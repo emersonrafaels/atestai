@@ -274,6 +274,17 @@ export interface AppSettings {
   signature: string;
   validation: { dataset: string; accuracy_min: number; kappa_min: number; finding_f1_min: number; score_error_max: number };
   rubric?: RubricInfo;
+  models?: ModelOption[];
+  keyed_providers?: string[];
+}
+
+/** Modelo sugerido nos campos de modelo (tabela de preços + configurados). */
+export interface ModelOption {
+  id: string;
+  provider: string;
+  name: string;
+  input_price: number | null;
+  output_price: number | null;
 }
 
 export type ValidationKind = "scope" | "quote" | "photos";

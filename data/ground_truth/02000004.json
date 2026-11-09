@@ -1,0 +1,100 @@
+{
+  "ticket_id": "02000004",
+  "dataset": "itau",
+  "service_template": "hvac",
+  "defects": [],
+  "workstream": "SETA",
+  "moment": "execution",
+  "maintenance_type": "preventive",
+  "category": "air_conditioning",
+  "symptom": "preventive_maintenance",
+  "before_applicable": true,
+  "quoted_value": 1710.0,
+  "amount_at_issue": 0.0,
+  "items": [
+    {
+      "n": 1,
+      "description": "Limpeza preventiva de split (evap. + cond.)",
+      "unit": "un",
+      "quantity": 6,
+      "unit_value": 180.0,
+      "total_value": 1080.0,
+      "classification": "compliant",
+      "lpu_code": "HVAC-001",
+      "reference_price": 180.0,
+      "findings": [],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    },
+    {
+      "n": 2,
+      "description": "Higienização com bactericida",
+      "unit": "un",
+      "quantity": 6,
+      "unit_value": 45.0,
+      "total_value": 270.0,
+      "classification": "compliant",
+      "lpu_code": "HVAC-002",
+      "reference_price": 45.0,
+      "findings": [],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    },
+    {
+      "n": 3,
+      "description": "Verificação de pressões",
+      "unit": "un",
+      "quantity": 6,
+      "unit_value": 60.0,
+      "total_value": 360.0,
+      "classification": "compliant",
+      "lpu_code": "HVAC-003",
+      "reference_price": 60.0,
+      "findings": [],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    }
+  ],
+  "attachments": {
+    "Orcamento_EPS-V0004.xlsx": {
+      "category": "quote_doc",
+      "moment": "undetermined",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Orçamento"
+    },
+    "IMG_20261027_085648.jpg": {
+      "category": "equipment_photo",
+      "moment": "before",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Filtro de ar sujo antes da limpeza"
+    },
+    "IMG_20261030_095911.jpg": {
+      "category": "equipment_photo",
+      "moment": "after",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Evaporadora limpa"
+    },
+    "IMG_20261030_101430.jpg": {
+      "category": "equipment_photo",
+      "moment": "after",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Filtro limpo"
+    }
+  },
+  "checklist_ok": true,
+  "missing": [],
+  "findings": [],
+  "optional": [],
+  "grades": {
+    "scope": 100,
+    "quote": 100,
+    "photos": 100
+  },
+  "score": 100,
+  "recommendation": "approve",
+  "confidence": "high"
+}

@@ -1,4 +1,4 @@
-import { BookOpen, ClipboardCheck, Compass, Cpu, Download, HelpCircle, Images, Inbox, Loader2, Play, Plus, Receipt, RotateCcw, Trash2, X, type LucideIcon } from "lucide-react";
+import { BarChart3, BookOpen, ClipboardCheck, Compass, Cpu, Download, FlaskConical, HelpCircle, Images, Inbox, Loader2, Play, Plus, Receipt, RotateCcw, ScanSearch, Trash2, Wifi, WifiOff, X, type LucideIcon } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api, type TicketDetail, type TicketSummary, type AppSettings, type Dataset, type Run, type Assessment, type Recommendation } from "./api";
 import { LlmCallsTab } from "./components/LlmCallsTab";
@@ -18,6 +18,7 @@ import { InfoBox, resetInfoBoxes } from "./components/ui/InfoBox";
 import { Lightbox, type LightboxItem } from "./components/ui/Lightbox";
 import { GlossaryDialog } from "./components/ui/GlossaryDialog";
 import itauLogo from "./assets/itau.png";
+import { ModelCombobox } from "./components/ui/ModelCombobox";
 
 type Tab = "assessment" | "quote" | "photos" | "calls" | "input";
 const TABS: { id: Tab; label: string; needsAssessment: boolean; icon: LucideIcon; hint: string }[] = [
@@ -207,78 +208,114 @@ export default function App() {
 
   return (
     <div className="grid h-full grid-rows-[auto_auto_1fr_auto]">
-      <header className="flex flex-wrap items-center gap-x-8 gap-y-3 border-b border-line bg-sheet px-6 py-3">
-        <div className="flex items-center gap-3">
-          <img src={itauLogo} alt="Itaú" width={36} height={36} className="size-9 shrink-0 rounded-[9px]" />
-          <span className="h-7 w-px bg-line" aria-hidden />
-          <h1 className="largo text-[22px] font-extrabold tracking-tight text-blueprint">Atest.AI</h1>
-          <span className="hidden text-sm text-muted xl:inline">Pré-análise de chamados SETA e SISR</span>
+      <header className="border-b border-line bg-sheet">
+        {/* linha 1: marca, navegação e ajuda */}
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 px-6 py-2.5">
+          <div className="flex items-center gap-3">
+            <img src={itauLogo} alt="Itaú" width={36} height={36} className="size-9 shrink-0 rounded-[9px] shadow-sm" />
+            <span className="h-8 w-px bg-line" aria-hidden />
+            <div className="leading-tight">
+              <h1 className="largo text-[20px] font-extrabold tracking-tight text-blueprint">Atest.AI</h1>
+              <span className="hidden text-[12px] text-muted sm:block">Pré-análise de chamados SETA e SISR</span>
+            </div>
+          </div>
+
+          <nav data-tour="nav" aria-label="Seções" className="order-3 flex w-full rounded-xl bg-paper p-1 text-[14px] sm:order-none sm:w-auto">
+            {([["analysis", "Análise", ScanSearch], ["validation", "Validação", FlaskConical], ["metrics", "Operação", BarChart3]] as const).map(([v, label, Icon]) => (
+              <Tooltip key={v} side="bottom" className="flex flex-1 sm:flex-none" content={SECTION_HINT[v]}>
+                <button onClick={() => setView(v)} aria-current={view === v ? "page" : undefined}
+                  className={`relative flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 transition-colors sm:flex-none ${view === v ? "bg-sheet font-semibold text-blueprint shadow-sm" : "text-muted hover:text-ink"}`}>
+                  <Icon size={16} aria-hidden />{label}
+                  {v === "analysis" && running && <span className="absolute right-1 top-1 size-2 rounded-full bg-blueprint pulso" aria-label="análise em andamento" />}
+                </button>
+              </Tooltip>
+            ))}
+          </nav>
+
+          <div className="order-2 ml-auto flex items-center gap-2 text-sm sm:order-none">
+            {config && (
+              <Tooltip side="bottom" content={<>Ambiente <b>{config.environment}</b> · versão {config.version}<br />Régua {config.rubric_version} · prompts {config.prompts_version}<br />Configuração {config.signature}</>}>
+                <span className={`hidden cursor-help items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-semibold md:flex ${ENV_BADGE[config.environment]?.cls ?? "bg-paper text-muted"}`}>
+                  <span className="size-1.5 rounded-full bg-current" />{ENV_BADGE[config.environment]?.label ?? config.environment}
+                </span>
+              </Tooltip>
+            )}
+            {config && (
+              <Tooltip side="bottom" content={config.api_available ? `Chave da API configurada: ${config.providers.join(", ")}` : `Sem chave da API (${config.missing_keys.join(", ")}): só o modo simulado está disponível`}>
+                <span className={`hidden cursor-help items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-semibold lg:flex ${config.api_available ? "bg-[#e3f2ea] text-ok" : "bg-paper text-muted"}`}>
+                  {config.api_available ? <Wifi size={13} /> : <WifiOff size={13} />}{config.api_available ? "API conectada" : "Só simulado"}
+                </span>
+              </Tooltip>
+            )}
+            <HelpMenu open={helpOpen} setOpen={setHelpOpen}
+              tour={() => { setHelpOpen(false); setTourOpen(true); }}
+              glossary={() => { setHelpOpen(false); setGlossaryOpen(true); }}
+              reset={() => { setHelpOpen(false); resetInfoBoxes(); }} />
+          </div>
         </div>
-        <nav data-tour="nav" className="flex gap-1 text-[15px]" aria-label="Seções">
-          {(["analysis", "validation", "metrics"] as const).map((v) => (
-            <Tooltip key={v} side="bottom" content={SECTION_HINT[v]}>
-              <button onClick={() => setView(v)} aria-current={view === v ? "page" : undefined}
-                className={`rounded-md px-3 py-1 transition-colors ${view === v ? "bg-blueprint-soft font-semibold text-blueprint" : "text-muted hover:bg-paper hover:text-ink"}`}>
-                {v === "analysis" ? "Análise" : v === "validation" ? "Validação" : "Operação"}
-              </button>
-            </Tooltip>
-          ))}
-        </nav>
-        <HelpMenu open={helpOpen} setOpen={setHelpOpen}
-          tour={() => { setHelpOpen(false); setTourOpen(true); }}
-          glossary={() => { setHelpOpen(false); setGlossaryOpen(true); }}
-          reset={() => { setHelpOpen(false); resetInfoBoxes(); }} />
-        {view !== "validation" && <div className="ml-auto flex flex-wrap items-center gap-4 text-sm">
-          <fieldset data-tour="mode" className="flex items-center gap-2">
-            <legend className="sr-only">Modo</legend>
-            <span className="flex items-center gap-1 text-muted">Modo <InfoTip term="mode" /></span>
-            <div className="flex rounded-lg bg-paper p-0.5">
-              <SegmentButton active={mode === "simulated"} onClick={() => setMode("simulated")}>Simulado</SegmentButton>
-              <SegmentButton active={mode === "api"} onClick={() => setMode("api")} disabled={!config?.api_available}
-                hint={config?.api_available ? `Chama a API: ${config.main_model}` : `Defina a chave de: ${config?.missing_keys.join(", ")} (config/.secrets.toml ou variável de ambiente)`}>
-                API{config ? ` ${config.providers.map((p) => p[0].toUpperCase() + p.slice(1)).join("/")}` : ""}</SegmentButton>
-            </div>
-          </fieldset>
-          <fieldset data-tour="phase" className="flex items-center gap-2">
-            <legend className="sr-only">Fase da régua</legend>
-            <span className="flex items-center gap-1 text-muted">Régua <InfoTip term="phase" /></span>
-            <div className="flex rounded-lg bg-paper p-0.5">
-              <SegmentButton active={phase === 1} onClick={() => setPhase(1)} hint="MVP: sem antes, ilegibilidade e reaproveitamento">Fase 1</SegmentButton>
-              <SegmentButton active={phase === 2} onClick={() => setPhase(2)} hint="Inclui as checagens da Fase 2">Fase 2</SegmentButton>
-            </div>
-          </fieldset>
-          {mode === "api" && (
-            <div className="flex rounded-lg bg-paper p-0.5">
-              <SegmentButton active={batchMode === "sync"} onClick={() => setBatchMode("sync")} hint="Uma requisição por vez: resultado em segundos">Síncrono</SegmentButton>
-              <SegmentButton active={batchMode === "batch"} onClick={() => setBatchMode("batch")} hint="Message Batches API: assíncrono, metade do custo">Batch −50%</SegmentButton>
-            </div>
-          )}
-          {mode === "api" && (
-            <div className="flex items-center gap-2">
-              <Tooltip content="Modelo principal: lê o escopo, confere o orçamento e escreve o parecer">
-                <input aria-label="Modelo principal" value={mainModel} onChange={(e) => setMainModel(e.target.value)}
-                  className="w-40 rounded-md border border-line px-2 py-1" />
+
+        {/* linha 2: barra de execução (só onde se analisa chamados) */}
+        {view !== "validation" && (
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-line/70 bg-paper/50 px-6 py-2 text-sm">
+            <fieldset data-tour="mode" className="flex items-center gap-2">
+              <legend className="sr-only">Modo</legend>
+              <span className="flex items-center gap-1 text-[13px] text-muted">Modo <InfoTip term="mode" /></span>
+              <div className="flex rounded-lg border border-line bg-sheet p-0.5">
+                <SegmentButton active={mode === "simulated"} onClick={() => setMode("simulated")} hint="Sem custo: respostas simuladas a partir do gabarito">Simulado</SegmentButton>
+                <SegmentButton active={mode === "api"} onClick={() => setMode("api")} disabled={!config?.api_available}
+                  hint={config?.api_available ? `Chama a API: ${config.main_model}` : `Defina a chave de: ${config?.missing_keys.join(", ")} (config/.secrets.toml ou variável de ambiente)`}>
+                  API{config ? ` ${config.providers.map((p) => p[0].toUpperCase() + p.slice(1)).join("/")}` : ""}</SegmentButton>
+              </div>
+            </fieldset>
+            <fieldset data-tour="phase" className="flex items-center gap-2">
+              <legend className="sr-only">Fase da régua</legend>
+              <span className="flex items-center gap-1 text-[13px] text-muted">Régua <InfoTip term="phase" /></span>
+              <div className="flex rounded-lg border border-line bg-sheet p-0.5">
+                <SegmentButton active={phase === 1} onClick={() => setPhase(1)} hint="MVP: sem antes, ilegibilidade e reaproveitamento">Fase 1</SegmentButton>
+                <SegmentButton active={phase === 2} onClick={() => setPhase(2)} hint="Inclui as checagens da Fase 2">Fase 2</SegmentButton>
+              </div>
+            </fieldset>
+            {mode === "api" && (
+              <fieldset className="flex items-center gap-2">
+                <legend className="sr-only">Envio</legend>
+                <span className="flex items-center gap-1 text-[13px] text-muted">Envio <InfoTip term="batch" /></span>
+                <div className="flex rounded-lg border border-line bg-sheet p-0.5">
+                  <SegmentButton active={batchMode === "sync"} onClick={() => setBatchMode("sync")} hint="Uma requisição por vez: resultado em segundos">Síncrono</SegmentButton>
+                  <SegmentButton active={batchMode === "batch"} onClick={() => setBatchMode("batch")} hint="Message Batches API: assíncrono, metade do custo">Batch −50%</SegmentButton>
+                </div>
+              </fieldset>
+            )}
+            {mode === "api" && (
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="flex items-center gap-1 text-[13px] text-muted">Modelos
+                  <InfoTip text={<><b>Principal</b>: lê o escopo, confere o orçamento e escreve o parecer.<br /><b>Rápido</b>: identifica os anexos e analisa as fotos.<br />Escolha na lista ou digite outro id no formato provedor:modelo.</>} />
+                </span>
+                <ModelCombobox label="Principal" value={mainModel} onChange={setMainModel} options={config?.models ?? []}
+                  defaultId={config?.main_model} availableProviders={config?.keyed_providers}
+                  hint="Escopo, orçamento × escopo e parecer: prefira o modelo mais capaz." />
+                <ModelCombobox label="Rápido" value={fastModel} onChange={setFastModel} options={config?.models ?? []}
+                  defaultId={config?.fast_model} availableProviders={config?.keyed_providers}
+                  hint="Identificação dos anexos e fotos: um modelo mais barato costuma bastar." />
+              </div>
+            )}
+
+            <div className="ml-auto flex items-center gap-2">
+              <Tooltip content="Envie um chamado real ou de teste: dados, planilha de orçamento e fotos">
+                <button onClick={() => setShowNewTicket(true)} disabled={!config}
+                  className="flex items-center gap-1.5 rounded-lg border border-line bg-sheet px-3 py-1.5 font-medium hover:border-ink/25">
+                  <Plus size={16} /> Novo chamado
+                </button>
               </Tooltip>
-              <Tooltip content="Modelo rápido: identifica os anexos e analisa as fotos">
-                <input aria-label="Modelo rápido" value={fastModel} onChange={(e) => setFastModel(e.target.value)}
-                  className="w-36 rounded-md border border-line px-2 py-1" />
+              <Tooltip content={!selected.size ? "Marque ao menos um chamado na lista à esquerda" : running ? "Aguarde a execução atual terminar" : `Roda o pipeline completo nos ${selected.size} chamado(s) marcados, no modo ${mode === "api" ? "API" : "simulado"}`}>
+                <button data-tour="run" onClick={run} disabled={!selected.size || running}
+                  className="flex items-center gap-2 rounded-lg bg-blueprint px-4 py-1.5 font-semibold text-white shadow-sm transition-colors hover:bg-[#1d44a0] disabled:pointer-events-none disabled:opacity-50">
+                  {running ? <Loader2 size={16} className="animate-spin" /> : <Play size={16} />}
+                  {running ? `Analisando ${summary.done}/${summary.total}…` : <>Analisar <span className="rounded-full bg-white/20 px-1.5 text-[12px] tabular-nums">{selected.size}</span></>}
+                </button>
               </Tooltip>
             </div>
-          )}
-          <Tooltip content="Envie um chamado real ou de teste: dados, planilha de orçamento e fotos">
-            <button onClick={() => setShowNewTicket(true)} disabled={!config}
-              className="flex items-center gap-1.5 rounded-lg border border-line px-3 py-2 font-medium hover:bg-paper">
-              <Plus size={16} /> Novo chamado
-            </button>
-          </Tooltip>
-          <Tooltip content={!selected.size ? "Marque ao menos um chamado na lista à esquerda" : running ? "Aguarde a execução atual terminar" : `Roda o pipeline completo nos ${selected.size} chamado(s) marcados`}>
-            <button data-tour="run" onClick={run} disabled={!selected.size || running}
-              className="flex items-center gap-2 rounded-lg bg-blueprint px-4 py-2 font-semibold text-white shadow-sm transition-colors hover:bg-[#1d44a0] disabled:pointer-events-none disabled:opacity-50">
-              {running ? <Loader2 size={16} className="animate-spin" /> : <Play size={16} />}
-              {running ? "Analisando…" : `Analisar ${selected.size} chamado${selected.size === 1 ? "" : "s"}`}
-            </button>
-          </Tooltip>
-        </div>}
+          </div>
+        )}
       </header>
 
       {view === "validation" && config ? (
@@ -317,7 +354,7 @@ export default function App() {
         )}
       </div>
 
-      <div className={`grid min-h-0 grid-cols-1 transition-[grid-template-columns] duration-200 ${listCollapsed ? "grid-rows-[auto_1fr] md:grid-rows-1 md:grid-cols-[60px_1fr]" : "md:grid-cols-[380px_1fr]"}`}>
+      <div className={`grid min-h-0 grid-cols-1 transition-[grid-template-columns] duration-200 ${listCollapsed ? "grid-rows-[auto_1fr] md:grid-rows-1 md:grid-cols-[76px_1fr]" : "md:grid-cols-[380px_1fr]"}`}>
         <TicketList collapsed={listCollapsed} setCollapsed={setListCollapsed} tickets={tickets} selected={selected} focus={focus} focusTicket={setFocus} execution={execution}
           streamFilter={streamFilter} setStreamFilter={setStreamFilter} datasets={datasets} dataset={dataset} setDataset={setDataset}
           toggle={(id) => setSelected((s) => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; })}
@@ -385,7 +422,7 @@ export default function App() {
               {assessment && (
                 <div hidden={tab !== "assessment"}>
                   <AssessmentTab key={`${assessment.ticket_id}-${assessment.record_id ?? assessment.generated_at}`} p={assessment} comparison={focusState?.comparison ?? null} rubric={rubric}
-                    ticket={detail_level} openPhoto={openPhoto} goTo={goTo} />
+                    ticket={detail_level} openPhoto={openPhoto} goTo={goTo} openTicket={(id) => { setView("analysis"); setFocus(id); }} />
                 </div>
               )}
               {assessment && tab === "quote" && <QuoteTab p={assessment} highlight={highlight.items} />}
@@ -437,6 +474,12 @@ function SegmentButton(p: { active: boolean; onClick: () => void; children: Reac
   );
 }
 
+const ENV_BADGE: Record<string, { label: string; cls: string }> = {
+  development: { label: "Desenvolvimento", cls: "bg-[#fdf1dc] text-warn" },
+  staging: { label: "Homologação", cls: "bg-blueprint-soft text-blueprint" },
+  production: { label: "Produção", cls: "bg-[#e3f2ea] text-ok" },
+};
+
 const SECTION_HINT = {
   analysis: "Analise chamados um a um e leia o parecer",
   validation: "Rode um conjunto inteiro contra o gabarito e meça a qualidade",
@@ -462,7 +505,7 @@ function HelpMenu({ open, setOpen, tour, glossary, reset }: { open: boolean; set
         <HelpCircle size={16} /> Ajuda
       </button>
       {open && (
-        <div role="menu" className="surgir absolute left-0 z-40 mt-2 w-64 rounded-xl border border-line bg-sheet p-1.5 shadow-xl">
+        <div role="menu" className="surgir absolute right-0 z-40 mt-2 w-64 rounded-xl border border-line bg-sheet p-1.5 shadow-xl">
           <button role="menuitem" onClick={tour} className={item}><Compass size={16} className="shrink-0 text-blueprint" /><span><b className="block font-medium">Tour guiado</b><span className="text-[12px] text-muted">Passo a passo desta tela</span></span></button>
           <button role="menuitem" onClick={glossary} className={item}><BookOpen size={16} className="shrink-0 text-blueprint" /><span><b className="block font-medium">Glossário</b><span className="text-[12px] text-muted">Score, peso, kappa, F1…</span></span></button>
           <button role="menuitem" onClick={reset} className={item}><RotateCcw size={16} className="shrink-0 text-blueprint" /><span><b className="block font-medium">Reexibir dicas</b><span className="text-[12px] text-muted">Mostra de novo as caixas fechadas</span></span></button>

@@ -1,0 +1,549 @@
+{
+  "ticket_id": "02000020",
+  "workstream": "SISR",
+  "category": "cctv_and_alarm",
+  "symptom": "preventive_maintenance",
+  "maintenance_type": "preventive",
+  "moment": "execution",
+  "branch": {
+    "code": "9013",
+    "name": "Itaú Ag. Água Branca",
+    "environment": "agência inteira"
+  },
+  "supplier": "Fornecedor Iota Segurança Eletrônica Ltda.",
+  "quoted_value": 2865.0,
+  "requested_scope": "Preventiva semestral do sistema de segurança da agência: teste das 5 câmeras e dos sensores do alarme, com relatório.",
+  "generated_at": "2026-11-09T05:15:54.975444",
+  "rubric_version": "2026-11-v3",
+  "prompts_version": "2026-11-v3",
+  "config_signature": "294d860f8d37",
+  "phase": 2,
+  "mode": "simulated",
+  "batch_mode": "sync",
+  "models": {
+    "main": "anthropic:claude-sonnet-5-5",
+    "fast": "anthropic:claude-sonnet-5-5"
+  },
+  "run_id": "20261109-051537-8c91",
+  "record_id": 63,
+  "checklist": {
+    "category": "cctv_and_alarm",
+    "maintenance": "preventive",
+    "moment": "execution",
+    "complete": true,
+    "uploaded": 4,
+    "total": 4,
+    "requirements": [
+      {
+        "id": "quote",
+        "description": "Orçamento na planilha Excel padrão",
+        "met": true,
+        "attachments": [
+          "Orcamento_IOT-V0020.xlsx"
+        ]
+      },
+      {
+        "id": "screen_photo",
+        "description": "Tela do gravador com as câmeras testadas",
+        "met": true,
+        "attachments": [
+          "IMG_20261101_085155.jpg"
+        ]
+      },
+      {
+        "id": "panel_photo",
+        "description": "Foto da central de alarme ou do teclado",
+        "met": true,
+        "attachments": [
+          "IMG_20261101_093232.jpg",
+          "WhatsApp Image 2026-11-02 at 15.26.18.jpeg"
+        ]
+      },
+      {
+        "id": "report",
+        "description": "Relatório da preventiva",
+        "met": true,
+        "attachments": [
+          "IMG_20261102_190400.jpg"
+        ]
+      }
+    ],
+    "missing": []
+  },
+  "attachments": [
+    {
+      "index": 1,
+      "name": "Orcamento_IOT-V0020.xlsx",
+      "category": "quote_doc",
+      "moment": "undetermined",
+      "readable": true,
+      "short_description": "Orçamento IOT-V0020: 4 itens, R$ 2,865.00"
+    },
+    {
+      "index": 2,
+      "name": "IMG_20261101_085155.jpg",
+      "category": "cctv_screen_photo",
+      "moment": "after",
+      "readable": true,
+      "short_description": "Monitor do NVR com as câmeras funcionando"
+    },
+    {
+      "index": 3,
+      "name": "IMG_20261101_093232.jpg",
+      "category": "alarm_panel_photo",
+      "moment": "after",
+      "readable": true,
+      "short_description": "Central de alarme pronta"
+    },
+    {
+      "index": 4,
+      "name": "WhatsApp Image 2026-11-02 at 15.26.18.jpeg",
+      "category": "alarm_panel_photo",
+      "moment": "after",
+      "readable": true,
+      "short_description": "Central de alarme pronta"
+    },
+    {
+      "index": 5,
+      "name": "IMG_20261102_190400.jpg",
+      "category": "technical_report_doc",
+      "moment": "after",
+      "readable": true,
+      "short_description": "Relatório de preventiva"
+    }
+  ],
+  "recommendation": "return_locked",
+  "recommendation_reason": "Trava de integridade: foto reaproveitada de outro chamado. Devolver qualquer que seja a nota",
+  "score": 62,
+  "grades": {
+    "scope": 100,
+    "quote": 65,
+    "photos": 40
+  },
+  "confidence": "high",
+  "confidence_reducers": [],
+  "findings": [
+    {
+      "kind": "out_of_scope_item",
+      "validation": "quote",
+      "severity": "high",
+      "discount": 35,
+      "description": "Item fora do escopo",
+      "evidence": "(simulado) fora do escopo",
+      "reference": "item 4: Câmera IP bullet nova 4MP",
+      "lock": false,
+      "reduces_confidence": false,
+      "phase": 1,
+      "amount_at_issue": 2300.0
+    },
+    {
+      "kind": "reused_photo",
+      "validation": "photos",
+      "severity": "critical",
+      "discount": 60,
+      "description": "Foto reaproveitada de outro chamado",
+      "evidence": "Foto idêntica ou muito semelhante à do chamado 02000010 (IMG_20261030_095243.jpg)",
+      "reference": "WhatsApp Image 2026-11-02 at 15.26.18.jpeg",
+      "lock": true,
+      "reduces_confidence": false,
+      "phase": 2,
+      "amount_at_issue": 0.0
+    }
+  ],
+  "amount_at_issue": 2300.0,
+  "amount_at_issue_pct": 80.3,
+  "scope": {
+    "local": "(simulado)",
+    "environment": "(simulado)",
+    "equipment": "",
+    "requested_services": [
+      "(simulado a partir do gabarito)"
+    ],
+    "mentioned_quantities": [],
+    "acceptance_criteria": [
+      "(simulado)"
+    ],
+    "expected_evidence": [],
+    "before_evidence_applicable": false,
+    "consistent_with_category_symptom": true,
+    "coherence_note": "",
+    "vague_scope": false,
+    "vague_reason": ""
+  },
+  "items": [
+    {
+      "n": 1,
+      "description": "Visita técnica e deslocamento",
+      "unit": "vb",
+      "quantity": 1.0,
+      "unit_value": 280.0,
+      "total_value": 280.0,
+      "classification": "compliant",
+      "reason": "(simulado) aderente",
+      "lpu_code": "SIS-001",
+      "reference_price": 280.0,
+      "expected_quantity_max": null,
+      "amount_at_issue": 0.0,
+      "findings": []
+    },
+    {
+      "n": 2,
+      "description": "Teste preventivo de câmera",
+      "unit": "un",
+      "quantity": 5.0,
+      "unit_value": 35.0,
+      "total_value": 175.0,
+      "classification": "compliant",
+      "reason": "(simulado) aderente",
+      "lpu_code": "CFTV-007",
+      "reference_price": 35.0,
+      "expected_quantity_max": null,
+      "amount_at_issue": 0.0,
+      "findings": []
+    },
+    {
+      "n": 3,
+      "description": "Teste preventivo de sensor",
+      "unit": "un",
+      "quantity": 5.0,
+      "unit_value": 22.0,
+      "total_value": 110.0,
+      "classification": "compliant",
+      "reason": "(simulado) aderente",
+      "lpu_code": "ALA-001",
+      "reference_price": 22.0,
+      "expected_quantity_max": null,
+      "amount_at_issue": 0.0,
+      "findings": []
+    },
+    {
+      "n": 4,
+      "description": "Câmera IP bullet nova 4MP",
+      "unit": "un",
+      "quantity": 1.0,
+      "unit_value": 2300.0,
+      "total_value": 2300.0,
+      "classification": "out_of_scope",
+      "reason": "(simulado) fora do escopo",
+      "lpu_code": "CFTV-002",
+      "reference_price": 2300.0,
+      "expected_quantity_max": null,
+      "amount_at_issue": 2300.0,
+      "findings": [
+        {
+          "kind": "out_of_scope_item",
+          "validation": "quote",
+          "severity": "high",
+          "discount": 35,
+          "description": "Item fora do escopo",
+          "evidence": "(simulado) fora do escopo",
+          "reference": "item 4: Câmera IP bullet nova 4MP",
+          "lock": false,
+          "reduces_confidence": false,
+          "phase": 1,
+          "amount_at_issue": 2300.0
+        }
+      ]
+    }
+  ],
+  "quote_notes": [],
+  "photos": [
+    {
+      "file": "IMG_20261101_085155.jpg",
+      "environment": "",
+      "what_it_shows": "Monitor do NVR com as câmeras funcionando",
+      "moment": "after",
+      "readable": true,
+      "matches_scope": "yes",
+      "reason": "(simulado)",
+      "covered_items": [],
+      "exif_date": "2026-11-01T08:15:00",
+      "reused_from": null,
+      "integrity_signals": []
+    },
+    {
+      "file": "IMG_20261101_093232.jpg",
+      "environment": "",
+      "what_it_shows": "Central de alarme pronta",
+      "moment": "after",
+      "readable": true,
+      "matches_scope": "yes",
+      "reason": "(simulado)",
+      "covered_items": [],
+      "exif_date": "2026-11-01T09:15:00",
+      "reused_from": null,
+      "integrity_signals": []
+    },
+    {
+      "file": "WhatsApp Image 2026-11-02 at 15.26.18.jpeg",
+      "environment": "",
+      "what_it_shows": "Central de alarme pronta",
+      "moment": "after",
+      "readable": true,
+      "matches_scope": "yes",
+      "reason": "(simulado)",
+      "covered_items": [],
+      "exif_date": null,
+      "reused_from": "02000010/IMG_20261030_095243.jpg",
+      "integrity_signals": [
+        "Semelhante à foto IMG_20261030_095243.jpg do chamado 02000010 (distância 0)"
+      ]
+    }
+  ],
+  "photo_summary": {
+    "has_before_photo": false,
+    "has_done_service_photo": true,
+    "done_justification": "(simulado)",
+    "items_without_photo": [],
+    "notes": ""
+  },
+  "summary": "Devolver (trava de integridade). Trava de integridade: foto reaproveitada de outro chamado. Devolver qualquer que seja a nota. 2 apontamento(s): item fora do escopo (item 4: Câmera IP bullet nova 4MP); foto reaproveitada de outro chamado (WhatsApp Image 2026-11-02 at 15.26.18.jpeg). Valor em questão: R$ 2.300,00 (80% do orçamento).",
+  "supplier_message": "Remover o item 4: Câmera IP bullet nova 4MP, que está fora do escopo; enviar fotos originais deste chamado.",
+  "llm_calls": [
+    {
+      "task": "identify_attachments",
+      "provider": "simulated",
+      "model": "simulado (anthropic:claude-sonnet-5-5)",
+      "resolved_model": "",
+      "prompt_version": "",
+      "prompt_hash": "",
+      "schema_hash": "",
+      "start": "2026-11-09T05:15:52.482300",
+      "duration_s": 0.31,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 0,
+      "cost_usd": 0.0,
+      "from_cache": false,
+      "simulated": true,
+      "via_batch": false,
+      "batch_id": null,
+      "response": {
+        "attachments": [
+          {
+            "index": 2,
+            "category": "cctv_screen_photo",
+            "moment": "after",
+            "readable": true,
+            "short_description": "Monitor do NVR com as câmeras funcionando"
+          },
+          {
+            "index": 3,
+            "category": "alarm_panel_photo",
+            "moment": "after",
+            "readable": true,
+            "short_description": "Central de alarme pronta"
+          },
+          {
+            "index": 4,
+            "category": "alarm_panel_photo",
+            "moment": "after",
+            "readable": true,
+            "short_description": "Central de alarme pronta"
+          },
+          {
+            "index": 5,
+            "category": "technical_report_doc",
+            "moment": "after",
+            "readable": true,
+            "short_description": "Relatório de preventiva"
+          }
+        ]
+      }
+    },
+    {
+      "task": "scope",
+      "provider": "simulated",
+      "model": "simulado (anthropic:claude-sonnet-5-5)",
+      "resolved_model": "",
+      "prompt_version": "",
+      "prompt_hash": "",
+      "schema_hash": "",
+      "start": "2026-11-09T05:15:52.797508",
+      "duration_s": 0.62,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 0,
+      "cost_usd": 0.0,
+      "from_cache": false,
+      "simulated": true,
+      "via_batch": false,
+      "batch_id": null,
+      "response": {
+        "local": "(simulado)",
+        "environment": "(simulado)",
+        "equipment": "",
+        "requested_services": [
+          "(simulado a partir do gabarito)"
+        ],
+        "mentioned_quantities": [],
+        "acceptance_criteria": [
+          "(simulado)"
+        ],
+        "expected_evidence": [],
+        "before_evidence_applicable": false,
+        "consistent_with_category_symptom": true,
+        "coherence_note": "",
+        "vague_scope": false,
+        "vague_reason": ""
+      }
+    },
+    {
+      "task": "quote_review",
+      "provider": "simulated",
+      "model": "simulado (anthropic:claude-sonnet-5-5)",
+      "resolved_model": "",
+      "prompt_version": "",
+      "prompt_hash": "",
+      "schema_hash": "",
+      "start": "2026-11-09T05:15:53.425744",
+      "duration_s": 0.61,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 0,
+      "cost_usd": 0.0,
+      "from_cache": false,
+      "simulated": true,
+      "via_batch": false,
+      "batch_id": null,
+      "response": {
+        "items": [
+          {
+            "n": 1,
+            "classification": "compliant",
+            "reason": "(simulado) aderente",
+            "expected_quantity_max": -1.0,
+            "plausible_quantity": true,
+            "duplicate_of": 0,
+            "lpu_code": "SIS-001"
+          },
+          {
+            "n": 2,
+            "classification": "compliant",
+            "reason": "(simulado) aderente",
+            "expected_quantity_max": -1.0,
+            "plausible_quantity": true,
+            "duplicate_of": 0,
+            "lpu_code": "CFTV-007"
+          },
+          {
+            "n": 3,
+            "classification": "compliant",
+            "reason": "(simulado) aderente",
+            "expected_quantity_max": -1.0,
+            "plausible_quantity": true,
+            "duplicate_of": 0,
+            "lpu_code": "ALA-001"
+          },
+          {
+            "n": 4,
+            "classification": "out_of_scope",
+            "reason": "(simulado) fora do escopo",
+            "expected_quantity_max": -1.0,
+            "plausible_quantity": true,
+            "duplicate_of": 0,
+            "lpu_code": "CFTV-002"
+          }
+        ],
+        "notes": ""
+      }
+    },
+    {
+      "task": "photos",
+      "provider": "simulated",
+      "model": "simulado (anthropic:claude-sonnet-5-5)",
+      "resolved_model": "",
+      "prompt_version": "",
+      "prompt_hash": "",
+      "schema_hash": "",
+      "start": "2026-11-09T05:15:54.070573",
+      "duration_s": 0.44,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 0,
+      "cost_usd": 0.0,
+      "from_cache": false,
+      "simulated": true,
+      "via_batch": false,
+      "batch_id": null,
+      "response": {
+        "photos": [
+          {
+            "index": 2,
+            "environment": "",
+            "what_it_shows": "Monitor do NVR com as câmeras funcionando",
+            "moment": "after",
+            "readable": true,
+            "matches_scope": "yes",
+            "reason": "(simulado)",
+            "covered_items": []
+          },
+          {
+            "index": 3,
+            "environment": "",
+            "what_it_shows": "Central de alarme pronta",
+            "moment": "after",
+            "readable": true,
+            "matches_scope": "yes",
+            "reason": "(simulado)",
+            "covered_items": []
+          },
+          {
+            "index": 4,
+            "environment": "",
+            "what_it_shows": "Central de alarme pronta",
+            "moment": "after",
+            "readable": true,
+            "matches_scope": "yes",
+            "reason": "(simulado)",
+            "covered_items": []
+          }
+        ],
+        "has_before_photo": false,
+        "has_done_service_photo": true,
+        "done_justification": "(simulado)",
+        "items_without_photo": [],
+        "notes": ""
+      }
+    },
+    {
+      "task": "assessment",
+      "provider": "simulated",
+      "model": "simulado (anthropic:claude-sonnet-5-5)",
+      "resolved_model": "",
+      "prompt_version": "",
+      "prompt_hash": "",
+      "schema_hash": "",
+      "start": "2026-11-09T05:15:54.591845",
+      "duration_s": 0.38,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 0,
+      "cost_usd": 0.0,
+      "from_cache": false,
+      "simulated": true,
+      "via_batch": false,
+      "batch_id": null,
+      "response": {
+        "summary": "Devolver (trava de integridade). Trava de integridade: foto reaproveitada de outro chamado. Devolver qualquer que seja a nota. 2 apontamento(s): item fora do escopo (item 4: Câmera IP bullet nova 4MP); foto reaproveitada de outro chamado (WhatsApp Image 2026-11-02 at 15.26.18.jpeg). Valor em questão: R$ 2.300,00 (80% do orçamento).",
+        "supplier_message": "Remover o item 4: Câmera IP bullet nova 4MP, que está fora do escopo; enviar fotos originais deste chamado."
+      }
+    }
+  ],
+  "duration_s": 2.55,
+  "stage_durations_s": {
+    "checklist": 0.374,
+    "scope": 0.619,
+    "quote": 0.618,
+    "photos": 0.557,
+    "score": 0.0,
+    "assessment": 0.384
+  },
+  "cost_usd": 0.0,
+  "cost_brl": 0.0
+}

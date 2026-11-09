@@ -1,0 +1,108 @@
+{
+  "ticket_id": "02000016",
+  "dataset": "itau",
+  "service_template": "sink",
+  "defects": [
+    "out_of_scope",
+    "date_before"
+  ],
+  "workstream": "SETA",
+  "moment": "quote",
+  "maintenance_type": "corrective",
+  "category": "plumbing",
+  "symptom": "leak",
+  "before_applicable": true,
+  "quoted_value": 463.0,
+  "amount_at_issue": 190.0,
+  "items": [
+    {
+      "n": 1,
+      "description": "Visita técnica",
+      "unit": "vb",
+      "quantity": 1,
+      "unit_value": 150.0,
+      "total_value": 150.0,
+      "classification": "compliant",
+      "lpu_code": "GER-001",
+      "reference_price": 150.0,
+      "findings": [],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    },
+    {
+      "n": 2,
+      "description": "Sifão PVC para pia",
+      "unit": "un",
+      "quantity": 1,
+      "unit_value": 38.0,
+      "total_value": 38.0,
+      "classification": "compliant",
+      "lpu_code": "HID-001",
+      "reference_price": 38.0,
+      "findings": [],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    },
+    {
+      "n": 3,
+      "description": "Mão de obra hidráulica",
+      "unit": "h",
+      "quantity": 1,
+      "unit_value": 85.0,
+      "total_value": 85.0,
+      "classification": "compliant",
+      "lpu_code": "HID-003",
+      "reference_price": 85.0,
+      "findings": [],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    },
+    {
+      "n": 4,
+      "description": "Registro de pressão 3/4",
+      "unit": "un",
+      "quantity": 2,
+      "unit_value": 95.0,
+      "total_value": 190.0,
+      "classification": "out_of_scope",
+      "lpu_code": "HID-002",
+      "reference_price": 95.0,
+      "findings": [
+        "out_of_scope_item"
+      ],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    }
+  ],
+  "attachments": {
+    "Orcamento_THE-V0016.xlsx": {
+      "category": "quote_doc",
+      "moment": "undetermined",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Orçamento"
+    },
+    "IMG_20261031_084510.jpg": {
+      "category": "room_before_photo",
+      "moment": "before",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Sifão vazando sob a pia"
+    }
+  },
+  "checklist_ok": true,
+  "missing": [],
+  "findings": [
+    "out_of_scope_item",
+    "photo_dated_before"
+  ],
+  "optional": [],
+  "grades": {
+    "scope": 100,
+    "quote": 65,
+    "photos": 85
+  },
+  "score": 80,
+  "recommendation": "approve_with_caveats",
+  "confidence": "high"
+}

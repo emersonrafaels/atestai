@@ -1,0 +1,126 @@
+{
+  "ticket_id": "02000019",
+  "dataset": "itau",
+  "service_template": "sensor",
+  "defects": [
+    "price",
+    "does_not_match",
+    "vague"
+  ],
+  "workstream": "SISR",
+  "moment": "execution",
+  "maintenance_type": "corrective",
+  "category": "alarm",
+  "symptom": "false_alarm",
+  "before_applicable": true,
+  "quoted_value": 597.49,
+  "amount_at_issue": 67.49,
+  "items": [
+    {
+      "n": 1,
+      "description": "Visita técnica",
+      "unit": "vb",
+      "quantity": 1,
+      "unit_value": 280.0,
+      "total_value": 280.0,
+      "classification": "compliant",
+      "lpu_code": "SIS-001",
+      "reference_price": 280.0,
+      "findings": [],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    },
+    {
+      "n": 2,
+      "description": "Sensor IVP com fio",
+      "unit": "un",
+      "quantity": 1,
+      "unit_value": 207.49,
+      "total_value": 207.49,
+      "classification": "compliant",
+      "lpu_code": "ALA-002",
+      "reference_price": 140.0,
+      "findings": [
+        "price_above_reference"
+      ],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    },
+    {
+      "n": 3,
+      "description": "Mão de obra substituição de sensor",
+      "unit": "un",
+      "quantity": 1,
+      "unit_value": 110.0,
+      "total_value": 110.0,
+      "classification": "compliant",
+      "lpu_code": "ALA-003",
+      "reference_price": 110.0,
+      "findings": [],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    }
+  ],
+  "attachments": {
+    "Orcamento_KAP-V0019.xlsx": {
+      "category": "quote_doc",
+      "moment": "undetermined",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Orçamento"
+    },
+    "IMG_20261101_081347.jpg": {
+      "category": "equipment_photo",
+      "moment": "before",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Sensor antigo amarelado"
+    },
+    "IMG_20261103_092431.jpg": {
+      "category": "equipment_photo",
+      "moment": "after",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Sensor novo instalado"
+    },
+    "IMG_20261103_103137.jpg": {
+      "category": "alarm_panel_photo",
+      "moment": "after",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Teclado indicando zona OK"
+    },
+    "IMG_20261104_174100.jpg": {
+      "category": "other",
+      "moment": "undetermined",
+      "matches_scope": false,
+      "readable": true,
+      "description": "Depósito com prateleiras: outro ambiente"
+    },
+    "IMG_20261104_190500.jpg": {
+      "category": "completion_certificate_doc",
+      "moment": "after",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Termo de conclusão assinado"
+    }
+  },
+  "checklist_ok": true,
+  "missing": [],
+  "findings": [
+    "photo_mismatch",
+    "price_above_reference",
+    "vague_scope"
+  ],
+  "optional": [
+    "unjustified_replacement"
+  ],
+  "grades": {
+    "scope": 85,
+    "quote": 85,
+    "photos": 65
+  },
+  "score": 77,
+  "recommendation": "approve_with_caveats",
+  "confidence": "medium"
+}

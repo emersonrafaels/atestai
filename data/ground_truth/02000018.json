@@ -1,0 +1,103 @@
+{
+  "ticket_id": "02000018",
+  "dataset": "itau",
+  "service_template": "camera",
+  "defects": [
+    "no_after",
+    "replacement",
+    "spreadsheet"
+  ],
+  "workstream": "SISR",
+  "moment": "execution",
+  "maintenance_type": "corrective",
+  "category": "cctv",
+  "symptom": "degraded_image",
+  "before_applicable": true,
+  "quoted_value": 2459.59,
+  "amount_at_issue": 2300.0,
+  "items": [
+    {
+      "n": 1,
+      "description": "Visita técnica e deslocamento",
+      "unit": "vb",
+      "quantity": 1,
+      "unit_value": 280.0,
+      "total_value": 280.0,
+      "classification": "compliant",
+      "lpu_code": "SIS-001",
+      "reference_price": 280.0,
+      "findings": [],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    },
+    {
+      "n": 2,
+      "description": "Limpeza e ajuste de foco da câmera",
+      "unit": "un",
+      "quantity": 1,
+      "unit_value": 180.0,
+      "total_value": 180.0,
+      "classification": "compliant",
+      "lpu_code": "CFTV-001",
+      "reference_price": 180.0,
+      "findings": [],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    },
+    {
+      "n": 3,
+      "description": "Câmera IP bullet nova 4MP",
+      "unit": "un",
+      "quantity": 1,
+      "unit_value": 2300.0,
+      "total_value": 2300.0,
+      "classification": "to_justify",
+      "lpu_code": "CFTV-002",
+      "reference_price": 2300.0,
+      "findings": [
+        "unjustified_replacement"
+      ],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    }
+  ],
+  "attachments": {
+    "Orcamento_BET-V0018.xlsx": {
+      "category": "quote_doc",
+      "moment": "undetermined",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Orçamento"
+    },
+    "IMG_20261031_081145.jpg": {
+      "category": "cctv_screen_photo",
+      "moment": "before",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Imagem da câmera desfocada"
+    },
+    "IMG_20261104_091733.jpg": {
+      "category": "equipment_photo",
+      "moment": "after",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Câmera instalada na parede"
+    }
+  },
+  "checklist_ok": true,
+  "missing": [],
+  "findings": [
+    "missing_after_photo",
+    "spreadsheet_mismatch",
+    "unjustified_replacement"
+  ],
+  "optional": [],
+  "grades": {
+    "scope": 100,
+    "quote": 50,
+    "photos": 65
+  },
+  "score": 66,
+  "recommendation": "return_to_supplier",
+  "confidence": "high"
+}

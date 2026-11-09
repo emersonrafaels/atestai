@@ -19,13 +19,14 @@ interface Props {
   ticket: TicketDetail | null;
   openPhoto: (items: LightboxItem[], index: number) => void;
   goTo: GoTo;
+  openTicket?: (id: string) => void;
 }
 
 /**
  * Parecer na ordem do próprio fluxo: checklist mínimo → recomendação → conta do score → apontamentos →
  * mensagem ao fornecedor → decisão da pessoa analista (por último, depois de ler tudo).
  */
-export function AssessmentTab({ p, comparison, rubric, ticket, openPhoto, goTo }: Props) {
+export function AssessmentTab({ p, comparison, rubric, ticket, openPhoto, goTo, openTicket }: Props) {
   const [copied, setCopied] = useState(false);
   const [open, setOpen] = useState<Set<number>>(new Set());
   const [unfounded, setUnfounded] = useState<Set<string>>(new Set());
@@ -224,7 +225,7 @@ export function AssessmentTab({ p, comparison, rubric, ticket, openPhoto, goTo }
                       </div>
                       {isOpen && (
                         <div id={`finding-ev-${idx}`} className="px-3 pb-3">
-                          <FindingEvidence f={f} p={p} ticket={ticket} openPhoto={openPhoto} goTo={goTo} />
+                          <FindingEvidence f={f} p={p} ticket={ticket} openPhoto={openPhoto} goTo={goTo} openTicket={openTicket} />
                         </div>
                       )}
                     </li>

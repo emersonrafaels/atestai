@@ -1,0 +1,47 @@
+{
+  "ticket_id": "02000016",
+  "workstream": "SETA",
+  "maintenance_type": "corrective",
+  "moment": "quote",
+  "category": "plumbing",
+  "symptom": "leak",
+  "branch": {
+    "code": "8356",
+    "name": "Itaú Ag. Brooklin",
+    "environment": "cozinha dos funcionários"
+  },
+  "supplier": {
+    "name": "Fornecedor Theta Hidráulica Ltda.",
+    "cnpj": "89.012.345/0001-67"
+  },
+  "requested_scope": "Vazamento no sifão da pia da cozinha dos funcionários. Trocar o sifão.",
+  "quoted_value": 463.0,
+  "dates": {
+    "opening": "2026-10-30",
+    "supplier_submission": "2026-11-02",
+    "manager_review": "2026-11-03"
+  },
+  "status": "forwarded_to_backoffice",
+  "origin": "dataset",
+  "dataset": "itau",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "attachments": [
+    {
+      "file_name": "Orcamento_THE-V0016.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 7659,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-02"
+    },
+    {
+      "file_name": "IMG_20261031_084510.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 121201,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-02"
+    }
+  ]
+}

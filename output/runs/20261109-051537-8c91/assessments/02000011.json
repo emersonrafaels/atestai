@@ -1,0 +1,129 @@
+{
+  "ticket_id": "02000011",
+  "workstream": "SETA",
+  "category": "painting",
+  "symptom": "finish_wear",
+  "maintenance_type": "corrective",
+  "moment": "execution",
+  "branch": {
+    "code": "8356",
+    "name": "Itaú Ag. Brooklin",
+    "environment": "backoffice"
+  },
+  "supplier": "Fornecedor Alfa Manutenção Predial Ltda.",
+  "quoted_value": 5753.1,
+  "requested_scope": "Repintura das paredes do backoffice (aprox. 151 m²), cor padrão da agência.",
+  "generated_at": "2026-11-09T05:15:46.417291",
+  "rubric_version": "2026-11-v3",
+  "prompts_version": "2026-11-v3",
+  "config_signature": "294d860f8d37",
+  "phase": 2,
+  "mode": "simulated",
+  "batch_mode": "sync",
+  "models": {
+    "main": "anthropic:claude-sonnet-5-5",
+    "fast": "anthropic:claude-sonnet-5-5"
+  },
+  "run_id": "20261109-051537-8c91",
+  "record_id": 53,
+  "checklist": {
+    "category": "painting",
+    "maintenance": "corrective",
+    "moment": "execution",
+    "complete": false,
+    "uploaded": 1,
+    "total": 2,
+    "requirements": [
+      {
+        "id": "quote",
+        "description": "Orçamento na planilha Excel padrão",
+        "met": true,
+        "attachments": [
+          "Orcamento_ALF-V0011.xlsx"
+        ]
+      },
+      {
+        "id": "after_photo",
+        "description": "Foto do ambiente depois do serviço",
+        "met": false,
+        "attachments": []
+      }
+    ],
+    "missing": [
+      "after_photo"
+    ]
+  },
+  "attachments": [
+    {
+      "index": 1,
+      "name": "Orcamento_ALF-V0011.xlsx",
+      "category": "quote_doc",
+      "moment": "undetermined",
+      "readable": true,
+      "short_description": "Orçamento ALF-V0011: 2 itens, R$ 5,753.10"
+    },
+    {
+      "index": 2,
+      "name": "IMG_20261029_081246.jpg",
+      "category": "room_before_photo",
+      "moment": "before",
+      "readable": true,
+      "short_description": "Paredes manchadas e descascando"
+    }
+  ],
+  "recommendation": "checklist_returned",
+  "recommendation_reason": "Checklist mínimo incompleto: 1 de 2 itens obrigatórios",
+  "score": null,
+  "grades": null,
+  "confidence": null,
+  "confidence_reducers": [],
+  "findings": [],
+  "amount_at_issue": 0.0,
+  "amount_at_issue_pct": 0.0,
+  "scope": null,
+  "items": [],
+  "quote_notes": [],
+  "photos": [],
+  "photo_summary": null,
+  "summary": "Devolvido: checklist mínimo incompleto (1 de 2). Sem score: o chamado não segue para a pessoa analista.",
+  "supplier_message": "Olá, Fornecedor Alfa Manutenção Predial Ltda. O chamado 02000011 foi devolvido porque faltam evidências obrigatórias para análise:\n- foto do ambiente depois do serviço.\nReenvie os itens pelo próprio chamado. O prazo de aprovação conta a partir do envio completo.",
+  "llm_calls": [
+    {
+      "task": "identify_attachments",
+      "provider": "simulated",
+      "model": "simulado (anthropic:claude-sonnet-5-5)",
+      "resolved_model": "",
+      "prompt_version": "",
+      "prompt_hash": "",
+      "schema_hash": "",
+      "start": "2026-11-09T05:15:45.918437",
+      "duration_s": 0.5,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 0,
+      "cost_usd": 0.0,
+      "from_cache": false,
+      "simulated": true,
+      "via_batch": false,
+      "batch_id": null,
+      "response": {
+        "attachments": [
+          {
+            "index": 2,
+            "category": "room_before_photo",
+            "moment": "before",
+            "readable": true,
+            "short_description": "Paredes manchadas e descascando"
+          }
+        ]
+      }
+    }
+  ],
+  "duration_s": 0.54,
+  "stage_durations_s": {
+    "checklist": 0.538
+  },
+  "cost_usd": 0.0,
+  "cost_brl": 0.0
+}

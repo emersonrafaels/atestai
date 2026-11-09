@@ -1,4 +1,4 @@
-import { CircleCheck, CircleX, Image as ImageIcon, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { Check, CircleCheck, CircleX, Image as ImageIcon, Info, Loader2, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import type { TicketSummary, Dataset, Run } from "../api";
 import { REC } from "../format";
 import { StageProgress } from "./StageProgress";
@@ -118,45 +118,101 @@ export function TicketList(p: Props) {
   );
 }
 
-/** Lista recolhida: uma faixa estreita com o status de cada chamado; clique abre o chamado, o botão expande. */
+/**
+ * Lista recolhida: uma faixa com um "cartão" por chamado (fim do número, score e cor da recomendação, esteira
+ * e marcação). Clique abre; Shift+clique marca ou desmarca para a próxima análise; o botão do topo expande.
+ */
 function Rail(p: Props & { visible: TicketSummary[] }) {
   const marked = p.visible.filter((c) => p.selected.has(c.ticket_id)).length;
+  const analysed = p.visible.filter((c) => p.execution?.tickets[c.ticket_id]?.assessment || c.last).length;
   return (
     <aside data-tour="ticket-list" aria-label="Lista de chamados (recolhida)"
-      className="flex min-h-0 items-center gap-2 border-b border-line bg-sheet px-3 py-2 md:flex-col md:border-b-0 md:border-r md:px-0 md:py-3">
-      <Tooltip side="bottom" content="Mostrar a lista de chamados (atalho: [ )">
-        <button onClick={() => p.setCollapsed(false)} aria-label="Mostrar a lista de chamados" aria-expanded="false"
-          className="rounded-md p-1.5 text-muted hover:bg-paper hover:text-ink"><PanelLeftOpen size={18} /></button>
-      </Tooltip>
-      <Tooltip content={`${p.visible.length} chamados no filtro · ${marked} marcados para analisar`}>
-        <span className="flex cursor-help items-center gap-1 text-[11px] font-semibold tabular-nums text-muted md:flex-col md:gap-0">
-          <span>{p.visible.length}</span>
-          {marked > 0 && <span className="rounded-full bg-blueprint px-1.5 text-white">{marked}</span>}
-        </span>
-      </Tooltip>
-      <span className="hidden h-px w-6 bg-line md:block" />
-      <ul className="flex min-h-0 flex-1 gap-1.5 overflow-auto md:flex-col md:items-center md:pb-2">
+      className="flex min-h-0 items-center gap-2 border-b border-line bg-sheet px-3 py-2 md:flex-col md:items-stretch md:gap-0 md:border-b-0 md:border-r md:p-0">
+      <div className="flex items-center gap-2 md:flex-col md:gap-1.5 md:border-b md:border-line md:px-2 md:py-2.5">
+        <Tooltip side="bottom" content="Mostrar a lista de chamados (atalho: [ )">
+          <button onClick={() => p.setCollapsed(false)} aria-label="Mostrar a lista de chamados" aria-expanded="false"
+            className="flex size-9 items-center justify-center rounded-lg border border-line text-muted transition-colors hover:border-blueprint hover:bg-blueprint-soft hover:text-blueprint">
+            <PanelLeftOpen size={18} />
+          </button>
+        </Tooltip>
+        <Tooltip content={<>{p.visible.length} chamados no filtro<br />{analysed} já analisados · {marked} marcados para analisar</>}>
+          <div className="flex cursor-help items-center gap-1.5 md:flex-col md:gap-1">
+            <span className="text-[13px] font-bold tabular-nums leading-none">{p.visible.length}</span>
+            <span className="hidden text-[10px] uppercase tracking-wide text-muted md:block">chamados</span>
+            {marked > 0 && (
+              <span className="flex items-center gap-0.5 rounded-full bg-blueprint px-1.5 py-px text-[10px] font-semibold tabular-nums text-white">
+                <Check size={10} strokeWidth={3} />{marked}
+              </span>
+            )}
+          </div>
+        </Tooltip>
+      </div>
+
+      <ul className="flex min-h-0 flex-1 gap-1.5 overflow-auto md:flex-col md:items-center md:px-2 md:py-2">
         {p.visible.map((c) => {
           const st = p.execution?.tickets[c.ticket_id];
-          const rec = st?.assessment?.recommendation ?? (!st ? c.last?.recommendation : undefined);
-          const running = st && st.status !== "done" && st.status !== "error";
+          const a = st?.assessment;
+          const rec = a?.recommendation ?? (!st ? c.last?.recommendation : undefined);
+          const score = a ? a.score : !st ? c.last?.score ?? null : null;
+          const running = !!st && st.status !== "done" && st.status !== "error";
+          const failed = st?.status === "error";
           const active = p.focus === c.ticket_id;
-          const score = st?.assessment ? st.assessment.score : !st ? c.last?.score : null;
+          const isMarked = p.selected.has(c.ticket_id);
           return (
-            <li key={c.ticket_id}>
-              <Tooltip content={<><b>{c.ticket_id}</b> · {c.category_label}<br />{rec ? `${REC[rec].label}${score != null ? ` · score ${score}` : ""}` : running ? "analisando…" : "ainda não analisado"}{p.selected.has(c.ticket_id) ? " · marcado" : ""}</>}>
-                <button onClick={() => p.focusTicket(c.ticket_id)} aria-label={`Abrir chamado ${c.ticket_id}`} aria-current={active ? "true" : undefined}
-                  className={`relative flex h-8 w-10 items-center justify-center rounded-md text-[11px] font-semibold tabular-nums transition-colors ${active ? "bg-blueprint text-white" : "bg-paper text-ink/80 hover:bg-blueprint-soft"}`}>
-                  {c.ticket_id.slice(-3)}
-                  <i className={`absolute -right-0.5 -top-0.5 size-2.5 rounded-full ring-2 ring-sheet ${running ? "pulso bg-blueprint" : ""}`}
-                    style={rec && !running ? { background: REC[rec].mark } : !running ? { background: "var(--color-line)" } : undefined} />
-                  {p.selected.has(c.ticket_id) && <i className="absolute -bottom-0.5 left-1/2 h-0.5 w-4 -translate-x-1/2 rounded bg-blueprint" />}
+            <li key={c.ticket_id} className="md:w-full">
+              <Tooltip className="flex" content={
+                <>
+                  <b>{c.ticket_id}</b> · {c.workstream}<br />
+                  {c.category_label} · {c.symptom_label}<br />
+                  <span className="opacity-80">{c.branch}</span><br />
+                  {running ? "Analisando…" : failed ? "Erro na análise" : rec ? <>{REC[rec].label}{score !== null ? ` · score ${score}` : ""}</> : "Ainda não analisado"}
+                  {isMarked ? " · marcado" : ""}
+                  <span className="mt-1 block opacity-70">Clique para abrir · Shift+clique para {isMarked ? "desmarcar" : "marcar"}</span>
+                </>
+              }>
+                <button
+                  onClick={(e) => (e.shiftKey ? p.toggle(c.ticket_id) : p.focusTicket(c.ticket_id))}
+                  aria-label={`Abrir chamado ${c.ticket_id}`} aria-current={active ? "true" : undefined}
+                  className={`relative flex w-14 flex-col items-center overflow-hidden rounded-lg border py-1 leading-tight transition-colors md:w-full ${
+                    active ? "border-blueprint bg-blueprint text-white shadow-sm" : "border-line bg-sheet hover:border-blueprint/50 hover:bg-blueprint-soft"}`}>
+                  {/* esteira: faixa à esquerda */}
+                  <span className={`absolute inset-y-0 left-0 w-1 ${c.workstream === "SETA" ? "bg-blueprint" : "bg-lock"} ${active ? "opacity-0" : "opacity-70"}`} />
+                  <span className="text-[12px] font-bold tabular-nums">{c.ticket_id.slice(-4)}</span>
+                  <span className={`mt-0.5 flex items-center gap-1 text-[10px] font-semibold tabular-nums ${active ? "text-white/90" : "text-muted"}`}>
+                    {running ? <Loader2 size={10} className="animate-spin" /> : failed ? <span className="text-bad">erro</span> : rec ? (
+                      <>
+                        <i className="size-2 rounded-full ring-1 ring-white/70" style={{ background: REC[rec].mark }} />
+                        {score !== null ? score : "↩"}
+                      </>
+                    ) : "—"}
+                  </span>
+                  {isMarked && (
+                    <span className={`absolute right-0.5 top-0.5 flex size-3.5 items-center justify-center rounded-full ${active ? "bg-white text-blueprint" : "bg-blueprint text-white"}`}>
+                      <Check size={9} strokeWidth={4} />
+                    </span>
+                  )}
                 </button>
               </Tooltip>
             </li>
           );
         })}
       </ul>
+
+      <Tooltip side="top" content={
+        <span className="block space-y-1">
+          <b className="block">Legenda</b>
+          <span className="flex items-center gap-1.5"><i className="h-3 w-1 rounded bg-[#2450b8]" /> SETA <i className="ml-2 h-3 w-1 rounded bg-[#5b3a9e]" /> SISR</span>
+          {(["approve", "approve_with_caveats", "return_to_supplier", "return_locked", "detailed_review", "checklist_returned"] as const).map((r) => (
+            <span key={r} className="flex items-center gap-1.5"><i className="size-2 rounded-full" style={{ background: REC[r].mark }} />{REC[r].label}</span>
+          ))}
+          <span className="block opacity-80">Número = score · ✓ = marcado para analisar</span>
+        </span>
+      }>
+        <span role="button" tabIndex={0} aria-label="Legenda das cores"
+          className="hidden cursor-help items-center justify-center gap-1 border-t border-line py-2 text-[11px] text-muted hover:text-ink md:flex">
+          <Info size={13} /> legenda
+        </span>
+      </Tooltip>
     </aside>
   );
 }

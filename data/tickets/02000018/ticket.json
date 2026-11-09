@@ -1,0 +1,54 @@
+{
+  "ticket_id": "02000018",
+  "workstream": "SISR",
+  "maintenance_type": "corrective",
+  "moment": "execution",
+  "category": "cctv",
+  "symptom": "degraded_image",
+  "branch": {
+    "code": "2809",
+    "name": "Itaú Ag. Vila Madalena",
+    "environment": "self_service"
+  },
+  "supplier": {
+    "name": "Fornecedor Beta Sistemas de Segurança Ltda.",
+    "cnpj": "23.456.789/0001-01"
+  },
+  "requested_scope": "Câmera do self_service com imagem desfocada: limpeza e ajuste de foco.",
+  "quoted_value": 2459.59,
+  "dates": {
+    "opening": "2026-10-30",
+    "supplier_submission": "2026-11-05",
+    "manager_review": "2026-11-06"
+  },
+  "status": "forwarded_to_backoffice",
+  "origin": "dataset",
+  "dataset": "itau",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "attachments": [
+    {
+      "file_name": "Orcamento_BET-V0018.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 7644,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-05"
+    },
+    {
+      "file_name": "IMG_20261031_081145.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 197301,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-05"
+    },
+    {
+      "file_name": "IMG_20261104_091733.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 185589,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-05"
+    }
+  ]
+}

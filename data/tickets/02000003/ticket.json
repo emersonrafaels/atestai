@@ -1,0 +1,75 @@
+{
+  "ticket_id": "02000003",
+  "workstream": "SETA",
+  "maintenance_type": "corrective",
+  "moment": "execution",
+  "category": "lighting",
+  "symptom": "poor_lighting",
+  "branch": {
+    "code": "7142",
+    "name": "Itaú Ag. Liberdade",
+    "environment": "corridor"
+  },
+  "supplier": {
+    "name": "Fornecedor Gama Instalações Elétricas Ltda.",
+    "cnpj": "34.567.890/0001-12"
+  },
+  "requested_scope": "Trocar as 5 lâmpadas tubulares queimadas do corridor.",
+  "quoted_value": 235.0,
+  "dates": {
+    "opening": "2026-10-25",
+    "supplier_submission": "2026-10-31",
+    "manager_review": "2026-11-01"
+  },
+  "status": "forwarded_to_backoffice",
+  "origin": "dataset",
+  "dataset": "itau",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "attachments": [
+    {
+      "file_name": "Orcamento_GAM-V0003.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 7571,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-31"
+    },
+    {
+      "file_name": "IMG_20261026_085046.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 104977,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-31"
+    },
+    {
+      "file_name": "IMG_20261030_094748.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 92107,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-31"
+    },
+    {
+      "file_name": "IMG_20261030_105651.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 229050,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-31"
+    },
+    {
+      "file_name": "IMG_20261030_115559.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 200091,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-31"
+    },
+    {
+      "file_name": "IMG_20261031_190500.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 203406,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-31"
+    }
+  ]
+}

@@ -1,0 +1,448 @@
+{
+  "ticket_id": "02000012",
+  "workstream": "SETA",
+  "category": "waterproofing",
+  "symptom": "moisture_infiltration",
+  "maintenance_type": "corrective",
+  "moment": "execution",
+  "branch": {
+    "code": "6084",
+    "name": "Itaú Ag. Tatuapé",
+    "environment": "backoffice"
+  },
+  "supplier": "Fornecedor Delta Impermeabilizações Ltda.",
+  "quoted_value": 982.0,
+  "requested_scope": "Infiltração no forro do backoffice: tratar a origem e recompor o forro de gesso (aprox. 4 m²).",
+  "generated_at": "2026-11-09T05:15:48.117957",
+  "rubric_version": "2026-11-v3",
+  "prompts_version": "2026-11-v3",
+  "config_signature": "294d860f8d37",
+  "phase": 2,
+  "mode": "simulated",
+  "batch_mode": "sync",
+  "models": {
+    "main": "anthropic:claude-sonnet-5-5",
+    "fast": "anthropic:claude-sonnet-5-5"
+  },
+  "run_id": "20261109-051537-8c91",
+  "record_id": 55,
+  "checklist": {
+    "category": "waterproofing",
+    "maintenance": "corrective",
+    "moment": "execution",
+    "complete": true,
+    "uploaded": 3,
+    "total": 3,
+    "requirements": [
+      {
+        "id": "quote",
+        "description": "Orçamento na planilha Excel padrão",
+        "met": true,
+        "attachments": [
+          "Orcamento_DEL-V0012.xlsx"
+        ]
+      },
+      {
+        "id": "before_photo",
+        "description": "Foto do dano antes do serviço",
+        "met": true,
+        "attachments": [
+          "IMG_20261029_082529.jpg"
+        ]
+      },
+      {
+        "id": "after_photo",
+        "description": "Foto do local depois do serviço",
+        "met": true,
+        "attachments": [
+          "IMG_20261102_092023.jpg"
+        ]
+      }
+    ],
+    "missing": []
+  },
+  "attachments": [
+    {
+      "index": 1,
+      "name": "Orcamento_DEL-V0012.xlsx",
+      "category": "quote_doc",
+      "moment": "undetermined",
+      "readable": true,
+      "short_description": "Orçamento DEL-V0012: 3 itens, R$ 982.00"
+    },
+    {
+      "index": 2,
+      "name": "IMG_20261029_082529.jpg",
+      "category": "room_before_photo",
+      "moment": "before",
+      "readable": true,
+      "short_description": "Forro com mancha de infiltração e mofo"
+    },
+    {
+      "index": 3,
+      "name": "IMG_20261102_092023.jpg",
+      "category": "room_after_photo",
+      "moment": "after",
+      "readable": true,
+      "short_description": "Forro recomposto e pintado"
+    }
+  ],
+  "recommendation": "approve",
+  "recommendation_reason": "Score de 85 ou mais, sem travas",
+  "score": 94,
+  "grades": {
+    "scope": 100,
+    "quote": 85,
+    "photos": 100
+  },
+  "confidence": "high",
+  "confidence_reducers": [],
+  "findings": [
+    {
+      "kind": "quantity_above_expected",
+      "validation": "quote",
+      "severity": "medium",
+      "discount": 15,
+      "description": "Quantidade acima do esperado",
+      "evidence": "Cobrado 6 m²; esperado até 4 m² para o escopo (excedente R$ 190,00)",
+      "reference": "item 2: Recomposição de forro de gesso",
+      "lock": false,
+      "reduces_confidence": false,
+      "phase": 1,
+      "amount_at_issue": 190.0
+    }
+  ],
+  "amount_at_issue": 190.0,
+  "amount_at_issue_pct": 19.3,
+  "scope": {
+    "local": "(simulado)",
+    "environment": "(simulado)",
+    "equipment": "",
+    "requested_services": [
+      "(simulado a partir do gabarito)"
+    ],
+    "mentioned_quantities": [],
+    "acceptance_criteria": [
+      "(simulado)"
+    ],
+    "expected_evidence": [],
+    "before_evidence_applicable": true,
+    "consistent_with_category_symptom": true,
+    "coherence_note": "",
+    "vague_scope": false,
+    "vague_reason": ""
+  },
+  "items": [
+    {
+      "n": 1,
+      "description": "Impermeabilização com manta líquida",
+      "unit": "m²",
+      "quantity": 4.0,
+      "unit_value": 68.0,
+      "total_value": 272.0,
+      "classification": "compliant",
+      "reason": "(simulado) aderente",
+      "lpu_code": "IMP-001",
+      "reference_price": 68.0,
+      "expected_quantity_max": null,
+      "amount_at_issue": 0.0,
+      "findings": []
+    },
+    {
+      "n": 2,
+      "description": "Recomposição de forro de gesso",
+      "unit": "m²",
+      "quantity": 6.0,
+      "unit_value": 95.0,
+      "total_value": 570.0,
+      "classification": "compliant",
+      "reason": "(simulado) aderente",
+      "lpu_code": "IMP-002",
+      "reference_price": 95.0,
+      "expected_quantity_max": 4.0,
+      "amount_at_issue": 190.0,
+      "findings": [
+        {
+          "kind": "quantity_above_expected",
+          "validation": "quote",
+          "severity": "medium",
+          "discount": 15,
+          "description": "Quantidade acima do esperado",
+          "evidence": "Cobrado 6 m²; esperado até 4 m² para o escopo (excedente R$ 190,00)",
+          "reference": "item 2: Recomposição de forro de gesso",
+          "lock": false,
+          "reduces_confidence": false,
+          "phase": 1,
+          "amount_at_issue": 190.0
+        }
+      ]
+    },
+    {
+      "n": 3,
+      "description": "Pintura de forro em látex",
+      "unit": "m²",
+      "quantity": 4.0,
+      "unit_value": 35.0,
+      "total_value": 140.0,
+      "classification": "compliant",
+      "reason": "(simulado) aderente",
+      "lpu_code": "PIN-002",
+      "reference_price": 35.0,
+      "expected_quantity_max": null,
+      "amount_at_issue": 0.0,
+      "findings": []
+    }
+  ],
+  "quote_notes": [],
+  "photos": [
+    {
+      "file": "IMG_20261029_082529.jpg",
+      "environment": "",
+      "what_it_shows": "Forro com mancha de infiltração e mofo",
+      "moment": "before",
+      "readable": true,
+      "matches_scope": "yes",
+      "reason": "(simulado)",
+      "covered_items": [],
+      "exif_date": "2026-10-29T08:15:00",
+      "reused_from": null,
+      "integrity_signals": []
+    },
+    {
+      "file": "IMG_20261102_092023.jpg",
+      "environment": "",
+      "what_it_shows": "Forro recomposto e pintado",
+      "moment": "after",
+      "readable": true,
+      "matches_scope": "yes",
+      "reason": "(simulado)",
+      "covered_items": [],
+      "exif_date": "2026-11-02T09:15:00",
+      "reused_from": null,
+      "integrity_signals": []
+    }
+  ],
+  "photo_summary": {
+    "has_before_photo": true,
+    "has_done_service_photo": true,
+    "done_justification": "(simulado)",
+    "items_without_photo": [],
+    "notes": ""
+  },
+  "summary": "Aprovar. Score de 85 ou mais, sem travas. 1 apontamento(s): quantidade acima do esperado (item 2: Recomposição de forro de gesso). Valor em questão: R$ 190,00 (19% do orçamento).",
+  "supplier_message": "",
+  "llm_calls": [
+    {
+      "task": "identify_attachments",
+      "provider": "simulated",
+      "model": "simulado (anthropic:claude-sonnet-5-5)",
+      "resolved_model": "",
+      "prompt_version": "",
+      "prompt_hash": "",
+      "schema_hash": "",
+      "start": "2026-11-09T05:15:46.114023",
+      "duration_s": 0.46,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 0,
+      "cost_usd": 0.0,
+      "from_cache": false,
+      "simulated": true,
+      "via_batch": false,
+      "batch_id": null,
+      "response": {
+        "attachments": [
+          {
+            "index": 2,
+            "category": "room_before_photo",
+            "moment": "before",
+            "readable": true,
+            "short_description": "Forro com mancha de infiltração e mofo"
+          },
+          {
+            "index": 3,
+            "category": "room_after_photo",
+            "moment": "after",
+            "readable": true,
+            "short_description": "Forro recomposto e pintado"
+          }
+        ]
+      }
+    },
+    {
+      "task": "scope",
+      "provider": "simulated",
+      "model": "simulado (anthropic:claude-sonnet-5-5)",
+      "resolved_model": "",
+      "prompt_version": "",
+      "prompt_hash": "",
+      "schema_hash": "",
+      "start": "2026-11-09T05:15:46.576949",
+      "duration_s": 0.3,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 0,
+      "cost_usd": 0.0,
+      "from_cache": false,
+      "simulated": true,
+      "via_batch": false,
+      "batch_id": null,
+      "response": {
+        "local": "(simulado)",
+        "environment": "(simulado)",
+        "equipment": "",
+        "requested_services": [
+          "(simulado a partir do gabarito)"
+        ],
+        "mentioned_quantities": [],
+        "acceptance_criteria": [
+          "(simulado)"
+        ],
+        "expected_evidence": [],
+        "before_evidence_applicable": true,
+        "consistent_with_category_symptom": true,
+        "coherence_note": "",
+        "vague_scope": false,
+        "vague_reason": ""
+      }
+    },
+    {
+      "task": "quote_review",
+      "provider": "simulated",
+      "model": "simulado (anthropic:claude-sonnet-5-5)",
+      "resolved_model": "",
+      "prompt_version": "",
+      "prompt_hash": "",
+      "schema_hash": "",
+      "start": "2026-11-09T05:15:46.891011",
+      "duration_s": 0.37,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 0,
+      "cost_usd": 0.0,
+      "from_cache": false,
+      "simulated": true,
+      "via_batch": false,
+      "batch_id": null,
+      "response": {
+        "items": [
+          {
+            "n": 1,
+            "classification": "compliant",
+            "reason": "(simulado) aderente",
+            "expected_quantity_max": -1.0,
+            "plausible_quantity": true,
+            "duplicate_of": 0,
+            "lpu_code": "IMP-001"
+          },
+          {
+            "n": 2,
+            "classification": "compliant",
+            "reason": "(simulado) aderente",
+            "expected_quantity_max": 4.0,
+            "plausible_quantity": false,
+            "duplicate_of": 0,
+            "lpu_code": "IMP-002"
+          },
+          {
+            "n": 3,
+            "classification": "compliant",
+            "reason": "(simulado) aderente",
+            "expected_quantity_max": -1.0,
+            "plausible_quantity": true,
+            "duplicate_of": 0,
+            "lpu_code": "PIN-002"
+          }
+        ],
+        "notes": ""
+      }
+    },
+    {
+      "task": "photos",
+      "provider": "simulated",
+      "model": "simulado (anthropic:claude-sonnet-5-5)",
+      "resolved_model": "",
+      "prompt_version": "",
+      "prompt_hash": "",
+      "schema_hash": "",
+      "start": "2026-11-09T05:15:47.305790",
+      "duration_s": 0.45,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 0,
+      "cost_usd": 0.0,
+      "from_cache": false,
+      "simulated": true,
+      "via_batch": false,
+      "batch_id": null,
+      "response": {
+        "photos": [
+          {
+            "index": 2,
+            "environment": "",
+            "what_it_shows": "Forro com mancha de infiltração e mofo",
+            "moment": "before",
+            "readable": true,
+            "matches_scope": "yes",
+            "reason": "(simulado)",
+            "covered_items": []
+          },
+          {
+            "index": 3,
+            "environment": "",
+            "what_it_shows": "Forro recomposto e pintado",
+            "moment": "after",
+            "readable": true,
+            "matches_scope": "yes",
+            "reason": "(simulado)",
+            "covered_items": []
+          }
+        ],
+        "has_before_photo": true,
+        "has_done_service_photo": true,
+        "done_justification": "(simulado)",
+        "items_without_photo": [],
+        "notes": ""
+      }
+    },
+    {
+      "task": "assessment",
+      "provider": "simulated",
+      "model": "simulado (anthropic:claude-sonnet-5-5)",
+      "resolved_model": "",
+      "prompt_version": "",
+      "prompt_hash": "",
+      "schema_hash": "",
+      "start": "2026-11-09T05:15:47.841394",
+      "duration_s": 0.28,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 0,
+      "cost_usd": 0.0,
+      "from_cache": false,
+      "simulated": true,
+      "via_batch": false,
+      "batch_id": null,
+      "response": {
+        "summary": "Aprovar. Score de 85 ou mais, sem travas. 1 apontamento(s): quantidade acima do esperado (item 2: Recomposição de forro de gesso). Valor em questão: R$ 190,00 (19% do orçamento).",
+        "supplier_message": ""
+      }
+    }
+  ],
+  "duration_s": 2.07,
+  "stage_durations_s": {
+    "checklist": 0.528,
+    "scope": 0.304,
+    "quote": 0.383,
+    "photos": 0.577,
+    "score": 0.0,
+    "assessment": 0.277
+  },
+  "cost_usd": 0.0,
+  "cost_brl": 0.0
+}

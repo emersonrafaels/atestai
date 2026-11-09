@@ -1,0 +1,61 @@
+{
+  "ticket_id": "02000004",
+  "workstream": "SETA",
+  "maintenance_type": "preventive",
+  "moment": "execution",
+  "category": "air_conditioning",
+  "symptom": "preventive_maintenance",
+  "branch": {
+    "code": "5531",
+    "name": "Itaú Ag. Moema",
+    "environment": "salão de atendimento"
+  },
+  "supplier": {
+    "name": "Fornecedor Épsilon Climatização Ltda.",
+    "cnpj": "56.789.012/0001-34"
+  },
+  "requested_scope": "Manutenção preventiva (PMOC) dos 6 aparelhos split do salão de atendimento: limpeza, higienização e verificação.",
+  "quoted_value": 1710.0,
+  "dates": {
+    "opening": "2026-10-26",
+    "supplier_submission": "2026-10-31",
+    "manager_review": "2026-11-01"
+  },
+  "status": "forwarded_to_backoffice",
+  "origin": "dataset",
+  "dataset": "itau",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "attachments": [
+    {
+      "file_name": "Orcamento_EPS-V0004.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 7686,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-31"
+    },
+    {
+      "file_name": "IMG_20261027_085648.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 246890,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-31"
+    },
+    {
+      "file_name": "IMG_20261030_095911.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 118294,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-31"
+    },
+    {
+      "file_name": "IMG_20261030_101430.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 188127,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-31"
+    }
+  ]
+}

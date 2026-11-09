@@ -151,7 +151,8 @@ def test_message_batches_groups_rounds(cfg, demo):
 
 
 def _wait(c: TestClient, ex_id: str) -> dict:
-    for _ in range(100):
+    # até 60 s: com cache vazio, a 1ª execução monta o índice de hashes de todas as fotos (~20 s com os 113 chamados)
+    for _ in range(600):
         e = c.get(f"/api/runs/{ex_id}").json()
         if e["status"] == "completed":
             return e

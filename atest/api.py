@@ -11,6 +11,7 @@ Operação      GET /api/config · GET /api/metrics
 from __future__ import annotations
 
 import logging
+import os
 import shutil
 import tempfile
 import threading
@@ -26,7 +27,7 @@ from pydantic import BaseModel, Field, ValidationError
 
 from .attachments import compute_hashes, detail_level, distance, exif_date, hashes_with_crops
 from .batch import BatchRunner, ComponentFactory, new_run_id
-from .config import ROOT, BatchMode, Mode, Settings, missing_keys, used_providers
+from .config import KEY_ENV_VAR, ROOT, BatchMode, Mode, Settings, missing_keys, used_providers
 from .database import Database, Feedback, FeedbackInput
 from .domain import (
     CATEGORY_LABEL,
@@ -233,6 +234,16 @@ class Option(BaseModel):
     label: str
 
 
+class ModelOption(BaseModel):
+    """Modelo conhecido pela configuração: da tabela de preços ou já usado em models.*."""
+
+    id: str = Field(description='"provedor:modelo", como vai para models.main / models.fast')
+    provider: str
+    name: str
+    input_price: float | None = Field(None, description="USD por milhão de tokens de entrada")
+    output_price: float | None = None
+
+
 class AppSettings(BaseModel):
     """Configuração exposta ao painel (modelos, provedores, chaves faltando, limites do portão)."""
 
@@ -253,6 +264,8 @@ class AppSettings(BaseModel):
     signature: str
     validation: dict
     rubric: dict = {}  # pesos, descontos por severidade, faixas e confiança: o painel explica o score com eles
+    models: list[ModelOption] = []  # sugestões para os campos de modelo (a pessoa pode digitar outro)
+    keyed_providers: list[str] = []  # provedores com chave de API no ambiente (só os nomes, nunca a chave)
 
 
 class Dataset(BaseModel):
@@ -469,6 +482,23 @@ def create_app(cfg: Settings) -> FastAPI:
             raise HTTPException(404, "chamado não encontrado")
         return folder
 
+    def model_options() -> list[ModelOption]:
+        """Modelos da tabela de preços + os já configurados, sem repetir, com o provedor explícito."""
+        default = cfg.llm.default_provider
+
+        def full(m: str) -> str:
+            return m if ":" in m else f"{default}:{m}"
+
+        ids = [full(m) for m in cfg.costs.prices]
+        ids += [full(m) for m in [cfg.models.main, cfg.models.fast, *cfg.models.tasks.values(), *cfg.models.fallback.values()] if m]
+        out = []
+        for mid in dict.fromkeys(ids):
+            provider, name = mid.split(":", 1)
+            price = cfg.costs.prices.get(name) or cfg.costs.prices.get(mid)
+            out.append(ModelOption(id=mid, provider=provider, name=name,
+                                   input_price=price.input if price else None, output_price=price.output if price else None))
+        return out
+
     # ------------------------------------------------------------------ configuração e métricas
     @app.get("/api/config")
     def config() -> AppSettings:
@@ -490,11 +520,13 @@ def create_app(cfg: Settings) -> FastAPI:
             signature=cfg.signature(),
             validation=cfg.validation.model_dump(),
             rubric=cfg.rubric.model_dump(mode="json", include={"weights", "discount_by_severity", "bands", "confidence"}),
+            models=model_options(),
+            keyed_providers=sorted(p for p, var in KEY_ENV_VAR.items() if os.getenv(var)),
         )
 
     @app.get("/api/datasets")
     def datasets() -> list[Dataset]:
-        labels = {"demo": "Demonstração (casos do deck)", "validation": "Validação (defeitos injetados)", "itau": "Itaú (fotos realistas por IA)", "uploaded": "Enviados pelo painel"}
+        labels = {"demo": "Demonstração (casos do deck)", "validation": "Validação (defeitos injetados)", "itau": "Itaú", "uploaded": "Enviados pelo painel"}
         counts = DatasetCatalog(cfg).counts()
         found = [Dataset(name=k, label=labels.get(k, k), n=v) for k, v in sorted(counts.items())]
         return [*found, Dataset(name="all", label="Todos", n=sum(counts.values()))]

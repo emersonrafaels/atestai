@@ -1,0 +1,75 @@
+{
+  "ticket_id": "02000014",
+  "workstream": "SETA",
+  "maintenance_type": "preventive",
+  "moment": "execution",
+  "category": "air_conditioning",
+  "symptom": "preventive_maintenance",
+  "branch": {
+    "code": "3967",
+    "name": "Itaú Ag. Santo Amaro",
+    "environment": "salão de atendimento"
+  },
+  "supplier": {
+    "name": "Fornecedor Épsilon Climatização Ltda.",
+    "cnpj": "56.789.012/0001-34"
+  },
+  "requested_scope": "Manutenção preventiva (PMOC) dos 2 aparelhos split do salão de atendimento: limpeza, higienização e verificação.",
+  "quoted_value": 1620.0,
+  "dates": {
+    "opening": "2026-10-29",
+    "supplier_submission": "2026-11-02",
+    "manager_review": "2026-11-03"
+  },
+  "status": "forwarded_to_backoffice",
+  "origin": "dataset",
+  "dataset": "itau",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "attachments": [
+    {
+      "file_name": "Orcamento_EPS-V0014.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 7746,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-02"
+    },
+    {
+      "file_name": "IMG_20261030_081239.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 200930,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-02"
+    },
+    {
+      "file_name": "IMG_20261101_094825.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 126465,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-02"
+    },
+    {
+      "file_name": "IMG_20261101_105950.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 176808,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-02"
+    },
+    {
+      "file_name": "IMG_20261102_171500.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 143087,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-02"
+    },
+    {
+      "file_name": "WhatsApp Image 2026-11-02 at 15.12.49.jpeg",
+      "content_type": "image/jpeg",
+      "size_bytes": 157324,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-02"
+    }
+  ]
+}

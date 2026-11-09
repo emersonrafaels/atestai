@@ -1,4 +1,5 @@
-import { ArrowRight, FileSpreadsheet, ImageOff, Lock } from "lucide-react";
+import { ArrowRight, ExternalLink, FileSpreadsheet, ImageOff, Lock } from "lucide-react";
+import { ReuseModal } from "./ReuseModal";
 import { useState } from "react";
 import type { Assessment, EvaluatedItem, EvaluatedPhoto, Finding, TicketDetail } from "../api";
 import { brl, num, MOMENT_LABEL } from "../format";
@@ -13,6 +14,8 @@ interface Props {
   ticket: TicketDetail | null;
   openPhoto: (items: LightboxItem[], index: number) => void;
   goTo: GoTo;
+  /** abre outro chamado na Análise (usado no modal de foto reaproveitada) */
+  openTicket?: (id: string) => void;
 }
 
 const photoUrl = (ticket: string, file: string) => `/api/tickets/${ticket}/attachments/${encodeURIComponent(file)}`;
@@ -31,14 +34,14 @@ export function whereLabel(loc: Located, p: Assessment): string {
 }
 
 /** Gaveta aberta ao clicar num apontamento: mostra a linha do orçamento, a foto ou o trecho do escopo com o problema. */
-export function FindingEvidence({ f, p, ticket, openPhoto, goTo }: Props) {
+export function FindingEvidence({ f, p, ticket, openPhoto, goTo, openTicket }: Props) {
   const loc = locate(f, p);
   return (
     <div className="surgir mt-3 space-y-3 rounded-lg border border-line bg-paper/50 p-3 text-sm">
       {loc.scope && <ScopeEvidence p={p} ticket={ticket} />}
       {loc.spreadsheet && <SpreadsheetEvidence ticket={ticket} goTo={goTo} />}
       {loc.items.length > 0 && <QuoteEvidence f={f} loc={loc} goTo={goTo} />}
-      {loc.reusedFrom && loc.photos[0] && <ReusedEvidence p={p} photo={loc.photos[0]} other={loc.reusedFrom} openPhoto={openPhoto} />}
+      {loc.reusedFrom && loc.photos[0] && <ReusedEvidence p={p} photo={loc.photos[0]} other={loc.reusedFrom} openPhoto={openPhoto} openTicket={openTicket} />}
       {!loc.reusedFrom && loc.photos.length > 0 && <PhotoEvidence f={f} p={p} photos={loc.photos} openPhoto={openPhoto} goTo={goTo} />}
       {loc.absence && <AbsenceEvidence p={p} kind={loc.absence} openPhoto={openPhoto} goTo={goTo} />}
       {!loc.scope && !loc.spreadsheet && !loc.items.length && !loc.photos.length && !loc.absence && (
@@ -186,23 +189,38 @@ function PhotoEvidence({ f, p, photos, openPhoto, goTo }: { f: Finding; p: Asses
   );
 }
 
-function ReusedEvidence({ p, photo, other, openPhoto }: { p: Assessment; photo: EvaluatedPhoto; other: { ticket: string; file: string }; openPhoto: Props["openPhoto"] }) {
+function ReusedEvidence({ p, photo, other, openPhoto, openTicket }: { p: Assessment; photo: EvaluatedPhoto; other: { ticket: string; file: string }; openPhoto: Props["openPhoto"]; openTicket?: Props["openTicket"] }) {
+  const [modal, setModal] = useState(false);
+  const link = (
+    <button type="button" onClick={() => setModal(true)} disabled={!other.file}
+      className="inline-flex items-center gap-1 rounded font-semibold text-lock underline decoration-lock/40 underline-offset-2 hover:decoration-lock disabled:no-underline">
+      chamado {other.ticket} <ExternalLink size={12} />
+    </button>
+  );
   const pair: LightboxItem[] = [
     { url: photoUrl(p.ticket_id, photo.file), caption: `Este chamado (${p.ticket_id}): ${photo.file}` },
     ...(other.file ? [{ url: photoUrl(other.ticket, other.file), caption: `Chamado ${other.ticket}: ${other.file}` }] : []),
   ];
   return (
     <div>
-      <div className="mb-1.5 flex items-center gap-1.5 font-medium text-lock"><Lock size={14} /> Compare lado a lado</div>
+      <div className="mb-1.5 flex flex-wrap items-center justify-between gap-2">
+        <span className="flex items-center gap-1.5 font-medium text-lock"><Lock size={14} /> Compare lado a lado com o {link}</span>
+        {other.file && (
+          <button type="button" onClick={() => setModal(true)} className="flex items-center gap-1 rounded-md border border-lock/30 bg-sheet px-2.5 py-1 text-[13px] font-medium text-lock hover:bg-[#f4f0fb]">
+            Ver agência, datas e detalhes <ArrowRight size={14} />
+          </button>
+        )}
+      </div>
       <div className="grid gap-3 sm:grid-cols-2">
         {pair.map((it, k) => (
           <figure key={k} className="rounded-md bg-sheet p-2">
             <Thumb url={it.url} alt={it.caption ?? ""} onClick={() => openPhoto(pair, k)} className="w-full" />
-            <figcaption className="mt-1 text-[12px]"><b>{k === 0 ? "Este chamado" : `Chamado ${other.ticket}`}</b> <span className="text-muted">· {k === 0 ? photo.file : other.file}</span></figcaption>
+            <figcaption className="mt-1 text-[12px]">{k === 0 ? <b>Este chamado</b> : link} <span className="text-muted">· {k === 0 ? photo.file : other.file}</span></figcaption>
           </figure>
         ))}
       </div>
       {photo.integrity_signals.length > 0 && <ul className="mt-1.5 text-[12px] text-lock">{photo.integrity_signals.map((s, k) => <li key={k}>{s}</li>)}</ul>}
+      {modal && <ReuseModal ticket={p.ticket_id} file={photo.file} origin={other.ticket} originFile={other.file} onClose={() => setModal(false)} openPhoto={openPhoto} openTicket={openTicket} />}
     </div>
   );
 }

@@ -1,0 +1,82 @@
+{
+  "ticket_id": "02000013",
+  "workstream": "SETA",
+  "maintenance_type": "corrective",
+  "moment": "execution",
+  "category": "lighting",
+  "symptom": "poor_lighting",
+  "branch": {
+    "code": "4675",
+    "name": "Itaú Ag. Aclimação",
+    "environment": "corridor"
+  },
+  "supplier": {
+    "name": "Fornecedor Gama Instalações Elétricas Ltda.",
+    "cnpj": "34.567.890/0001-12"
+  },
+  "requested_scope": "Trocar as 11 lâmpadas tubulares queimadas do corridor.",
+  "quoted_value": 645.59,
+  "dates": {
+    "opening": "2026-10-29",
+    "supplier_submission": "2026-11-02",
+    "manager_review": "2026-11-03"
+  },
+  "status": "forwarded_to_backoffice",
+  "origin": "dataset",
+  "dataset": "itau",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "attachments": [
+    {
+      "file_name": "Orcamento_GAM-V0013.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 7584,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-02"
+    },
+    {
+      "file_name": "IMG_20261030_081532.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 177003,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-02"
+    },
+    {
+      "file_name": "IMG_20261101_091929.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 111034,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-02"
+    },
+    {
+      "file_name": "IMG_20261101_105853.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 207986,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-02"
+    },
+    {
+      "file_name": "IMG_20261101_115344.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 151675,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-02"
+    },
+    {
+      "file_name": "IMG_20261102_184700.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 244625,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-02"
+    },
+    {
+      "file_name": "IMG_20261102_190600.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 204892,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-02"
+    }
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "ticket_id": "02000015",
+  "workstream": "SETA",
+  "maintenance_type": "corrective",
+  "moment": "execution",
+  "category": "electrical",
+  "symptom": "electrical_failure",
+  "branch": {
+    "code": "4675",
+    "name": "Itaú Ag. Aclimação",
+    "environment": "salão de atendimento"
+  },
+  "supplier": {
+    "name": "Fornecedor Eta Elétrica e Manutenção Ltda.",
+    "cnpj": "78.901.234/0001-56"
+  },
+  "requested_scope": "Substituir 7 tomadas danificadas no salão de atendimento, uma com sinais de queima.",
+  "quoted_value": 930.44,
+  "dates": {
+    "opening": "2026-10-29",
+    "supplier_submission": "2026-11-01",
+    "manager_review": "2026-11-02"
+  },
+  "status": "forwarded_to_backoffice",
+  "origin": "dataset",
+  "dataset": "itau",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "attachments": [
+    {
+      "file_name": "Orcamento_ETA-V0015.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 7648,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-01"
+    },
+    {
+      "file_name": "IMG_20261030_084720.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 194575,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-01"
+    },
+    {
+      "file_name": "IMG_20261031_092914.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 72038,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-01"
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "ticket_id": "02000011",
+  "workstream": "SETA",
+  "maintenance_type": "corrective",
+  "moment": "execution",
+  "category": "painting",
+  "symptom": "finish_wear",
+  "branch": {
+    "code": "8356",
+    "name": "Itaú Ag. Brooklin",
+    "environment": "backoffice"
+  },
+  "supplier": {
+    "name": "Fornecedor Alfa Manutenção Predial Ltda.",
+    "cnpj": "12.345.678/0001-90"
+  },
+  "requested_scope": "Repintura das paredes do backoffice (aprox. 151 m²), cor padrão da agência.",
+  "quoted_value": 5753.1,
+  "dates": {
+    "opening": "2026-10-28",
+    "supplier_submission": "2026-10-30",
+    "manager_review": "2026-10-31"
+  },
+  "status": "forwarded_to_backoffice",
+  "origin": "dataset",
+  "dataset": "itau",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "attachments": [
+    {
+      "file_name": "Orcamento_ALF-V0011.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 7618,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-30"
+    },
+    {
+      "file_name": "IMG_20261029_081246.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 112389,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-30"
+    }
+  ]
+}
