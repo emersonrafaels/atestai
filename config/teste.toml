@@ -1,0 +1,5 @@
+# Copie para config/.secrets.toml (já está no .gitignore) e preencha só os provedores que usar.
+[default]
+anthropic_api_key = "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"
+openai_api_key = "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"
+# gemini_api_key = "..."
