@@ -4,6 +4,7 @@ import { api, type TicketDetail, type TicketSummary, type AppSettings, type Data
 import { serverOutdated } from "./api";
 import { LlmCallsTab } from "./components/LlmCallsTab";
 import { ScopeTab } from "./components/ScopeTab";
+import { StageTimeline } from "./components/StageTimeline";
 import { TicketInputTab } from "./components/TicketInputTab";
 import { PhotosTab } from "./components/PhotosTab";
 import { QuoteTab } from "./components/QuoteTab";
@@ -13,7 +14,7 @@ import { TicketList } from "./components/TicketList";
 import { OperationsView } from "./components/OperationsView";
 import { NewTicket } from "./components/NewTicket";
 import { ValidationView } from "./components/ValidationView";
-import { brl4, REC, DEFAULT_RUBRIC, ENV_NAME, MAINTENANCE_LABEL, STAGE_LABEL, STAGE_DOCS } from "./format";
+import { brl4, REC, DEFAULT_RUBRIC, ENV_NAME, MAINTENANCE_LABEL } from "./format";
 import { Tour, tourDone, type TourStep } from "./components/ui/Tour";
 import { Tooltip, InfoTip } from "./components/ui/Tooltip";
 import { InfoBox, resetInfoBoxes } from "./components/ui/InfoBox";
@@ -427,11 +428,6 @@ export default function App() {
                         {MAINTENANCE_LABEL[detail_level.maintenance_type] ?? detail_level.maintenance_type}
                       </span>
                     </Tooltip>
-                    <Tooltip content={<><b>Etapa da esteira: {STAGE_LABEL[detail_level.moment]}</b><br />O fornecedor envia: {(STAGE_DOCS[detail_level.moment] ?? []).join(", ").toLowerCase()}.</>}>
-                      <span className="flex cursor-help items-center gap-1.5 rounded-full bg-blueprint-soft px-2.5 py-0.5 text-[12px] font-semibold text-blueprint">
-                        <StageDots moment={detail_level.moment} />{STAGE_LABEL[detail_level.moment] ?? detail_level.moment}
-                      </span>
-                    </Tooltip>
                   </div>
                 </div>
                 {focusState && focusState.status !== "done" && focusState.status !== "error" && <StageProgress state={focusState} />}
@@ -440,6 +436,8 @@ export default function App() {
                 )}
                 {focusState?.status === "error" && <span className="text-sm text-bad">{focusState.error}</span>}
               </div>
+
+              <StageTimeline ticket={detail_level} />
 
               {!assessment && !focusState && (
                 <InfoBox tone="tip" className="mb-4" title="Este chamado ainda não foi analisado">
@@ -527,17 +525,6 @@ function SegmentButton(p: { active: boolean; onClick: () => void; children: Reac
         {p.children}
       </button>
     </Tooltip>
-  );
-}
-
-/** Duas bolinhas = as duas etapas da esteira; a preenchida é a etapa atual do chamado. */
-function StageDots({ moment }: { moment: string }) {
-  return (
-    <span className="flex items-center gap-0.5" aria-hidden>
-      <i className="size-1.5 rounded-full bg-blueprint" />
-      <i className={`h-px w-1.5 ${moment === "execution" ? "bg-blueprint" : "bg-blueprint/30"}`} />
-      <i className={`size-1.5 rounded-full ${moment === "execution" ? "bg-blueprint" : "border border-blueprint/50"}`} />
-    </span>
   );
 }
 

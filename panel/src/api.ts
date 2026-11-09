@@ -300,6 +300,10 @@ export interface ModelOption {
   name: string;
   input_price: number | null;
   output_price: number | null;
+  /** complemento, ex.: backend da IARA (azure_openai, bedrock, vertex) */
+  detail?: string;
+  /** não lê imagens: falha nas tarefas com fotos e anexos */
+  text_only?: boolean;
 }
 
 export type ValidationKind = "scope" | "quote" | "photos";

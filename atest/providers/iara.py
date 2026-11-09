@@ -11,12 +11,15 @@ Opções em [default.llm.provider_options.iara] (settings.toml):
   ou "prompt" (sem response_format, só o schema no prompt) — use os dois últimos se o backend recusar o primeiro
 - pdf_mode: "file" (envia o PDF como arquivo) ou "text" (extrai o texto localmente com pypdf)
 - enable_polling: repassado à IARA (aguarda a resposta quando a inferência é enfileirada)
+- models: catálogo {backend: [modelos]}; define o backend de cada modelo e as opções do painel
+- text_only: modelos do catálogo que não leem imagem (recusados com erro claro em tarefas com anexos)
 """
 
 from __future__ import annotations
 
 import io
 import json
+import logging
 import os
 import random
 import re
@@ -25,6 +28,7 @@ from typing import Any
 
 from pydantic import ValidationError
 
+from ..observability import event
 from .base import DocumentPart, ImagePart, Provider, ProviderError, ProviderResponse, Request, T, TextPart, Usage
 
 BACKENDS = ("azure_openai", "bedrock", "vertex")
@@ -43,13 +47,24 @@ def _get(obj: Any, key: str, default: Any = None) -> Any:
     return getattr(obj, key, default)
 
 
-def split_backend(model: str, default: str) -> tuple[str, str]:
-    """'bedrock/modelo' → ('bedrock', 'modelo'); 'gpt-4.1' → (padrao, 'gpt-4.1')."""
+def split_backend(model: str, default: str, catalog: dict[str, str] | None = None) -> tuple[str, str]:
+    """Backend e id do modelo: 'bedrock/modelo' → ('bedrock', 'modelo'); senão o backend do catálogo; senão o padrão."""
     if "/" in model:
         prefix, rest = model.split("/", 1)
         if prefix.strip().lower() in BACKENDS:
             return prefix.strip().lower(), rest.strip()
-    return default, model
+    return (catalog or {}).get(model, default), model
+
+
+def catalog_backends(models: dict[str, list[str]] | None) -> dict[str, str]:
+    """{backend: [modelos]} (config [llm.provider_options.iara.models]) → {modelo: backend}."""
+    out: dict[str, str] = {}
+    for backend, ids in (models or {}).items():
+        if backend not in BACKENDS:
+            raise ValueError(f"iara.models: backend desconhecido {backend!r} (use {', '.join(BACKENDS)})")
+        for mid in ids:
+            out.setdefault(mid, backend)
+    return out
 
 
 def strict_schema(output: type) -> dict:
@@ -80,6 +95,82 @@ def strip_fences(text: str) -> str:
     if m := re.fullmatch(r"```[a-zA-Z]*\s*(.*?)\s*```", text, flags=re.DOTALL):
         return m.group(1)
     return text
+
+
+# erros do Pydantic de "esperava lista/objeto e veio outra coisa": candidatos a JSON que veio como string
+_CONTAINER_ERRORS = {"list_type", "dict_type", "model_type", "model_attributes_type", "tuple_type", "set_type"}
+
+
+def _loads(value: str) -> Any:
+    """JSON dentro de uma string (com ou sem cercas de código); devolve None se não for JSON de lista/objeto."""
+    text = strip_fences(value)
+    if text[:1] not in ("{", "["):
+        return None
+    try:
+        return json.loads(text)
+    except ValueError:
+        return None
+
+
+def parse_output(data: Any, output: type[T], max_rounds: int = 20) -> tuple[T, list[str]]:
+    """Valida a resposta no schema, corrigindo o JSON "duplamente codificado" que alguns modelos devolvem pela IARA.
+
+    Claude via Bedrock (e outros) às vezes devolve um campo lista/objeto como string com JSON dentro, e às vezes essa
+    string é o objeto inteiro de novo: {"attachments": "{\\"attachments\\": [...]}"}. Também acontece a resposta toda vir
+    como string ou embrulhada numa chave só ({"AttachmentIdentification": {...}}). A correção só age onde o schema espera
+    lista/objeto e recebeu texto; o resultado continua validado pelo Pydantic. Devolve o objeto e as correções aplicadas.
+    """
+    repairs: list[str] = []
+    for _ in range(max_rounds):
+        if isinstance(data, str) and (inner := _loads(data)) is not None:
+            data = inner
+            repairs.append("resposta inteira como string")
+            continue
+        try:
+            return output.model_validate(data), repairs
+        except ValidationError as e:
+            if _repair(data, e, repairs):
+                continue
+            # objeto embrulhado numa chave que não é campo do schema: {"NomeDoSchema": {...}}
+            if isinstance(data, dict) and len(data) == 1:
+                ((key, inner),) = data.items()
+                inner = _loads(inner) if isinstance(inner, str) else inner
+                if key not in output.model_fields and isinstance(inner, dict):
+                    data = inner
+                    repairs.append(f"objeto embrulhado em '{key}'")
+                    continue
+            raise
+    return output.model_validate(data), repairs
+
+
+def _repair(data: Any, error: ValidationError, repairs: list[str]) -> bool:
+    """Decodifica, no lugar, os campos que vieram como string com JSON onde o schema pede lista/objeto."""
+    fixed = False
+    for err in error.errors():
+        loc = err["loc"]
+        if err["type"] not in _CONTAINER_ERRORS or not isinstance(err.get("input"), str) or not loc:
+            continue
+        value = _loads(err["input"])
+        if value is None:
+            continue
+        parent = data
+        try:
+            for step in loc[:-1]:
+                parent = parent[step]
+        except (KeyError, IndexError, TypeError):
+            continue
+        key = loc[-1]
+        if not isinstance(parent, dict | list) or (isinstance(parent, dict) and key not in parent):
+            continue
+        if isinstance(parent, dict) and isinstance(value, dict) and key in value:
+            # a string era o objeto pai inteiro de novo: traz o campo e os irmãos que vieram dentro dela
+            parent.update(value)
+            repairs.append(f"'{'.'.join(map(str, loc))}' trazia o objeto inteiro como string")
+        else:
+            parent[key] = value
+            repairs.append(f"'{'.'.join(map(str, loc))}' veio como string com JSON")
+        fixed = True
+    return fixed
 
 
 def pdf_text(data: bytes) -> str:
@@ -148,6 +239,8 @@ class IaraProvider(Provider):
         json_mode: str = "json_schema",
         pdf_mode: str = "file",
         enable_polling: bool = True,
+        models: dict[str, list[str]] | None = None,
+        text_only: list[str] | None = None,
     ):
         if json_mode not in JSON_MODES:
             raise ValueError(f"iara.json_mode inválido: {json_mode!r} (use {', '.join(JSON_MODES)})")
@@ -160,6 +253,8 @@ class IaraProvider(Provider):
         self.json_mode = json_mode
         self.pdf_mode = pdf_mode
         self.enable_polling = enable_polling
+        self.catalog = catalog_backends(models)  # modelo → backend (azure_openai, bedrock, vertex)
+        self.text_only = set(text_only or ())  # modelos que não leem imagem
         self._injected = client
         self._clients: dict[str, Any] = {}
 
@@ -221,7 +316,12 @@ class IaraProvider(Provider):
                 attempt += 1
 
     def generate(self, req: Request, output: type[T]) -> ProviderResponse[T]:
-        backend, model = split_backend(req.model, self.backend)
+        backend, model = split_backend(req.model, self.backend, self.catalog)
+        if model in self.text_only and any(isinstance(p, ImagePart) or (isinstance(p, DocumentPart) and self.pdf_mode == "file") for p in req.parts):
+            raise ProviderError(
+                f"[{req.task}] o modelo {model} não lê imagens nem PDFs e esta tarefa envia anexos; "
+                "escolha um modelo com visão (ex.: gpt-4.1, claude-sonnet-5, gemini-2.5-flash) ou use-o só em tarefas de texto"
+            )
         resp = self._create(self.client(backend), self._kwargs(req, model, output), req.task)
         choices = _get(resp, "choices") or []
         if not choices:
@@ -238,9 +338,15 @@ class IaraProvider(Provider):
         if not text.strip():
             raise ProviderError(f"[{req.task}] resposta da IARA vazia")
         try:
-            obj = output.model_validate_json(strip_fences(text))
+            data = json.loads(strip_fences(text))
+        except ValueError as e:
+            raise ProviderError(f"[{req.task}] resposta da IARA não é JSON: {text[:300]!r}") from e
+        try:
+            obj, repairs = parse_output(data, output)
         except ValidationError as e:
             raise ProviderError(f"[{req.task}] resposta fora do schema {output.__name__}: {e}") from e
+        if repairs:
+            event("iara_json_repaired", logging.WARNING, task=req.task, model=model, backend=backend, repairs=repairs)
         u = _get(resp, "usage")
         cache = _get(_get(u, "prompt_tokens_details"), "cached_tokens", 0) or 0
         prompt = _get(u, "prompt_tokens", 0) or 0

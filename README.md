@@ -100,13 +100,15 @@ Dentro do banco, todo LLM passa pela IARA. Fora dele, nada muda (Anthropic). O p
 3. `cp config/settings.itau.toml.example config/settings.local.toml`. Esse arquivo fica fora do git e é carregado depois do `settings.toml`; ele troca os modelos para `iara:gpt-4.1` e escolhe o ambiente da IARA (`dev`, `homol` ou `prod`). Com `ATEST_ENV=production`, o ambiente vira `prod`.
 4. Antes de rodar o lote, teste com `python examples/api_smoke_test.py`.
 
-Modelos: `iara:<modelo>` usa o backend padrão (`provider = "azure_openai"`); `iara:bedrock/<modelo>` ou `iara:vertex/<modelo>` escolhe outro backend só para aquele modelo. Se o backend recusar alguma coisa, ajuste em `[default.llm.provider_options.iara]`, sem mexer no código:
+Modelos: o catálogo da IARA fica em `[default.llm.provider_options.iara.models]`, agrupado por backend (`azure_openai`, `bedrock`, `vertex`), como na página "Modelos" da documentação. Com a IARA escolhida, o painel lista esses modelos com campo de busca. `iara:claude-sonnet-5` vai sozinho para o `bedrock`. Um modelo fora do catálogo usa o backend padrão (`provider = "azure_openai"`), e `iara:bedrock/<modelo>` força o backend. Os modelos em `text_only` não leem imagem: o painel os marca como "só texto", e o adaptador os recusa, com erro claro, nas tarefas com fotos e anexos. Eles servem para tarefas de texto em `[models.tasks]` (`scope`, `quote_review`, `assessment`). Ficaram fora do catálogo os embeddings, o áudio, a geração de imagem e os modelos `-batch`. Se o backend recusar alguma coisa, ajuste em `[default.llm.provider_options.iara]`, sem mexer no código:
 
 | Opção | Padrão | Alternativas |
 |---|---|---|
 | `json_mode` | `"json_schema"` (schema estrito no `response_format`) | `"json_object"` (JSON livre e schema no prompt) · `"prompt"` (sem `response_format`) |
 | `pdf_mode` | `"file"` (PDF enviado como arquivo) | `"text"` (texto extraído localmente com `pypdf`) |
 | `enable_polling` | `true` | `false` |
+
+Alguns modelos pela IARA (ex.: Claude via Bedrock) devolvem campos lista/objeto como string com JSON dentro, às vezes com o objeto inteiro repetido (`{"attachments": "{\"attachments\": [...]}"}`). O adaptador corrige isso antes de validar, só onde o schema pede lista/objeto, e registra o evento `iara_json_repaired` no log. Texto livre que não é JSON continua sendo erro.
 
 A Batch API da IARA ainda não está integrada: no modo Lote, as chamadas para `iara:` saem síncronas e sem o desconto de lote. Os preços em `[default.costs.prices."iara:gpt-4.1"]` são os de lista da OpenAI, só como referência.
 

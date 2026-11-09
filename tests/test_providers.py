@@ -1,6 +1,7 @@
 """Camada de provedores (Anthropic, OpenAI, Gemini, IARA), roteamento por tarefa, contingência, cache e métricas de validação."""
 
 import io
+import json
 import sys
 from types import SimpleNamespace
 
@@ -231,6 +232,47 @@ def test_iara_errors_and_retries(monkeypatch):
         iara.IaraProvider(json_mode="xml")
 
 
+def test_iara_repairs_double_encoded_json_from_claude_via_bedrock():
+    """Caso real (Claude Sonnet via IARA/Bedrock): o campo lista veio como string com o objeto inteiro dentro."""
+    from atest.providers.iara import IaraProvider, parse_output
+
+    item = {"index": 1, "category": "quote_doc", "moment": "after", "readable": True, "short_description": "Orçamento"}
+    inner = json.dumps({"attachments": [item]}, ensure_ascii=False)
+    fake = FakeIara(_completion(json.dumps({"attachments": inner}, ensure_ascii=False)))
+    r = IaraProvider(client=fake).generate(_req(TextPart("x")), llm_schemas.AttachmentIdentification)
+    assert r.obj.attachments[0].index == 1 and r.obj.attachments[0].short_description == "Orçamento"
+
+    # só a lista como string; um item da lista como string; a resposta toda como string; embrulhada numa chave
+    out = llm_schemas.AttachmentIdentification
+    for data in (
+        {"attachments": json.dumps([item])},
+        {"attachments": [json.dumps(item)]},
+        json.dumps(json.dumps({"attachments": [item]})),
+        {"AttachmentIdentification": {"attachments": [item]}},
+        {"AttachmentIdentification": json.dumps({"attachments": inner})},
+    ):
+        obj, repairs = parse_output(json.loads(data) if isinstance(data, str) else data, out)
+        assert obj.attachments[0].category == "quote_doc" and repairs, data
+
+    # o objeto inteiro dentro de um campo traz os irmãos junto (PhotoAnalysis tem outros campos na raiz)
+    photos = {
+        "photos": [],
+        "has_before_photo": True,
+        "has_done_service_photo": False,
+        "done_justification": "",
+        "items_without_photo": [3],
+        "notes": "",
+    }
+    obj, _ = parse_output({"photos": json.dumps(photos)}, llm_schemas.PhotoAnalysis)
+    assert obj.has_before_photo and obj.items_without_photo == [3]
+
+    # texto livre que não é JSON continua sendo erro de schema (não inventa dado)
+    with pytest.raises(ValidationError):
+        parse_output({"attachments": "nenhum anexo legível"}, out)
+    # resposta correta passa sem correção
+    assert parse_output({"attachments": [item]}, out)[1] == []
+
+
 def test_iara_backend_per_model(monkeypatch):
     from atest.providers import iara
 
@@ -252,6 +294,50 @@ def test_iara_backend_per_model(monkeypatch):
     assert created[0] == {"client_id": "id", "client_secret": "secret", "environment": "homol", "provider": "bedrock"}
     assert iara.split_backend("bedrock/anthropic.claude-x:0", "azure_openai") == ("bedrock", "anthropic.claude-x:0")
     assert iara.split_backend("org/modelo", "azure_openai") == ("azure_openai", "org/modelo")
+
+
+def test_iara_catalog_routes_backend_and_blocks_images_on_text_only_models(cfg):
+    from atest.providers import iara
+
+    opts = cfg.llm.provider_options["iara"]
+    catalog = iara.catalog_backends(opts["models"])
+    # o catálogo do settings.toml: backend certo, sem modelos de embedding/áudio/imagem/lote
+    assert (catalog["claude-sonnet-5"], catalog["gpt-5.5"], catalog["gemini-2.5-flash"]) == ("bedrock", "azure_openai", "vertex")
+    assert not any(k.endswith("-batch") or "embed" in k or "image" in k or k == "gpt-audio" for k in catalog)
+    assert set(opts["text_only"]) <= set(catalog)
+    # todo modelo do catálogo tem preço de referência (sem ele o custo sairia US$ 0)
+    assert not [m for m in catalog if f"iara:{m}" not in cfg.costs.prices]
+    assert all(m.split(":", 1)[1] in catalog for c in ("main", "fast") for m in [getattr(cfg.panel.providers["iara"], c)])
+
+    # "iara:claude-sonnet-5" vai ao bedrock sem prefixo; prefixo explícito ainda vale; fora do catálogo = backend padrão
+    assert iara.split_backend("claude-sonnet-5", "azure_openai", catalog) == ("bedrock", "claude-sonnet-5")
+    assert iara.split_backend("vertex/claude-sonnet-5", "azure_openai", catalog) == ("vertex", "claude-sonnet-5")
+    assert iara.split_backend("modelo-novo", "azure_openai", catalog) == ("azure_openai", "modelo-novo")
+    with pytest.raises(ValueError):
+        iara.catalog_backends({"aws": ["x"]})
+
+    fake = FakeIara(_completion('{"response": "ok"}'))
+    p = iara.IaraProvider(client=fake, **opts)
+    with pytest.raises(ProviderError, match="não lê imagens") as e:
+        p.generate(Request(task="photos", system="s", parts=[TextPart("x"), ImagePart(b"img")], model="llama3-8b-instruct", max_tokens=10), Output)
+    assert not e.value.transient and not fake.calls  # nem chega a chamar a IARA
+    assert (
+        p.generate(Request(task="scope", system="s", parts=[TextPart("x")], model="llama3-8b-instruct", max_tokens=10), Output).obj.response == "ok"
+    )
+
+
+def test_panel_lists_iara_catalog_models(cfg):
+    from fastapi.testclient import TestClient
+
+    from atest.api import create_app
+
+    models = {m["id"]: m for m in TestClient(create_app(cfg)).get("/api/config").json()["models"]}
+    assert models["iara:claude-sonnet-5"]["detail"] == "bedrock" and not models["iara:claude-sonnet-5"]["text_only"]
+    assert models["iara:gemini-3.5-flash"]["detail"] == "vertex"
+    assert models["iara:llama3-8b-instruct"]["text_only"]
+    # o modelo com preço na tabela continua com preço e ganha o backend
+    assert models["iara:gpt-4.1"]["input_price"] == 2.0 and models["iara:gpt-4.1"]["detail"] == "azure_openai"
+    assert sum(m["provider"] == "iara" for m in models.values()) == 56
 
 
 def test_iara_options_reach_the_provider_and_credentials_need_both_vars(cfg, monkeypatch):

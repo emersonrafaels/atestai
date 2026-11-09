@@ -52,6 +52,42 @@ provider = "azure_openai"    # backend padrão da IARA: azure_openai | bedrock |
 json_mode = "json_schema"    # se o backend recusar response_format com schema: "json_object" ou "prompt"
 pdf_mode = "file"            # se o backend recusar PDF como arquivo: "text" (extrai o texto localmente; requer pypdf)
 enable_polling = true
+# modelos do catálogo que não leem imagem: servem para tarefas só de texto (scope, quote_review, assessment em
+# [models.tasks]); como principal ou rápido eles falham nas fotos e nos anexos, e o painel os marca como "só texto"
+text_only = [
+  "gpt-oss-20b", "gpt-oss-120b", "amazon.nova-micro-v1:0",
+  "llama3-8b-instruct", "llama3-70b-instruct", "llama3-3-70b-instruct", "llama3-1-70b-instruct", "llama3-1-8b-instruct",
+  "qwen3-32b", "qwen3-coder-30b-a3b", "deepseek-v3.2", "deepseek-v4-pro", "deepseek-v4-flash",
+  "mistral-7b-instruct", "mixtral-8x7b-instruct", "mistral-large-2402", "mistral-small-2402",
+]
+
+[default.llm.provider_options.iara.models]
+# Catálogo da IARA (documentação "Modelos", coluna Model (SDK)), agrupado pelo backend (coluna Provider).
+# Com ele, "iara:claude-sonnet-5" vai para o bedrock sem precisar escrever "iara:bedrock/claude-sonnet-5", e o
+# painel lista estes modelos quando a IARA está selecionada. Ficam de fora os que não respondem chat com texto:
+# embeddings (text-embedding-*, amazon.titan-embed-*, gemini-embedding-001), áudio (gpt-audio), geração de imagem
+# (gemini-3-pro-image, gemini-3.1-flash-image) e os "-batch" (só pela Batch API, ainda não integrada).
+azure_openai = [
+  "gpt-6.1-sol", "gpt-6-luna", "gpt-5.6-terra", "gpt-5.6-luna", "gpt-5.5",
+  "gpt-5.4", "gpt-5.4-mini", "gpt-5.4-nano", "gpt-5.2", "gpt-5.1",
+  "gpt-5", "gpt-5-mini", "gpt-5-nano",
+  "gpt-4.1", "gpt-4.1-mini", "gpt-4.1-nano", "gpt-4o", "gpt-4o-mini", "o3",
+  "gpt-oss-20b", "gpt-oss-120b", "kimi-k3",
+]
+bedrock = [
+  "claude-opus-5-5", "claude-sonnet-5", "claude-opus-4-8", "claude-opus-4-7", "claude-opus-4-6-v1", "claude-sonnet-4-6",
+  "claude-opus-4-1-20250805",
+  "amazon.nova-pro-v1:0", "amazon.nova-lite-v1:0", "amazon.nova-micro-v1:0",
+  "llama4-maverick-17b-instruct", "llama4-scout-17b-instruct",
+  "llama3-3-70b-instruct", "llama3-1-70b-instruct", "llama3-1-8b-instruct", "llama3-70b-instruct", "llama3-8b-instruct",
+  "qwen3-32b", "qwen3-coder-30b-a3b",
+  "deepseek-v4-pro", "deepseek-v4-flash", "deepseek-v3.2",
+  "mistral-large-2402", "mistral-small-2402", "mixtral-8x7b-instruct", "mistral-7b-instruct",
+  "gemma-3-27b-it", "gemma-3-12b-it", "gemma-3-4b-it",
+]
+vertex = [
+  "gemini-3.6-flash", "gemini-3.5-flash", "gemini-3.5-flash-lite", "gemini-3.1-flash-lite", "gemini-2.5-flash",
+]
 
 [default.pipeline]
 phase = 2                   # 1 = régua do MVP; 2 = inclui "antes", ilegibilidade, reaproveitamento e data das fotos
@@ -154,19 +190,72 @@ output = 20.00
 cache_write = 5.00
 cache_read = 0.20
 
-# Modelos usados via IARA (chave com o prefixo "iara:" para o painel listar com o provedor certo). Preço de lista da OpenAI,
-# só como referência: o custo interno cobrado pela IARA pode ser outro.
-[default.costs.prices."iara:gpt-4.1"]
-input = 2.00
-output = 8.00
-cache_write = 0
-cache_read = 0.50
-
-[default.costs.prices."iara:gpt-4.1-mini"]
-input = 0.40
-output = 1.60
-cache_write = 0
-cache_read = 0.10
+# Modelos do catálogo da IARA: preço de mercado, ou seja, a lista pública do fabricante ou do serviço de origem
+# (Azure/OpenAI, Bedrock, Vertex), pesquisada em nov/2026. Serve só como referência: o custo que a IARA cobra
+# internamente pode ser outro. A chave tem o prefixo "iara:" para o painel listar com o provedor certo.
+# cache_write = 0 onde não há cobrança de escrita de cache; cache_read = input onde o modelo não tem desconto de cache.
+# Marcas: (*) fonte só de agregadores, sem confirmação na página oficial; (~) preço da API do fabricante, não do
+# Bedrock (o Bedrock não publicava o preço destes).
+[default.costs.prices]
+# --- azure_openai ---
+"iara:gpt-6.1-sol"     = { input = 2.00,  output = 10.00, cache_write = 0, cache_read = 0.10 }   # (*)
+"iara:gpt-6-luna"      = { input = 0.10,  output = 0.50,  cache_write = 0, cache_read = 0.01 }   # (*)
+"iara:gpt-5.6-terra"   = { input = 2.00,  output = 12.00, cache_write = 0, cache_read = 0.20 }   # preço desde 30/07/2026
+"iara:gpt-5.6-luna"    = { input = 0.20,  output = 1.20,  cache_write = 0, cache_read = 0.02 }   # preço desde 30/07/2026
+"iara:gpt-5.5"         = { input = 5.00,  output = 30.00, cache_write = 0, cache_read = 0.50 }
+"iara:gpt-5.4"         = { input = 2.50,  output = 15.00, cache_write = 0, cache_read = 0.25 }
+"iara:gpt-5.4-mini"    = { input = 0.75,  output = 4.50,  cache_write = 0, cache_read = 0.075 }
+"iara:gpt-5.4-nano"    = { input = 0.20,  output = 1.25,  cache_write = 0, cache_read = 0.02 }
+"iara:gpt-5.2"         = { input = 1.75,  output = 14.00, cache_write = 0, cache_read = 0.175 }
+"iara:gpt-5.1"         = { input = 1.25,  output = 10.00, cache_write = 0, cache_read = 0.125 }
+"iara:gpt-5"           = { input = 1.25,  output = 10.00, cache_write = 0, cache_read = 0.125 }
+"iara:gpt-5-mini"      = { input = 0.25,  output = 2.00,  cache_write = 0, cache_read = 0.025 }
+"iara:gpt-5-nano"      = { input = 0.05,  output = 0.40,  cache_write = 0, cache_read = 0.005 }
+"iara:gpt-4.1"         = { input = 2.00,  output = 8.00,  cache_write = 0, cache_read = 0.50 }
+"iara:gpt-4.1-mini"    = { input = 0.40,  output = 1.60,  cache_write = 0, cache_read = 0.10 }
+"iara:gpt-4.1-nano"    = { input = 0.10,  output = 0.40,  cache_write = 0, cache_read = 0.025 }
+"iara:gpt-4o"          = { input = 2.50,  output = 10.00, cache_write = 0, cache_read = 1.25 }
+"iara:gpt-4o-mini"     = { input = 0.15,  output = 0.60,  cache_write = 0, cache_read = 0.075 }
+"iara:o3"              = { input = 2.00,  output = 8.00,  cache_write = 0, cache_read = 0.50 }
+"iara:gpt-oss-20b"     = { input = 0.07,  output = 0.30,  cache_write = 0, cache_read = 0.07 }   # (*)
+"iara:gpt-oss-120b"    = { input = 0.15,  output = 0.60,  cache_write = 0, cache_read = 0.15 }   # (*)
+"iara:kimi-k3"         = { input = 3.00,  output = 15.00, cache_write = 0, cache_read = 0.30 }
+# --- bedrock ---
+"iara:claude-opus-5-5"            = { input = 4.00,  output = 20.00, cache_write = 5.00,  cache_read = 0.20 }
+"iara:claude-sonnet-5"            = { input = 2.00,  output = 10.00, cache_write = 2.50,  cache_read = 0.20 }
+"iara:claude-opus-4-8"            = { input = 5.00,  output = 25.00, cache_write = 6.25,  cache_read = 0.50 }
+"iara:claude-opus-4-7"            = { input = 5.00,  output = 25.00, cache_write = 6.25,  cache_read = 0.50 }
+"iara:claude-opus-4-6-v1"         = { input = 5.00,  output = 25.00, cache_write = 6.25,  cache_read = 0.50 }
+"iara:claude-sonnet-4-6"          = { input = 3.00,  output = 15.00, cache_write = 3.75,  cache_read = 0.30 }
+"iara:claude-opus-4-1-20250805"   = { input = 15.00, output = 75.00, cache_write = 18.75, cache_read = 1.50 }
+"iara:amazon.nova-pro-v1:0"       = { input = 0.80,  output = 3.20,  cache_write = 0, cache_read = 0.20 }
+"iara:amazon.nova-lite-v1:0"      = { input = 0.06,  output = 0.24,  cache_write = 0, cache_read = 0.015 }
+"iara:amazon.nova-micro-v1:0"     = { input = 0.035, output = 0.14,  cache_write = 0, cache_read = 0.00875 }
+"iara:llama4-maverick-17b-instruct" = { input = 0.24, output = 0.97, cache_write = 0, cache_read = 0.24 }
+"iara:llama4-scout-17b-instruct"  = { input = 0.17,  output = 0.66,  cache_write = 0, cache_read = 0.17 }
+"iara:llama3-3-70b-instruct"      = { input = 0.72,  output = 0.72,  cache_write = 0, cache_read = 0.72 }
+"iara:llama3-1-70b-instruct"      = { input = 0.72,  output = 0.72,  cache_write = 0, cache_read = 0.72 }
+"iara:llama3-1-8b-instruct"       = { input = 0.22,  output = 0.22,  cache_write = 0, cache_read = 0.22 }
+"iara:llama3-70b-instruct"        = { input = 2.65,  output = 3.50,  cache_write = 0, cache_read = 2.65 }
+"iara:llama3-8b-instruct"         = { input = 0.30,  output = 0.60,  cache_write = 0, cache_read = 0.30 }
+"iara:qwen3-32b"                  = { input = 0.15,  output = 0.60,  cache_write = 0, cache_read = 0.15 }   # (*)
+"iara:qwen3-coder-30b-a3b"        = { input = 0.15,  output = 0.60,  cache_write = 0, cache_read = 0.15 }   # (*)
+"iara:deepseek-v4-pro"            = { input = 1.74,  output = 3.48,  cache_write = 0, cache_read = 1.74 }   # (~)
+"iara:deepseek-v4-flash"          = { input = 0.14,  output = 0.28,  cache_write = 0, cache_read = 0.14 }   # (~)
+"iara:deepseek-v3.2"              = { input = 0.62,  output = 1.85,  cache_write = 0, cache_read = 0.62 }   # (*)
+"iara:mistral-large-2402"         = { input = 4.00,  output = 12.00, cache_write = 0, cache_read = 4.00 }
+"iara:mistral-small-2402"         = { input = 1.00,  output = 3.00,  cache_write = 0, cache_read = 1.00 }
+"iara:mixtral-8x7b-instruct"      = { input = 0.45,  output = 0.70,  cache_write = 0, cache_read = 0.45 }
+"iara:mistral-7b-instruct"        = { input = 0.15,  output = 0.20,  cache_write = 0, cache_read = 0.15 }
+"iara:gemma-3-27b-it"             = { input = 0.23,  output = 0.38,  cache_write = 0, cache_read = 0.23 }
+"iara:gemma-3-12b-it"             = { input = 0.09,  output = 0.29,  cache_write = 0, cache_read = 0.09 }
+"iara:gemma-3-4b-it"              = { input = 0.04,  output = 0.08,  cache_write = 0, cache_read = 0.04 }
+# --- vertex ---
+"iara:gemini-3.6-flash"      = { input = 1.50, output = 7.50, cache_write = 0, cache_read = 0.15 }   # preço cheio; promocional 0,75/3,75 até 31/12/2026
+"iara:gemini-3.5-flash"      = { input = 1.50, output = 9.00, cache_write = 0, cache_read = 0.15 }
+"iara:gemini-3.5-flash-lite" = { input = 0.30, output = 2.50, cache_write = 0, cache_read = 0.03 }
+"iara:gemini-3.1-flash-lite" = { input = 0.25, output = 1.50, cache_write = 0, cache_read = 0.025 }
+"iara:gemini-2.5-flash"      = { input = 0.30, output = 2.50, cache_write = 0, cache_read = 0.03 }
 
 # ----------------------------------------------------------------------------------------------
 [development]

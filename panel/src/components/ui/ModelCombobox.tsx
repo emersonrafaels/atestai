@@ -1,4 +1,4 @@
-import { AlertTriangle, ArrowLeft, Check, ChevronDown, PencilLine } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Check, ChevronDown, PencilLine, Search } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 import type { ModelOption } from "../../api";
 import { providerLabel } from "../../format";
@@ -30,16 +30,22 @@ export function ModelCombobox({ label, value, onChange, options, defaultId, defa
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState("");
   const [active, setActive] = useState(0);
+  const [query, setQuery] = useState("");
   const root = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
   const list = useRef<HTMLUListElement>(null);
   const field = useRef<HTMLInputElement>(null);
+  const search = useRef<HTMLInputElement>(null);
   const id = useId();
 
   const known = options.find((o) => o.id === value || o.name === value);
   const custom = !!value && !known;
+  // lista longa (ex.: catálogo da IARA) ganha um campo de busca por nome ou backend
+  const searchable = options.length > 10;
+  const q = query.trim().toLowerCase();
+  const shown = q ? options.filter((o) => `${o.name} ${o.detail ?? ""}`.toLowerCase().includes(q)) : options;
   // linhas da lista: modelos conhecidos e, por último, "Outro modelo…"
-  const rows = [...options.map((o) => ({ kind: "option" as const, o })), { kind: "other" as const }];
+  const rows = [...shown.map((o) => ({ kind: "option" as const, o })), { kind: "other" as const }];
   const providerOf = (v: string) => (v.includes(":") ? v.split(":")[0].toLowerCase() : defaultProvider);
   const keyless = (v: string) => !!availableProviders && !availableProviders.includes(providerOf(v));
 
@@ -50,7 +56,8 @@ export function ModelCombobox({ label, value, onChange, options, defaultId, defa
   };
   const openList = () => {
     setEditing(false);
-    setActive(known ? options.indexOf(known) : custom ? rows.length - 1 : 0);
+    setQuery("");
+    setActive(known ? options.indexOf(known) : custom ? options.length : 0); // a busca começa vazia: índices da lista completa
     setOpen(true);
   };
   const startEdit = () => {
@@ -69,7 +76,7 @@ export function ModelCombobox({ label, value, onChange, options, defaultId, defa
     return () => document.removeEventListener("mousedown", out);
   });
   useEffect(() => {
-    if (open && !editing) list.current?.focus();
+    if (open && !editing) (search.current ?? list.current)?.focus();
     if (open && editing) field.current?.focus();
   }, [open, editing]);
   useEffect(() => {
@@ -81,7 +88,7 @@ export function ModelCombobox({ label, value, onChange, options, defaultId, defa
     else if (e.key === "ArrowUp") { e.preventDefault(); setActive((a) => Math.max(0, a - 1)); }
     else if (e.key === "Home") { e.preventDefault(); setActive(0); }
     else if (e.key === "End") { e.preventDefault(); setActive(rows.length - 1); }
-    else if (e.key === "Enter" || e.key === " ") {
+    else if (e.key === "Enter" || (e.key === " " && e.currentTarget === list.current)) {
       e.preventDefault();
       const r = rows[active];
       if (r.kind === "option") choose(r.o.id);
@@ -104,6 +111,11 @@ export function ModelCombobox({ label, value, onChange, options, defaultId, defa
         <span className="text-[11px] font-semibold uppercase tracking-wide text-muted">{label}</span>
         <span className="min-w-0 max-w-52 truncate font-medium">{known ? known.name : value || "escolher…"}</span>
         {known && <span className="hidden text-[11px] text-muted xl:inline">{providerLabel(known.provider)}</span>}
+        {known?.text_only && (
+          <Tooltip content="Este modelo não lê imagens: a identificação dos anexos e a análise das fotos vão falhar. Escolha um modelo com visão.">
+            <span className="flex items-center gap-1 rounded bg-[#fdf1dc] px-1 text-[10px] font-semibold uppercase text-warn"><AlertTriangle size={11} /> só texto</span>
+          </Tooltip>
+        )}
         {custom && (
           <Tooltip content={keyless(value) ? `O provedor "${providerOf(value)}" não tem credencial configurada: a execução vai falhar.` : "Modelo personalizado, fora da tabela de preços: a análise roda, mas o custo não é calculado."}>
             <span className={`flex items-center gap-1 rounded px-1 text-[10px] font-semibold uppercase ${keyless(value) ? "bg-[#f8e4e2] text-bad" : "bg-[#fdf1dc] text-warn"}`}>
@@ -119,7 +131,16 @@ export function ModelCombobox({ label, value, onChange, options, defaultId, defa
           {!editing ? (
             <>
               {hint && <div className="border-b border-line bg-paper/60 px-3 py-1.5 text-[12px] text-muted">{hint}</div>}
-              <ul ref={list} role="listbox" tabIndex={-1} aria-label={`Modelos para ${label.toLowerCase()}`}
+              {searchable && (
+                <label className="flex items-center gap-2 border-b border-line px-3 py-1.5">
+                  <Search size={14} className="shrink-0 text-muted" aria-hidden />
+                  <input ref={search} value={query} onChange={(e) => { setQuery(e.target.value); setActive(0); }} onKeyDown={onListKey}
+                    placeholder={`Buscar entre ${options.length} modelos (nome ou backend)`} aria-label="Buscar modelo" spellCheck={false}
+                    aria-controls={`${id}-list`} aria-activedescendant={`${id}-opt-${active}`}
+                    className="w-full bg-transparent py-0.5 text-sm outline-none placeholder:text-muted" />
+                </label>
+              )}
+              <ul ref={list} id={`${id}-list`} role="listbox" tabIndex={-1} aria-label={`Modelos para ${label.toLowerCase()}`}
                 aria-activedescendant={`${id}-opt-${active}`} onKeyDown={onListKey} className="max-h-72 overflow-y-auto p-1 outline-none">
                 {rows.map((r, i) => {
                   const isActive = i === active;
@@ -148,7 +169,13 @@ export function ModelCombobox({ label, value, onChange, options, defaultId, defa
                           <b className="font-medium">{o.name}</b>
                           {o.id === defaultId && <span className="rounded bg-paper px-1 text-[10px] font-semibold uppercase text-muted">padrão</span>}
                         </span>
-                        <span className="block text-[12px] text-muted">{providerLabel(o.provider)}</span>
+                        <span className="flex items-center gap-1.5 text-[12px] text-muted">
+                          {providerLabel(o.provider)}{o.detail ? ` · ${o.detail}` : ""}
+                          {o.text_only && (
+                            <span title="Não lê imagens: como principal ou rápido falha nas fotos e anexos; use só em tarefas de texto"
+                              className="rounded bg-[#fdf1dc] px-1 text-[10px] font-semibold uppercase text-warn">só texto</span>
+                          )}
+                        </span>
                       </span>
                       {o.input_price !== null && o.output_price !== null && (
                         <span title="US$ por milhão de tokens: entrada / saída" className="whitespace-nowrap text-right text-[12px] tabular-nums text-muted">US$ {usd(o.input_price)} / {usd(o.output_price)}</span>

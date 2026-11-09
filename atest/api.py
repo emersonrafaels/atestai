@@ -303,6 +303,8 @@ class ModelOption(BaseModel):
     name: str
     input_price: float | None = Field(None, description="USD por milhão de tokens de entrada")
     output_price: float | None = None
+    detail: str = Field("", description="complemento mostrado no painel, ex.: o backend da IARA")
+    text_only: bool = Field(False, description="não lê imagens: falha nas tarefas com fotos e anexos")
 
 
 class AppSettings(BaseModel):
@@ -577,12 +579,30 @@ def create_app(cfg: Settings) -> FastAPI:
         ids = [full(m) for m in cfg.costs.prices]
         ids += [full(m) for m in [cfg.models.main, cfg.models.fast, *cfg.models.tasks.values(), *cfg.models.fallback.values()] if m]
         ids += [m for c in provider_choices(cfg) for m in (c.main, c.fast)]
+        # catálogo de um provedor ([llm.provider_options.<p>.models] = {grupo: [modelos]}, ex.: backends da IARA)
+        detail: dict[str, str] = {}
+        text_only: set[str] = set()
+        for prov, opts in cfg.llm.provider_options.items():
+            for group, names in (opts.get("models") or {}).items():
+                for name in names:
+                    ids.append(f"{prov}:{name}")
+                    detail.setdefault(f"{prov}:{name}", group)
+            text_only |= {f"{prov}:{name}" for name in opts.get("text_only") or ()}
         out = []
         for mid in dict.fromkeys(ids):
             provider, name = mid.split(":", 1)
             price = cfg.costs.prices.get(name) or cfg.costs.prices.get(mid)
-            out.append(ModelOption(id=mid, provider=provider, name=name,
-                                   input_price=price.input if price else None, output_price=price.output if price else None))
+            out.append(
+                ModelOption(
+                    id=mid,
+                    provider=provider,
+                    name=name,
+                    input_price=price.input if price else None,
+                    output_price=price.output if price else None,
+                    detail=detail.get(mid, ""),
+                    text_only=mid in text_only,
+                )
+            )
         return out
 
 
