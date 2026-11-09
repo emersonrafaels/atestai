@@ -12,6 +12,8 @@ numpy>=2
 anthropic>=2.6
 openai>=1.60          # opcional: modelos "openai:..."
 google-genai>=1.0     # opcional: modelos "google:..."
+# iara_genai_sdk       # só dentro do Itaú (Artifactory interno): modelos "iara:..."
+pypdf>=5              # opcional: pdf_mode = "text" da IARA
 
 # fluxo de revisão humana (exemplos/fluxo_copiloto_langgraph.py)
 langgraph>=1.0        # opcional

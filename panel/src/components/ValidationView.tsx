@@ -126,7 +126,7 @@ export function ValidationView({ config, openCase }: Props) {
               <legend className="mb-1 flex items-center gap-1 font-medium">Modo <InfoTip term="mode" /></legend>
               <div className="flex rounded-lg bg-paper p-0.5">
                 {(["simulated", "api"] as const).map((m) => (
-                  <Tooltip key={m} className="flex flex-1" content={m === "api" && !config.api_available ? `Sem chave para: ${config.missing_keys.join(", ")}` : m === "api" ? "Chama o modelo de verdade: mede a qualidade real e gera custo" : "Sem custo: mostra o fluxo e as métricas com erro simulado"}>
+                  <Tooltip key={m} className="flex flex-1" content={m === "api" && !config.api_available ? `Sem credenciais para: ${config.missing_keys.map(providerLabel).join(", ")}` : m === "api" ? "Chama o modelo de verdade: mede a qualidade real e gera custo" : "Sem custo: mostra o fluxo e as métricas com erro simulado"}>
                     <button type="button" disabled={running || (m === "api" && !config.api_available)} onClick={() => setMode(m)}
                       className={`flex-1 rounded-md px-3 py-1 ${mode === m ? "bg-sheet font-semibold shadow-sm" : "text-muted hover:text-ink"} disabled:pointer-events-none disabled:opacity-40`}>
                       {m === "simulated" ? "Simulado" : `API (${config.providers.map(providerLabel).join(", ")})`}

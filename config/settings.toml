@@ -4,7 +4,9 @@
 # Escolha o ambiente com a variável ATEST_ENV (padrão: development).
 # Qualquer chave pode ser sobrescrita por variável de ambiente com prefixo ATEST_,
 # usando "__" para níveis:  ATEST_MODELS__MAIN="claude-opus-5-5"   ATEST_PIPELINE__PHASE=1
-# Segredos (ANTHROPIC_API_KEY) ficam em config/.secrets.toml (fora do git) ou no ambiente.
+# Segredos (ANTHROPIC_API_KEY, IARA_CLIENT_ID/SECRET...) ficam em config/.secrets.toml (fora do git) ou no ambiente.
+# Ajustes só da máquina (ex.: dentro do Itaú, usar a IARA) vão em config/settings.local.toml (fora do git;
+# veja config/settings.itau.toml.example), carregado automaticamente depois deste arquivo.
 
 [default]
 version = "0.3.0"
@@ -18,7 +20,8 @@ tickets = []              # vazio = todos os chamados da pasta de dados
 evaluate_against_ground_truth = true
 
 [default.models]
-# Formato "provedor:modelo". Provedores prontos: anthropic, openai, google (Gemini). Sem prefixo = llm.default_provider.
+# Formato "provedor:modelo". Provedores prontos: anthropic, openai, google (Gemini) e iara (IARA GenAI, dentro do Itaú;
+# ex.: "iara:gpt-4.1" ou "iara:bedrock/<modelo>"). Sem prefixo = llm.default_provider.
 # Fixe snapshots (ids com data) em produção; o id efetivamente usado pelo provedor fica gravado em cada chamada.
 main = "anthropic:claude-sonnet-5-5"   # escopo, orçamento × escopo, fotos
 fast = "anthropic:claude-sonnet-5-5"       # identificação dos anexos, redação do parecer
@@ -41,6 +44,14 @@ timeout_s = 180
 max_retries = 4
 image_max_side = 1568
 use_disk_cache = true    # não paga duas vezes pela mesma requisição
+
+[default.llm.provider_options.iara]
+# usado só quando algum modelo é "iara:..."
+environment = "dev"          # dev | homol | prod
+provider = "azure_openai"    # backend padrão da IARA: azure_openai | bedrock | vertex ("iara:bedrock/<modelo>" troca por modelo)
+json_mode = "json_schema"    # se o backend recusar response_format com schema: "json_object" ou "prompt"
+pdf_mode = "file"            # se o backend recusar PDF como arquivo: "text" (extrai o texto localmente; requer pypdf)
+enable_polling = true
 
 [default.pipeline]
 phase = 2                   # 1 = régua do MVP; 2 = inclui "antes", ilegibilidade, reaproveitamento e data das fotos
@@ -115,6 +126,20 @@ input = 4.00
 output = 20.00
 cache_write = 5.00
 cache_read = 0.20
+
+# Modelos usados via IARA (chave com o prefixo "iara:" para o painel listar com o provedor certo). Preço de lista da OpenAI,
+# só como referência: o custo interno cobrado pela IARA pode ser outro.
+[default.costs.prices."iara:gpt-4.1"]
+input = 2.00
+output = 8.00
+cache_write = 0
+cache_read = 0.50
+
+[default.costs.prices."iara:gpt-4.1-mini"]
+input = 0.40
+output = 1.60
+cache_write = 0
+cache_read = 0.10
 
 # ----------------------------------------------------------------------------------------------
 [development]

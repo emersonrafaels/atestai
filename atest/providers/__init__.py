@@ -1,5 +1,6 @@
-"""Registro de provedores de LLM. Para incluir outro (Azure OpenAI, Bedrock, Vertex, modelo local...), implemente
-`Provedor` e registre com `registrar("nome", fabrica)`; depois use "nome:modelo" no config/settings.toml."""
+"""Registro de provedores de LLM (anthropic, openai, google, iara). Para incluir outro (modelo local...), implemente
+`Provider` e registre com `register("nome", fabrica)`; depois use "nome:modelo" no config/settings.toml.
+Opções específicas de um provedor vêm de [llm.provider_options.<nome>] e chegam como argumentos da fábrica."""
 
 from __future__ import annotations
 
@@ -45,7 +46,13 @@ def _google(**kw) -> Provider:
     return GoogleProvider(**kw)
 
 
-PROVIDERS: dict[str, Factory] = {"anthropic": _anthropic, "openai": _openai, "google": _google}
+def _iara(**kw) -> Provider:
+    from .iara import IaraProvider
+
+    return IaraProvider(**kw)
+
+
+PROVIDERS: dict[str, Factory] = {"anthropic": _anthropic, "openai": _openai, "google": _google, "iara": _iara}
 _instances: dict[str, Provider] = {}
 _lock = Lock()
 

@@ -249,7 +249,7 @@ export default function App() {
               </Tooltip>
             )}
             {config && (
-              <Tooltip side="bottom" content={config.api_available ? `Chave da API configurada: ${config.providers.map(providerLabel).join(", ")}` : `Sem chave da API (${config.missing_keys.join(", ")}): só o modo simulado está disponível`}>
+              <Tooltip side="bottom" content={config.api_available ? `Credenciais configuradas: ${config.providers.map(providerLabel).join(", ")}` : `Sem credenciais da API (${config.missing_keys.map(providerLabel).join(", ")}): só o modo simulado está disponível`}>
                 <span className={`hidden cursor-help items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-semibold lg:flex ${config.api_available ? "bg-[#e3f2ea] text-ok" : "bg-paper text-muted"}`}>
                   {config.api_available ? <Wifi size={13} /> : <WifiOff size={13} />}{config.api_available ? "API conectada" : "Só simulado"}
                 </span>
@@ -271,8 +271,8 @@ export default function App() {
               <div className="flex rounded-lg border border-line bg-sheet p-0.5">
                 <SegmentButton active={mode === "simulated"} onClick={() => setMode("simulated")} hint="Sem custo: respostas simuladas, sem chamar o modelo">Simulado</SegmentButton>
                 <SegmentButton active={mode === "api"} onClick={() => setMode("api")} disabled={!config?.api_available}
-                  hint={config?.api_available ? `Chama a API: ${config.main_model}` : `Defina a chave de: ${config?.missing_keys.join(", ")} (config/.secrets.toml ou variável de ambiente)`}>
-                  API{config ? ` ${config.providers.map((p) => p[0].toUpperCase() + p.slice(1)).join("/")}` : ""}</SegmentButton>
+                  hint={config?.api_available ? `Chama a API: ${config.main_model}` : `Defina as credenciais de: ${config?.missing_keys.map(providerLabel).join(", ")} (config/.secrets.toml ou variável de ambiente)`}>
+                  API{config ? ` ${config.providers.map(providerLabel).join("/")}` : ""}</SegmentButton>
               </div>
             </fieldset>
             <fieldset data-tour="phase" className="flex items-center gap-2">

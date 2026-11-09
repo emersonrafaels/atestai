@@ -12,7 +12,6 @@ Portal        POST /api/admin/login · GET /api/admin/overview · PUT /api/admin
 from __future__ import annotations
 
 import logging
-import os
 import shutil
 import tempfile
 import threading
@@ -29,7 +28,7 @@ from pydantic import BaseModel, Field, ValidationError
 from .admin import SECTIONS, AdminError, AdminStore
 from .attachments import compute_hashes, detail_level, distance, exif_date, hashes_with_crops
 from .batch import BatchRunner, ComponentFactory, new_run_id
-from .config import KEY_ENV_VAR, ROOT, BatchMode, Mode, Settings, missing_keys, used_providers
+from .config import KEY_ENV_VAR, ROOT, BatchMode, Mode, Settings, has_credentials, missing_keys, used_providers
 from .database import Database, Feedback, FeedbackInput
 from .domain import (
     CATEGORY_LABEL,
@@ -674,7 +673,7 @@ def create_app(cfg: Settings) -> FastAPI:
             validation=cfg.validation.model_dump(),
             rubric=manager.cfg_base.rubric.model_dump(mode="json", include={"weights", "discount_by_severity", "bands", "confidence"}),
             models=model_options(),
-            keyed_providers=sorted(p for p, var in KEY_ENV_VAR.items() if os.getenv(var)),
+            keyed_providers=sorted(p for p in KEY_ENV_VAR if has_credentials(p)),
         )
 
     @app.get("/api/datasets")

@@ -80,6 +80,9 @@ class LlmSettings(_Section):
     max_retries: int = Field(4, ge=0)
     image_max_side: int = 1568
     use_disk_cache: bool = True
+    provider_options: dict[str, dict[str, Any]] = Field(
+        default_factory=dict, description="Opções extras por provedor, repassadas à sua fábrica (ex.: [llm.provider_options.iara])"
+    )
 
 
 class PipelineSettings(_Section):
@@ -365,8 +368,26 @@ def load_settings(environment: str | None = None) -> Settings:
     return Settings.model_validate(data)
 
 
-SECRETS = {"anthropic_api_key": "ANTHROPIC_API_KEY", "openai_api_key": "OPENAI_API_KEY", "gemini_api_key": "GEMINI_API_KEY"}
-KEY_ENV_VAR = {"anthropic": "ANTHROPIC_API_KEY", "openai": "OPENAI_API_KEY", "google": "GEMINI_API_KEY"}
+SECRETS = {
+    "anthropic_api_key": "ANTHROPIC_API_KEY",
+    "openai_api_key": "OPENAI_API_KEY",
+    "gemini_api_key": "GEMINI_API_KEY",
+    "iara_client_id": "IARA_CLIENT_ID",
+    "iara_client_secret": "IARA_CLIENT_SECRET",
+    "iara_access_token": "IARA_ACCESS_TOKEN",
+}
+# variáveis de ambiente que um provedor precisa (todas) para funcionar
+KEY_ENV_VAR: dict[str, tuple[str, ...]] = {
+    "anthropic": ("ANTHROPIC_API_KEY",),
+    "openai": ("OPENAI_API_KEY",),
+    "google": ("GEMINI_API_KEY",),
+    "iara": ("IARA_CLIENT_ID", "IARA_CLIENT_SECRET"),
+}
+
+
+def has_credentials(provider: str) -> bool:
+    """True se todas as variáveis de credencial do provedor estão no ambiente (provedor desconhecido: True)."""
+    return all(os.getenv(v) for v in KEY_ENV_VAR.get(provider, ()))
 
 
 def used_providers(cfg: Settings) -> set[str]:
@@ -376,8 +397,8 @@ def used_providers(cfg: Settings) -> set[str]:
 
 
 def missing_keys(cfg: Settings) -> list[str]:
-    """Provedores configurados sem chave de API no ambiente."""
-    return sorted(p for p in used_providers(cfg) if p in KEY_ENV_VAR and not os.getenv(KEY_ENV_VAR[p]))
+    """Provedores configurados sem credencial (chave de API ou client_id/secret) no ambiente."""
+    return sorted(p for p in used_providers(cfg) if not has_credentials(p))
 
 
 def api_available(cfg: Settings | None = None) -> bool:

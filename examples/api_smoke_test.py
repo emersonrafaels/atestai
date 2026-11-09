@@ -1,6 +1,6 @@
-"""Teste rápido do provedor configurado (Anthropic, OpenAI ou Gemini) antes de rodar o lote.
+"""Teste rápido do provedor configurado (Anthropic, OpenAI, Gemini ou IARA) antes de rodar o lote.
 
-Usa o modelo principal de config/settings.toml (ex.: "anthropic:claude-sonnet-5-5", "openai:<modelo>", "google:<modelo>")
+Usa o modelo principal de config/settings.toml (ex.: "anthropic:claude-sonnet-5-5", "openai:<modelo>", "iara:gpt-4.1")
 e as chaves de config/.secrets.toml. Rode:  python examples/api_smoke_test.py
 """
 
@@ -37,9 +37,9 @@ class PhotoReading(BaseModel):
 def main() -> None:
     cfg = load_settings()
     if missing := missing_keys(cfg):
-        raise SystemExit(f"Faltam chaves de API para: {', '.join(missing)}. Preencha config/.secrets.toml.")
+        raise SystemExit(f"Faltam credenciais para: {', '.join(missing)}. Preencha config/.secrets.toml ou as variáveis de ambiente.")
     name, model = providers.split_model(cfg.models.main, cfg.llm.default_provider)
-    prov = providers.get(name)
+    prov = providers.get(name, timeout_s=cfg.llm.timeout_s, max_retries=cfg.llm.max_retries, **cfg.llm.provider_options.get(name, {}))
     print(f"Provedor {name} · modelo {model}")
 
     t = time.perf_counter()

@@ -1,0 +1,21 @@
+# Perfil para rodar dentro do Itaú, com todos os LLMs pela IARA GenAI.
+# Copie para config/settings.local.toml (fora do git); o Dynaconf carrega esse arquivo depois do settings.toml,
+# então só o que estiver aqui muda. Fora do banco, basta não ter o settings.local.toml.
+# Credenciais (IARA_CLIENT_ID, IARA_CLIENT_SECRET) em config/.secrets.toml ou em variáveis de ambiente.
+
+[default.models]
+main = "iara:gpt-4.1"       # escopo, orçamento × escopo, fotos
+fast = "iara:gpt-4.1"       # identificação dos anexos, redação do parecer
+
+[default.llm]
+default_provider = "iara"
+
+[default.llm.provider_options.iara]
+environment = "dev"          # dev | homol | prod
+provider = "azure_openai"    # azure_openai | bedrock | vertex
+json_mode = "json_schema"    # json_schema | json_object | prompt
+pdf_mode = "file"            # file | text
+enable_polling = true
+
+[production.llm.provider_options.iara]
+environment = "prod"

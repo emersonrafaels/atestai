@@ -1499,3 +1499,4 @@
 {"ts": "2026-11-09T10:47:53.290", "level": "INFO", "logger": "atest", "msg": "stage_end", "run": "20261109-104724-668b", "ticket": "02000003", "stage": "assessment", "event": "stage_end", "duration_s": 3.583}
 {"ts": "2026-11-09T10:47:53.294", "level": "INFO", "logger": "atest", "msg": "ticket_end", "run": "20261109-104724-668b", "ticket": "02000003", "event": "ticket_end", "recommendation": "approve_with_caveats", "score": 72, "cost_usd": 0.086619, "duration_s": 27.61, "findings": ["missing_after_photo", "photo_mismatch"]}
 {"ts": "2026-11-09T10:47:53.360", "level": "INFO", "logger": "atest", "msg": "run_end", "run": "20261109-104724-668b", "event": "run_end", "assessments": 1, "errors": 0, "cost_usd": 0.086619, "input_tokens": 18057, "output_tokens": 2928, "api_batches": []}
+{"ts": "2026-11-09T11:53:15.981", "level": "INFO", "logger": "atest", "msg": "admin_login", "event": "admin_login", "user": "emervin"}

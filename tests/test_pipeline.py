@@ -5,6 +5,7 @@ import json
 import re
 import time
 from datetime import UTC, datetime
+from types import SimpleNamespace
 
 import anthropic
 import httpx2 as httpx
@@ -18,6 +19,7 @@ from atest.database import Database
 from atest.llm import BatchClient, ProviderClient
 from atest.observability import configure_logging
 from atest.providers.anthropic import AnthropicProvider
+from atest.providers.iara import IaraProvider
 from atest.repository import load_ground_truth
 from atest.simulated import SimulatedClient
 
@@ -52,6 +54,16 @@ class FakeServer:
                 return name
         return "quote_review"
 
+    def answer(self, schema: dict, texts: str) -> dict:
+        """Resposta do gabarito para a tarefa (identificada pelo schema) e o chamado citado no texto."""
+        attachments = re.findall(r"--- Anexo (\d+): (.+?) \(", texts)
+        tid = re.search(r"Chamado (\d{8})", texts).group(1)
+        meta = {"ticket": tid, "attachments": [n for _, n in attachments], "indices": [int(i) for i, _ in attachments]}
+        t = self._task(schema)
+        if t == "assessment":
+            return {"summary": "(mock)", "supplier_message": ""}
+        return getattr(self.simulated, f"_{t}")(load_ground_truth(self.cfg.ground_truth_dir, tid), meta)
+
     def message(self, params: dict) -> dict:
         self.requests += 1
         fmt = params["output_config"]["format"]
@@ -59,16 +71,7 @@ class FakeServer:
         assert params["system"][0]["cache_control"] == {"type": "ephemeral"}
         content = params["messages"][0]["content"]
         self.images += sum(b["type"] == "image" for b in content)
-        texts = " ".join(b["text"] for b in content if b["type"] == "text")
-        attachments = re.findall(r"--- Anexo (\d+): (.+?) \(", texts)
-        tid = re.search(r"Chamado (\d{8})", texts).group(1)
-        meta = {"ticket": tid, "attachments": [n for _, n in attachments], "indices": [int(i) for i, _ in attachments]}
-        t = self._task(fmt["schema"])
-        out = (
-            {"summary": "(mock)", "supplier_message": ""}
-            if t == "assessment"
-            else getattr(self.simulated, f"_{t}")(load_ground_truth(self.cfg.ground_truth_dir, tid), meta)
-        )
+        out = self.answer(fmt["schema"], " ".join(b["text"] for b in content if b["type"] == "text"))
         return {
             "id": "msg_mock",
             "type": "message",
@@ -148,6 +151,48 @@ def test_message_batches_groups_rounds(cfg, demo):
     assert ch.via_batch and ch.batch_id
     sync = CostCalculator(cfg_b).price(ch.model)
     assert ch.cost_usd < (ch.input_tokens * sync.input + ch.output_tokens * sync.output) / 1e6  # desconto aplicado
+
+
+class FakeIaraClient:
+    """Cliente IARA falso (chat.completions no formato OpenAI) respondendo a partir do gabarito."""
+
+    def __init__(self, cfg):
+        self.server = FakeServer(cfg)
+        self.models: set[str] = set()
+        self.chat = SimpleNamespace(completions=SimpleNamespace(create=self.create))
+
+    def create(self, **kw) -> dict:
+        self.server.requests += 1
+        self.models.add(kw["model"])
+        fmt = kw["response_format"]
+        assert fmt["type"] == "json_schema" and fmt["json_schema"]["strict"] is True
+        schema = fmt["json_schema"]["schema"]
+        assert schema["additionalProperties"] is False and schema["required"] == list(schema["properties"])
+        system, user = kw["messages"]
+        assert system["role"] == "system" and user["role"] == "user"
+        self.server.images += sum(b["type"] == "image_url" for b in user["content"])
+        out = self.server.answer(schema, " ".join(b["text"] for b in user["content"] if b["type"] == "text"))
+        return {
+            "id": "chatcmpl-mock",
+            "model": f"{kw['model']}-2025-04-14",
+            "choices": [{"index": 0, "finish_reason": "stop", "message": {"role": "assistant", "content": json.dumps(out, ensure_ascii=False)}}],
+            "usage": {"prompt_tokens": 1000, "completion_tokens": 100, "prompt_tokens_details": {"cached_tokens": 200}},
+        }
+
+
+def test_iara_runs_the_same_pipeline_in_sync_and_batch_mode(cfg, demo):
+    """Trocar para a IARA é só configuração: mesmo pipeline e mesmo resultado; no modo lote cai para chamadas síncronas."""
+    for kind, client_cls in ((BatchMode.SYNC, ProviderClient), (BatchMode.BATCH, BatchClient)):
+        fake = FakeIaraClient(cfg)
+        c = cfg.with_overrides(**{"execution.mode": Mode.API, "batch.kind": kind, "models.main": "iara:gpt-4.1", "models.fast": "iara:gpt-4.1-mini"})
+        client = client_cls(c, {"iara": IaraProvider(client=fake)})
+        res = BatchRunner(c, ComponentFactory(c).orchestrator(client)).run(demo)
+        assert not res.errors and res.evaluation.exact_recommendation == 13
+        assert fake.models == {"gpt-4.1", "gpt-4.1-mini"} and fake.server.images > 30 and not res.api_batches
+        call = res.assessments[0].llm_calls[0]
+        assert call.provider == "iara" and call.model.startswith("iara:gpt-4.1") and call.resolved_model.endswith("-2025-04-14")
+        assert (call.input_tokens, call.output_tokens, call.cache_read_tokens) == (800, 100, 200)
+        assert not call.via_batch and call.cost_usd > 0
 
 
 def _wait(c: TestClient, ex_id: str) -> dict:

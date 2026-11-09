@@ -1,10 +1,15 @@
-"""Camada de provedores (Anthropic, OpenAI, Gemini), roteamento por tarefa, contingência, cache e métricas de validação."""
+"""Camada de provedores (Anthropic, OpenAI, Gemini, IARA), roteamento por tarefa, contingência, cache e métricas de validação."""
+
+import io
+import sys
+from types import SimpleNamespace
 
 import pytest
 from pydantic import BaseModel
 
-from atest import providers
+from atest import llm_schemas, providers
 from atest.batch import BatchRunner
+from atest.config import missing_keys
 from atest.llm import LlmSession, ProviderClient
 from atest.providers.base import DocumentPart, ImagePart, Provider, ProviderError, ProviderResponse, Request, TextPart, Usage
 from atest.validation import DatasetCatalog, Stats
@@ -37,7 +42,7 @@ def test_split_model_accepts_provider_prefix():
     assert providers.split_model("openai:gpt-x") == ("openai", "gpt-x")
     assert providers.split_model("google:gemini-y") == ("google", "gemini-y")
     assert providers.split_model("claude-sonnet-5-5") == ("anthropic", "claude-sonnet-5-5")
-    assert set(providers.PROVIDERS) >= {"anthropic", "openai", "google"}
+    assert set(providers.PROVIDERS) >= {"anthropic", "openai", "google", "iara"}
 
 
 def test_cache_key_changes_with_provider_content_and_schema():
@@ -76,6 +81,194 @@ def test_anthropic_conversion_caches_system():
     p = AnthropicProvider(client=object())._params(_req(TextPart("oi"), ImagePart(b"img"), DocumentPart(b"%PDF")))
     assert p["system"][0]["cache_control"] == {"type": "ephemeral"}
     assert [b["type"] for b in p["messages"][0]["content"]] == ["text", "image", "document"]
+
+
+# --------------------------------------------------------------------------- IARA GenAI (Itaú)
+class FakeIara:
+    """Cliente IARA de teste: `chat.completions.create` devolve respostas em fila (objeto, dict ou exceção)."""
+
+    def __init__(self, *responses):
+        self.responses, self.calls = list(responses), []
+        self.chat = SimpleNamespace(completions=SimpleNamespace(create=self._create))
+
+    def _create(self, **kw):
+        self.calls.append(kw)
+        r = self.responses.pop(0)
+        if isinstance(r, Exception):
+            raise r
+        return r
+
+
+def _completion(content, finish="stop", prompt=100, completion=20, cached=30, model="gpt-4.1-2025-04-14"):
+    return SimpleNamespace(
+        id="chatcmpl-1",
+        model=model,
+        choices=[SimpleNamespace(finish_reason=finish, message=SimpleNamespace(content=content, refusal=None))],
+        usage=SimpleNamespace(prompt_tokens=prompt, completion_tokens=completion, prompt_tokens_details=SimpleNamespace(cached_tokens=cached)),
+    )
+
+
+class HttpError(Exception):
+    def __init__(self, status_code):
+        super().__init__(f"HTTP {status_code}")
+        self.status_code = status_code
+
+
+def _pdf(text: str) -> bytes:
+    """PDF mínimo de uma página com o texto (para o pdf_mode = "text")."""
+    stream = f"BT /F1 12 Tf 72 720 Td ({text}) Tj ET".encode()
+    objs = [
+        b"<< /Type /Catalog /Pages 2 0 R >>",
+        b"<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+        b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>",
+        b"<< /Length " + str(len(stream)).encode() + b" >>stream\n" + stream + b"\nendstream",
+        b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+    ]
+    out, offsets = io.BytesIO(), []
+    out.write(b"%PDF-1.4\n")
+    for i, o in enumerate(objs, 1):
+        offsets.append(out.tell())
+        out.write(f"{i} 0 obj\n".encode() + o + b"\nendobj\n")
+    xref = out.tell()
+    out.write(f"xref\n0 {len(objs) + 1}\n0000000000 65535 f \n".encode())
+    out.write("".join(f"{off:010d} 00000 n \n" for off in offsets).encode())
+    out.write(f"trailer << /Size {len(objs) + 1} /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF".encode())
+    return out.getvalue()
+
+
+def test_iara_conversion_text_image_and_pdf():
+    from atest.providers.iara import convert
+
+    req = _req(TextPart("oi"), ImagePart(b"img", "image/png"), DocumentPart(b"%PDF", title="certificate.pdf"))
+    system, user = convert(req, Output)
+    assert system == {"role": "system", "content": "sys"} and user["role"] == "user"
+    assert [c["type"] for c in user["content"]] == ["text", "image_url", "file"]
+    assert user["content"][1]["image_url"]["url"].startswith("data:image/png;base64,")
+    assert user["content"][2]["file"]["filename"] == "certificate.pdf"
+    assert user["content"][2]["file"]["file_data"].startswith("data:application/pdf;base64,")
+    # sem response_format com schema, o schema vai no prompt de sistema
+    assert '"response"' in convert(req, Output, json_mode="prompt")[0]["content"]
+
+
+def test_iara_pdf_as_text():
+    pytest.importorskip("pypdf")
+    from atest.providers.iara import convert
+
+    _, user = convert(_req(DocumentPart(_pdf("Laudo ART 123"), title="art.pdf")), Output, pdf_mode="text")
+    assert user["content"][0]["type"] == "text"
+    assert user["content"][0]["text"].startswith("[PDF: art.pdf]") and "Laudo ART 123" in user["content"][0]["text"]
+
+
+@pytest.mark.parametrize(
+    "output",
+    [llm_schemas.AttachmentIdentification, llm_schemas.ScopeReading, llm_schemas.QuoteReview, llm_schemas.PhotoAnalysis, llm_schemas.AssessmentText],
+)
+def test_iara_strict_schema_closes_every_object(output):
+    from atest.providers.iara import strict_schema
+
+    schema = strict_schema(output)
+    objects = []
+
+    def collect(node):
+        if isinstance(node, dict):
+            if isinstance(node.get("properties"), dict):
+                objects.append(node)
+            for k, v in node.items():
+                if k in ("properties", "$defs"):
+                    for s in v.values():
+                        collect(s)
+                else:
+                    collect(v)
+        elif isinstance(node, list):
+            for v in node:
+                collect(v)
+
+    collect(schema)
+    assert objects and all(o["additionalProperties"] is False and o["required"] == list(o["properties"]) for o in objects)
+    # os nomes dos campos são preservados (nenhum campo some por se chamar como palavra do JSON Schema)
+    assert set(schema["properties"]) == set(output.model_json_schema()["properties"])
+
+
+def test_iara_generate_parses_json_usage_and_params():
+    from atest.providers.iara import IaraProvider
+
+    fake = FakeIara(_completion('```json\n{"response": "ok"}\n```'))
+    r = IaraProvider(client=fake).generate(_req(TextPart("x")), Output)
+    assert r.obj == Output(response="ok") and r.resolved_model == "gpt-4.1-2025-04-14" and r.response_id == "chatcmpl-1"
+    assert (r.usage.input, r.usage.output, r.usage.cache_read_tokens) == (70, 20, 30)
+    kw = fake.calls[0]
+    assert kw["model"] == "m" and kw["max_tokens"] == 100 and kw["enable_polling"] is True
+    assert kw["response_format"]["type"] == "json_schema" and kw["response_format"]["json_schema"]["strict"] is True
+    assert kw["response_format"]["json_schema"]["schema"]["additionalProperties"] is False
+    assert "reasoning_effort" not in kw
+
+    # resposta em dict (formato alternativo do SDK) e json_mode = "json_object"
+    fake = FakeIara({"id": "x", "model": "m", "choices": [{"finish_reason": "stop", "message": {"content": '{"response": "dict"}'}}]})
+    r = IaraProvider(client=fake, json_mode="json_object", enable_polling=False).generate(_req(TextPart("x")), Output)
+    assert r.obj.response == "dict" and r.usage.input == 0
+    assert fake.calls[0]["response_format"] == {"type": "json_object"} and "enable_polling" not in fake.calls[0]
+
+
+def test_iara_errors_and_retries(monkeypatch):
+    from atest.providers import iara
+
+    monkeypatch.setattr(iara.time, "sleep", lambda s: None)
+    with pytest.raises(ProviderError, match="max_tokens") as e:
+        iara.IaraProvider(client=FakeIara(_completion('{"resp', finish="length"))).generate(_req(TextPart("x")), Output)
+    assert not e.value.transient
+    with pytest.raises(ProviderError, match="fora do schema"):
+        iara.IaraProvider(client=FakeIara(_completion('{"outro": 1}'))).generate(_req(TextPart("x")), Output)
+    # 429 / 5xx: repete até max_retries e, se esgotar, sinaliza erro transitório (aciona a contingência)
+    fake = FakeIara(HttpError(429), HttpError(503), _completion('{"response": "ok"}'))
+    assert iara.IaraProvider(client=fake, max_retries=2).generate(_req(TextPart("x")), Output).obj.response == "ok"
+    with pytest.raises(ProviderError) as e:
+        iara.IaraProvider(client=FakeIara(HttpError(429), HttpError(429)), max_retries=1).generate(_req(TextPart("x")), Output)
+    assert e.value.transient
+    with pytest.raises(ProviderError) as e:
+        iara.IaraProvider(client=FakeIara(HttpError(400))).generate(_req(TextPart("x")), Output)
+    assert not e.value.transient
+    with pytest.raises(ValueError):
+        iara.IaraProvider(json_mode="xml")
+
+
+def test_iara_backend_per_model(monkeypatch):
+    from atest.providers import iara
+
+    created = []
+
+    class FakeSdk:
+        def __init__(self, **kw):
+            created.append(kw)
+            self.chat = FakeIara(_completion('{"response": "ok"}')).chat
+
+    monkeypatch.setitem(sys.modules, "iaragenai", SimpleNamespace(IaraGenAI=FakeSdk))
+    monkeypatch.setenv("IARA_CLIENT_ID", "id")
+    monkeypatch.setenv("IARA_CLIENT_SECRET", "secret")
+    monkeypatch.delenv("IARA_ACCESS_TOKEN", raising=False)
+    p = iara.IaraProvider(environment="homol")
+    p.generate(Request(task="t", system="s", parts=[TextPart("x")], model="bedrock/anthropic.claude-x:0", max_tokens=10), Output)
+    p.generate(Request(task="t", system="s", parts=[TextPart("x")], model="gpt-4.1", max_tokens=10), Output)
+    assert [c["provider"] for c in created] == ["bedrock", "azure_openai"]
+    assert created[0] == {"client_id": "id", "client_secret": "secret", "environment": "homol", "provider": "bedrock"}
+    assert iara.split_backend("bedrock/anthropic.claude-x:0", "azure_openai") == ("bedrock", "anthropic.claude-x:0")
+    assert iara.split_backend("org/modelo", "azure_openai") == ("azure_openai", "org/modelo")
+
+
+def test_iara_options_reach_the_provider_and_credentials_need_both_vars(cfg, monkeypatch):
+    from atest.providers.iara import IaraProvider
+
+    c = cfg.with_overrides(**{"models.main": "iara:gpt-4.1", "llm.provider_options": {"iara": {"environment": "prod", "pdf_mode": "text"}}})
+    providers.clear_instances()
+    try:
+        p = ProviderClient(c).provider("iara")
+        assert isinstance(p, IaraProvider) and p.environment == "prod" and p.pdf_mode == "text" and p.backend == "azure_openai"
+    finally:
+        providers.clear_instances()
+    monkeypatch.setenv("IARA_CLIENT_ID", "id")
+    monkeypatch.delenv("IARA_CLIENT_SECRET", raising=False)
+    assert "iara" in missing_keys(c)
+    monkeypatch.setenv("IARA_CLIENT_SECRET", "secret")
+    assert "iara" not in missing_keys(c)
 
 
 # --------------------------------------------------------------------------- roteamento, contingência e cache

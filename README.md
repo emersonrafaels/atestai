@@ -59,11 +59,12 @@ Trocar, remover ou acrescentar uma etapa é passar outra lista em `Orchestrator(
 | `config/rubric.toml` | pesos 20/40/40, faixas 85/70, descontos por severidade, tipos de apontamento, tolerâncias |
 | `config/checklists.toml` | itens obrigatórios por categoria × tipo de manutenção × momento |
 | `config/prompts.toml` | os prompts de sistema de cada tarefa (em português), com versão |
-| `config/.secrets.toml` | chaves de API (fora do git) |
+| `config/.secrets.toml` | chaves de API e credenciais da IARA (fora do git) |
+| `config/settings.local.toml` | ajustes só desta máquina, ex.: usar a IARA dentro do Itaú (fora do git; modelo em `config/settings.itau.toml.example`) |
 
 Ambientes `[default]`, `[development]` e `[production]`, escolhidos por `ATEST_ENV`. Qualquer chave pode ser sobrescrita por variável de ambiente: `ATEST_MODELS__MAIN="openai:<modelo>"`, `ATEST_PIPELINE__PHASE=1`. Tudo é validado por Pydantic ao carregar (`atest/config.py`): erro de digitação no TOML falha na hora, não no meio de um lote.
 
-## Trocar de LLM: Anthropic, OpenAI ou Gemini
+## Trocar de LLM: Anthropic, OpenAI, Gemini ou IARA
 
 O pipeline não conhece nenhum SDK. Ele monta uma `Request` neutra (texto, imagens e PDFs como `TextPart`, `ImagePart`, `DocumentPart`) e pede uma saída Pydantic; cada provedor em `atest/providers/` traduz para a sua API de saída estruturada:
 
@@ -72,6 +73,7 @@ O pipeline não conhece nenhum SDK. Ele monta uma `Request` neutra (texto, image
 | `anthropic` | `messages.parse(output_format=...)`, prompt de sistema com cache | Message Batches API (−50%) |
 | `openai` | Responses API, `responses.parse(text_format=...)` | — (cai para síncrono) |
 | `google` | `google-genai`, `response_schema=<Pydantic>` | — (cai para síncrono) |
+| `iara` | IARA GenAI (Itaú), `chat.completions.create` com `response_format` JSON Schema estrito | — (cai para síncrono) |
 
 Trocar é só configuração, no formato `"provedor:modelo"`:
 
@@ -87,7 +89,26 @@ photos = "google:<modelo-gemini>"
 main = "openai:<modelo-openai>"
 ```
 
-Um provedor novo é uma subclasse de `Provider` com `generate(request, output)` e uma linha em `providers.register("nome", fabrica)`. O painel mostra quais provedores a configuração usa e avisa se falta chave.
+Um provedor novo é uma subclasse de `Provider` com `generate(request, output)` e uma linha em `providers.register("nome", fabrica)`. Opções próprias dele ficam em `[default.llm.provider_options.<nome>]` e chegam como argumentos da fábrica. O painel mostra quais provedores a configuração usa e avisa se falta credencial.
+
+### Rodando no Itaú (IARA GenAI)
+
+Dentro do banco, todo LLM passa pela IARA. Fora dele, nada muda (Anthropic). O pipeline, o painel, os custos, o cache e a validação são os mesmos; só a configuração troca.
+
+1. Instale o SDK pelo Artifactory interno: `pip install iara_genai_sdk` (mais `pypdf`, se for usar `pdf_mode = "text"`).
+2. Credenciais da aplicação em `config/.secrets.toml` (`iara_client_id`, `iara_client_secret` e, opcional, `iara_access_token`) ou nas variáveis `IARA_CLIENT_ID`, `IARA_CLIENT_SECRET` e `IARA_ACCESS_TOKEN`.
+3. `cp config/settings.itau.toml.example config/settings.local.toml`. Esse arquivo fica fora do git e é carregado depois do `settings.toml`; ele troca os modelos para `iara:gpt-4.1` e escolhe o ambiente da IARA (`dev`, `homol` ou `prod`). Com `ATEST_ENV=production`, o ambiente vira `prod`.
+4. Antes de rodar o lote, teste com `python examples/api_smoke_test.py`.
+
+Modelos: `iara:<modelo>` usa o backend padrão (`provider = "azure_openai"`); `iara:bedrock/<modelo>` ou `iara:vertex/<modelo>` escolhe outro backend só para aquele modelo. Se o backend recusar alguma coisa, ajuste em `[default.llm.provider_options.iara]`, sem mexer no código:
+
+| Opção | Padrão | Alternativas |
+|---|---|---|
+| `json_mode` | `"json_schema"` (schema estrito no `response_format`) | `"json_object"` (JSON livre e schema no prompt) · `"prompt"` (sem `response_format`) |
+| `pdf_mode` | `"file"` (PDF enviado como arquivo) | `"text"` (texto extraído localmente com `pypdf`) |
+| `enable_polling` | `true` | `false` |
+
+A Batch API da IARA ainda não está integrada: no modo Lote, as chamadas para `iara:` saem síncronas e sem o desconto de lote. Os preços em `[default.costs.prices."iara:gpt-4.1"]` são os de lista da OpenAI, só como referência.
 
 ## LangChain e LangGraph: onde (não) usar
 
@@ -170,7 +191,7 @@ atest/
   config.py              Dynaconf → Settings (Pydantic), assinatura, chaves por provedor
   domain.py              domínio: Ticket, Quote, Rubric, Finding, Assessment, LlmCall...
   llm_schemas.py         saídas estruturadas pedidas ao modelo (descrições em português)
-  providers/             Provider (ABC) + anthropic, openai, google
+  providers/             Provider (ABC) + anthropic, openai, google, iara
   llm.py                 ProviderClient (cache, contingência), BatchClient (lotes), LlmSession (roteamento, custo, rastro)
   simulated.py           SimulatedClient: responde pelo gabarito, com ruído opcional
   analysis.py            AnalysisContext e AnalysisStage (contrato das etapas)
@@ -193,4 +214,5 @@ tests/
 - O modo simulado responde pelo gabarito e **não mede a qualidade do modelo**; serve para demonstrar fluxo e métricas. A medida real é `action = "validate"` em modo API, idealmente com chamados históricos no formato de `data/tickets/<id>/`.
 - O limiar de semelhança das fotos (`hash_max_distance`, e o mais estrito para fotos com pouco detalhe) foi calibrado em fotos sintéticas; recalibre com fotos reais.
 - Os provedores OpenAI e Gemini estão testados na conversão de conteúdo, não contra a API real (não havia chave neste ambiente).
+- O provedor IARA foi escrito a partir da documentação interna e testado com um cliente falso (pipeline completo, síncrono e lote). Ainda não rodou contra a IARA real. Os pontos a confirmar dentro do banco são o suporte a `response_format` com JSON Schema, PDF como arquivo e os nomes dos campos de uso de tokens e das exceções do SDK.
 - Bancos SQLite criados pela versão em português (`saida/atest.db`) não são compatíveis com o novo esquema; a versão atual cria `output/atest.db`.

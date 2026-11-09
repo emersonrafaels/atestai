@@ -79,7 +79,8 @@ class ProviderClient:
         """Instância do provedor pelo nome (injetada nos testes ou criada pelo registro)."""
         if name in self._instances:
             return self._instances[name]
-        return providers.get(name, timeout_s=self.cfg.llm.timeout_s, max_retries=self.cfg.llm.max_retries)
+        options = self.cfg.llm.provider_options.get(name, {})
+        return providers.get(name, timeout_s=self.cfg.llm.timeout_s, max_retries=self.cfg.llm.max_retries, **options)
 
     def _request(self, task: str, system: str, parts: list[Part], model: str, max_tokens: int) -> tuple[str, Request]:
         prov, mid = providers.split_model(model, self.cfg.llm.default_provider)

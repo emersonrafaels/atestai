@@ -173,7 +173,7 @@ export const ENV_LABEL: Record<string, string> = {
 };
 export const envLabel = (v: string | null | undefined) => (v ? ENV_LABEL[v] ?? v.replace(/_/g, " ") : "");
 
-export const PROVIDER_LABEL: Record<string, string> = { anthropic: "Anthropic", openai: "OpenAI", google: "Google" };
+export const PROVIDER_LABEL: Record<string, string> = { anthropic: "Anthropic", openai: "OpenAI", google: "Google", iara: "IARA" };
 export const providerLabel = (v: string) => PROVIDER_LABEL[v] ?? v;
 
 export const ENV_NAME: Record<string, string> = { development: "desenvolvimento", staging: "homologação", production: "produção" };

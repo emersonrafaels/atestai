@@ -105,7 +105,7 @@ export function ModelCombobox({ label, value, onChange, options, defaultId, defa
         <span className="min-w-0 max-w-52 truncate font-medium">{known ? known.name : value || "escolher…"}</span>
         {known && <span className="hidden text-[11px] text-muted xl:inline">{providerLabel(known.provider)}</span>}
         {custom && (
-          <Tooltip content={keyless(value) ? `O provedor "${providerOf(value)}" não tem chave configurada: a execução vai falhar.` : "Modelo personalizado, fora da tabela de preços: a análise roda, mas o custo não é calculado."}>
+          <Tooltip content={keyless(value) ? `O provedor "${providerOf(value)}" não tem credencial configurada: a execução vai falhar.` : "Modelo personalizado, fora da tabela de preços: a análise roda, mas o custo não é calculado."}>
             <span className={`flex items-center gap-1 rounded px-1 text-[10px] font-semibold uppercase ${keyless(value) ? "bg-[#f8e4e2] text-bad" : "bg-[#fdf1dc] text-warn"}`}>
               <AlertTriangle size={11} /> personalizado
             </span>
@@ -179,12 +179,12 @@ export function ModelCombobox({ label, value, onChange, options, defaultId, defa
                   <>
                     {!draft.includes(":") && <p className="text-muted">Sem “provedor:”, será usado {providerLabel(defaultProvider)}.</p>}
                     {keyless(draft.trim())
-                      ? <p className="flex items-center gap-1 text-bad"><AlertTriangle size={12} /> O provedor “{providerOf(draft.trim())}” não tem chave configurada: a execução vai falhar.</p>
+                      ? <p className="flex items-center gap-1 text-bad"><AlertTriangle size={12} /> O provedor “{providerOf(draft.trim())}” não tem credencial configurada: a execução vai falhar.</p>
                       : <p className="text-warn">Fora da tabela de preços: a análise roda, mas o custo não é calculado.</p>}
                   </>
                 )}
                 {availableProviders && (
-                  <p className="text-muted">Provedores com chave: {availableProviders.length ? availableProviders.map(providerLabel).join(", ") : "nenhum"}.</p>
+                  <p className="text-muted">Provedores com credencial: {availableProviders.length ? availableProviders.map(providerLabel).join(", ") : "nenhum"}.</p>
                 )}
               </div>
               <div className="flex justify-end gap-2">
