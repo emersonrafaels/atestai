@@ -126,8 +126,8 @@ fast = "anthropic:claude-sonnet-5-5"
 
 [default.panel.providers.iara]
 label = "IARA (Itaú)"
-main = "iara:gpt-4.1"
-fast = "iara:gpt-4.1-mini"
+main = "iara:claude-sonnet-5"   # bedrock pelo catálogo abaixo; lê imagem e PDF
+fast = "iara:claude-sonnet-5"
 
 [default.panel.providers.openai]
 label = "OpenAI"

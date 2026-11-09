@@ -369,7 +369,8 @@ def test_panel_provider_choices_come_from_config(cfg, monkeypatch):
     assert [c.id for c in choices] == ["anthropic", "iara"]
     assert choices[0].main == cfg.models.main and choices[0].available
     assert not choices[1].available and choices[1].credentials == ["IARA_CLIENT_ID", "IARA_CLIENT_SECRET"]
-    assert (choices[1].main, choices[1].fast) == ("iara:gpt-4.1", "iara:gpt-4.1-mini")
+    iara = cfg.panel.providers["iara"]
+    assert (choices[1].main, choices[1].fast) == (iara.main, iara.fast) == ("iara:claude-sonnet-5", "iara:claude-sonnet-5")
 
     # o provedor dos modelos configurados vem primeiro, com os modelos de [models], mesmo se escondido no painel
     itau = cfg.with_overrides(**{"models.main": "iara:gpt-4.1", "models.fast": "iara:gpt-4.1", "panel.providers.anthropic.enabled": False})
@@ -389,11 +390,12 @@ def test_run_with_chosen_provider_ignores_other_providers_overrides(cfg):
     base = cfg.with_overrides(**{"models.tasks": {"photos": "anthropic:a", "scope": "iara:b"}, "models.fallback": {"main": "anthropic:c"}})
     manager = RunManager(base, database=None)
     run = manager.run_settings(RunRequest(tickets=["1"], provider="iara"))
-    assert (run.models.main, run.models.fast) == ("iara:gpt-4.1", "iara:gpt-4.1-mini")
+    iara = base.panel.providers["iara"]
+    assert (run.models.main, run.models.fast) == (iara.main, iara.fast) == ("iara:claude-sonnet-5", "iara:claude-sonnet-5")
     assert run.models.tasks == {"scope": "iara:b"} and run.models.fallback == {}
     # modelos escolhidos no painel valem sobre os do provedor
     run = manager.run_settings(RunRequest(tickets=["1"], provider="iara", main_model="iara:gpt-5"))
-    assert run.models.main == "iara:gpt-5" and run.models.fast == "iara:gpt-4.1-mini"
+    assert run.models.main == "iara:gpt-5" and run.models.fast == iara.fast
     # sem provedor, nada muda (compatível com chamadas antigas da API)
     assert manager.run_settings(RunRequest(tickets=["1"])).models.tasks == base.models.tasks
     with pytest.raises(HTTPException) as e:

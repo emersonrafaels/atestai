@@ -367,7 +367,7 @@ export default function App() {
                   <Plus size={16} /> Novo chamado
                 </button>
               </Tooltip>
-              <Tooltip content={!selected.size ? "Marque ao menos um chamado na lista à esquerda" : running ? "Aguarde a execução atual terminar" : `Roda o pipeline completo nos ${selected.size} chamado(s) marcados, no modo ${mode === "api" ? "API" : "simulado"}`}>
+              <Tooltip content={!selected.size ? "Marque ao menos um chamado na lista à esquerda" : running ? "Aguarde a execução atual terminar" : `Analisa no modo ${mode === "api" ? "API" : "simulado"}: ${[...selected].slice(0, 8).join(", ")}${selected.size > 8 ? ` e mais ${selected.size - 8}` : ""}`}>
                 <button data-tour="run" onClick={run} disabled={!selected.size || running}
                   className="flex items-center gap-2 rounded-lg bg-blueprint px-4 py-1.5 font-semibold text-white shadow-sm transition-colors hover:bg-[#1d44a0] disabled:pointer-events-none disabled:opacity-50">
                   {running ? <Loader2 size={16} className="animate-spin" /> : <Play size={16} />}

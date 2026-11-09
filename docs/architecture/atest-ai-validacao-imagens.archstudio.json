@@ -1,0 +1,1106 @@
+{
+  "format": "archstudio",
+  "version": 1,
+  "name": "Atest.AI • Validação de imagens",
+  "description": "Arquitetura de solução da feature de validação de imagens (agente de evidências fotográficas) do Atest.AI para as esteiras SETA e SISR. Entrada e saída pelo Salesforce: MVP em batch diário via repositório compartilhado (D+1) e versão alvo via API. O contrato de dados é o mesmo nos dois modos; só o transporte muda. Modo sombra no MVP: o parecer não altera status.",
+  "settings": {
+    "grid": true,
+    "snap": true,
+    "gridSize": 10,
+    "wheel": "zoom",
+    "minimap": true,
+    "guides": true
+  },
+  "nodes": [
+    {
+      "id": "title",
+      "type": "shape-text",
+      "x": 20,
+      "y": -130,
+      "label": "Atest.AI • Validação de imagens (agente de evidências fotográficas)",
+      "sub": "Arquitetura de solução • SETA e SISR • MVP em batch diário (D+1) e versão alvo via API",
+      "style": {
+        "fontSize": 26,
+        "align": "start"
+      },
+      "kind": "text",
+      "w": 1500,
+      "h": 64
+    },
+    {
+      "id": "sf_in",
+      "type": "g-generic",
+      "x": 20,
+      "y": 110,
+      "label": "Salesforce • entrada",
+      "sub": "",
+      "style": {
+        "stroke": "#00A1E0",
+        "fill": "#00A1E0",
+        "fo": 0.05,
+        "dashed": false,
+        "glyph": "cloud"
+      },
+      "kind": "group",
+      "w": 260,
+      "h": 500
+    },
+    {
+      "id": "cloud",
+      "type": "g-cloud",
+      "x": 320,
+      "y": 20,
+      "label": "AWS Cloud",
+      "sub": "conta do Atest.AI",
+      "style": {},
+      "kind": "group",
+      "w": 1790,
+      "h": 1060
+    },
+    {
+      "id": "region",
+      "type": "g-region",
+      "x": 340,
+      "y": 60,
+      "label": "sa-east-1 (São Paulo)",
+      "sub": "",
+      "style": {},
+      "kind": "group",
+      "w": 1750,
+      "h": 1000
+    },
+    {
+      "id": "in_mvp",
+      "type": "g-offline",
+      "x": 360,
+      "y": 110,
+      "label": "MVP • batch D+1",
+      "sub": "",
+      "style": {},
+      "kind": "group",
+      "w": 260,
+      "h": 240
+    },
+    {
+      "id": "in_api",
+      "type": "g-online",
+      "x": 360,
+      "y": 370,
+      "label": "Alvo • via API",
+      "sub": "",
+      "style": {},
+      "kind": "group",
+      "w": 260,
+      "h": 240
+    },
+    {
+      "id": "st_orq",
+      "type": "g-stage",
+      "x": 645,
+      "y": 110,
+      "label": "Orquestração",
+      "sub": "",
+      "style": {},
+      "kind": "group",
+      "w": 260,
+      "h": 500
+    },
+    {
+      "id": "st_pre",
+      "type": "g-stage",
+      "x": 940,
+      "y": 110,
+      "label": "Pré-processamento",
+      "sub": "Fase 2",
+      "style": {
+        "dashed": true
+      },
+      "kind": "group",
+      "w": 260,
+      "h": 500
+    },
+    {
+      "id": "st_ia",
+      "type": "g-stage",
+      "x": 1230,
+      "y": 110,
+      "label": "Análise visual com IA",
+      "sub": "",
+      "style": {},
+      "kind": "group",
+      "w": 260,
+      "h": 500
+    },
+    {
+      "id": "st_ev",
+      "type": "g-stage",
+      "x": 1520,
+      "y": 110,
+      "label": "Evidência e parecer",
+      "sub": "",
+      "style": {},
+      "kind": "group",
+      "w": 260,
+      "h": 500
+    },
+    {
+      "id": "out_mvp",
+      "type": "g-offline",
+      "x": 1810,
+      "y": 110,
+      "label": "MVP • batch D+1",
+      "sub": "",
+      "style": {},
+      "kind": "group",
+      "w": 260,
+      "h": 240
+    },
+    {
+      "id": "out_api",
+      "type": "g-online",
+      "x": 1810,
+      "y": 370,
+      "label": "Alvo • via API",
+      "sub": "",
+      "style": {},
+      "kind": "group",
+      "w": 260,
+      "h": 240
+    },
+    {
+      "id": "dados",
+      "type": "g-generic",
+      "x": 645,
+      "y": 670,
+      "label": "Dados e conhecimento",
+      "sub": "",
+      "style": {},
+      "kind": "group",
+      "w": 1135,
+      "h": 150
+    },
+    {
+      "id": "gov",
+      "type": "g-generic",
+      "x": 360,
+      "y": 850,
+      "label": "Segurança, observabilidade e feedback",
+      "sub": "",
+      "style": {},
+      "kind": "group",
+      "w": 1710,
+      "h": 180
+    },
+    {
+      "id": "sf_out",
+      "type": "g-generic",
+      "x": 2140,
+      "y": 110,
+      "label": "Salesforce • saída",
+      "sub": "",
+      "style": {
+        "stroke": "#00A1E0",
+        "fill": "#00A1E0",
+        "fo": 0.05,
+        "dashed": false,
+        "glyph": "cloud"
+      },
+      "kind": "group",
+      "w": 260,
+      "h": 500
+    },
+    {
+      "id": "forn",
+      "type": "users",
+      "x": 122,
+      "y": -10,
+      "label": "Fornecedor",
+      "sub": "envia orçamento e fotos",
+      "style": {},
+      "kind": "icon",
+      "w": 56,
+      "h": 56
+    },
+    {
+      "id": "chamado",
+      "type": "extapi",
+      "x": 40,
+      "y": 160,
+      "label": "Chamado SETA / SISR",
+      "sub": "escopo • orçamento • fotos",
+      "style": {
+        "accent": "#00A1E0",
+        "glyph": "cloud"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60
+    },
+    {
+      "id": "extr",
+      "type": "extapi",
+      "x": 40,
+      "y": 270,
+      "label": "Extração diária",
+      "sub": "MVP • fotos + manifesto JSON",
+      "style": {
+        "accent": "#00A1E0",
+        "glyph": "ingest"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60
+    },
+    {
+      "id": "trig",
+      "type": "extapi",
+      "x": 40,
+      "y": 420,
+      "label": "Gatilho no envio",
+      "sub": "alvo • Flow / Apex callout",
+      "style": {
+        "accent": "#00A1E0",
+        "glyph": "bolt"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60
+    },
+    {
+      "id": "sched",
+      "type": "eventbridge",
+      "x": 380,
+      "y": 160,
+      "label": "Janela diária",
+      "sub": "EventBridge Scheduler",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60
+    },
+    {
+      "id": "inbox",
+      "type": "s3",
+      "x": 380,
+      "y": 270,
+      "label": "Repositório compartilhado",
+      "sub": "S3 inbox/ • SSE-KMS",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60
+    },
+    {
+      "id": "apigw",
+      "type": "apigw",
+      "x": 380,
+      "y": 420,
+      "label": "API Atest.AI",
+      "sub": "API Gateway • OAuth 2.0",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60
+    },
+    {
+      "id": "ingest",
+      "type": "lambda",
+      "x": 380,
+      "y": 530,
+      "label": "Ingest e contrato",
+      "sub": "valida payload • baixa anexos",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60
+    },
+    {
+      "id": "sqs",
+      "type": "sqs",
+      "x": 670,
+      "y": 160,
+      "label": "Fila de análises",
+      "sub": "SQS + DLQ • 1 msg por chamado",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60
+    },
+    {
+      "id": "sfn",
+      "type": "stepfunctions",
+      "x": 670,
+      "y": 280,
+      "label": "Orquestrador do agente",
+      "sub": "Step Functions • Map por foto",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60
+    },
+    {
+      "id": "norm",
+      "type": "lambda",
+      "x": 670,
+      "y": 400,
+      "label": "Recebe e normaliza fotos",
+      "sub": "HEIC→JPEG • miniaturas",
+      "style": {
+        "badge": "1"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60
+    },
+    {
+      "id": "gate",
+      "type": "ml-gate",
+      "x": 670,
+      "y": 520,
+      "label": "Checklist mínimo de fotos",
+      "sub": "por tipo de serviço",
+      "style": {
+        "badge": "0"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60
+    },
+    {
+      "id": "qual",
+      "type": "lambda",
+      "x": 960,
+      "y": 160,
+      "label": "Qualidade e legibilidade",
+      "sub": "nitidez • exposição • corte",
+      "style": {
+        "badge": "2",
+        "dashed": true
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60
+    },
+    {
+      "id": "exif",
+      "type": "lambda",
+      "x": 960,
+      "y": 280,
+      "label": "Metadados EXIF",
+      "sub": "data • hora • GPS, se houver",
+      "style": {
+        "badge": "3",
+        "dashed": true
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60
+    },
+    {
+      "id": "dup",
+      "type": "lambda",
+      "x": 960,
+      "y": 400,
+      "label": "Fotos repetidas",
+      "sub": "hash perceptual + embeddings",
+      "style": {
+        "badge": "4",
+        "dashed": true
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60
+    },
+    {
+      "id": "emb",
+      "type": "bedrock",
+      "x": 960,
+      "y": 520,
+      "label": "Embeddings de imagem",
+      "sub": "Titan Multimodal Embeddings",
+      "style": {
+        "dashed": true
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60
+    },
+    {
+      "id": "guard",
+      "type": "gen-guard",
+      "x": 1250,
+      "y": 160,
+      "label": "Guardrails",
+      "sub": "Bedrock Guardrails • PII",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60
+    },
+    {
+      "id": "ident",
+      "type": "bedrock",
+      "x": 1250,
+      "y": 280,
+      "label": "Identifica a imagem",
+      "sub": "Claude multimodal • ambiente/serviço",
+      "style": {
+        "badge": "5"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60
+    },
+    {
+      "id": "ad",
+      "type": "bedrock",
+      "x": 1250,
+      "y": 400,
+      "label": "Antes × depois",
+      "sub": "classifica o momento da foto",
+      "style": {
+        "badge": "6",
+        "dashed": true
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60
+    },
+    {
+      "id": "cruza",
+      "type": "bedrock",
+      "x": 1250,
+      "y": 520,
+      "label": "Cruza com escopo/orçamento",
+      "sub": "aderência ao escopo",
+      "style": {
+        "badge": "7"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60
+    },
+    {
+      "id": "evid",
+      "type": "lambda",
+      "x": 1540,
+      "y": 160,
+      "label": "Gera a evidência",
+      "sub": "válidas • sinalizadas • motivos",
+      "style": {
+        "badge": "8"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60
+    },
+    {
+      "id": "parecer",
+      "type": "ml-eval",
+      "x": 1540,
+      "y": 280,
+      "label": "Parecer + score",
+      "sub": "junta escopo e orçamento",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60
+    },
+    {
+      "id": "ret",
+      "type": "lambda",
+      "x": 1540,
+      "y": 400,
+      "label": "Montagem do retorno",
+      "sub": "parecer ou devolução",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60
+    },
+    {
+      "id": "outbox",
+      "type": "s3",
+      "x": 1830,
+      "y": 200,
+      "label": "Outbox do parecer",
+      "sub": "S3 outbox/ • JSON por chamado",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60
+    },
+    {
+      "id": "wb",
+      "type": "lambda",
+      "x": 1830,
+      "y": 420,
+      "label": "Writeback Salesforce",
+      "sub": "REST API • tempo real",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60
+    },
+    {
+      "id": "sec",
+      "type": "secrets",
+      "x": 1830,
+      "y": 530,
+      "label": "Credenciais Salesforce",
+      "sub": "Secrets Manager • OAuth",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60
+    },
+    {
+      "id": "imp",
+      "type": "extapi",
+      "x": 2160,
+      "y": 200,
+      "label": "Importação do retorno",
+      "sub": "MVP • job diário lê outbox/",
+      "style": {
+        "accent": "#00A1E0",
+        "glyph": "ingest"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60
+    },
+    {
+      "id": "campos",
+      "type": "extapi",
+      "x": 2160,
+      "y": 420,
+      "label": "Campos do parecer",
+      "sub": "recomendação • score • fotos",
+      "style": {
+        "accent": "#00A1E0",
+        "glyph": "checklist"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60
+    },
+    {
+      "id": "analista",
+      "type": "user",
+      "x": 2160,
+      "y": 530,
+      "label": "Pessoa analista",
+      "sub": "decide no próprio chamado",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60
+    },
+    {
+      "id": "fotos",
+      "type": "s3",
+      "x": 670,
+      "y": 720,
+      "label": "Fotos do chamado",
+      "sub": "S3 raw/ → curated/ • KMS",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60
+    },
+    {
+      "id": "vdb",
+      "type": "opensearch",
+      "x": 960,
+      "y": 720,
+      "label": "Índice histórico de fotos",
+      "sub": "OpenSearch Serverless • kNN",
+      "style": {
+        "dashed": true
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60
+    },
+    {
+      "id": "ctx",
+      "type": "gen-agent",
+      "x": 1250,
+      "y": 720,
+      "label": "Contexto do chamado",
+      "sub": "critérios de aceite + itens (reuso)",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60
+    },
+    {
+      "id": "ddb",
+      "type": "dynamodb",
+      "x": 1540,
+      "y": 720,
+      "label": "Pareceres e auditoria",
+      "sub": "DynamoDB • 1 item por foto",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60
+    },
+    {
+      "id": "iam",
+      "type": "iam",
+      "x": 440,
+      "y": 895,
+      "label": "IAM",
+      "sub": "menor privilégio",
+      "style": {},
+      "kind": "icon",
+      "w": 56,
+      "h": 56
+    },
+    {
+      "id": "kms",
+      "type": "kms",
+      "x": 655,
+      "y": 895,
+      "label": "KMS",
+      "sub": "criptografia das fotos",
+      "style": {},
+      "kind": "icon",
+      "w": 56,
+      "h": 56
+    },
+    {
+      "id": "pl",
+      "type": "privatelink",
+      "x": 870,
+      "y": 895,
+      "label": "PrivateLink",
+      "sub": "Bedrock e S3 sem internet",
+      "style": {},
+      "kind": "icon",
+      "w": 56,
+      "h": 56
+    },
+    {
+      "id": "cw",
+      "type": "cloudwatch",
+      "x": 1085,
+      "y": 895,
+      "label": "CloudWatch",
+      "sub": "logs • métricas • alarmes",
+      "style": {},
+      "kind": "icon",
+      "w": 56,
+      "h": 56
+    },
+    {
+      "id": "ct",
+      "type": "cloudtrail",
+      "x": 1300,
+      "y": 895,
+      "label": "CloudTrail",
+      "sub": "trilha de auditoria",
+      "style": {},
+      "kind": "icon",
+      "w": 56,
+      "h": 56
+    },
+    {
+      "id": "xray",
+      "type": "xray",
+      "x": 1515,
+      "y": 895,
+      "label": "X-Ray",
+      "sub": "tempo por etapa",
+      "style": {},
+      "kind": "icon",
+      "w": 56,
+      "h": 56
+    },
+    {
+      "id": "bi",
+      "type": "quicksight",
+      "x": 1730,
+      "y": 895,
+      "label": "Analítico",
+      "sub": "concordância • divergências",
+      "style": {},
+      "kind": "icon",
+      "w": 56,
+      "h": 56
+    },
+    {
+      "id": "painel",
+      "type": "browser",
+      "x": 1945,
+      "y": 895,
+      "label": "Painel web",
+      "sub": "feedback item a item (reuso)",
+      "style": {
+        "accent": "#334155"
+      },
+      "kind": "icon",
+      "w": 56,
+      "h": 56
+    },
+    {
+      "id": "legenda",
+      "type": "shape-note",
+      "x": 20,
+      "y": 660,
+      "label": "Como ler",
+      "sub": "Números 0–8: etapas do agente (deck, slide 4).\nBorda tracejada: Fase 2. No MVP o orquestrador vai de 1 direto para 5.\nAzul-petróleo: MVP em batch diário (D+1).\nMagenta: versão alvo via API.\nRoxo: devolução por checklist incompleto.\nVerde: feedback que calibra o Atest.AI.",
+      "style": {},
+      "kind": "note",
+      "w": 280,
+      "h": 180
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "from": "forn",
+      "to": "chamado",
+      "label": "",
+      "style": {}
+    },
+    {
+      "id": "e2",
+      "from": "chamado",
+      "to": "extr",
+      "label": "",
+      "style": {
+        "color": "#0891b2"
+      }
+    },
+    {
+      "id": "e3",
+      "from": "chamado",
+      "to": "trig",
+      "label": "",
+      "style": {
+        "color": "#a21caf"
+      },
+      "fromSide": "left",
+      "toSide": "left"
+    },
+    {
+      "id": "e4",
+      "from": "extr",
+      "to": "inbox",
+      "label": "D+1",
+      "style": {
+        "color": "#0891b2"
+      }
+    },
+    {
+      "id": "e5",
+      "from": "trig",
+      "to": "apigw",
+      "label": "no envio",
+      "style": {
+        "color": "#a21caf"
+      }
+    },
+    {
+      "id": "e6",
+      "from": "sched",
+      "to": "inbox",
+      "label": "dispara a carga",
+      "style": {
+        "color": "#0891b2",
+        "dash": "dashed"
+      }
+    },
+    {
+      "id": "e7",
+      "from": "inbox",
+      "to": "sqs",
+      "label": "",
+      "style": {
+        "color": "#0891b2"
+      }
+    },
+    {
+      "id": "e8",
+      "from": "apigw",
+      "to": "ingest",
+      "label": "",
+      "style": {
+        "color": "#a21caf"
+      }
+    },
+    {
+      "id": "e9",
+      "from": "ingest",
+      "to": "sqs",
+      "label": "",
+      "style": {
+        "color": "#a21caf"
+      }
+    },
+    {
+      "id": "e10",
+      "from": "sqs",
+      "to": "sfn",
+      "label": "",
+      "style": {}
+    },
+    {
+      "id": "e11",
+      "from": "sfn",
+      "to": "gate",
+      "label": "",
+      "style": {},
+      "fromSide": "left",
+      "toSide": "left"
+    },
+    {
+      "id": "e12",
+      "from": "gate",
+      "to": "norm",
+      "label": "completo",
+      "style": {
+        "color": "#16a34a"
+      },
+      "fromSide": "top",
+      "toSide": "bottom"
+    },
+    {
+      "id": "e13",
+      "from": "gate",
+      "to": "ret",
+      "label": "checklist incompleto → devolução",
+      "style": {
+        "color": "#6A3FD1",
+        "dash": "dashed",
+        "width": 2
+      },
+      "fromSide": "bottom",
+      "toSide": "bottom",
+      "mid": 640
+    },
+    {
+      "id": "e14",
+      "from": "norm",
+      "to": "fotos",
+      "label": "grava",
+      "style": {
+        "dash": "dotted"
+      },
+      "fromSide": "right",
+      "toSide": "top"
+    },
+    {
+      "id": "e15",
+      "from": "norm",
+      "to": "qual",
+      "label": "",
+      "style": {},
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "e16",
+      "from": "qual",
+      "to": "exif",
+      "label": "",
+      "style": {}
+    },
+    {
+      "id": "e17",
+      "from": "exif",
+      "to": "dup",
+      "label": "",
+      "style": {}
+    },
+    {
+      "id": "e18",
+      "from": "dup",
+      "to": "emb",
+      "label": "",
+      "style": {}
+    },
+    {
+      "id": "e19",
+      "from": "emb",
+      "to": "vdb",
+      "label": "busca kNN",
+      "style": {
+        "arrow": "both",
+        "dash": "dashed"
+      }
+    },
+    {
+      "id": "e20",
+      "from": "dup",
+      "to": "ident",
+      "label": "",
+      "style": {},
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "e21",
+      "from": "guard",
+      "to": "ident",
+      "label": "",
+      "style": {
+        "arrow": "both",
+        "dash": "dotted"
+      }
+    },
+    {
+      "id": "e22",
+      "from": "ident",
+      "to": "ad",
+      "label": "",
+      "style": {}
+    },
+    {
+      "id": "e23",
+      "from": "ad",
+      "to": "cruza",
+      "label": "",
+      "style": {}
+    },
+    {
+      "id": "e24",
+      "from": "ctx",
+      "to": "cruza",
+      "label": "",
+      "style": {
+        "dash": "dashed"
+      }
+    },
+    {
+      "id": "e25",
+      "from": "cruza",
+      "to": "evid",
+      "label": "",
+      "style": {},
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "e26",
+      "from": "evid",
+      "to": "parecer",
+      "label": "",
+      "style": {}
+    },
+    {
+      "id": "e27",
+      "from": "parecer",
+      "to": "ret",
+      "label": "",
+      "style": {}
+    },
+    {
+      "id": "e28",
+      "from": "ret",
+      "to": "ddb",
+      "label": "registra",
+      "style": {
+        "dash": "dotted"
+      },
+      "fromSide": "right",
+      "toSide": "top"
+    },
+    {
+      "id": "e29",
+      "from": "ret",
+      "to": "outbox",
+      "label": "",
+      "style": {
+        "color": "#0891b2"
+      },
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "e30",
+      "from": "ret",
+      "to": "wb",
+      "label": "",
+      "style": {
+        "color": "#a21caf"
+      },
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "e31",
+      "from": "wb",
+      "to": "sec",
+      "label": "",
+      "style": {
+        "arrow": "both",
+        "dash": "dotted"
+      }
+    },
+    {
+      "id": "e32",
+      "from": "outbox",
+      "to": "imp",
+      "label": "D+1",
+      "style": {
+        "color": "#0891b2"
+      }
+    },
+    {
+      "id": "e33",
+      "from": "wb",
+      "to": "campos",
+      "label": "API",
+      "style": {
+        "color": "#a21caf"
+      }
+    },
+    {
+      "id": "e34",
+      "from": "imp",
+      "to": "campos",
+      "label": "",
+      "style": {
+        "color": "#0891b2"
+      }
+    },
+    {
+      "id": "e35",
+      "from": "campos",
+      "to": "analista",
+      "label": "",
+      "style": {}
+    },
+    {
+      "id": "e36",
+      "from": "analista",
+      "to": "painel",
+      "label": "acertos e erros",
+      "style": {
+        "dash": "dashed",
+        "color": "#16a34a"
+      }
+    },
+    {
+      "id": "e37",
+      "from": "painel",
+      "to": "ddb",
+      "label": "feedback",
+      "style": {
+        "color": "#16a34a"
+      }
+    },
+    {
+      "id": "e38",
+      "from": "ddb",
+      "to": "bi",
+      "label": "",
+      "style": {
+        "dash": "dotted"
+      }
+    }
+  ]
+}

@@ -1,10 +1,11 @@
-import { Check, Image as ImageIcon, Info, Loader2, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { Check, Image as ImageIcon, Info, Loader2, PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
 import { useState } from "react";
 import type { TicketSummary, Dataset, Run } from "../api";
 import { REC, MAINTENANCE_LABEL, STAGE_LABEL, STAGE_SHORT } from "../format";
 import { StageProgress } from "./StageProgress";
 import { ScorePill } from "./ScoreBadge";
 import { InfoTip, Tooltip } from "./ui/Tooltip";
+import { Switch } from "./ui/Switch";
 
 interface Props {
   tickets: TicketSummary[];
@@ -27,12 +28,17 @@ export function TicketList(p: Props) {
   // filtros de classificação: etapa da esteira e tipo de manutenção
   const [stage, setStage] = useState<"all" | "quote" | "execution">("all");
   const [kind, setKind] = useState<"all" | "corrective" | "preventive">("all");
-  const visible = p.tickets.filter((c) => (p.streamFilter === "all" || c.workstream === p.streamFilter) && (p.dataset === "all" || c.dataset === p.dataset)
+  const [onlyMarked, setOnlyMarked] = useState(false);
+  const [showAllMarked, setShowAllMarked] = useState(false);
+  const marked = p.tickets.filter((c) => p.selected.has(c.ticket_id));
+  const filtered = p.tickets.filter((c) => (p.streamFilter === "all" || c.workstream === p.streamFilter) && (p.dataset === "all" || c.dataset === p.dataset)
     && (stage === "all" || c.moment === stage) && (kind === "all" || c.maintenance_type === kind));
+  // "só marcados" ignora os outros filtros: mostra tudo o que vai para a análise
+  const visible = onlyMarked && marked.length ? marked : filtered;
+  const hiddenMarked = marked.filter((c) => !filtered.includes(c));
   const inScope = p.tickets.filter((c) => (p.streamFilter === "all" || c.workstream === p.streamFilter) && (p.dataset === "all" || c.dataset === p.dataset));
   const count = (f: (c: TicketSummary) => boolean) => inScope.filter(f).length;
   const allMarked = visible.length > 0 && visible.every((c) => p.selected.has(c.ticket_id));
-  const markedVisible = visible.filter((c) => p.selected.has(c.ticket_id)).length;
   if (p.collapsed) return <Rail {...p} visible={visible} />;
   return (
     <aside data-tour="ticket-list" className="flex min-h-0 flex-col border-r border-line bg-sheet">
@@ -58,11 +64,13 @@ export function TicketList(p: Props) {
             </button>
           ))}
         </div>
-        <label className="flex cursor-pointer items-center gap-2 text-sm text-muted">
-          <input type="checkbox" className="size-4 accent-[var(--color-blueprint)]" checked={allMarked}
-            onChange={(e) => p.setAll(visible.map((c) => c.ticket_id), e.target.checked)} />
-          Marcar todos
-        </label>
+        <Tooltip content={`Marca ou desmarca os ${visible.length} chamados que aparecem na lista agora`}>
+          <label className="flex cursor-pointer items-center gap-2 text-sm text-muted">
+            <input type="checkbox" className="size-4 accent-[var(--color-blueprint)]" checked={allMarked}
+              onChange={(e) => p.setAll(visible.map((c) => c.ticket_id), e.target.checked)} />
+            Marcar todos
+          </label>
+        </Tooltip>
       </div>
       <div className="grid grid-cols-2 gap-2 border-b border-line px-4 py-2 text-[13px]">
         <label className="min-w-0">
@@ -84,11 +92,16 @@ export function TicketList(p: Props) {
       </div>
       <div className="flex items-center justify-between border-b border-line bg-paper/50 px-4 py-1.5 text-[12px] text-muted">
         <span>
-          {visible.length} chamado{visible.length === 1 ? "" : "s"}
-          {(stage !== "all" || kind !== "all") && <button onClick={() => { setStage("all"); setKind("all"); }} className="ml-1.5 font-medium text-blueprint hover:underline">limpar filtros</button>}
+          {onlyMarked && marked.length ? "Mostrando só os marcados" : <>{visible.length} chamado{visible.length === 1 ? "" : "s"}</>}
+          {!onlyMarked && (stage !== "all" || kind !== "all") && <button onClick={() => { setStage("all"); setKind("all"); }} className="ml-1.5 font-medium text-blueprint hover:underline">limpar filtros</button>}
         </span>
-        <span className={markedVisible ? "font-medium text-blueprint" : ""}>{markedVisible} marcado{markedVisible === 1 ? "" : "s"} para analisar</span>
+        <label className={`flex items-center gap-1.5 ${marked.length ? "cursor-pointer" : "opacity-50"}`}>
+          <Switch size="sm" on={onlyMarked && marked.length > 0} disabled={!marked.length} onChange={setOnlyMarked} label="Mostrar só os marcados" />
+          Só marcados
+        </label>
       </div>
+      <MarkedTray marked={marked} hidden={hiddenMarked} focus={p.focus} expanded={showAllMarked} setExpanded={setShowAllMarked}
+        open={p.focusTicket} unmark={p.toggle} clear={() => { p.setAll(marked.map((c) => c.ticket_id), false); setOnlyMarked(false); }} />
       <ul className="min-h-0 flex-1 overflow-y-auto">
         {!visible.length && (
           <li className="px-6 py-10 text-center text-sm text-muted">Nenhum chamado neste filtro. Troque o conjunto, a esteira, a etapa ou o tipo acima.</li>
@@ -97,12 +110,16 @@ export function TicketList(p: Props) {
           const st = p.execution?.tickets[c.ticket_id];
           const done = st?.assessment;
           const active = p.focus === c.ticket_id;
+          const isMarked = p.selected.has(c.ticket_id);
           return (
             <li key={c.ticket_id}
-              className={`relative flex gap-3 border-b border-line/70 px-4 py-3 ${active ? "bg-blueprint-soft" : "hover:bg-paper/60"}`}>
+              className={`relative flex gap-3 border-b border-line/70 px-4 py-3 transition-colors ${active ? "bg-blueprint-soft" : isMarked ? "bg-[#f3f6fd] hover:bg-blueprint-soft/70" : "hover:bg-paper/60"}`}>
               {active && <span className="absolute inset-y-0 left-0 w-1 bg-blueprint" />}
-              <input type="checkbox" aria-label={`Selecionar chamado ${c.ticket_id}`} className="mt-1 size-4 shrink-0 accent-[var(--color-blueprint)]"
-                checked={p.selected.has(c.ticket_id)} onChange={() => p.toggle(c.ticket_id)} />
+              {!active && isMarked && <span className="absolute inset-y-0 left-0 w-1 bg-blueprint/30" />}
+              <label className="-m-2 flex h-fit cursor-pointer p-2" title={isMarked ? "Desmarcar (sai da próxima análise)" : "Marcar para analisar"}>
+                <input type="checkbox" aria-label={`${isMarked ? "Desmarcar" : "Marcar"} chamado ${c.ticket_id} para analisar`} className="mt-1 size-4 shrink-0 cursor-pointer accent-[var(--color-blueprint)]"
+                  checked={isMarked} onChange={() => p.toggle(c.ticket_id)} />
+              </label>
               <button className="min-w-0 flex-1 text-left" onClick={() => p.focusTicket(c.ticket_id)}>
                 <div className="flex items-baseline justify-between gap-2">
                   <span className="font-semibold tabular-nums">{c.ticket_id}</span>
@@ -240,5 +257,61 @@ function Rail(p: Props & { visible: TicketSummary[] }) {
         </span>
       </Tooltip>
     </aside>
+  );
+}
+
+
+/**
+ * Painel dos marcados para analisar: total (inclusive os que o filtro esconde), um selo por chamado para abrir
+ * ou desmarcar, e "Limpar". É o que vai para o botão Analisar.
+ */
+function MarkedTray({ marked, hidden, focus, expanded, setExpanded, open, unmark, clear }: {
+  marked: TicketSummary[]; hidden: TicketSummary[]; focus: string | null; expanded: boolean; setExpanded: (v: boolean) => void;
+  open: (id: string) => void; unmark: (id: string) => void; clear: () => void;
+}) {
+  if (!marked.length) {
+    return <div className="border-b border-line px-4 py-2 text-[12px] text-muted">Nenhum chamado marcado. Marque as caixas para escolher o que analisar.</div>;
+  }
+  const LIMIT = 6;
+  const shown = expanded ? marked : marked.slice(0, LIMIT);
+  return (
+    <section aria-label="Chamados marcados para analisar" className="border-b border-line bg-[#f3f6fd] px-4 py-2.5">
+      <div className="mb-1.5 flex items-center justify-between gap-2 text-[13px]">
+        <span className="flex items-center gap-1.5 font-semibold text-blueprint">
+          <span className="flex size-5 items-center justify-center rounded bg-blueprint text-white"><Check size={13} strokeWidth={3} /></span>
+          {marked.length} marcado{marked.length === 1 ? "" : "s"} para analisar
+        </span>
+        <button onClick={clear} className="rounded-md px-1.5 py-0.5 text-[12px] font-medium text-muted hover:bg-sheet hover:text-bad">Limpar</button>
+      </div>
+      {hidden.length > 0 && (
+        <p className="mb-1.5 text-[12px] text-warn">{hidden.length} {hidden.length === 1 ? "está" : "estão"} fora do filtro atual (selo tracejado).</p>
+      )}
+      <ul className="flex flex-wrap gap-1.5">
+        {shown.map((c) => {
+          const outside = hidden.includes(c);
+          return (
+            <li key={c.ticket_id}>
+              <span className={`flex items-center rounded-full text-[12px] font-semibold tabular-nums ${
+                focus === c.ticket_id ? "bg-blueprint text-white" : outside ? "border border-dashed border-blueprint/50 bg-sheet text-blueprint" : "bg-sheet text-blueprint ring-1 ring-blueprint/25"}`}>
+                <Tooltip content={<>{c.category_label} · {c.symptom_label}{outside ? <><br />Fora do filtro atual</> : null}<br />Clique para abrir</>}>
+                  <button onClick={() => open(c.ticket_id)} className="py-0.5 pl-2 pr-1">{c.ticket_id}</button>
+                </Tooltip>
+                <button onClick={() => unmark(c.ticket_id)} aria-label={`Desmarcar ${c.ticket_id}`} title="Desmarcar"
+                  className={`mr-0.5 rounded-full p-0.5 ${focus === c.ticket_id ? "hover:bg-white/20" : "hover:bg-[#f8e4e2] hover:text-bad"}`}>
+                  <X size={12} strokeWidth={2.5} />
+                </button>
+              </span>
+            </li>
+          );
+        })}
+        {marked.length > LIMIT && (
+          <li>
+            <button onClick={() => setExpanded(!expanded)} className="rounded-full px-2 py-0.5 text-[12px] font-medium text-blueprint hover:bg-sheet">
+              {expanded ? "mostrar menos" : `+${marked.length - LIMIT} outros`}
+            </button>
+          </li>
+        )}
+      </ul>
+    </section>
   );
 }
