@@ -1,9 +1,10 @@
 import { CircleCheck, CircleX, FlaskConical, Loader2, Play, Search, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api, type AppSettings, type Dataset, type Recommendation, type Run, type RunSummary, type ValidationReport } from "../api";
-import { brl, brl4, pct, REC, FINDING_LABELS, providerLabel } from "../format";
+import { brl, brl4, pct, REC, FINDING_LABELS } from "../format";
 import { InfoTip, Tooltip } from "./ui/Tooltip";
 import { InfoBox } from "./ui/InfoBox";
+import { ProviderPicker, findChoice, initialProvider } from "./ui/ProviderPicker";
 import { Card, Kpi, Meter, SectionNav, type DeltaInfo } from "./ui/Panel";
 
 interface Props {
@@ -19,6 +20,7 @@ export function ValidationView({ config, openCase }: Props) {
   const [mode, setMode] = useState<"simulated" | "api">("simulated");
   const [batchMode, setBatchMode] = useState<"sync" | "batch">(config.batch_mode);
   const [noise, setNoise] = useState(0.15);
+  const [provider, setProvider] = useState(() => initialProvider(config));
   const [execution, setRun] = useState<Run | null>(null);
   const [report, setReport] = useState<ValidationReport | null>(null);
   const [history, setHistory] = useState<RunSummary[]>([]);
@@ -55,8 +57,10 @@ export function ValidationView({ config, openCase }: Props) {
     setReport(null);
     try {
       const label = `${datasets.find((c) => c.name === dataset)?.label.split(" (")[0] ?? dataset}${sample && sample < nDataset ? `, amostra ${sample}` : ""}${mode === "simulated" ? `, ruído ${Math.round(noise * 100)}%` : ""}`;
+      const choice = mode === "api" ? findChoice(config, provider) : null;
       const ex = await api.run({ dataset, sample: sample && sample < nDataset ? sample : null, mode, batch_mode: batchMode, phase: 2,
-        simulated_noise: mode === "simulated" ? noise : 0, label });
+        simulated_noise: mode === "simulated" ? noise : 0, label: choice ? `${label}, ${choice.label}` : label,
+        ...(choice ? { provider: choice.id, main_model: choice.main, fast_model: choice.fast } : {}) });
       setRun(ex);
       setStartedAt(Date.now());
       if (timer.current) window.clearInterval(timer.current);
@@ -126,10 +130,10 @@ export function ValidationView({ config, openCase }: Props) {
               <legend className="mb-1 flex items-center gap-1 font-medium">Modo <InfoTip term="mode" /></legend>
               <div className="flex rounded-lg bg-paper p-0.5">
                 {(["simulated", "api"] as const).map((m) => (
-                  <Tooltip key={m} className="flex flex-1" content={m === "api" && !config.api_available ? `Sem credenciais para: ${config.missing_keys.map(providerLabel).join(", ")}` : m === "api" ? "Chama o modelo de verdade: mede a qualidade real e gera custo" : "Sem custo: mostra o fluxo e as métricas com erro simulado"}>
+                  <Tooltip key={m} className="flex flex-1" content={m === "api" && !config.api_available ? "Nenhum provedor com credencial: defina em config/.secrets.toml ou no ambiente" : m === "api" ? "Chama o modelo de verdade: mede a qualidade real e gera custo" : "Sem custo: mostra o fluxo e as métricas com erro simulado"}>
                     <button type="button" disabled={running || (m === "api" && !config.api_available)} onClick={() => setMode(m)}
                       className={`flex-1 rounded-md px-3 py-1 ${mode === m ? "bg-sheet font-semibold shadow-sm" : "text-muted hover:text-ink"} disabled:pointer-events-none disabled:opacity-40`}>
-                      {m === "simulated" ? "Simulado" : `API (${config.providers.map(providerLabel).join(", ")})`}
+                      {m === "simulated" ? "Simulado" : "API"}
                     </button>
                   </Tooltip>
                 ))}
@@ -144,6 +148,11 @@ export function ValidationView({ config, openCase }: Props) {
                 </span>
               </label>
             ) : (
+              <>
+              <fieldset>
+                <legend className="mb-1 flex items-center gap-1 font-medium">Provedor</legend>
+                <ProviderPicker config={config} value={provider} onChange={setProvider} disabled={running} />
+              </fieldset>
               <fieldset>
                 <legend className="mb-1 flex items-center gap-1 font-medium">Envio <InfoTip term="batch" /></legend>
                 <div className="flex rounded-lg bg-paper p-0.5">
@@ -155,6 +164,7 @@ export function ValidationView({ config, openCase }: Props) {
                   ))}
                 </div>
               </fieldset>
+              </>
             )}
           </div>
           <div className="flex flex-col items-stretch justify-end gap-1.5 lg:items-end">

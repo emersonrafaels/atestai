@@ -25,6 +25,7 @@ from fastapi.staticfiles import StaticFiles
 from PIL import Image
 from pydantic import BaseModel, Field, ValidationError
 
+from . import providers
 from .admin import SECTIONS, AdminError, AdminStore
 from .attachments import compute_hashes, detail_level, distance, exif_date, hashes_with_crops
 from .batch import BatchRunner, ComponentFactory, new_run_id
@@ -187,6 +188,7 @@ class RunRequest(BaseModel):
     batch_mode: BatchMode = BatchMode.SYNC
     main_model: str | None = None
     fast_model: str | None = None
+    provider: str | None = Field(None, description="provedor escolhido no painel (um de panel.providers); sem ele, vale a configuração")
 
 
 class TicketState(BaseModel):
@@ -256,7 +258,41 @@ class PasswordInput(BaseModel):
 
 
 # Suba quando o painel passar a depender de rotas ou campos novos da API (panel/src/api.ts: PANEL_API).
-PANEL_API = 3
+PANEL_API = 4
+
+
+class ProviderChoice(BaseModel):
+    """Provedor do seletor do painel (config: [panel.providers]), com os modelos que ele preenche."""
+
+    id: str
+    label: str
+    main: str = Field(description='"provedor:modelo" principal')
+    fast: str
+    available: bool = Field(description="há credencial no ambiente")
+    credentials: list[str] = Field(default_factory=list, description="variáveis de ambiente que o provedor exige (só os nomes)")
+
+
+def provider_choices(cfg: Settings) -> list[ProviderChoice]:
+    """Provedores do seletor: o de [models].main (sempre, primeiro, com os modelos de [models]) e os ativos de panel.providers."""
+    default = cfg.llm.default_provider
+
+    def full(m: str) -> str:
+        return m if ":" in m else f"{default}:{m}"
+
+    def choice(name: str, label: str, main: str, fast: str) -> ProviderChoice:
+        return ProviderChoice(
+            id=name, label=label or name, main=main, fast=fast, available=has_credentials(name), credentials=list(KEY_ENV_VAR.get(name, ()))
+        )
+
+    main, fast = full(cfg.models.main), full(cfg.models.fast)
+    current = providers.split_model(main, default)[0]
+    p = cfg.panel.providers.get(current)
+    fast_same = providers.split_model(fast, default)[0] == current
+    out = {current: choice(current, p.label if p else "", main, fast if fast_same else (p.fast if p else main))}
+    for name, p in cfg.panel.providers.items():
+        if p.enabled and name not in out:
+            out[name] = choice(name, p.label, p.main, p.fast)
+    return list(out.values())
 
 
 class ModelOption(BaseModel):
@@ -291,6 +327,7 @@ class AppSettings(BaseModel):
     rubric: dict = {}  # pesos, descontos por severidade, faixas e confiança: o painel explica o score com eles
     models: list[ModelOption] = []  # sugestões para os campos de modelo (a pessoa pode digitar outro)
     keyed_providers: list[str] = []  # provedores com chave de API no ambiente (só os nomes, nunca a chave)
+    provider_choices: list[ProviderChoice] = []  # seletor de provedor do painel (o primeiro é o da configuração)
     panel_api: int = PANEL_API  # revisão do contrato com o painel: front-end mais novo que o servidor avisa para reiniciar
 
 
@@ -322,21 +359,41 @@ class RunManager:
             raise HTTPException(422, "Nenhum chamado no conjunto escolhido.")
         return ids
 
+    def run_settings(self, request: RunRequest) -> Settings:
+        """Configuração da execução: a base com modo, fase, envio, provedor e modelos escolhidos no painel."""
+        base = self.cfg_base
+        overrides: dict = {
+            "validation.simulated_noise": request.simulated_noise if request.mode == Mode.SIMULATED else 0.0,
+            "execution.mode": request.mode,
+            "pipeline.phase": request.phase,
+            "batch.kind": request.batch_mode,
+            "models.main": request.main_model or base.models.main,
+            "models.fast": request.fast_model or base.models.fast,
+        }
+        if request.provider:
+            choice = next((c for c in provider_choices(base) if c.id == request.provider), None)
+            if choice is None:
+                raise HTTPException(422, f"Provedor '{request.provider}' não está em panel.providers (config/settings.toml).")
+            overrides["models.main"] = request.main_model or choice.main
+            overrides["models.fast"] = request.fast_model or choice.fast
+
+            # tarefas e contingência configuradas para outro provedor não valem quando a pessoa escolhe um provedor
+            def same(m: str) -> bool:
+                return providers.split_model(m, base.llm.default_provider)[0] == choice.id
+
+            overrides["models.tasks"] = {k: m for k, m in base.models.tasks.items() if same(m)}
+            overrides["models.fallback"] = {k: m for k, m in base.models.fallback.items() if same(m)}
+        cfg = base.with_overrides(**overrides)
+        if cfg.execution.mode == Mode.API and (missing := missing_keys(cfg)):
+            raise HTTPException(
+                400, f"Modo API sem credencial para: {', '.join(missing)}. Preencha config/.secrets.toml ou as variáveis de ambiente."
+            )
+        return cfg
+
     def start(self, request: RunRequest) -> Run:
         """Valida o pedido, cria a execução e roda em uma thread; devolve o estado inicial."""
         ids = self.resolve_ids(request)
-        cfg = self.cfg_base.with_overrides(
-            **{
-                "validation.simulated_noise": request.simulated_noise if request.mode == Mode.SIMULATED else 0.0,
-                "execution.mode": request.mode,
-                "pipeline.phase": request.phase,
-                "batch.kind": request.batch_mode,
-                "models.main": request.main_model or self.cfg_base.models.main,
-                "models.fast": request.fast_model or self.cfg_base.models.fast,
-            }
-        )
-        if cfg.execution.mode == Mode.API and (missing := missing_keys(cfg)):
-            raise HTTPException(400, f"Modo API sem chave para: {', '.join(missing)}. Preencha config/.secrets.toml.")
+        cfg = self.run_settings(request)
         batch_mode = request.batch_mode if request.mode == Mode.API else BatchMode.SYNC
         ex = Run(
             id=new_run_id(),
@@ -519,6 +576,7 @@ def create_app(cfg: Settings) -> FastAPI:
 
         ids = [full(m) for m in cfg.costs.prices]
         ids += [full(m) for m in [cfg.models.main, cfg.models.fast, *cfg.models.tasks.values(), *cfg.models.fallback.values()] if m]
+        ids += [m for c in provider_choices(cfg) for m in (c.main, c.fast)]
         out = []
         for mid in dict.fromkeys(ids):
             provider, name = mid.split(":", 1)
@@ -657,7 +715,7 @@ def create_app(cfg: Settings) -> FastAPI:
         return AppSettings(
             environment=cfg.environment,
             version=cfg.version,
-            api_available=not missing_keys(cfg),
+            api_available=any(c.available for c in provider_choices(cfg)),
             main_model=cfg.models.main,
             fast_model=cfg.models.fast,
             phase=cfg.pipeline.phase,
@@ -674,6 +732,7 @@ def create_app(cfg: Settings) -> FastAPI:
             rubric=manager.cfg_base.rubric.model_dump(mode="json", include={"weights", "discount_by_severity", "bands", "confidence"}),
             models=model_options(),
             keyed_providers=sorted(p for p in KEY_ENV_VAR if has_credentials(p)),
+            provider_choices=provider_choices(cfg),
         )
 
     @app.get("/api/datasets")

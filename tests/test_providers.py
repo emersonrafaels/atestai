@@ -5,7 +5,7 @@ import sys
 from types import SimpleNamespace
 
 import pytest
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 from atest import llm_schemas, providers
 from atest.batch import BatchRunner
@@ -269,6 +269,50 @@ def test_iara_options_reach_the_provider_and_credentials_need_both_vars(cfg, mon
     assert "iara" in missing_keys(c)
     monkeypatch.setenv("IARA_CLIENT_SECRET", "secret")
     assert "iara" not in missing_keys(c)
+
+
+# --------------------------------------------------------------------------- seletor de provedor do painel
+def test_panel_provider_choices_come_from_config(cfg, monkeypatch):
+    from atest.api import provider_choices
+
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "x")
+    for v in ("IARA_CLIENT_ID", "IARA_CLIENT_SECRET"):
+        monkeypatch.delenv(v, raising=False)
+    choices = provider_choices(cfg)
+    # openai e google estão com enabled = false no settings.toml
+    assert [c.id for c in choices] == ["anthropic", "iara"]
+    assert choices[0].main == cfg.models.main and choices[0].available
+    assert not choices[1].available and choices[1].credentials == ["IARA_CLIENT_ID", "IARA_CLIENT_SECRET"]
+    assert (choices[1].main, choices[1].fast) == ("iara:gpt-4.1", "iara:gpt-4.1-mini")
+
+    # o provedor dos modelos configurados vem primeiro, com os modelos de [models], mesmo se escondido no painel
+    itau = cfg.with_overrides(**{"models.main": "iara:gpt-4.1", "models.fast": "iara:gpt-4.1", "panel.providers.anthropic.enabled": False})
+    assert [(c.id, c.fast) for c in provider_choices(itau)] == [("iara", "iara:gpt-4.1")]
+
+    # modelo sem prefixo ganha o do provedor; prefixo de outro provedor é erro de configuração
+    assert cfg.with_overrides(**{"panel.providers": {"iara": {"main": "x", "fast": "y"}}}).panel.providers["iara"].main == "iara:x"
+    with pytest.raises(ValidationError):
+        cfg.with_overrides(**{"panel.providers": {"iara": {"main": "openai:x", "fast": "y"}}})
+
+
+def test_run_with_chosen_provider_ignores_other_providers_overrides(cfg):
+    from fastapi import HTTPException
+
+    from atest.api import RunManager, RunRequest
+
+    base = cfg.with_overrides(**{"models.tasks": {"photos": "anthropic:a", "scope": "iara:b"}, "models.fallback": {"main": "anthropic:c"}})
+    manager = RunManager(base, database=None)
+    run = manager.run_settings(RunRequest(tickets=["1"], provider="iara"))
+    assert (run.models.main, run.models.fast) == ("iara:gpt-4.1", "iara:gpt-4.1-mini")
+    assert run.models.tasks == {"scope": "iara:b"} and run.models.fallback == {}
+    # modelos escolhidos no painel valem sobre os do provedor
+    run = manager.run_settings(RunRequest(tickets=["1"], provider="iara", main_model="iara:gpt-5"))
+    assert run.models.main == "iara:gpt-5" and run.models.fast == "iara:gpt-4.1-mini"
+    # sem provedor, nada muda (compatível com chamadas antigas da API)
+    assert manager.run_settings(RunRequest(tickets=["1"])).models.tasks == base.models.tasks
+    with pytest.raises(HTTPException) as e:
+        manager.run_settings(RunRequest(tickets=["1"], provider="openai"))  # existe, mas está com enabled = false
+    assert e.value.status_code == 422
 
 
 # --------------------------------------------------------------------------- roteamento, contingência e cache

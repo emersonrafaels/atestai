@@ -19,3 +19,7 @@ enable_polling = true
 
 [production.llm.provider_options.iara]
 environment = "prod"
+
+# Dentro do banco a Anthropic não é alcançável: some do seletor de provedores do painel
+[default.panel.providers.anthropic]
+enabled = false

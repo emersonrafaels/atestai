@@ -276,8 +276,21 @@ export interface AppSettings {
   rubric?: RubricInfo;
   models?: ModelOption[];
   keyed_providers?: string[];
+  /** seletor de provedor (config/settings.toml: [panel.providers]); o primeiro é o da configuração */
+  provider_choices?: ProviderChoice[];
   /** revisão do contrato com o servidor; ausente ou menor = servidor antigo rodando */
   panel_api?: number;
+}
+
+/** Provedor oferecido no seletor do painel, com os modelos que ele preenche ao ser escolhido. */
+export interface ProviderChoice {
+  id: string;
+  label: string;
+  main: string;
+  fast: string;
+  available: boolean;
+  /** variáveis de ambiente exigidas (só os nomes) */
+  credentials: string[];
 }
 
 /** Modelo sugerido nos campos de modelo (tabela de preços + configurados). */
@@ -469,6 +482,7 @@ export interface RunRequest {
   phase: number;
   main_model?: string;
   fast_model?: string;
+  provider?: string;
 }
 
 async function ask<T>(url: string, init?: RequestInit): Promise<T> {
@@ -599,7 +613,7 @@ export interface AdminUser {
 }
 
 /** Revisão da API que este front-end espera (atest/api.py: PANEL_API). */
-export const PANEL_API = 3;
+export const PANEL_API = 4;
 export const serverOutdated = (c: AppSettings | null) => !!c && (c.panel_api ?? 0) < PANEL_API;
 
 const TOKEN_KEY = "atest.admin.token";

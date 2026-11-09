@@ -13,7 +13,7 @@ import { TicketList } from "./components/TicketList";
 import { OperationsView } from "./components/OperationsView";
 import { NewTicket } from "./components/NewTicket";
 import { ValidationView } from "./components/ValidationView";
-import { brl4, REC, DEFAULT_RUBRIC, ENV_NAME, providerLabel, MAINTENANCE_LABEL, STAGE_LABEL, STAGE_DOCS } from "./format";
+import { brl4, REC, DEFAULT_RUBRIC, ENV_NAME, MAINTENANCE_LABEL, STAGE_LABEL, STAGE_DOCS } from "./format";
 import { Tour, tourDone, type TourStep } from "./components/ui/Tour";
 import { Tooltip, InfoTip } from "./components/ui/Tooltip";
 import { InfoBox, resetInfoBoxes } from "./components/ui/InfoBox";
@@ -22,6 +22,7 @@ import { GlossaryDialog } from "./components/ui/GlossaryDialog";
 import itauLogo from "./assets/itau.png";
 import { AdminView } from "./components/admin/AdminView";
 import { ModelCombobox } from "./components/ui/ModelCombobox";
+import { ProviderPicker, findChoice, initialProvider, providerChoices, withProvider } from "./components/ui/ProviderPicker";
 
 type Tab = "assessment" | "scope" | "quote" | "photos" | "calls" | "input";
 const TABS: { id: Tab; label: string; needsAssessment: boolean; icon: LucideIcon; hint: string }[] = [
@@ -54,6 +55,7 @@ export default function App() {
   const [phase, setPhase] = useState(2);
   const [mainModel, setMainModel] = useState("");
   const [fastModel, setFastModel] = useState("");
+  const [provider, setProvider] = useState("");
   const [execution, setRun] = useState<Run | null>(null);
   const [tab, setTabRaw] = useState<Tab>("input");
   const [highlight, setHighlight] = useState<{ items?: number[]; files?: string[] }>({});
@@ -88,8 +90,11 @@ export default function App() {
       setConfig(c);
       setPhase(c.phase);
       setBatchMode(c.batch_mode);
-      setMainModel(c.main_model);
-      setFastModel(c.fast_model);
+      const p = initialProvider(c);
+      const choice = findChoice(c, p);
+      setProvider(p);
+      setMainModel(choice?.main ?? c.main_model);
+      setFastModel(choice?.fast ?? c.fast_model);
     }).catch((e) => setError(String(e.message ?? e)));
     api.datasets().then(setDatasets).catch(() => undefined);
     api.tickets().then((cs) => {
@@ -168,11 +173,21 @@ export default function App() {
     setFocus(cs[0]?.ticket_id ?? null);
   };
 
+  // trocar de provedor preenche os modelos que ele traz na configuração ([panel.providers])
+  const chooseProvider = (id: string) => {
+    const choice = findChoice(config, id);
+    setProvider(id);
+    if (choice) { setMainModel(choice.main); setFastModel(choice.fast); }
+  };
+  const providerModels = (config?.models ?? []).filter((m) => m.provider === provider);
+  const currentChoice = findChoice(config, provider);
+
   const run = async () => {
     setError(null);
     try {
       const ids = tickets.map((c) => c.ticket_id).filter((id) => selected.has(id));
-      const ex = await api.run({ tickets: ids, mode, batch_mode: batchMode, phase, main_model: mainModel, fast_model: fastModel });
+      const ex = await api.run({ tickets: ids, mode, batch_mode: batchMode, phase, provider: provider || undefined,
+        main_model: withProvider(mainModel, provider), fast_model: withProvider(fastModel, provider) });
       setRun(ex);
       if (!focus || !selected.has(focus)) setFocus(ids[0]);
       track(ex.id);
@@ -249,7 +264,7 @@ export default function App() {
               </Tooltip>
             )}
             {config && (
-              <Tooltip side="bottom" content={config.api_available ? `Credenciais configuradas: ${config.providers.map(providerLabel).join(", ")}` : `Sem credenciais da API (${config.missing_keys.map(providerLabel).join(", ")}): só o modo simulado está disponível`}>
+              <Tooltip side="bottom" content={config.api_available ? `Provedores com credencial: ${providerChoices(config).filter((p) => p.available).map((p) => p.label).join(", ")}` : `Nenhum provedor com credencial (${providerChoices(config).map((p) => p.label).join(", ")}): só o modo simulado está disponível`}>
                 <span className={`hidden cursor-help items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-semibold lg:flex ${config.api_available ? "bg-[#e3f2ea] text-ok" : "bg-paper text-muted"}`}>
                   {config.api_available ? <Wifi size={13} /> : <WifiOff size={13} />}{config.api_available ? "API conectada" : "Só simulado"}
                 </span>
@@ -271,10 +286,19 @@ export default function App() {
               <div className="flex rounded-lg border border-line bg-sheet p-0.5">
                 <SegmentButton active={mode === "simulated"} onClick={() => setMode("simulated")} hint="Sem custo: respostas simuladas, sem chamar o modelo">Simulado</SegmentButton>
                 <SegmentButton active={mode === "api"} onClick={() => setMode("api")} disabled={!config?.api_available}
-                  hint={config?.api_available ? `Chama a API: ${config.main_model}` : `Defina as credenciais de: ${config?.missing_keys.map(providerLabel).join(", ")} (config/.secrets.toml ou variável de ambiente)`}>
-                  API{config ? ` ${config.providers.map(providerLabel).join("/")}` : ""}</SegmentButton>
+                  hint={config?.api_available ? `Chama o modelo de verdade${currentChoice ? ` (${currentChoice.label})` : ""}: mede a qualidade real e gera custo` : "Nenhum provedor com credencial: defina em config/.secrets.toml ou no ambiente"}>
+                  API</SegmentButton>
               </div>
             </fieldset>
+            {mode === "api" && config && (
+              <fieldset data-tour="provider" className="flex items-center gap-2">
+                <legend className="sr-only">Provedor</legend>
+                <span className="flex items-center gap-1 text-[13px] text-muted">Provedor
+                  <InfoTip text={<>Quem responde às chamadas de LLM nesta execução. A lista e os modelos de cada provedor ficam em <code>config/settings.toml</code>, seção <code>[panel.providers]</code>.</>} />
+                </span>
+                <ProviderPicker config={config} value={provider} onChange={chooseProvider} disabled={running} />
+              </fieldset>
+            )}
             <fieldset data-tour="phase" className="flex items-center gap-2">
               <legend className="sr-only">Fase da régua</legend>
               <span className="flex items-center gap-1 text-[13px] text-muted">Régua <InfoTip term="phase" /></span>
@@ -289,7 +313,7 @@ export default function App() {
                 <span className="flex items-center gap-1 text-[13px] text-muted">Envio <InfoTip term="batch" /></span>
                 <div className="flex rounded-lg border border-line bg-sheet p-0.5">
                   <SegmentButton active={batchMode === "sync"} onClick={() => setBatchMode("sync")} hint="Uma requisição por vez: resultado em segundos">Síncrono</SegmentButton>
-                  <SegmentButton active={batchMode === "batch"} onClick={() => setBatchMode("batch")} hint="Envio em lote (Message Batches): assíncrono, metade do custo">Lote −50%</SegmentButton>
+                  <SegmentButton active={batchMode === "batch"} onClick={() => setBatchMode("batch")} hint={provider === "anthropic" ? "Envio em lote (Message Batches): assíncrono, metade do custo" : `${currentChoice?.label ?? provider} não tem lote integrado: as chamadas saem síncronas, sem desconto`}>Lote −50%</SegmentButton>
                 </div>
               </fieldset>
             )}
@@ -298,11 +322,11 @@ export default function App() {
                 <span className="flex items-center gap-1 text-[13px] text-muted">Modelos
                   <InfoTip text={<><b>Principal</b>: lê o escopo, confere o orçamento e escreve o parecer.<br /><b>Rápido</b>: identifica os anexos e analisa as fotos.<br />Escolha na lista ou digite outro id no formato provedor:modelo.</>} />
                 </span>
-                <ModelCombobox label="Principal" value={mainModel} onChange={setMainModel} options={config?.models ?? []}
-                  defaultId={config?.main_model} availableProviders={config?.keyed_providers}
+                <ModelCombobox label="Principal" value={mainModel} onChange={setMainModel} options={providerModels}
+                  defaultId={currentChoice?.main ?? config?.main_model} defaultProvider={provider || undefined} availableProviders={config?.keyed_providers}
                   hint="Escopo, orçamento × escopo e parecer: prefira o modelo mais capaz." />
-                <ModelCombobox label="Rápido" value={fastModel} onChange={setFastModel} options={config?.models ?? []}
-                  defaultId={config?.fast_model} availableProviders={config?.keyed_providers}
+                <ModelCombobox label="Rápido" value={fastModel} onChange={setFastModel} options={providerModels}
+                  defaultId={currentChoice?.fast ?? config?.fast_model} defaultProvider={provider || undefined} availableProviders={config?.keyed_providers}
                   hint="Identificação dos anexos e fotos: um modelo mais barato costuma bastar." />
               </div>
             )}

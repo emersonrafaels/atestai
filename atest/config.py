@@ -18,7 +18,7 @@ from pathlib import Path
 from typing import Any
 
 from dynaconf import Dynaconf, Validator
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from .domain import AttachmentCategory, Rubric
 
@@ -112,12 +112,39 @@ class Paths(_Section):
     upload_id_prefix: str = "9"
 
 
+class PanelProvider(_Section):
+    """Provedor oferecido no seletor do painel, com os modelos que ele preenche ao ser escolhido."""
+
+    label: str = ""
+    main: str = Field(description='Modelo principal ("provedor:modelo" ou só o id do modelo)')
+    fast: str = Field(description="Modelo rápido")
+    enabled: bool = True
+
+
 class PanelSettings(_Section):
-    """Seção [panel]: endereço do painel web."""
+    """Seção [panel]: endereço do painel web e provedores que aparecem no seletor."""
 
     host: str = "0.0.0.0"
     port: int = 8000
     simulated_delay_s: float = 0.45
+    providers: dict[str, PanelProvider] = Field(default_factory=dict, description="Provedores do seletor do painel, na ordem do arquivo")
+
+    @field_validator("providers")
+    @classmethod
+    def _models_belong_to_provider(cls, v: dict[str, PanelProvider]) -> dict[str, PanelProvider]:
+        """Completa o prefixo "provedor:" dos modelos e recusa modelo de outro provedor (erro de digitação no TOML)."""
+        out = {}
+        for name, p in v.items():
+            models = {}
+            for role in ("main", "fast"):
+                model = getattr(p, role)
+                if ":" not in model:
+                    model = f"{name}:{model}"
+                elif model.split(":", 1)[0].strip().lower() != name:
+                    raise ValueError(f"panel.providers.{name}.{role} = {model!r} é de outro provedor (use {name}:<modelo>)")
+                models[role] = model
+            out[name] = p.model_copy(update=models)
+        return out
 
 
 class AdminUserSeed(_Section):
