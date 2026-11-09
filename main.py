@@ -10,6 +10,7 @@ Trocar de ambiente: ATEST_ENV=production python main.py
 from __future__ import annotations
 
 from atest.batch import BatchRunner
+from atest.admin import apply_saved_config
 from atest.config import Action, Mode, Settings, load_settings, missing_keys
 from atest.database import Database
 from atest.domain import Assessment
@@ -91,8 +92,10 @@ class Application:
 
 
 def main() -> None:
-    """Ponto de entrada: carrega a configuração e executa a ação configurada."""
-    raise SystemExit(Application(load_settings()).run())
+    """Ponto de entrada: carrega a configuração (TOML + ajustes salvos no portal) e executa a ação configurada."""
+    cfg = load_settings()
+    # o painel aplica os ajustes do portal por conta própria (precisa dos TOML puros como base para "Restaurar padrão")
+    raise SystemExit(Application(cfg if cfg.execution.action == Action.PANEL else apply_saved_config(cfg)).run())
 
 
 if __name__ == "__main__":

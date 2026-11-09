@@ -120,7 +120,15 @@ O `Orchestrator` inteiro vira um único nó do grafo. Também passa a valer a pe
 - **Validação**: roda um conjunto inteiro (ou uma amostra) e mostra a leitura de ciência de dados: portão de qualidade, acurácia com IC 95% por bootstrap, kappa de Cohen, F1 de "pegar problema", matriz de confusão, dispersão do score, precisão/cobertura/F1 por tipo de apontamento, acurácia por categoria, valor em questão, latência e custo p50/p95, e os casos divergentes.
 - **Operação**: histórico de execuções, custos e feedbacks.
 
-Front-end em React + TypeScript + Tailwind (Vite), em `panel/`. Para alterar: `cd panel && npm install && npm run dev` (proxy de `/api` para `:8000`); `npm run build` gera `panel/dist`, servido pelo FastAPI. Rotas da API: `/api/tickets`, `/api/runs`, `/api/assessments`, `/api/datasets`, `/api/validations`, `/api/metrics`, `/api/spreadsheet-template`.
+Front-end em React + TypeScript + Tailwind (Vite), em `panel/`. Para alterar: `cd panel && npm install && npm run dev` (proxy de `/api` para `:8000`); `npm run build` gera `panel/dist`, servido pelo FastAPI. Rotas da API: `/api/tickets`, `/api/runs`, `/api/assessments`, `/api/datasets`, `/api/validations`, `/api/metrics`, `/api/spreadsheet-template` e, com login, `/api/admin/*`.
+
+### Configuração (portal com login)
+
+A aba **Configuração** do painel é o portal para manter as regras sem editar arquivo: checklist mínimo por categoria × tipo de manutenção × etapa da esteira (ativar/desativar regras e exigências, criar regras, ajustar os tipos de anexo aceitos), regras de apontamento (ativar/desativar, severidade, fase, trava, redução de confiança), régua do score (pesos, descontos, faixas, confiança, tolerâncias), além de consulta a categorias, sintomas e LPU.
+
+- **Acesso:** usuário e senha (PBKDF2; sessão em token que expira em `admin.session_hours`; bloqueio temporário após `admin.max_failed_logins` erros). O primeiro usuário vem de `[default.admin].seed_users` em `config/settings.toml`, que guarda só o hash. Troque a senha inicial pelo próprio portal (Usuários e senha).
+- **Como as mudanças valem:** cada "Salvar" exige um motivo e grava uma versão completa da seção no banco (`config_versions`). A configuração efetiva é a dos TOML com a última versão por cima; os arquivos em `config/` continuam sendo o padrão de fábrica ("Restaurar padrão"). O histórico mostra autor, motivo e o resumo do que mudou, e permite voltar a qualquer versão.
+- **Rastreabilidade:** a assinatura da configuração (gravada em cada parecer e em cada rodada de validação) inclui régua e checklist; a versão da régua ganha o sufixo `+portal.N`. `python main.py` (lote e validação) também aplica as versões salvas.
 
 ## Contrato de entrada
 

@@ -1,0 +1,740 @@
+{
+  "ticket_id": "00517706",
+  "workstream": "SISR",
+  "category": "cctv",
+  "symptom": "degraded_image",
+  "maintenance_type": "corrective",
+  "moment": "execution",
+  "branch": {
+    "code": "0533",
+    "name": "Ag. Norte",
+    "environment": "self_service"
+  },
+  "supplier": "Fornecedor Beta Sistemas de Segurança Ltda.",
+  "quoted_value": 4260.0,
+  "requested_scope": "Câmera 04 do autoatendimento com imagem desfocada: limpeza e ajuste de foco.",
+  "generated_at": "2026-11-09T10:04:05.005331",
+  "rubric_version": "2026-11-v3",
+  "prompts_version": "2026-11-v3",
+  "config_signature": "294d860f8d37",
+  "phase": 2,
+  "mode": "api",
+  "batch_mode": "sync",
+  "models": {
+    "main": "anthropic:claude-sonnet-5-5",
+    "fast": "anthropic:claude-sonnet-5-5"
+  },
+  "run_id": "20261109-100358-69c0",
+  "record_id": 66,
+  "checklist": {
+    "category": "cctv",
+    "maintenance": "corrective",
+    "moment": "execution",
+    "complete": true,
+    "uploaded": 3,
+    "total": 3,
+    "requirements": [
+      {
+        "id": "quote",
+        "description": "Orçamento na planilha Excel padrão",
+        "met": true,
+        "attachments": [
+          "Orcamento_BETA-OS-7781.xlsx"
+        ]
+      },
+      {
+        "id": "equipment_photo",
+        "description": "Foto do equipamento atendido",
+        "met": true,
+        "attachments": [
+          "WhatsApp Image 2026-09-30 at 15.02.11.jpeg",
+          "IMG_20260930_143940.jpg",
+          "IMG_20260930_160512.jpg"
+        ]
+      },
+      {
+        "id": "screen_photo",
+        "description": "Imagem da câmera ou tela do gravador",
+        "met": true,
+        "attachments": [
+          "IMG_20260930_142210.jpg",
+          "IMG_20260930_150318.jpg"
+        ]
+      }
+    ],
+    "missing": []
+  },
+  "attachments": [
+    {
+      "index": 1,
+      "name": "Orcamento_BETA-OS-7781.xlsx",
+      "category": "quote_doc",
+      "moment": "undetermined",
+      "readable": true,
+      "short_description": "Orçamento BETA-OS-7781: 4 itens, R$ 4,260.00"
+    },
+    {
+      "index": 2,
+      "name": "IMG_20260930_142210.jpg",
+      "category": "cctv_screen_photo",
+      "moment": "before",
+      "readable": true,
+      "short_description": "Imagem de câmera desfocada do autoatendimento, com caixas eletrônicos e carimbo de data/hora"
+    },
+    {
+      "index": 3,
+      "name": "WhatsApp Image 2026-09-30 at 15.02.11.jpeg",
+      "category": "equipment_photo",
+      "moment": "during",
+      "readable": true,
+      "short_description": "Câmera embutida no forro, vista de baixo, lente escura"
+    },
+    {
+      "index": 4,
+      "name": "IMG_20260930_150318.jpg",
+      "category": "cctv_screen_photo",
+      "moment": "after",
+      "readable": true,
+      "short_description": "Imagem nítida de câmera mostrando corredor com portas"
+    },
+    {
+      "index": 5,
+      "name": "IMG_20260930_143940.jpg",
+      "category": "equipment_photo",
+      "moment": "undetermined",
+      "readable": true,
+      "short_description": "Rack com patch panel, NVR 16 canais e nobreak UPS"
+    },
+    {
+      "index": 6,
+      "name": "IMG_20260930_160512.jpg",
+      "category": "equipment_photo",
+      "moment": "during",
+      "readable": true,
+      "short_description": "Câmera removida sobre bancada com placa e multímetro marcando 12.0"
+    }
+  ],
+  "recommendation": "return_locked",
+  "recommendation_reason": "Trava de integridade: foto reaproveitada de outro chamado. Devolver qualquer que seja a nota",
+  "score": 26,
+  "grades": {
+    "scope": 100,
+    "quote": 15,
+    "photos": 0
+  },
+  "confidence": "high",
+  "confidence_reducers": [],
+  "findings": [
+    {
+      "kind": "unjustified_replacement",
+      "validation": "quote",
+      "severity": "high",
+      "discount": 35,
+      "description": "Troca ou peça sem justificativa técnica",
+      "evidence": "Troca da câmera por uma nova quando o escopo pedia apenas limpeza e ajuste de foco, sem laudo ou justificativa técnica de defeito irreparável no chamado.",
+      "reference": "item 3: Câmera IP bullet nova 4 MP",
+      "lock": false,
+      "reduces_confidence": false,
+      "phase": 1,
+      "amount_at_issue": 2450.0
+    },
+    {
+      "kind": "out_of_scope_item",
+      "validation": "quote",
+      "severity": "high",
+      "discount": 35,
+      "description": "Item fora do escopo",
+      "evidence": "Cabeamento novo não foi pedido e nenhuma falha de cabo foi relatada; o sintoma é imagem desfocada, tratável com limpeza e ajuste de foco.",
+      "reference": "item 4: Cabeamento UTP cat6 novo",
+      "lock": false,
+      "reduces_confidence": false,
+      "phase": 1,
+      "amount_at_issue": 1350.0
+    },
+    {
+      "kind": "quantity_above_expected",
+      "validation": "quote",
+      "severity": "medium",
+      "discount": 15,
+      "description": "Quantidade acima do esperado",
+      "evidence": "Cobrado 30 m, acima do plausível para o escopo",
+      "reference": "item 4: Cabeamento UTP cat6 novo",
+      "lock": false,
+      "reduces_confidence": false,
+      "phase": 1,
+      "amount_at_issue": 1350.0
+    },
+    {
+      "kind": "photo_mismatch",
+      "validation": "photos",
+      "severity": "high",
+      "discount": 35,
+      "description": "Foto não corresponde ao escopo",
+      "evidence": "Imagem nítida de câmera de um corredor com várias portas, forro com luminárias e uma porta vermelha ao fundo, fotografada de um monitor. Não aparecem terminais de autoatendimento.. Mostra outro local (corredor interno com portas), não a área de autoatendimento da câmera 04. A nitidez não comprova o reparo pedido, pois a câmera é outra.",
+      "reference": "IMG_20260930_150318.jpg",
+      "lock": false,
+      "reduces_confidence": false,
+      "phase": 1,
+      "amount_at_issue": 0.0
+    },
+    {
+      "kind": "missing_after_photo",
+      "validation": "photos",
+      "severity": "high",
+      "discount": 35,
+      "description": "Sem foto do serviço concluído",
+      "evidence": "Nenhuma foto legível mostra a imagem da câmera 04 nítida e focada no autoatendimento após o reparo. A única imagem de câmera do autoatendimento (anexo 2) está desfocada. A imagem nítida (anexo 4) é de um corredor, outro local. As demais fotos mostram câmera dome no teto, rack e câmera em bancada, sem comprovar o resultado.",
+      "reference": "",
+      "lock": false,
+      "reduces_confidence": false,
+      "phase": 1,
+      "amount_at_issue": 0.0
+    },
+    {
+      "kind": "reused_photo",
+      "validation": "photos",
+      "severity": "critical",
+      "discount": 60,
+      "description": "Foto reaproveitada de outro chamado",
+      "evidence": "Foto idêntica ou muito semelhante à do chamado 00498812 (IMG_20260614_093822.jpg)",
+      "reference": "WhatsApp Image 2026-09-30 at 15.02.11.jpeg",
+      "lock": true,
+      "reduces_confidence": false,
+      "phase": 2,
+      "amount_at_issue": 0.0
+    },
+    {
+      "kind": "photo_dated_before",
+      "validation": "photos",
+      "severity": "medium",
+      "discount": 15,
+      "description": "Foto com data anterior à abertura do chamado",
+      "evidence": "Data da foto (14/06/2026) anterior à abertura do chamado (22/09/2026)",
+      "reference": "IMG_20260930_150318.jpg",
+      "lock": false,
+      "reduces_confidence": false,
+      "phase": 2,
+      "amount_at_issue": 0.0
+    },
+    {
+      "kind": "reused_photo",
+      "validation": "photos",
+      "severity": "critical",
+      "discount": 60,
+      "description": "Foto reaproveitada de outro chamado",
+      "evidence": "Foto idêntica ou muito semelhante à do chamado 00498812 (IMG_20260614_094103.jpg)",
+      "reference": "IMG_20260930_150318.jpg",
+      "lock": true,
+      "reduces_confidence": false,
+      "phase": 2,
+      "amount_at_issue": 0.0
+    }
+  ],
+  "amount_at_issue": 3800.0,
+  "amount_at_issue_pct": 89.2,
+  "scope": {
+    "local": "Ag. Norte (cód. 0533), área de autoatendimento (self_service)",
+    "environment": "self_service",
+    "equipment": "Câmera 04",
+    "requested_services": [
+      "limpar a câmera 04 do autoatendimento",
+      "ajustar o foco da câmera 04 do autoatendimento"
+    ],
+    "mentioned_quantities": [],
+    "acceptance_criteria": [
+      "O serviço foi executado na câmera 04 da área de autoatendimento da Ag. Norte",
+      "A limpeza da câmera 04 foi realizada",
+      "O foco da câmera 04 foi ajustado",
+      "A imagem da câmera 04 aparece nítida, sem desfoque, após o serviço",
+      "O orçamento contempla apenas limpeza e ajuste de foco da câmera 04, sem itens não solicitados"
+    ],
+    "expected_evidence": [
+      "Imagem da câmera 04 nítida e focada após o serviço (print do monitor/gravador)",
+      "Foto da câmera 04 limpa e instalada no autoatendimento",
+      "Foto ou registro do ajuste de foco sendo realizado na câmera 04"
+    ],
+    "before_evidence_applicable": true,
+    "consistent_with_category_symptom": true,
+    "coherence_note": "",
+    "vague_scope": false,
+    "vague_reason": ""
+  },
+  "items": [
+    {
+      "n": 1,
+      "description": "Visita técnica e deslocamento",
+      "unit": "vb",
+      "quantity": 1.0,
+      "unit_value": 280.0,
+      "total_value": 280.0,
+      "classification": "compliant",
+      "reason": "Visita técnica e deslocamento são necessários para executar a limpeza e o ajuste de foco da câmera 04 na agência.",
+      "lpu_code": "SIS-001",
+      "reference_price": 280.0,
+      "expected_quantity_max": 1.0,
+      "amount_at_issue": 0.0,
+      "findings": []
+    },
+    {
+      "n": 2,
+      "description": "Limpeza e ajuste de foco da câmera 04",
+      "unit": "un",
+      "quantity": 1.0,
+      "unit_value": 180.0,
+      "total_value": 180.0,
+      "classification": "compliant",
+      "reason": "Limpeza e ajuste de foco da câmera 04 é exatamente o serviço solicitado no chamado.",
+      "lpu_code": "CFTV-001",
+      "reference_price": 180.0,
+      "expected_quantity_max": 1.0,
+      "amount_at_issue": 0.0,
+      "findings": []
+    },
+    {
+      "n": 3,
+      "description": "Câmera IP bullet nova 4 MP",
+      "unit": "un",
+      "quantity": 1.0,
+      "unit_value": 2450.0,
+      "total_value": 2450.0,
+      "classification": "to_justify",
+      "reason": "Troca da câmera por uma nova quando o escopo pedia apenas limpeza e ajuste de foco, sem laudo ou justificativa técnica de defeito irreparável no chamado.",
+      "lpu_code": "CFTV-002",
+      "reference_price": 2300.0,
+      "expected_quantity_max": 1.0,
+      "amount_at_issue": 2450.0,
+      "findings": [
+        {
+          "kind": "unjustified_replacement",
+          "validation": "quote",
+          "severity": "high",
+          "discount": 35,
+          "description": "Troca ou peça sem justificativa técnica",
+          "evidence": "Troca da câmera por uma nova quando o escopo pedia apenas limpeza e ajuste de foco, sem laudo ou justificativa técnica de defeito irreparável no chamado.",
+          "reference": "item 3: Câmera IP bullet nova 4 MP",
+          "lock": false,
+          "reduces_confidence": false,
+          "phase": 1,
+          "amount_at_issue": 2450.0
+        }
+      ]
+    },
+    {
+      "n": 4,
+      "description": "Cabeamento UTP cat6 novo",
+      "unit": "m",
+      "quantity": 30.0,
+      "unit_value": 45.0,
+      "total_value": 1350.0,
+      "classification": "out_of_scope",
+      "reason": "Cabeamento novo não foi pedido e nenhuma falha de cabo foi relatada; o sintoma é imagem desfocada, tratável com limpeza e ajuste de foco.",
+      "lpu_code": "CFTV-003",
+      "reference_price": 45.0,
+      "expected_quantity_max": null,
+      "amount_at_issue": 1350.0,
+      "findings": [
+        {
+          "kind": "out_of_scope_item",
+          "validation": "quote",
+          "severity": "high",
+          "discount": 35,
+          "description": "Item fora do escopo",
+          "evidence": "Cabeamento novo não foi pedido e nenhuma falha de cabo foi relatada; o sintoma é imagem desfocada, tratável com limpeza e ajuste de foco.",
+          "reference": "item 4: Cabeamento UTP cat6 novo",
+          "lock": false,
+          "reduces_confidence": false,
+          "phase": 1,
+          "amount_at_issue": 1350.0
+        },
+        {
+          "kind": "quantity_above_expected",
+          "validation": "quote",
+          "severity": "medium",
+          "discount": 15,
+          "description": "Quantidade acima do esperado",
+          "evidence": "Cobrado 30 m, acima do plausível para o escopo",
+          "reference": "item 4: Cabeamento UTP cat6 novo",
+          "lock": false,
+          "reduces_confidence": false,
+          "phase": 1,
+          "amount_at_issue": 1350.0
+        }
+      ]
+    }
+  ],
+  "quote_notes": [
+    "Apenas os itens 1 e 2 correspondem ao escopo (limpeza e ajuste de foco da câmera 04). O item 3 (câmera nova) exige laudo técnico que justifique a troca. O item 4 (30 m de cabo UTP cat6) está fora do escopo, pois não há falha de cabeamento relatada. A comparação de preços com a LPU é feita em etapa posterior."
+  ],
+  "photos": [
+    {
+      "file": "IMG_20260930_142210.jpg",
+      "environment": "imagem de câmera de área com caixas eletrônicos (autoatendimento), fotografada de um monitor com data/hora no canto",
+      "what_it_shows": "Imagem de câmera totalmente desfocada de um ambiente com terminais/caixas eletrônicos ao fundo, piso claro e uma pessoa ao lado dos terminais. Cena sem nitidez, com data/hora cortada e ilegível.",
+      "moment": "before",
+      "readable": true,
+      "matches_scope": "partial",
+      "reason": "A foto nítida do monitor mostra imagem desfocada, ou seja, o sintoma de desfoque. Serve como evidência do 'antes', mas não comprova o resultado. Não identifica qual é a câmera (04), e o timestamp ilegível não permite situá-la antes ou depois do serviço.",
+      "covered_items": [],
+      "exif_date": "2026-09-30T14:22:31",
+      "reused_from": null,
+      "integrity_signals": []
+    },
+    {
+      "file": "WhatsApp Image 2026-09-30 at 15.02.11.jpeg",
+      "environment": "teto da agência (forro com placas) onde a câmera está instalada",
+      "what_it_shows": "Câmera tipo dome embutida no forro, com a lente escura e reflexo visível, vista de baixo. Não há ferramentas nem pessoa, e não há indicação de que é a câmera 04 ou do autoatendimento.",
+      "moment": "undetermined",
+      "readable": true,
+      "matches_scope": "partial",
+      "reason": "Mostra uma câmera instalada e aparentemente limpa, mas é uma dome embutida, sem identificação de câmera 04 ou do local de autoatendimento. Não mostra o ajuste de foco nem a imagem resultante, e não comprova o resultado pedido.",
+      "covered_items": [],
+      "exif_date": null,
+      "reused_from": "00498812/IMG_20260614_093822.jpg",
+      "integrity_signals": [
+        "Semelhante à foto IMG_20260614_093822.jpg do chamado 00498812 (distância 0)"
+      ]
+    },
+    {
+      "file": "IMG_20260930_150318.jpg",
+      "environment": "imagem de câmera de corredor interno com portas",
+      "what_it_shows": "Imagem nítida de câmera de um corredor com várias portas, forro com luminárias e uma porta vermelha ao fundo, fotografada de um monitor. Não aparecem terminais de autoatendimento.",
+      "moment": "undetermined",
+      "readable": true,
+      "matches_scope": "no",
+      "reason": "Mostra outro local (corredor interno com portas), não a área de autoatendimento da câmera 04. A nitidez não comprova o reparo pedido, pois a câmera é outra.",
+      "covered_items": [],
+      "exif_date": "2026-06-14T09:41:03",
+      "reused_from": "00498812/IMG_20260614_094103.jpg",
+      "integrity_signals": [
+        "Data da foto (14/06/2026) anterior à abertura do chamado (22/09/2026)",
+        "Semelhante à foto IMG_20260614_094103.jpg do chamado 00498812 (distância 11)"
+      ]
+    },
+    {
+      "file": "IMG_20260930_143940.jpg",
+      "environment": "rack/backoffice de CFTV",
+      "what_it_shows": "Rack com patch panel com cabos UTP coloridos soltos, switch com LEDs, NVR 16CH e no-break (UPS) com LED verde. Não aparece imagem de câmera.",
+      "moment": "undetermined",
+      "readable": true,
+      "matches_scope": "partial",
+      "reason": "Mostra o rack de CFTV do contexto, mas não a câmera 04, a limpeza, o foco ou a imagem nítida. Não evidencia o cabeamento novo de 30 m, pois só mostram cabos no patch panel sem relação com instalação nova.",
+      "covered_items": [],
+      "exif_date": "2026-09-30T14:39:40",
+      "reused_from": null,
+      "integrity_signals": []
+    },
+    {
+      "file": "IMG_20260930_160512.jpg",
+      "environment": "bancada (superfície de madeira) com equipamentos",
+      "what_it_shows": "Câmera bullet branca sobre bancada, ao lado de uma placa eletrônica verde, um multímetro amarelo marcando 12.0 e uma ferramenta. Equipamento fora do local de instalação.",
+      "moment": "during",
+      "readable": true,
+      "matches_scope": "partial",
+      "reason": "Mostra uma câmera bullet em bancada, com medição de tensão, sem relação com o local de autoatendimento. Não comprova limpeza, foco nem imagem nítida, e não dá para afirmar que é a câmera 04 nem que é nova (item 3).",
+      "covered_items": [],
+      "exif_date": "2026-09-30T16:05:12",
+      "reused_from": null,
+      "integrity_signals": []
+    }
+  ],
+  "photo_summary": {
+    "has_before_photo": true,
+    "has_done_service_photo": false,
+    "done_justification": "Nenhuma foto legível mostra a imagem da câmera 04 nítida e focada no autoatendimento após o reparo. A única imagem de câmera do autoatendimento (anexo 2) está desfocada. A imagem nítida (anexo 4) é de um corredor, outro local. As demais fotos mostram câmera dome no teto, rack e câmera em bancada, sem comprovar o resultado.",
+    "items_without_photo": [
+      2,
+      3,
+      4
+    ],
+    "notes": "A única foto com o sintoma é o anexo 2, que não identifica a câmera 04 nem tem data legível. Os itens 3 (câmera IP bullet nova 4 MP) e 4 (cabeamento UTP cat6 novo, 30 m) não têm evidência de instalação: a câmera bullet aparece só em bancada e o cabeamento não está evidenciado. O orçamento inclui esses dois itens, que não constam do escopo (apenas limpeza e ajuste de foco), e as fotos não os justificam. A câmera instalada no teto (anexo 3) é dome embutida, divergente da bullet orçada."
+  },
+  "summary": "Recomendo devolver o chamado: há duas fotos reaproveitadas do chamado 00498812, o que aciona a trava de integridade, e nenhuma foto comprova o reparo da câmera 04. O orçamento também inclui troca de câmera e cabeamento novo fora do escopo de limpeza e ajuste de foco, com valor em questão de R$ 3.800,00 (89% do orçamento).",
+  "supplier_message": "Reenviar fotos originais deste chamado, sem reaproveitar imagens do chamado 00498812 (WhatsApp Image 2026-09-30 at 15.02.11.jpeg e IMG_20260930_150318.jpg); Enviar foto da imagem da câmera 04 nítida e focada na área de autoatendimento após o reparo, pois a imagem nítida enviada mostra um corredor com portas, outro local; Esclarecer a data da foto IMG_20260930_150318.jpg (14/06/2026), anterior à abertura do chamado em 22/09/2026; Remover do orçamento a troca da câmera IP bullet 4 MP (item 3) ou apresentar laudo técnico de defeito irreparável; Remover o cabeamento UTP cat6 novo (item 4), não solicitado e sem falha de cabo relatada, ou justificar tecnicamente a necessidade e a quantidade de 30 m.",
+  "llm_calls": [
+    {
+      "task": "identify_attachments",
+      "provider": "anthropic",
+      "model": "anthropic:claude-sonnet-5-5",
+      "resolved_model": "claude-sonnet-5-5",
+      "prompt_version": "2026-11-v3",
+      "prompt_hash": "0fc9398acff7",
+      "schema_hash": "8adbed0ff236",
+      "start": "2026-11-09T10:04:00.369117",
+      "duration_s": 0.0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 0,
+      "cost_usd": 0.0,
+      "from_cache": true,
+      "simulated": false,
+      "via_batch": false,
+      "batch_id": null,
+      "response": {
+        "attachments": [
+          {
+            "index": 2,
+            "category": "cctv_screen_photo",
+            "moment": "before",
+            "readable": true,
+            "short_description": "Imagem de câmera desfocada do autoatendimento, com caixas eletrônicos e carimbo de data/hora"
+          },
+          {
+            "index": 3,
+            "category": "equipment_photo",
+            "moment": "during",
+            "readable": true,
+            "short_description": "Câmera embutida no forro, vista de baixo, lente escura"
+          },
+          {
+            "index": 4,
+            "category": "cctv_screen_photo",
+            "moment": "after",
+            "readable": true,
+            "short_description": "Imagem nítida de câmera mostrando corredor com portas"
+          },
+          {
+            "index": 5,
+            "category": "equipment_photo",
+            "moment": "undetermined",
+            "readable": true,
+            "short_description": "Rack com patch panel, NVR 16 canais e nobreak UPS"
+          },
+          {
+            "index": 6,
+            "category": "equipment_photo",
+            "moment": "during",
+            "readable": true,
+            "short_description": "Câmera removida sobre bancada com placa e multímetro marcando 12.0"
+          }
+        ]
+      }
+    },
+    {
+      "task": "scope",
+      "provider": "anthropic",
+      "model": "anthropic:claude-sonnet-5-5",
+      "resolved_model": "claude-sonnet-5-5",
+      "prompt_version": "2026-11-v3",
+      "prompt_hash": "5de9d7f21ed2",
+      "schema_hash": "def08ad3c954",
+      "start": "2026-11-09T10:04:00.382516",
+      "duration_s": 0.0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 0,
+      "cost_usd": 0.0,
+      "from_cache": true,
+      "simulated": false,
+      "via_batch": false,
+      "batch_id": null,
+      "response": {
+        "local": "Ag. Norte (cód. 0533), área de autoatendimento (self_service)",
+        "environment": "self_service",
+        "equipment": "Câmera 04",
+        "requested_services": [
+          "limpar a câmera 04 do autoatendimento",
+          "ajustar o foco da câmera 04 do autoatendimento"
+        ],
+        "mentioned_quantities": [],
+        "acceptance_criteria": [
+          "O serviço foi executado na câmera 04 da área de autoatendimento da Ag. Norte",
+          "A limpeza da câmera 04 foi realizada",
+          "O foco da câmera 04 foi ajustado",
+          "A imagem da câmera 04 aparece nítida, sem desfoque, após o serviço",
+          "O orçamento contempla apenas limpeza e ajuste de foco da câmera 04, sem itens não solicitados"
+        ],
+        "expected_evidence": [
+          "Imagem da câmera 04 nítida e focada após o serviço (print do monitor/gravador)",
+          "Foto da câmera 04 limpa e instalada no autoatendimento",
+          "Foto ou registro do ajuste de foco sendo realizado na câmera 04"
+        ],
+        "before_evidence_applicable": true,
+        "consistent_with_category_symptom": true,
+        "coherence_note": "",
+        "vague_scope": false,
+        "vague_reason": ""
+      }
+    },
+    {
+      "task": "quote_review",
+      "provider": "anthropic",
+      "model": "anthropic:claude-sonnet-5-5",
+      "resolved_model": "claude-sonnet-5-5",
+      "prompt_version": "2026-11-v3",
+      "prompt_hash": "9acdba03fa9b",
+      "schema_hash": "2512ea23c87d",
+      "start": "2026-11-09T10:04:00.464719",
+      "duration_s": 0.0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 0,
+      "cost_usd": 0.0,
+      "from_cache": true,
+      "simulated": false,
+      "via_batch": false,
+      "batch_id": null,
+      "response": {
+        "items": [
+          {
+            "n": 1,
+            "classification": "compliant",
+            "reason": "Visita técnica e deslocamento são necessários para executar a limpeza e o ajuste de foco da câmera 04 na agência.",
+            "expected_quantity_max": 1.0,
+            "plausible_quantity": true,
+            "duplicate_of": 0,
+            "lpu_code": "SIS-001"
+          },
+          {
+            "n": 2,
+            "classification": "compliant",
+            "reason": "Limpeza e ajuste de foco da câmera 04 é exatamente o serviço solicitado no chamado.",
+            "expected_quantity_max": 1.0,
+            "plausible_quantity": true,
+            "duplicate_of": 0,
+            "lpu_code": "CFTV-001"
+          },
+          {
+            "n": 3,
+            "classification": "to_justify",
+            "reason": "Troca da câmera por uma nova quando o escopo pedia apenas limpeza e ajuste de foco, sem laudo ou justificativa técnica de defeito irreparável no chamado.",
+            "expected_quantity_max": 1.0,
+            "plausible_quantity": true,
+            "duplicate_of": 0,
+            "lpu_code": "CFTV-002"
+          },
+          {
+            "n": 4,
+            "classification": "out_of_scope",
+            "reason": "Cabeamento novo não foi pedido e nenhuma falha de cabo foi relatada; o sintoma é imagem desfocada, tratável com limpeza e ajuste de foco.",
+            "expected_quantity_max": 0.0,
+            "plausible_quantity": false,
+            "duplicate_of": 0,
+            "lpu_code": "CFTV-003"
+          }
+        ],
+        "notes": "Apenas os itens 1 e 2 correspondem ao escopo (limpeza e ajuste de foco da câmera 04). O item 3 (câmera nova) exige laudo técnico que justifique a troca. O item 4 (30 m de cabo UTP cat6) está fora do escopo, pois não há falha de cabeamento relatada. A comparação de preços com a LPU é feita em etapa posterior."
+      }
+    },
+    {
+      "task": "photos",
+      "provider": "anthropic",
+      "model": "anthropic:claude-sonnet-5-5",
+      "resolved_model": "claude-sonnet-5-5",
+      "prompt_version": "2026-11-v3",
+      "prompt_hash": "7b25d2cff792",
+      "schema_hash": "e5e769f9df84",
+      "start": "2026-11-09T10:04:00.819191",
+      "duration_s": 0.0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 0,
+      "cost_usd": 0.0,
+      "from_cache": true,
+      "simulated": false,
+      "via_batch": false,
+      "batch_id": null,
+      "response": {
+        "photos": [
+          {
+            "index": 2,
+            "environment": "imagem de câmera de área com caixas eletrônicos (autoatendimento), fotografada de um monitor com data/hora no canto",
+            "what_it_shows": "Imagem de câmera totalmente desfocada de um ambiente com terminais/caixas eletrônicos ao fundo, piso claro e uma pessoa ao lado dos terminais. Cena sem nitidez, com data/hora cortada e ilegível.",
+            "moment": "before",
+            "readable": true,
+            "matches_scope": "partial",
+            "reason": "A foto nítida do monitor mostra imagem desfocada, ou seja, o sintoma de desfoque. Serve como evidência do 'antes', mas não comprova o resultado. Não identifica qual é a câmera (04), e o timestamp ilegível não permite situá-la antes ou depois do serviço.",
+            "covered_items": []
+          },
+          {
+            "index": 3,
+            "environment": "teto da agência (forro com placas) onde a câmera está instalada",
+            "what_it_shows": "Câmera tipo dome embutida no forro, com a lente escura e reflexo visível, vista de baixo. Não há ferramentas nem pessoa, e não há indicação de que é a câmera 04 ou do autoatendimento.",
+            "moment": "undetermined",
+            "readable": true,
+            "matches_scope": "partial",
+            "reason": "Mostra uma câmera instalada e aparentemente limpa, mas é uma dome embutida, sem identificação de câmera 04 ou do local de autoatendimento. Não mostra o ajuste de foco nem a imagem resultante, e não comprova o resultado pedido.",
+            "covered_items": []
+          },
+          {
+            "index": 4,
+            "environment": "imagem de câmera de corredor interno com portas",
+            "what_it_shows": "Imagem nítida de câmera de um corredor com várias portas, forro com luminárias e uma porta vermelha ao fundo, fotografada de um monitor. Não aparecem terminais de autoatendimento.",
+            "moment": "undetermined",
+            "readable": true,
+            "matches_scope": "no",
+            "reason": "Mostra outro local (corredor interno com portas), não a área de autoatendimento da câmera 04. A nitidez não comprova o reparo pedido, pois a câmera é outra.",
+            "covered_items": []
+          },
+          {
+            "index": 5,
+            "environment": "rack/backoffice de CFTV",
+            "what_it_shows": "Rack com patch panel com cabos UTP coloridos soltos, switch com LEDs, NVR 16CH e no-break (UPS) com LED verde. Não aparece imagem de câmera.",
+            "moment": "undetermined",
+            "readable": true,
+            "matches_scope": "partial",
+            "reason": "Mostra o rack de CFTV do contexto, mas não a câmera 04, a limpeza, o foco ou a imagem nítida. Não evidencia o cabeamento novo de 30 m, pois só mostram cabos no patch panel sem relação com instalação nova.",
+            "covered_items": []
+          },
+          {
+            "index": 6,
+            "environment": "bancada (superfície de madeira) com equipamentos",
+            "what_it_shows": "Câmera bullet branca sobre bancada, ao lado de uma placa eletrônica verde, um multímetro amarelo marcando 12.0 e uma ferramenta. Equipamento fora do local de instalação.",
+            "moment": "during",
+            "readable": true,
+            "matches_scope": "partial",
+            "reason": "Mostra uma câmera bullet em bancada, com medição de tensão, sem relação com o local de autoatendimento. Não comprova limpeza, foco nem imagem nítida, e não dá para afirmar que é a câmera 04 nem que é nova (item 3).",
+            "covered_items": []
+          }
+        ],
+        "has_before_photo": true,
+        "has_done_service_photo": false,
+        "done_justification": "Nenhuma foto legível mostra a imagem da câmera 04 nítida e focada no autoatendimento após o reparo. A única imagem de câmera do autoatendimento (anexo 2) está desfocada. A imagem nítida (anexo 4) é de um corredor, outro local. As demais fotos mostram câmera dome no teto, rack e câmera em bancada, sem comprovar o resultado.",
+        "items_without_photo": [
+          2,
+          3,
+          4
+        ],
+        "notes": "A única foto com o sintoma é o anexo 2, que não identifica a câmera 04 nem tem data legível. Os itens 3 (câmera IP bullet nova 4 MP) e 4 (cabeamento UTP cat6 novo, 30 m) não têm evidência de instalação: a câmera bullet aparece só em bancada e o cabeamento não está evidenciado. O orçamento inclui esses dois itens, que não constam do escopo (apenas limpeza e ajuste de foco), e as fotos não os justificam. A câmera instalada no teto (anexo 3) é dome embutida, divergente da bullet orçada."
+      }
+    },
+    {
+      "task": "assessment",
+      "provider": "anthropic",
+      "model": "anthropic:claude-sonnet-5-5",
+      "resolved_model": "claude-sonnet-5-5",
+      "prompt_version": "2026-11-v3",
+      "prompt_hash": "f54736ffd38a",
+      "schema_hash": "54e4cbe91987",
+      "start": "2026-11-09T10:04:05.003105",
+      "duration_s": 0.0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 0,
+      "cost_usd": 0.0,
+      "from_cache": true,
+      "simulated": false,
+      "via_batch": false,
+      "batch_id": null,
+      "response": {
+        "summary": "Recomendo devolver o chamado: há duas fotos reaproveitadas do chamado 00498812, o que aciona a trava de integridade, e nenhuma foto comprova o reparo da câmera 04. O orçamento também inclui troca de câmera e cabeamento novo fora do escopo de limpeza e ajuste de foco, com valor em questão de R$ 3.800,00 (89% do orçamento).",
+        "supplier_message": "Reenviar fotos originais deste chamado, sem reaproveitar imagens do chamado 00498812 (WhatsApp Image 2026-09-30 at 15.02.11.jpeg e IMG_20260930_150318.jpg); Enviar foto da imagem da câmera 04 nítida e focada na área de autoatendimento após o reparo, pois a imagem nítida enviada mostra um corredor com portas, outro local; Esclarecer a data da foto IMG_20260930_150318.jpg (14/06/2026), anterior à abertura do chamado em 22/09/2026; Remover do orçamento a troca da câmera IP bullet 4 MP (item 3) ou apresentar laudo técnico de defeito irreparável; Remover o cabeamento UTP cat6 novo (item 4), não solicitado e sem falha de cabo relatada, ou justificar tecnicamente a necessidade e a quantidade de 30 m."
+      }
+    }
+  ],
+  "duration_s": 5.39,
+  "stage_durations_s": {
+    "checklist": 0.756,
+    "scope": 0.009,
+    "quote": 0.09,
+    "photos": 4.504,
+    "score": 0.002,
+    "assessment": 0.018
+  },
+  "cost_usd": 0.0,
+  "cost_brl": 0.0
+}

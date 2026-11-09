@@ -1,9 +1,9 @@
 import { ArrowDown, Check, ChevronDown, Copy, Lock, MapPin, ShieldAlert, ThumbsDown, Undo2, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { Comparison, Assessment, RubricInfo, TicketDetail } from "../api";
-import { brl, brl4, REC, SEVERITY, FINDING_LABELS, CONFIDENCE_LABEL, VALIDATIONS, VALIDATION_LABEL, VALIDATION_SHORT, explainFindings, pts } from "../format";
+import type { Assessment, RubricInfo, TicketDetail } from "../api";
+import { brl, brl4, REC, SEVERITY, FINDING_LABELS, CONFIDENCE_LABEL, VALIDATIONS, VALIDATION_LABEL, VALIDATION_SHORT, explainFindings, pts, STAGE_LABEL, MAINTENANCE_LABEL } from "../format";
 import { locate } from "../evidence";
-import { Stamp } from "./Stamp";
+import { ScoreGauge } from "./ScoreBadge";
 import { DecisionPanel } from "./DecisionPanel";
 import { ScoreBreakdown } from "./ScoreBreakdown";
 import { FindingEvidence, whereLabel, type GoTo } from "./FindingEvidence";
@@ -14,7 +14,6 @@ import { StepTitle } from "./ui/StepTitle";
 
 interface Props {
   p: Assessment;
-  comparison: Comparison | null;
   rubric: RubricInfo;
   ticket: TicketDetail | null;
   openPhoto: (items: LightboxItem[], index: number) => void;
@@ -26,7 +25,7 @@ interface Props {
  * Parecer na ordem do próprio fluxo: checklist mínimo → recomendação → conta do score → apontamentos →
  * mensagem ao fornecedor → decisão da pessoa analista (por último, depois de ler tudo).
  */
-export function AssessmentTab({ p, comparison, rubric, ticket, openPhoto, goTo, openTicket }: Props) {
+export function AssessmentTab({ p, rubric, ticket, openPhoto, goTo, openTicket }: Props) {
   const [copied, setCopied] = useState(false);
   const [open, setOpen] = useState<Set<number>>(new Set());
   const [unfounded, setUnfounded] = useState<Set<string>>(new Set());
@@ -74,7 +73,7 @@ export function AssessmentTab({ p, comparison, rubric, ticket, openPhoto, goTo, 
       {/* 1. checklist mínimo: é a primeira etapa do fluxo, então vem primeiro */}
       <section data-tour="checklist" className="rounded-xl border border-line bg-sheet p-5">
         <StepTitle n={++n}
-          sub="Documentos obrigatórios para esta categoria. Sem eles, o chamado volta antes de qualquer análise."
+          sub={<>Documentos obrigatórios para {ticket?.category_label ? <b className="text-ink/80">{ticket.category_label.toLowerCase()}</b> : "esta categoria"} na etapa <b className="text-ink/80">{STAGE_LABEL[p.moment] ?? p.moment}</b> ({(MAINTENANCE_LABEL[p.maintenance_type] ?? p.maintenance_type).toLowerCase()}). Sem eles, o chamado volta antes de qualquer análise.</>}
           aside={
             <span className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-semibold ${p.checklist.complete ? "bg-[#e3f2ea] text-ok" : "bg-[#f8e4e2] text-bad"}`}>
               {p.checklist.complete ? <Check size={15} /> : <X size={15} />}
@@ -111,7 +110,7 @@ export function AssessmentTab({ p, comparison, rubric, ticket, openPhoto, goTo, 
           <Tooltip className="inline-flex self-center" content={p.score !== null
             ? `Score ${p.score} de 100 → ${REC[p.recommendation].label}. Veja abaixo como cada ponto foi calculado.`
             : `${REC[p.recommendation].label}: sem score, porque o chamado parou antes das validações.`}>
-            <Stamp recommendation={p.recommendation} score={p.score} ticketId={p.ticket_id} data={p.generated_at} size={190} />
+            <ScoreGauge score={p.score} recommendation={p.recommendation} rubric={rubric} size={196} locked={p.findings.some((f) => f.lock)} />
           </Tooltip>
           <div className="min-w-0 flex-1 space-y-3">
             <h2 className="largo text-2xl font-bold" style={{ color: REC[p.recommendation].color }}>{REC[p.recommendation].label}</h2>
@@ -127,19 +126,10 @@ export function AssessmentTab({ p, comparison, rubric, ticket, openPhoto, goTo, 
                 </Fact>
               )}
               {p.amount_at_issue > 0 && (
-                <Fact label="Valor em questão" help={<InfoTip term="amount" />}><b className="tabular-nums text-bad">{brl(p.amount_at_issue)}</b><span className="text-muted"> ({p.amount_at_issue_pct.toFixed(0)}% do orçado)</span></Fact>
+                <Fact label="Valor potencial divergente" help={<InfoTip term="amount" />}><b className="tabular-nums text-bad">{brl(p.amount_at_issue)}</b><span className="text-muted"> ({p.amount_at_issue_pct.toFixed(0)}% do orçado)</span></Fact>
               )}
               <Fact label="Custo da análise"><b>{p.mode === "api" ? brl4(p.cost_brl) : "simulado"}</b></Fact>
             </dl>
-            {comparison && (
-              <p className={`inline-flex flex-wrap items-center gap-1.5 rounded-md px-2.5 py-1 text-sm ${comparison.recommendation_ok ? "bg-[#e3f2ea] text-ok" : "bg-[#f8e4e2] text-bad"}`}>
-                {comparison.recommendation_ok ? <Check size={15} /> : <X size={15} />}
-                Gabarito: {REC[comparison.expected].label}{comparison.expected_score !== null ? `, score ${comparison.expected_score}` : ""}
-                {comparison.missed.length > 0 && ` · faltou ${comparison.missed.map((t) => FINDING_LABELS[t] ?? t).join(", ")}`}
-                {comparison.extra.length > 0 && ` · a mais: ${comparison.extra.map((t) => FINDING_LABELS[t] ?? t).join(", ")}`}
-                <InfoTip term="ground_truth" />
-              </p>
-            )}
           </div>
         </div>
       </section>
@@ -205,7 +195,7 @@ export function AssessmentTab({ p, comparison, rubric, ticket, openPhoto, goTo, 
                           <div className="mt-1 text-muted">{f.evidence}</div>
                           <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px]">
                             {where && <span className="flex items-center gap-1 font-medium text-blueprint"><MapPin size={12} /> {where}</span>}
-                            {f.amount_at_issue > 0 && <span className="text-muted">Em questão: <b className="text-bad">{brl(f.amount_at_issue)}</b></span>}
+                            {f.amount_at_issue > 0 && <span className="text-muted">Potencial divergente: <b className="text-bad">{brl(f.amount_at_issue)}</b></span>}
                             <span className="ml-auto flex items-center gap-0.5 font-medium text-blueprint">
                               {isOpen ? "Ocultar" : "Ver onde está o erro"} <ChevronDown size={14} className={`transition ${isOpen ? "rotate-180" : ""}`} />
                             </span>

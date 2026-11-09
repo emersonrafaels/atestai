@@ -1,0 +1,203 @@
+{
+  "n": 1,
+  "no_ground_truth": 0,
+  "classes": [
+    "approve",
+    "approve_with_caveats",
+    "detailed_review",
+    "return_to_supplier",
+    "return_locked",
+    "checklist_returned"
+  ],
+  "matrix": [
+    [
+      0,
+      1,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  ],
+  "accuracy": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+  },
+  "balanced_accuracy": 0.0,
+  "kappa": 0.0,
+  "problem_catch": {
+    "tp": 0,
+    "fp": 0,
+    "fn": 0,
+    "tn": 1,
+    "precision": null,
+    "recall": null,
+    "f1": null,
+    "specificity": 1.0
+  },
+  "problem_catch_f1_ci": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+  },
+  "checklist_accuracy": 1.0,
+  "findings": [
+    {
+      "kind": "missing_after_photo",
+      "support": 0,
+      "tp": 0,
+      "fp": 1,
+      "fn": 0,
+      "precision": 0.0,
+      "recall": null,
+      "f1": null
+    },
+    {
+      "kind": "photo_mismatch",
+      "support": 0,
+      "tp": 0,
+      "fp": 1,
+      "fn": 0,
+      "precision": 0.0,
+      "recall": null,
+      "f1": null
+    }
+  ],
+  "findings_micro": {
+    "tp": 0,
+    "fp": 2,
+    "fn": 0,
+    "tn": 0,
+    "precision": 0.0,
+    "recall": null,
+    "f1": null,
+    "specificity": 0.0
+  },
+  "finding_macro_f1": null,
+  "score_pairs": [
+    {
+      "ticket_id": "02000003",
+      "expected": 100,
+      "obtained": 72
+    }
+  ],
+  "score_mae": 28.0,
+  "score_rmse": 28.0,
+  "score_bias": -28.0,
+  "score_pearson": null,
+  "expected_amount_at_issue": 0.0,
+  "obtained_amount_at_issue": 0.0,
+  "amount_at_issue_mae": 0.0,
+  "by_category": [
+    {
+      "name": "lighting",
+      "n": 1,
+      "hits": 0,
+      "accuracy": 0.0
+    }
+  ],
+  "by_service_template": [
+    {
+      "name": "lamps",
+      "n": 1,
+      "hits": 0,
+      "accuracy": 0.0
+    }
+  ],
+  "operations": {
+    "latency_p50_s": 27.61,
+    "latency_p95_s": 27.61,
+    "avg_cost_brl": 0.4677,
+    "p95_cost_brl": 0.4677,
+    "total_cost_brl": 0.4677,
+    "avg_input_tokens": 18057.0,
+    "avg_output_tokens": 2928.0
+  },
+  "mismatches": [
+    {
+      "ticket_id": "02000003",
+      "category": "Iluminação",
+      "expected": "approve",
+      "obtained": "approve_with_caveats",
+      "expected_score": 100,
+      "obtained_score": 72,
+      "missed": [],
+      "extra": [
+        "missing_after_photo",
+        "photo_mismatch"
+      ]
+    }
+  ],
+  "gate": [
+    {
+      "metric": "Acurácia da recomendação",
+      "value": 0.0,
+      "limit": 0.85,
+      "direction": ">=",
+      "passed": false
+    },
+    {
+      "metric": "Kappa de Cohen",
+      "value": 0.0,
+      "limit": 0.75,
+      "direction": ">=",
+      "passed": false
+    },
+    {
+      "metric": "F1 dos apontamentos (micro)",
+      "value": null,
+      "limit": 0.8,
+      "direction": ">=",
+      "passed": false
+    },
+    {
+      "metric": "Erro médio do score",
+      "value": 28.0,
+      "limit": 8.0,
+      "direction": "<=",
+      "passed": false
+    }
+  ],
+  "gate_passed": false
+}

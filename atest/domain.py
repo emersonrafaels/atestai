@@ -384,6 +384,7 @@ class FindingType(DomainModel):
     reduces_confidence: bool = False
     lock: bool = False
     amount_at_issue: AmountAtIssue = AmountAtIssue.NONE
+    enabled: bool = Field(True, description="desativado: o apontamento não é gerado nem desconta (portal de configuração)")
 
 
 class Band(DomainModel):

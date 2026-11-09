@@ -12,7 +12,7 @@ from __future__ import annotations
 import difflib
 
 from .analysis import AnalysisContext, AnalysisStage
-from .domain import AmountAtIssue, EvaluatedItem, Finding, ItemClassification, LpuItem, Quote, QuoteItem, Stage
+from .domain import AmountAtIssue, EvaluatedItem, Finding, ItemClassification, LpuItem, Quote, QuoteItem, Rubric, Stage
 from .formatting import brl, normalize_text, normalize_unit
 from .llm import LlmSession
 from .llm_schemas import ItemReview, QuoteReview, ScopeReading
@@ -158,11 +158,15 @@ class QuoteStage(AnalysisStage):
         return 0
 
     def _amount_at_issue(self, item: QuoteItem, findings: list[Finding]) -> float:
-        """Item inteiro se algum apontamento questiona o item; senão a soma dos excedentes (limitada ao total do item)."""
-        if not findings:
-            return 0.0
-        kinds = self.rubric.finding_types
-        if any(kinds[f.kind].amount_at_issue == AmountAtIssue.ITEM for f in findings):
-            return item.total_value
-        excess = sum(f.amount_at_issue for f in findings if kinds[f.kind].amount_at_issue == AmountAtIssue.EXCESS)
-        return round(min(item.total_value, excess), 2)
+        return amount_at_issue(item, findings, self.rubric)
+
+
+def amount_at_issue(item: QuoteItem, findings: list[Finding], rubric: Rubric) -> float:
+    """Item inteiro se algum apontamento questiona o item; senão a soma dos excedentes (limitada ao total do item)."""
+    if not findings:
+        return 0.0
+    kinds = rubric.finding_types
+    if any(kinds[f.kind].amount_at_issue == AmountAtIssue.ITEM for f in findings):
+        return item.total_value
+    excess = sum(f.amount_at_issue for f in findings if kinds[f.kind].amount_at_issue == AmountAtIssue.EXCESS)
+    return round(min(item.total_value, excess), 2)

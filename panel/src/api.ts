@@ -276,6 +276,8 @@ export interface AppSettings {
   rubric?: RubricInfo;
   models?: ModelOption[];
   keyed_providers?: string[];
+  /** revisão do contrato com o servidor; ausente ou menor = servidor antigo rodando */
+  panel_api?: number;
 }
 
 /** Modelo sugerido nos campos de modelo (tabela de preços + configurados). */
@@ -505,4 +507,140 @@ export const api = {
   deleteTicket: (id: string) => ask<void>(`/api/tickets/${id}`, { method: "DELETE" }),
   reuse: (id: string, file: string, origin: string, originFile: string) =>
     ask<ReuseComparison>(`/api/tickets/${id}/reuse?${new URLSearchParams({ file, origin, origin_file: originFile })}`),
+};
+
+// ============================================================================ portal de configuração (com login)
+export interface FindingTypeConfig {
+  validation: ValidationKind;
+  severity: Finding["severity"];
+  description: string;
+  phase: number;
+  reduces_confidence: boolean;
+  lock: boolean;
+  amount_at_issue: "item" | "excess" | "none";
+  enabled: boolean;
+}
+
+export interface RubricConfig {
+  version: string;
+  weights: Record<ValidationKind, number>;
+  discount_by_severity: Record<Finding["severity"], number>;
+  counts: string;
+  bands: { score_min: number; recommendation: Recommendation }[];
+  confidence: { medium_with_n_reducers: number; low_with_n_reducers: number };
+  price_tolerance_pct: number;
+  hash_max_distance: number;
+  hash_max_distance_low_detail: number;
+  hash_crops: number[];
+  hash_min_detail: number;
+  hash_method: string;
+  spreadsheet_value_tolerance: number;
+  photo_date_tolerance_days: number;
+  finding_types: Record<string, FindingTypeConfig>;
+}
+
+export interface ChecklistRequirementConfig {
+  id: string;
+  description: string;
+  accepted: string[];
+  enabled: boolean;
+}
+
+export interface ChecklistRuleConfig {
+  category: string;
+  maintenance: string;
+  moment: string;
+  requirements: ChecklistRequirementConfig[];
+  enabled: boolean;
+}
+
+export interface ChecklistsConfig {
+  attachment_categories: Record<string, string>;
+  rules: ChecklistRuleConfig[];
+}
+
+export interface SectionState<T> {
+  data: T;
+  base: T;
+  overridden: boolean;
+  version_id: number | null;
+}
+
+export interface AdminOverview {
+  sections: { rubric: SectionState<RubricConfig>; checklists: SectionState<ChecklistsConfig> };
+  catalog: {
+    categories: { value: string; label: string; tickets: number; symptoms_seen: string[] }[];
+    symptoms: { value: string; label: string; tickets: number }[];
+    tickets: number;
+  };
+  lpu: Record<string, { code: string; description: string; unit: string; reference_price: number }[]>;
+  system: {
+    rubric_version: string; prompts_version: string; signature: string; base_signature: string;
+    main_model: string; fast_model: string; phase: number; environment: string; version: string;
+    validation: { dataset: string; accuracy_min: number; kappa_min: number; finding_f1_min: number; score_error_max: number };
+  };
+}
+
+export interface AdminHistoryItem {
+  id: number;
+  section: "rubric" | "checklists";
+  author: string;
+  comment: string;
+  summary: string[];
+  created_at: string;
+  is_default: boolean;
+}
+
+export interface AdminUser {
+  username: string;
+  created_at: string;
+  created_by: string | null;
+  last_login: string | null;
+}
+
+/** Revisão da API que este front-end espera (atest/api.py: PANEL_API). */
+export const PANEL_API = 3;
+export const serverOutdated = (c: AppSettings | null) => !!c && (c.panel_api ?? 0) < PANEL_API;
+
+const TOKEN_KEY = "atest.admin.token";
+export const ADMIN_LOGOUT_EVENT = "atest:admin-logout";
+
+/** Sessão do portal: o token fica só nesta aba do navegador (sessionStorage) e some ao fechá-la. */
+export const adminSession = {
+  get: (): string | null => { try { return sessionStorage.getItem(TOKEN_KEY); } catch { return null; } },
+  set: (t: string) => { try { sessionStorage.setItem(TOKEN_KEY, t); } catch { /* armazenamento indisponível */ } },
+  clear: () => { try { sessionStorage.removeItem(TOKEN_KEY); } catch { /* armazenamento indisponível */ } },
+};
+
+async function askAdmin<T>(url: string, init?: RequestInit): Promise<T> {
+  const token = adminSession.get();
+  try {
+    return await ask<T>(url, { ...init, headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) } });
+  } catch (e) {
+    if ((e as Error).message.startsWith("Sessão expirada")) {
+      adminSession.clear();
+      window.dispatchEvent(new Event(ADMIN_LOGOUT_EVENT));
+    }
+    throw e;
+  }
+}
+
+export const adminApi = {
+  login: (username: string, password: string) =>
+    ask<{ token: string; username: string; expires_at: string }>("/api/admin/login", { method: "POST", body: JSON.stringify({ username, password }) }),
+  logout: () => askAdmin<void>("/api/admin/logout", { method: "POST" }),
+  me: () => askAdmin<{ username: string }>("/api/admin/me"),
+  overview: () => askAdmin<AdminOverview>("/api/admin/overview"),
+  save: (section: "rubric" | "checklists", data: unknown, comment: string) =>
+    askAdmin<AdminOverview>(`/api/admin/config/${section}`, { method: "PUT", body: JSON.stringify({ data, comment }) }),
+  reset: (section: "rubric" | "checklists", comment: string) =>
+    askAdmin<AdminOverview>(`/api/admin/config/${section}/reset`, { method: "POST", body: JSON.stringify({ comment }) }),
+  restore: (id: number, comment: string) =>
+    askAdmin<AdminOverview>(`/api/admin/history/${id}/restore`, { method: "POST", body: JSON.stringify({ comment }) }),
+  history: () => askAdmin<AdminHistoryItem[]>("/api/admin/history"),
+  users: () => askAdmin<AdminUser[]>("/api/admin/users"),
+  addUser: (username: string, password: string) =>
+    askAdmin<AdminUser[]>("/api/admin/users", { method: "POST", body: JSON.stringify({ username, password }) }),
+  changePassword: (current: string, next: string) =>
+    askAdmin<void>("/api/admin/password", { method: "POST", body: JSON.stringify({ current, new: next }) }),
 };

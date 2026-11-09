@@ -1,0 +1,585 @@
+{
+  "ticket_id": "02000003",
+  "workstream": "SETA",
+  "category": "lighting",
+  "symptom": "poor_lighting",
+  "maintenance_type": "corrective",
+  "moment": "execution",
+  "branch": {
+    "code": "7142",
+    "name": "Itaú Ag. Liberdade",
+    "environment": "corridor"
+  },
+  "supplier": "Fornecedor Gama Instalações Elétricas Ltda.",
+  "quoted_value": 235.0,
+  "requested_scope": "Trocar as 5 lâmpadas tubulares queimadas do corridor.",
+  "generated_at": "2026-11-09T10:47:53.292032",
+  "rubric_version": "2026-11-v3",
+  "prompts_version": "2026-11-v3",
+  "config_signature": "294d860f8d37",
+  "phase": 2,
+  "mode": "api",
+  "batch_mode": "sync",
+  "models": {
+    "main": "anthropic:claude-sonnet-5-5",
+    "fast": "anthropic:claude-sonnet-5-5"
+  },
+  "run_id": "20261109-104724-668b",
+  "record_id": 71,
+  "checklist": {
+    "category": "lighting",
+    "maintenance": "corrective",
+    "moment": "execution",
+    "complete": true,
+    "uploaded": 6,
+    "total": 6,
+    "requirements": [
+      {
+        "id": "quote",
+        "description": "Orçamento na planilha Excel padrão",
+        "met": true,
+        "attachments": [
+          "Orcamento_GAM-V0003.xlsx"
+        ]
+      },
+      {
+        "id": "before_photo",
+        "description": "Foto do ambiente antes do serviço",
+        "met": true,
+        "attachments": [
+          "IMG_20261026_085046.jpg"
+        ]
+      },
+      {
+        "id": "label_photo",
+        "description": "Foto da etiqueta do modelo instalado",
+        "met": true,
+        "attachments": [
+          "IMG_20261030_105651.jpg"
+        ]
+      },
+      {
+        "id": "after_photo",
+        "description": "Foto do ambiente depois do serviço",
+        "met": true,
+        "attachments": [
+          "IMG_20261030_094748.jpg"
+        ]
+      },
+      {
+        "id": "removed_items_photo",
+        "description": "Foto das luminárias retiradas",
+        "met": true,
+        "attachments": [
+          "IMG_20261030_115559.jpg"
+        ]
+      },
+      {
+        "id": "certificate",
+        "description": "Termo de conclusão assinado pela agência",
+        "met": true,
+        "attachments": [
+          "IMG_20261031_190500.jpg"
+        ]
+      }
+    ],
+    "missing": []
+  },
+  "attachments": [
+    {
+      "index": 1,
+      "name": "Orcamento_GAM-V0003.xlsx",
+      "category": "quote_doc",
+      "moment": "undetermined",
+      "readable": true,
+      "short_description": "Orçamento GAM-V0003: 2 itens, R$ 235.00"
+    },
+    {
+      "index": 2,
+      "name": "IMG_20261026_085046.jpg",
+      "category": "room_before_photo",
+      "moment": "before",
+      "readable": true,
+      "short_description": "Ambiente de escritório escuro, com iluminação deficiente no teto"
+    },
+    {
+      "index": 3,
+      "name": "IMG_20261030_094748.jpg",
+      "category": "room_after_photo",
+      "moment": "after",
+      "readable": true,
+      "short_description": "Teto com painéis de LED acesos e ambiente bem iluminado"
+    },
+    {
+      "index": 4,
+      "name": "IMG_20261030_105651.jpg",
+      "category": "label_photo",
+      "moment": "after",
+      "readable": true,
+      "short_description": "Etiqueta de luminária LED de embutir 60x60, modelo PL-6060-40W"
+    },
+    {
+      "index": 5,
+      "name": "IMG_20261030_115559.jpg",
+      "category": "removed_items_photo",
+      "moment": "after",
+      "readable": true,
+      "short_description": "Luminárias e lâmpadas tubulares antigas retiradas, empilhadas no chão"
+    },
+    {
+      "index": 6,
+      "name": "IMG_20261031_190500.jpg",
+      "category": "completion_certificate_doc",
+      "moment": "after",
+      "readable": true,
+      "short_description": "Termo de conclusão de serviço assinado pela agência, datado de 31/10/2026"
+    }
+  ],
+  "recommendation": "approve_with_caveats",
+  "recommendation_reason": "Score entre 70 e 84",
+  "score": 72,
+  "grades": {
+    "scope": 100,
+    "quote": 100,
+    "photos": 30
+  },
+  "confidence": "high",
+  "confidence_reducers": [],
+  "findings": [
+    {
+      "kind": "photo_mismatch",
+      "validation": "photos",
+      "severity": "high",
+      "discount": 35,
+      "description": "Foto não corresponde ao escopo",
+      "evidence": "Teto com painéis LED quadrados embutidos acesos, sprinkler, detector de fumaça e uma câmera no canto. São luminárias de painel, não lâmpadas tubulares T8.. Mostra painéis LED quadrados acesos, outro tipo de luminária que não as lâmpadas tubulares T8 do orçamento. O ambiente não pode ser confirmado como corredor. Não evidencia a troca das 5 lâmpadas tubulares.",
+      "reference": "IMG_20261030_094748.jpg",
+      "lock": false,
+      "reduces_confidence": false,
+      "phase": 1,
+      "amount_at_issue": 0.0
+    },
+    {
+      "kind": "photo_mismatch",
+      "validation": "photos",
+      "severity": "high",
+      "discount": 35,
+      "description": "Foto não corresponde ao escopo",
+      "evidence": "Etiqueta de 'Luminária LED de embutir 60x60', modelo PL-6060-40W, 40 W, 4000 K, lote 2609-118, fab. 09/2026.. A etiqueta é de luminária de embutir 60x60 de 40 W, e não de lâmpada LED tubular T8 18W do orçamento. Não mostra instalação nem local, e diverge do item orçado.",
+      "reference": "IMG_20261030_105651.jpg",
+      "lock": false,
+      "reduces_confidence": false,
+      "phase": 1,
+      "amount_at_issue": 0.0
+    },
+    {
+      "kind": "missing_after_photo",
+      "validation": "photos",
+      "severity": "high",
+      "discount": 35,
+      "description": "Sem foto do serviço concluído",
+      "evidence": "Nenhuma foto comprova o resultado pedido: 5 lâmpadas tubulares novas instaladas e acesas no corredor. A foto 3 mostra painéis LED quadrados em ambiente não identificado como corredor. A foto 4 é etiqueta de luminária de embutir 60x60 de 40 W, e não de lâmpada T8 18W. A foto 5 mostra material descartado, incluindo calhas inteiras. A foto 2 mostra um escritório escuro, não o corredor.",
+      "reference": "",
+      "lock": false,
+      "reduces_confidence": false,
+      "phase": 1,
+      "amount_at_issue": 0.0
+    }
+  ],
+  "amount_at_issue": 0.0,
+  "amount_at_issue_pct": 0.0,
+  "scope": {
+    "local": "Itaú Ag. Liberdade (cód. 7142)",
+    "environment": "corridor",
+    "equipment": "lâmpadas tubulares",
+    "requested_services": [
+      "Trocar as 5 lâmpadas tubulares queimadas do corridor"
+    ],
+    "mentioned_quantities": [
+      {
+        "description": "lâmpadas tubulares queimadas a trocar",
+        "quantity": 5.0,
+        "unit": "unidade"
+      }
+    ],
+    "acceptance_criteria": [
+      "O orçamento prevê a troca de 5 lâmpadas tubulares no corredor",
+      "As 5 lâmpadas tubulares queimadas foram substituídas por novas",
+      "As lâmpadas novas estão instaladas no corredor da agência e acesas/funcionando",
+      "O corredor apresenta iluminação adequada após a troca, sem lâmpadas queimadas remanescentes",
+      "A quantidade de lâmpadas cobrada no orçamento corresponde a 5 unidades"
+    ],
+    "expected_evidence": [
+      "Foto do corredor com as lâmpadas tubulares novas instaladas e acesas",
+      "Foto de cada uma das 5 lâmpadas novas instaladas, evidenciando a quantidade trocada",
+      "Nota fiscal ou comprovante de compra das lâmpadas, se houver"
+    ],
+    "before_evidence_applicable": true,
+    "consistent_with_category_symptom": true,
+    "coherence_note": "",
+    "vague_scope": false,
+    "vague_reason": ""
+  },
+  "items": [
+    {
+      "n": 1,
+      "description": "Lâmpada LED tubular T8 18W",
+      "unit": "un",
+      "quantity": 5.0,
+      "unit_value": 22.0,
+      "total_value": 110.0,
+      "classification": "compliant",
+      "reason": "Lâmpada LED tubular T8 18W é o material necessário para trocar as 5 lâmpadas tubulares queimadas do corredor, em quantidade igual à do escopo.",
+      "lpu_code": "ELE-008",
+      "reference_price": 22.0,
+      "expected_quantity_max": 5.0,
+      "amount_at_issue": 0.0,
+      "findings": []
+    },
+    {
+      "n": 2,
+      "description": "Mão de obra troca de lâmpada",
+      "unit": "un",
+      "quantity": 5.0,
+      "unit_value": 25.0,
+      "total_value": 125.0,
+      "classification": "compliant",
+      "reason": "Mão de obra de troca de lâmpada é coerente com o serviço pedido, e 5 unidades correspondem às 5 lâmpadas a trocar.",
+      "lpu_code": "ELE-009",
+      "reference_price": 25.0,
+      "expected_quantity_max": 5.0,
+      "amount_at_issue": 0.0,
+      "findings": []
+    }
+  ],
+  "quote_notes": [
+    "Os dois itens aderem ao escopo (troca de 5 lâmpadas tubulares no corredor) e as quantidades batem com o pedido. Não há itens duplicados nem fora de escopo. Preço não avaliado nesta etapa."
+  ],
+  "photos": [
+    {
+      "file": "IMG_20261026_085046.jpg",
+      "environment": "Área de escritório/backoffice da agência, com mesas, gaveteiros, impressora e câmera no teto",
+      "what_it_shows": "Ambiente interno bastante escuro, com luminárias de embutir no forro aparentemente apagadas, o que sugere iluminação deficiente. Não é um corredor.",
+      "moment": "before",
+      "readable": true,
+      "matches_scope": "partial",
+      "reason": "Mostra iluminação deficiente em ambiente interno, mas é uma sala de escritório com mesas e equipamentos, não o corredor do escopo. Não permite contar nem identificar as 5 lâmpadas tubulares queimadas. Serve apenas como contexto do problema.",
+      "covered_items": [],
+      "exif_date": "2026-10-26T08:15:00",
+      "reused_from": null,
+      "integrity_signals": []
+    },
+    {
+      "file": "IMG_20261030_094748.jpg",
+      "environment": "Forro de gesso/modular de ambiente interno, sem identificação clara de corredor",
+      "what_it_shows": "Teto com painéis LED quadrados embutidos acesos, sprinkler, detector de fumaça e uma câmera no canto. São luminárias de painel, não lâmpadas tubulares T8.",
+      "moment": "after",
+      "readable": true,
+      "matches_scope": "no",
+      "reason": "Mostra painéis LED quadrados acesos, outro tipo de luminária que não as lâmpadas tubulares T8 do orçamento. O ambiente não pode ser confirmado como corredor. Não evidencia a troca das 5 lâmpadas tubulares.",
+      "covered_items": [],
+      "exif_date": "2026-10-30T09:15:00",
+      "reused_from": null,
+      "integrity_signals": []
+    },
+    {
+      "file": "IMG_20261030_105651.jpg",
+      "environment": "Close de etiqueta de embalagem, sem ambiente identificável",
+      "what_it_shows": "Etiqueta de 'Luminária LED de embutir 60x60', modelo PL-6060-40W, 40 W, 4000 K, lote 2609-118, fab. 09/2026.",
+      "moment": "undetermined",
+      "readable": true,
+      "matches_scope": "no",
+      "reason": "A etiqueta é de luminária de embutir 60x60 de 40 W, e não de lâmpada LED tubular T8 18W do orçamento. Não mostra instalação nem local, e diverge do item orçado.",
+      "covered_items": [],
+      "exif_date": "2026-10-30T10:15:00",
+      "reused_from": null,
+      "integrity_signals": []
+    },
+    {
+      "file": "IMG_20261030_115559.jpg",
+      "environment": "Piso interno com material descartado, encostado em parede",
+      "what_it_shows": "Pilha de luminárias/calhas fluorescentes tubulares com aletas e várias lâmpadas tubulares brancas, aparentemente removidas e descartadas.",
+      "moment": "during",
+      "readable": true,
+      "matches_scope": "partial",
+      "reason": "Mostra material retirado: calhas completas e tubos fluorescentes. Isso indica uma retirada maior do que a troca de 5 lâmpadas, com luminárias inteiras removidas. Não comprova a instalação de lâmpadas novas nem o corredor aceso, e não permite verificar a quantidade nem que as lâmpadas estavam queimadas.",
+      "covered_items": [],
+      "exif_date": "2026-10-30T11:15:00",
+      "reused_from": null,
+      "integrity_signals": []
+    }
+  ],
+  "photo_summary": {
+    "has_before_photo": true,
+    "has_done_service_photo": false,
+    "done_justification": "Nenhuma foto comprova o resultado pedido: 5 lâmpadas tubulares novas instaladas e acesas no corredor. A foto 3 mostra painéis LED quadrados em ambiente não identificado como corredor. A foto 4 é etiqueta de luminária de embutir 60x60 de 40 W, e não de lâmpada T8 18W. A foto 5 mostra material descartado, incluindo calhas inteiras. A foto 2 mostra um escritório escuro, não o corredor.",
+    "items_without_photo": [
+      1
+    ],
+    "notes": "Há divergência entre o escopo e o que as fotos sugerem. O pedido é a troca de 5 lâmpadas tubulares T8 no corredor, mas as imagens indicam troca por painéis/luminárias LED de embutir 60x60, com retirada de calhas completas. A etiqueta mostra um produto diferente do orçado (painel de 40 W, e não T8 de 18 W). Nenhuma foto identifica o corredor, e a única foto do antes (anexo 2) é de um escritório. Anexo 1 não foi enviado: as fotos começam no anexo 2. A mão de obra não exige foto."
+  },
+  "summary": "Recomendação: aprovar com ressalvas, pois escopo e orçamento estão consistentes (notas 100), mas as fotos não comprovam o serviço (nota 30). As imagens mostram painéis LED quadrados e uma etiqueta de luminária de embutir 60x60 de 40 W, e não as 5 lâmpadas tubulares T8 do orçamento, e o ambiente não é identificado como corredor. O valor em questão é R$ 0,00 (0% do orçamento).",
+  "supplier_message": "Reenviar fotos do corredor com as 5 lâmpadas tubulares T8 novas instaladas e acesas; substituir a foto dos painéis LED quadrados, que não corresponde ao item orçado; substituir a foto da etiqueta da luminária de embutir 60x60 de 40 W por etiqueta ou embalagem das lâmpadas T8 18W instaladas; justificar o material descartado, incluindo calhas inteiras, caso a troca tenha ido além das lâmpadas; incluir foto que identifique o local como corredor.",
+  "llm_calls": [
+    {
+      "task": "identify_attachments",
+      "provider": "anthropic",
+      "model": "anthropic:claude-sonnet-5-5",
+      "resolved_model": "claude-sonnet-5-5",
+      "prompt_version": "2026-11-v3",
+      "prompt_hash": "0fc9398acff7",
+      "schema_hash": "8adbed0ff236",
+      "start": "2026-11-09T10:47:25.884384",
+      "duration_s": 4.03,
+      "input_tokens": 8840,
+      "output_tokens": 336,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 1465,
+      "cost_usd": 0.024702,
+      "from_cache": false,
+      "simulated": false,
+      "via_batch": false,
+      "batch_id": null,
+      "response": {
+        "attachments": [
+          {
+            "index": 2,
+            "category": "room_before_photo",
+            "moment": "before",
+            "readable": true,
+            "short_description": "Ambiente de escritório escuro, com iluminação deficiente no teto"
+          },
+          {
+            "index": 3,
+            "category": "room_after_photo",
+            "moment": "after",
+            "readable": true,
+            "short_description": "Teto com painéis de LED acesos e ambiente bem iluminado"
+          },
+          {
+            "index": 4,
+            "category": "label_photo",
+            "moment": "after",
+            "readable": true,
+            "short_description": "Etiqueta de luminária LED de embutir 60x60, modelo PL-6060-40W"
+          },
+          {
+            "index": 5,
+            "category": "removed_items_photo",
+            "moment": "after",
+            "readable": true,
+            "short_description": "Luminárias e lâmpadas tubulares antigas retiradas, empilhadas no chão"
+          },
+          {
+            "index": 6,
+            "category": "completion_certificate_doc",
+            "moment": "after",
+            "readable": true,
+            "short_description": "Termo de conclusão de serviço assinado pela agência, datado de 31/10/2026"
+          }
+        ]
+      }
+    },
+    {
+      "task": "scope",
+      "provider": "anthropic",
+      "model": "anthropic:claude-sonnet-5-5",
+      "resolved_model": "claude-sonnet-5-5",
+      "prompt_version": "2026-11-v3",
+      "prompt_hash": "5de9d7f21ed2",
+      "schema_hash": "def08ad3c954",
+      "start": "2026-11-09T10:47:29.924296",
+      "duration_s": 4.01,
+      "input_tokens": 215,
+      "output_tokens": 473,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 2090,
+      "cost_usd": 0.010385,
+      "from_cache": false,
+      "simulated": false,
+      "via_batch": false,
+      "batch_id": null,
+      "response": {
+        "local": "Itaú Ag. Liberdade (cód. 7142)",
+        "environment": "corridor",
+        "equipment": "lâmpadas tubulares",
+        "requested_services": [
+          "Trocar as 5 lâmpadas tubulares queimadas do corridor"
+        ],
+        "mentioned_quantities": [
+          {
+            "description": "lâmpadas tubulares queimadas a trocar",
+            "quantity": 5.0,
+            "unit": "unidade"
+          }
+        ],
+        "acceptance_criteria": [
+          "O orçamento prevê a troca de 5 lâmpadas tubulares no corredor",
+          "As 5 lâmpadas tubulares queimadas foram substituídas por novas",
+          "As lâmpadas novas estão instaladas no corredor da agência e acesas/funcionando",
+          "O corredor apresenta iluminação adequada após a troca, sem lâmpadas queimadas remanescentes",
+          "A quantidade de lâmpadas cobrada no orçamento corresponde a 5 unidades"
+        ],
+        "expected_evidence": [
+          "Foto do corredor com as lâmpadas tubulares novas instaladas e acesas",
+          "Foto de cada uma das 5 lâmpadas novas instaladas, evidenciando a quantidade trocada",
+          "Nota fiscal ou comprovante de compra das lâmpadas, se houver"
+        ],
+        "before_evidence_applicable": true,
+        "consistent_with_category_symptom": true,
+        "coherence_note": "",
+        "vague_scope": false,
+        "vague_reason": ""
+      }
+    },
+    {
+      "task": "quote_review",
+      "provider": "anthropic",
+      "model": "anthropic:claude-sonnet-5-5",
+      "resolved_model": "claude-sonnet-5-5",
+      "prompt_version": "2026-11-v3",
+      "prompt_hash": "6e7abbc0f6b5",
+      "schema_hash": "2512ea23c87d",
+      "start": "2026-11-09T10:47:33.975967",
+      "duration_s": 3.57,
+      "input_tokens": 773,
+      "output_tokens": 347,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 2397,
+      "cost_usd": 0.011008,
+      "from_cache": false,
+      "simulated": false,
+      "via_batch": false,
+      "batch_id": null,
+      "response": {
+        "items": [
+          {
+            "n": 1,
+            "classification": "compliant",
+            "reason": "Lâmpada LED tubular T8 18W é o material necessário para trocar as 5 lâmpadas tubulares queimadas do corredor, em quantidade igual à do escopo.",
+            "expected_quantity_max": 5.0,
+            "plausible_quantity": true,
+            "duplicate_of": 0,
+            "lpu_code": "ELE-008"
+          },
+          {
+            "n": 2,
+            "classification": "compliant",
+            "reason": "Mão de obra de troca de lâmpada é coerente com o serviço pedido, e 5 unidades correspondem às 5 lâmpadas a trocar.",
+            "expected_quantity_max": 5.0,
+            "plausible_quantity": true,
+            "duplicate_of": 0,
+            "lpu_code": "ELE-009"
+          }
+        ],
+        "notes": "Os dois itens aderem ao escopo (troca de 5 lâmpadas tubulares no corredor) e as quantidades batem com o pedido. Não há itens duplicados nem fora de escopo. Preço não avaliado nesta etapa."
+      }
+    },
+    {
+      "task": "photos",
+      "provider": "anthropic",
+      "model": "anthropic:claude-sonnet-5-5",
+      "resolved_model": "claude-sonnet-5-5",
+      "prompt_version": "2026-11-v3",
+      "prompt_hash": "7b25d2cff792",
+      "schema_hash": "e5e769f9df84",
+      "start": "2026-11-09T10:47:37.715476",
+      "duration_s": 11.65,
+      "input_tokens": 7331,
+      "output_tokens": 1400,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 1849,
+      "cost_usd": 0.033285,
+      "from_cache": false,
+      "simulated": false,
+      "via_batch": false,
+      "batch_id": null,
+      "response": {
+        "photos": [
+          {
+            "index": 2,
+            "environment": "Área de escritório/backoffice da agência, com mesas, gaveteiros, impressora e câmera no teto",
+            "what_it_shows": "Ambiente interno bastante escuro, com luminárias de embutir no forro aparentemente apagadas, o que sugere iluminação deficiente. Não é um corredor.",
+            "moment": "before",
+            "readable": true,
+            "matches_scope": "partial",
+            "reason": "Mostra iluminação deficiente em ambiente interno, mas é uma sala de escritório com mesas e equipamentos, não o corredor do escopo. Não permite contar nem identificar as 5 lâmpadas tubulares queimadas. Serve apenas como contexto do problema.",
+            "covered_items": []
+          },
+          {
+            "index": 3,
+            "environment": "Forro de gesso/modular de ambiente interno, sem identificação clara de corredor",
+            "what_it_shows": "Teto com painéis LED quadrados embutidos acesos, sprinkler, detector de fumaça e uma câmera no canto. São luminárias de painel, não lâmpadas tubulares T8.",
+            "moment": "after",
+            "readable": true,
+            "matches_scope": "no",
+            "reason": "Mostra painéis LED quadrados acesos, outro tipo de luminária que não as lâmpadas tubulares T8 do orçamento. O ambiente não pode ser confirmado como corredor. Não evidencia a troca das 5 lâmpadas tubulares.",
+            "covered_items": []
+          },
+          {
+            "index": 4,
+            "environment": "Close de etiqueta de embalagem, sem ambiente identificável",
+            "what_it_shows": "Etiqueta de 'Luminária LED de embutir 60x60', modelo PL-6060-40W, 40 W, 4000 K, lote 2609-118, fab. 09/2026.",
+            "moment": "undetermined",
+            "readable": true,
+            "matches_scope": "no",
+            "reason": "A etiqueta é de luminária de embutir 60x60 de 40 W, e não de lâmpada LED tubular T8 18W do orçamento. Não mostra instalação nem local, e diverge do item orçado.",
+            "covered_items": []
+          },
+          {
+            "index": 5,
+            "environment": "Piso interno com material descartado, encostado em parede",
+            "what_it_shows": "Pilha de luminárias/calhas fluorescentes tubulares com aletas e várias lâmpadas tubulares brancas, aparentemente removidas e descartadas.",
+            "moment": "during",
+            "readable": true,
+            "matches_scope": "partial",
+            "reason": "Mostra material retirado: calhas completas e tubos fluorescentes. Isso indica uma retirada maior do que a troca de 5 lâmpadas, com luminárias inteiras removidas. Não comprova a instalação de lâmpadas novas nem o corredor aceso, e não permite verificar a quantidade nem que as lâmpadas estavam queimadas.",
+            "covered_items": []
+          }
+        ],
+        "has_before_photo": true,
+        "has_done_service_photo": false,
+        "done_justification": "Nenhuma foto comprova o resultado pedido: 5 lâmpadas tubulares novas instaladas e acesas no corredor. A foto 3 mostra painéis LED quadrados em ambiente não identificado como corredor. A foto 4 é etiqueta de luminária de embutir 60x60 de 40 W, e não de lâmpada T8 18W. A foto 5 mostra material descartado, incluindo calhas inteiras. A foto 2 mostra um escritório escuro, não o corredor.",
+        "items_without_photo": [
+          1
+        ],
+        "notes": "Há divergência entre o escopo e o que as fotos sugerem. O pedido é a troca de 5 lâmpadas tubulares T8 no corredor, mas as imagens indicam troca por painéis/luminárias LED de embutir 60x60, com retirada de calhas completas. A etiqueta mostra um produto diferente do orçado (painel de 40 W, e não T8 de 18 W). Nenhuma foto identifica o corredor, e a única foto do antes (anexo 2) é de um escritório. Anexo 1 não foi enviado: as fotos começam no anexo 2. A mão de obra não exige foto."
+      }
+    },
+    {
+      "task": "assessment",
+      "provider": "anthropic",
+      "model": "anthropic:claude-sonnet-5-5",
+      "resolved_model": "claude-sonnet-5-5",
+      "prompt_version": "2026-11-v3",
+      "prompt_hash": "f54736ffd38a",
+      "schema_hash": "54e4cbe91987",
+      "start": "2026-11-09T10:47:49.709065",
+      "duration_s": 3.58,
+      "input_tokens": 898,
+      "output_tokens": 372,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 689,
+      "cost_usd": 0.007239,
+      "from_cache": false,
+      "simulated": false,
+      "via_batch": false,
+      "batch_id": null,
+      "response": {
+        "summary": "Recomendação: aprovar com ressalvas, pois escopo e orçamento estão consistentes (notas 100), mas as fotos não comprovam o serviço (nota 30). As imagens mostram painéis LED quadrados e uma etiqueta de luminária de embutir 60x60 de 40 W, e não as 5 lâmpadas tubulares T8 do orçamento, e o ambiente não é identificado como corredor. O valor em questão é R$ 0,00 (0% do orçamento).",
+        "supplier_message": "Reenviar fotos do corredor com as 5 lâmpadas tubulares T8 novas instaladas e acesas; substituir a foto dos painéis LED quadrados, que não corresponde ao item orçado; substituir a foto da etiqueta da luminária de embutir 60x60 de 40 W por etiqueta ou embalagem das lâmpadas T8 18W instaladas; justificar o material descartado, incluindo calhas inteiras, caso a troca tenha ido além das lâmpadas; incluir foto que identifique o local como corredor."
+      }
+    }
+  ],
+  "duration_s": 27.61,
+  "stage_durations_s": {
+    "checklist": 4.233,
+    "scope": 4.018,
+    "quote": 3.613,
+    "photos": 12.146,
+    "score": 0.002,
+    "assessment": 3.583
+  },
+  "cost_usd": 0.086619,
+  "cost_brl": 0.4677
+}

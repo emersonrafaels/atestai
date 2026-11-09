@@ -117,6 +117,22 @@ class PanelSettings(_Section):
     simulated_delay_s: float = 0.45
 
 
+class AdminUserSeed(_Section):
+    """Usuário criado no primeiro uso do portal (só o hash da senha fica no arquivo)."""
+
+    username: str
+    password_hash: str
+
+
+class AdminSettings(_Section):
+    """Seção [admin]: portal de configuração (usuários iniciais, duração da sessão, bloqueio por tentativas)."""
+
+    session_hours: float = 8
+    max_failed_logins: int = 5
+    lockout_minutes: int = 5
+    seed_users: list[AdminUserSeed] = Field(default_factory=list)
+
+
 class ValidationResult(_Section):
     """Portão de qualidade: uma rodada no conjunto de validação abaixo destes limites reprova a versão."""
 
@@ -160,6 +176,7 @@ class ChecklistRequirement(_Section):
     id: str
     description: str
     accepted: list[AttachmentCategory]
+    enabled: bool = True
 
 
 class ChecklistRule(_Section):
@@ -169,6 +186,7 @@ class ChecklistRule(_Section):
     maintenance: str = "*"
     moment: str = "*"
     requirements: list[ChecklistRequirement]
+    enabled: bool = True
 
     def house(self, category: str, maintenance: str, moment: str) -> int | None:
         """Especificidade da regra (quanto maior, mais específica) ou None se não casa."""
@@ -189,10 +207,15 @@ class Checklists(_Section):
     rules: list[ChecklistRule]
 
     def requirements(self, category: str, maintenance: str, moment: str) -> list[ChecklistRequirement]:
-        """Requisitos da regra mais específica que casa com categoria, manutenção e momento."""
-        candidates = [(r.house(category, maintenance, moment), i, r) for i, r in enumerate(self.rules)]
+        """Requisitos ativos da regra ativa mais específica que casa com categoria, manutenção e momento."""
+        rule = self.rule_for(category, maintenance, moment)
+        return [r for r in rule.requirements if r.enabled] if rule else []
+
+    def rule_for(self, category: str, maintenance: str, moment: str) -> ChecklistRule | None:
+        """Regra ativa mais específica (em empate, a que vem por último no arquivo)."""
+        candidates = [(r.house(category, maintenance, moment), i, r) for i, r in enumerate(self.rules) if r.enabled]
         valid = [(p, i, r) for p, i, r in candidates if p is not None]
-        return max(valid, key=lambda x: (x[0], x[1]))[2].requirements if valid else []
+        return max(valid, key=lambda x: (x[0], x[1]))[2] if valid else None
 
 
 class Prompts(_Section):
@@ -220,6 +243,7 @@ class Settings(BaseModel):
     batch: BatchSettings
     paths: Paths
     panel: PanelSettings
+    admin: AdminSettings = Field(default_factory=AdminSettings)
     observability: ObservabilitySettings
     validation: ValidationResult = Field(default_factory=ValidationResult)
     costs: CostSettings
@@ -274,6 +298,7 @@ class Settings(BaseModel):
 
         target = {
             "rubric": self.rubric.model_dump(mode="json"),
+            "checklists": self.checklists.model_dump(mode="json"),
             "prompts": self.prompts.model_dump(),
             "models": self.models.model_dump(),
             "llm": self.llm.model_dump(include={"default_provider", "effort", "max_tokens", "image_max_side"}),

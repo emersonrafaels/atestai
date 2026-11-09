@@ -67,6 +67,16 @@ host = "0.0.0.0"
 port = 8000
 simulated_delay_s = 0.45   # só para o progresso ficar visível na demonstração
 
+[default.admin]
+# Portal de configuração (aba Configuração do painel). Os usuários abaixo são criados no banco no primeiro uso;
+# depois disso, senhas e novos usuários são geridos pelo próprio portal. Aqui fica só o hash PBKDF2, nunca a senha.
+session_hours = 8          # duração da sessão após o login
+max_failed_logins = 5      # tentativas erradas seguidas antes do bloqueio temporário
+lockout_minutes = 5
+seed_users = [
+  { username = "emervin", password_hash = "pbkdf2_sha256$390000$lLeQW8rPW33XzE+bNVoCpQ==$Txv6N4w9QQnLJHmS+E8ER702gCbe4rFnJ8BoLazuf3Y=" },
+]
+
 [default.validation]
 # portão de qualidade (ação "validate" e aba Validação do painel)
 dataset = "validation"

@@ -130,12 +130,14 @@ export const GLOSSARY: Record<string, { term: string; text: string }> = {
   once: { term: "Desconto único por tipo", text: "Se o mesmo tipo de apontamento aparece várias vezes na mesma validação, ele desconta uma vez só. As demais ocorrências ficam listadas como evidência." },
   lock: { term: "Trava de integridade", text: "Apontamento grave (ex.: foto reaproveitada de outro chamado). Devolve o chamado qualquer que seja o score." },
   confidence: { term: "Confiança", text: "Quanto dá para confiar na análise com a entrada recebida. Escopo vago ou foto ilegível reduzem a confiança. Confiança baixa manda o chamado para análise detalhada." },
-  amount: { term: "Valor em questão", text: "Quanto do orçamento está sob dúvida. Item fora do escopo, sem justificativa ou duplicado conta inteiro; preço ou quantidade acima contam só o excedente." },
+  amount: { term: "Valor potencial divergente", text: "Quanto do orçamento pode estar divergente do escopo ou da referência. Item fora do escopo, sem justificativa ou duplicado conta inteiro; preço ou quantidade acima contam só o excedente." },
   bands: { term: "Faixas de recomendação", text: "85 ou mais: aprovar. De 70 a 84: aprovar com ressalvas. Abaixo de 70: devolver ao fornecedor. Travas e confiança baixa vencem a faixa." },
   checklist: { term: "Checklist mínimo", text: "Documentos obrigatórios para a categoria (ex.: foto do depois, termo de conclusão). Se faltar algo, o chamado volta antes de qualquer análise e não recebe score." },
   phase: { term: "Fase da régua", text: "Fase 1 é o MVP: não cobra foto do antes nem checa ilegibilidade e reaproveitamento. Fase 2 inclui essas checagens." },
-  mode: { term: "Modo", text: "Simulado demonstra o fluxo com respostas montadas a partir do gabarito, sem custo. API chama o modelo de verdade e gera custo." },
-  batch: { term: "Batch", text: "Envio assíncrono em lote (Message Batches API). Custa metade, mas o resultado demora mais." },
+  mode: { term: "Modo", text: "Simulado demonstra o fluxo com respostas simuladas, sem chamar o modelo e sem custo. API chama o modelo de verdade e gera custo." },
+  batch: { term: "Envio em lote", text: "Os pedidos vão juntos para a API de lotes do provedor (Message Batches). Custa metade, mas o resultado demora mais." },
+  stage: { term: "Etapa da esteira", text: "Aprovação de Orçamento: o fornecedor envia escopo, orçamento e fotos do antes. Aprovação do Serviço: além disso, envia as fotos do depois e os demais documentos do checklist da categoria." },
+  maintenance: { term: "Tipo de manutenção", text: "Corretiva: conserta um problema que apareceu. Preventiva: manutenção programada para evitar problemas (ex.: limpeza mensal do ar-condicionado)." },
   ground_truth: { term: "Gabarito", text: "A decisão esperada para o chamado, definida por especialistas. Serve para medir se o Atest.AI acertou." },
   accuracy: { term: "Acurácia", text: "Percentual de chamados em que a recomendação do Atest.AI foi igual à do gabarito. O IC 95% mostra a faixa provável do valor real." },
   kappa: { term: "Kappa de Cohen", text: "Concordância com o gabarito descontando o acerto por acaso. 0 = acaso; acima de 0,6 = boa; acima de 0,8 = muito boa." },
@@ -152,3 +154,26 @@ export const GLOSSARY: Record<string, { term: string; text: string }> = {
   noise: { term: "Erro simulado", text: "No modo simulado, a fração de vezes em que o simulador erra de propósito, para imitar um modelo real." },
   p95: { term: "p95", text: "95% dos chamados ficaram abaixo deste valor. Mostra o pior caso típico, sem os extremos." },
 };
+
+// ============================================================================ classificação do chamado (valores da API → português)
+export const MAINTENANCE_LABEL: Record<string, string> = { corrective: "Corretiva", preventive: "Preventiva" };
+export const STAGE_LABEL: Record<string, string> = { quote: "Aprovação de Orçamento", execution: "Aprovação do Serviço" };
+export const STAGE_SHORT: Record<string, string> = { quote: "Orçamento", execution: "Serviço" };
+/** O que o fornecedor envia em cada etapa da esteira. */
+export const STAGE_DOCS: Record<string, string[]> = {
+  quote: ["Escopo", "Orçamento (planilha padrão)", "Fotos do antes"],
+  execution: ["Escopo", "Orçamento (planilha padrão)", "Fotos do antes", "Fotos do depois", "Demais documentos do checklist da categoria"],
+};
+
+/** Ambientes da agência como chegam no chamado. Valores fora da lista aparecem como vieram. */
+export const ENV_LABEL: Record<string, string> = {
+  backoffice: "backoffice", back_office: "backoffice", corridor: "corredor", self_service: "autoatendimento",
+  service: "salão de atendimento", boxes: "caixas", kitchen: "cozinha", parking: "estacionamento", treasury: "tesouraria",
+  hall: "salão", facade: "fachada", restroom: "banheiro",
+};
+export const envLabel = (v: string | null | undefined) => (v ? ENV_LABEL[v] ?? v.replace(/_/g, " ") : "");
+
+export const PROVIDER_LABEL: Record<string, string> = { anthropic: "Anthropic", openai: "OpenAI", google: "Google" };
+export const providerLabel = (v: string) => PROVIDER_LABEL[v] ?? v;
+
+export const ENV_NAME: Record<string, string> = { development: "desenvolvimento", staging: "homologação", production: "produção" };

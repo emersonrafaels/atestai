@@ -1,0 +1,168 @@
+{
+  "n": 1,
+  "no_ground_truth": 0,
+  "classes": [
+    "approve",
+    "approve_with_caveats",
+    "detailed_review",
+    "return_to_supplier",
+    "return_locked",
+    "checklist_returned"
+  ],
+  "matrix": [
+    [
+      1,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  ],
+  "accuracy": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+  },
+  "balanced_accuracy": 1.0,
+  "kappa": null,
+  "problem_catch": {
+    "tp": 0,
+    "fp": 0,
+    "fn": 0,
+    "tn": 1,
+    "precision": null,
+    "recall": null,
+    "f1": null,
+    "specificity": 1.0
+  },
+  "problem_catch_f1_ci": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+  },
+  "checklist_accuracy": 1.0,
+  "findings": [],
+  "findings_micro": {
+    "tp": 0,
+    "fp": 0,
+    "fn": 0,
+    "tn": 0,
+    "precision": null,
+    "recall": null,
+    "f1": null,
+    "specificity": null
+  },
+  "finding_macro_f1": null,
+  "score_pairs": [
+    {
+      "ticket_id": "02000002",
+      "expected": 100,
+      "obtained": 100
+    }
+  ],
+  "score_mae": 0.0,
+  "score_rmse": 0.0,
+  "score_bias": 0.0,
+  "score_pearson": null,
+  "expected_amount_at_issue": 0.0,
+  "obtained_amount_at_issue": 0.0,
+  "amount_at_issue_mae": 0.0,
+  "by_category": [
+    {
+      "name": "waterproofing",
+      "n": 1,
+      "hits": 1,
+      "accuracy": 1.0
+    }
+  ],
+  "by_service_template": [
+    {
+      "name": "infiltration",
+      "n": 1,
+      "hits": 1,
+      "accuracy": 1.0
+    }
+  ],
+  "operations": {
+    "latency_p50_s": 2.68,
+    "latency_p95_s": 2.68,
+    "avg_cost_brl": 0.0,
+    "p95_cost_brl": 0.0,
+    "total_cost_brl": 0.0,
+    "avg_input_tokens": 0.0,
+    "avg_output_tokens": 0.0
+  },
+  "mismatches": [],
+  "gate": [
+    {
+      "metric": "Acurácia da recomendação",
+      "value": 1.0,
+      "limit": 0.85,
+      "direction": ">=",
+      "passed": true
+    },
+    {
+      "metric": "Kappa de Cohen",
+      "value": null,
+      "limit": 0.75,
+      "direction": ">=",
+      "passed": false
+    },
+    {
+      "metric": "F1 dos apontamentos (micro)",
+      "value": null,
+      "limit": 0.8,
+      "direction": ">=",
+      "passed": false
+    },
+    {
+      "metric": "Erro médio do score",
+      "value": 0.0,
+      "limit": 8.0,
+      "direction": "<=",
+      "passed": true
+    }
+  ],
+  "gate_passed": false
+}

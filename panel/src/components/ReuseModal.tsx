@@ -2,7 +2,7 @@ import { AlertTriangle, ArrowRight, Building2, CalendarClock, Camera, CheckCircl
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { api, type PhotoFacts, type ReuseComparison, type TicketFacts } from "../api";
-import { brl, REC } from "../format";
+import { brl, REC, envLabel } from "../format";
 import type { LightboxItem } from "./ui/Lightbox";
 import { Tooltip } from "./ui/Tooltip";
 
@@ -12,10 +12,6 @@ const STATUS: Record<string, { label: string; cls: string }> = {
   rejected: { label: "Recusado", cls: "bg-[#f8e4e2] text-bad" },
   returned: { label: "Devolvido", cls: "bg-[#f8e4e2] text-bad" },
   forwarded_to_backoffice: { label: "No backoffice", cls: "bg-blueprint-soft text-blueprint" },
-};
-const ENV: Record<string, string> = {
-  backoffice: "backoffice", back_office: "backoffice", corridor: "corredor", self_service: "autoatendimento", service: "salão de atendimento",
-  boxes: "caixas", kitchen: "cozinha", parking: "estacionamento", treasury: "tesouraria", hall: "salão", facade: "fachada", restroom: "banheiro",
 };
 
 const day = (s: string | null) => (s ? new Date(`${s.slice(0, 10)}T12:00:00`).toLocaleDateString("pt-BR") : "—");
@@ -204,7 +200,7 @@ function Similarity({ d, identical }: { d: ReuseComparison; identical: boolean }
 function Compare({ o, c }: { o: TicketFacts; c: TicketFacts }) {
   const rows: { icon?: ReactNode; label: string; a: ReactNode; b: ReactNode; same?: boolean; hot?: boolean }[] = [
     { icon: <Building2 size={14} />, label: "Agência", a: <>{o.branch_name} <span className="text-muted">· cód. {o.branch_code}</span></>, b: <>{c.branch_name} <span className="text-muted">· cód. {c.branch_code}</span></>, same: o.branch_code === c.branch_code },
-    { label: "Ambiente", a: ENV[o.environment] ?? o.environment, b: ENV[c.environment] ?? c.environment, same: o.environment === c.environment },
+    { label: "Ambiente", a: envLabel(o.environment), b: envLabel(c.environment), same: o.environment === c.environment },
     { icon: <Store size={14} />, label: "Fornecedor", a: <>{o.supplier_name}<div className="text-[12px] text-muted">CNPJ {o.supplier_cnpj}</div></>, b: <>{c.supplier_name}<div className="text-[12px] text-muted">CNPJ {c.supplier_cnpj}</div></>, same: o.supplier_cnpj === c.supplier_cnpj, hot: o.supplier_cnpj === c.supplier_cnpj },
     { label: "Esteira · categoria", a: <>{o.workstream} · {o.category_label}<div className="text-[12px] text-muted">{o.symptom_label}</div></>, b: <>{c.workstream} · {c.category_label}<div className="text-[12px] text-muted">{c.symptom_label}</div></> },
     { label: "Escopo", a: <span className="italic">“{o.scope}”</span>, b: <span className="italic">“{c.scope}”</span> },

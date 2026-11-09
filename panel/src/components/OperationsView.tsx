@@ -68,11 +68,11 @@ export function OperationsView({ openRun }: { openRun: (id: string) => void }) {
       <section data-tour="ops-kpis" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
         <Kpi label="Pareceres emitidos" value={m.assessments.toLocaleString("pt-BR")} sub={`${m.tickets} chamados · ${m.runs} execuções`} />
         <Kpi label="Tempo médio por parecer" value={m.avg_duration_s !== null ? `${m.avg_duration_s.toFixed(1)} s` : "—"} sub="do checklist ao parecer"
-          help={<InfoTip text="Inclui a espera da API. No modo batch, inclui a espera do lote." />} />
+          help={<InfoTip text="Inclui a espera da API. No envio em lote, inclui a espera do lote." />} />
         <Kpi label="Custo com a API" value={brl(m.cost_brl)} sub={`US$ ${m.cost_usd.toFixed(4)}`} />
         <Kpi label="Custo médio por chamado" value={m.avg_cost_brl ? brl4(m.avg_cost_brl) : "—"} sub="só execuções no modo API"
           help={<InfoTip text="Custo total da API dividido pelos pareceres gerados no modo API." />} />
-        <Kpi label="Valor em questão" value={brl(m.amount_at_issue)} sub="soma de todos os pareceres" help={<InfoTip term="amount" />} />
+        <Kpi label="Valor potencial divergente" value={brl(m.amount_at_issue)} sub="soma de todos os pareceres" help={<InfoTip term="amount" />} />
         <Kpi label="Aceite do parecer" value={acceptRate !== null ? pct(acceptRate) : "—"} tone={acceptRate === null ? undefined : acceptRate >= 0.8 ? "ok" : acceptRate >= 0.6 ? "warn" : "bad"}
           sub={decided ? `${decided} decisões registradas` : "nenhuma decisão registrada"}
           help={<InfoTip text="Percentual das decisões em que a pessoa analista aceitou o parecer como veio. Abaixo de 80% vale investigar os apontamentos contestados." />} />
@@ -241,7 +241,7 @@ function Tasks({ m }: { m: M }) {
                 {th("calls", "Chamadas")}{th("avg_duration_s", "Latência média")}
                 <th className="px-3 py-2 text-right font-medium">Tokens (entrada / saída)</th>
                 <th className="px-3 py-2 text-right font-medium"><Tooltip content="Parte dos tokens de entrada lida do cache de prompt (mais barata)"><span className="cursor-help">Cache</span></Tooltip></th>
-                <th className="px-3 py-2 text-right font-medium">Via batch</th>
+                <th className="px-3 py-2 text-right font-medium">Via lote</th>
                 {th("cost_usd", "Custo")}
                 <th className="w-32 px-5 py-2 font-medium">% do custo</th>
               </tr>
@@ -308,7 +308,7 @@ function Runs({ runs, openRun }: { runs: RunSummary[]; openRun: (id: string) => 
                     <span className="block text-[12px] text-muted">{new Date(e.created_at).toLocaleString("pt-BR")}{e.label ? ` · ${e.id}` : ""}</span>
                   </span>
                   <span className="hidden flex-wrap items-center gap-1.5 md:flex">
-                    <span className={`rounded px-1.5 text-[11px] font-semibold ${e.mode === "api" ? "bg-blueprint-soft text-blueprint" : "bg-paper text-muted"}`}>{e.mode === "api" ? (e.batch_mode === "batch" ? "API batch" : "API") : "Simulado"}</span>
+                    <span className={`rounded px-1.5 text-[11px] font-semibold ${e.mode === "api" ? "bg-blueprint-soft text-blueprint" : "bg-paper text-muted"}`}>{e.mode === "api" ? (e.batch_mode === "batch" ? "API em lote" : "API") : "Simulado"}</span>
                     <span className="text-[12px] text-muted">fase {e.phase} · {e.tickets.length} chamado{e.tickets.length === 1 ? "" : "s"}</span>
                     {e.status === "running" && <span className="flex items-center gap-1 text-[12px] text-blueprint"><Loader2 size={12} className="animate-spin" /> rodando</span>}
                   </span>

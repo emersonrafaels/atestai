@@ -6,6 +6,7 @@ Chamados      GET /api/tickets · GET /api/tickets/{id} · GET /api/tickets/{id}
 Execuções     POST /api/runs · GET /api/runs · GET /api/runs/{id}
 Pareceres     GET /api/assessments/{id} · GET|POST /api/assessments/{id}/feedback
 Operação      GET /api/config · GET /api/metrics
+Portal        POST /api/admin/login · GET /api/admin/overview · PUT /api/admin/config/{seção} · usuários e histórico (com token)
 """
 
 from __future__ import annotations
@@ -19,12 +20,13 @@ from datetime import date, datetime
 from pathlib import Path
 from typing import Annotated, Literal
 
-from fastapi import FastAPI, File, Form, HTTPException, UploadFile
-from fastapi.responses import FileResponse, Response
+from fastapi import FastAPI, File, Form, Header, HTTPException, Request, UploadFile
+from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from PIL import Image
 from pydantic import BaseModel, Field, ValidationError
 
+from .admin import SECTIONS, AdminError, AdminStore
 from .attachments import compute_hashes, detail_level, distance, exif_date, hashes_with_crops
 from .batch import BatchRunner, ComponentFactory, new_run_id
 from .config import KEY_ENV_VAR, ROOT, BatchMode, Mode, Settings, missing_keys, used_providers
@@ -45,7 +47,7 @@ from .domain import (
 )
 from .evaluation import Evaluation, GroundTruthEvaluator, TicketComparison
 from .observability import configure_logging, event
-from .repository import QuoteError, list_tickets, load_ground_truth, load_ticket, read_quote
+from .repository import QuoteError, References, list_tickets, load_ground_truth, load_ticket, read_quote
 from .spreadsheet import spreadsheet_template
 from .validation import DatasetCatalog
 
@@ -234,6 +236,30 @@ class Option(BaseModel):
     label: str
 
 
+class LoginInput(BaseModel):
+    username: str = Field(max_length=80)
+    password: str = Field(max_length=200)
+
+
+class SaveSectionInput(BaseModel):
+    data: dict | None = None
+    comment: str = Field("", max_length=500)
+
+
+class NewUserInput(BaseModel):
+    username: str = Field(max_length=40)
+    password: str = Field(max_length=200)
+
+
+class PasswordInput(BaseModel):
+    current: str = Field(max_length=200)
+    new: str = Field(max_length=200)
+
+
+# Suba quando o painel passar a depender de rotas ou campos novos da API (panel/src/api.ts: PANEL_API).
+PANEL_API = 3
+
+
 class ModelOption(BaseModel):
     """Modelo conhecido pela configuração: da tabela de preços ou já usado em models.*."""
 
@@ -266,6 +292,7 @@ class AppSettings(BaseModel):
     rubric: dict = {}  # pesos, descontos por severidade, faixas e confiança: o painel explica o score com eles
     models: list[ModelOption] = []  # sugestões para os campos de modelo (a pessoa pode digitar outro)
     keyed_providers: list[str] = []  # provedores com chave de API no ambiente (só os nomes, nunca a chave)
+    panel_api: int = PANEL_API  # revisão do contrato com o painel: front-end mais novo que o servidor avisa para reiniciar
 
 
 class Dataset(BaseModel):
@@ -428,7 +455,9 @@ def create_app(cfg: Settings) -> FastAPI:
     """Cria a aplicação FastAPI do painel: API em /api e front-end compilado na raiz."""
     configure_logging(cfg)
     database = Database(cfg.database_file)
-    manager = RunManager(cfg, database)
+    admin = AdminStore(database, cfg.admin)
+    base_cfg = cfg  # o que está nos TOML; a configuração efetiva fica em manager.cfg_base
+    manager = RunManager(admin.apply(base_cfg), database)
     app = FastAPI(title="Atest.AI", version=cfg.version)
 
     def summary(folder: Path) -> TicketSummary:
@@ -499,6 +528,130 @@ def create_app(cfg: Settings) -> FastAPI:
                                    input_price=price.input if price else None, output_price=price.output if price else None))
         return out
 
+
+    # ------------------------------------------------------------------ portal de configuração (com login)
+    @app.exception_handler(AdminError)
+    def admin_error(_: Request, e: AdminError) -> JSONResponse:
+        return JSONResponse({"detail": str(e)}, status_code=e.status)
+
+    def admin_user(authorization: str | None) -> str:
+        token = authorization.removeprefix("Bearer ").strip() if authorization else None
+        user = admin.user_for(token)
+        if not user:
+            raise HTTPException(401, "Sessão expirada ou inválida. Entre de novo.")
+        return user
+
+    def overview() -> dict:
+        eff = manager.cfg_base
+        counts_cat: dict[str, int] = {}
+        counts_sym: dict[str, int] = {}
+        pairs: dict[str, set[str]] = {}
+        total = 0
+        for folder in list_tickets(cfg.tickets_dir):
+            d = load_ticket(folder).data
+            total += 1
+            counts_cat[d.category.value] = counts_cat.get(d.category.value, 0) + 1
+            counts_sym[d.symptom.value] = counts_sym.get(d.symptom.value, 0) + 1
+            pairs.setdefault(d.category.value, set()).add(d.symptom.value)
+        sections = {}
+        for sec in SECTIONS:
+            latest = admin.latest(sec)
+            sections[sec] = {
+                "data": admin.section_data(sec, base_cfg),
+                "base": admin.base_data(sec, base_cfg),
+                "overridden": bool(latest and latest["data"] is not None),
+                "version_id": latest["id"] if latest else None,
+            }
+        lpu = References(base_cfg).lpu
+        return {
+            "sections": sections,
+            "catalog": {
+                "categories": [{"value": c.value, "label": CATEGORY_LABEL[c], "tickets": counts_cat.get(c.value, 0),
+                                "symptoms_seen": sorted(pairs.get(c.value, set()))} for c in Category],
+                "symptoms": [{"value": sy.value, "label": SYMPTOM_LABEL[sy], "tickets": counts_sym.get(sy.value, 0)} for sy in Symptom],
+                "tickets": total,
+            },
+            "lpu": {ws: [i.model_dump() for i in items.values()] for ws, items in lpu.items()},
+            "system": {
+                "rubric_version": eff.rubric.version, "prompts_version": cfg.prompts.version,
+                "signature": eff.signature(), "base_signature": base_cfg.signature(),
+                "main_model": cfg.models.main, "fast_model": cfg.models.fast, "phase": cfg.pipeline.phase,
+                "validation": cfg.validation.model_dump(), "environment": cfg.environment, "version": cfg.version,
+            },
+        }
+
+    @app.post("/api/admin/login")
+    def admin_login(body: LoginInput) -> dict:
+        token, expires = admin.login(body.username, body.password)
+        event("admin_login", user=body.username.strip().lower())
+        return {"token": token, "username": body.username.strip().lower(), "expires_at": expires.isoformat(timespec="seconds")}
+
+    @app.post("/api/admin/logout", status_code=204)
+    def admin_logout(authorization: Annotated[str | None, Header()] = None) -> Response:
+        admin_user(authorization)
+        admin.logout(authorization.removeprefix("Bearer ").strip())  # type: ignore[union-attr]
+        return Response(status_code=204)
+
+    @app.get("/api/admin/me")
+    def admin_me(authorization: Annotated[str | None, Header()] = None) -> dict:
+        return {"username": admin_user(authorization)}
+
+    @app.get("/api/admin/overview")
+    def admin_overview(authorization: Annotated[str | None, Header()] = None) -> dict:
+        admin_user(authorization)
+        return overview()
+
+    def apply_and_overview(vid: int, user: str, section: str) -> dict:
+        manager.cfg_base = admin.apply(base_cfg)
+        event("admin_config_saved", user=user, section=section, version_id=vid, signature=manager.cfg_base.signature())
+        return overview()
+
+    @app.put("/api/admin/config/{section}")
+    def admin_save(section: Literal["rubric", "checklists"], body: SaveSectionInput, authorization: Annotated[str | None, Header()] = None) -> dict:
+        user = admin_user(authorization)
+        if body.data is None:
+            raise HTTPException(422, "Envie a seção completa em 'data'.")
+        vid = admin.save(section, body.data, base_cfg, user, body.comment)
+        return apply_and_overview(vid, user, section)
+
+    @app.post("/api/admin/config/{section}/reset")
+    def admin_reset(section: Literal["rubric", "checklists"], body: SaveSectionInput, authorization: Annotated[str | None, Header()] = None) -> dict:
+        user = admin_user(authorization)
+        vid = admin.save(section, None, base_cfg, user, body.comment)
+        return apply_and_overview(vid, user, section)
+
+    @app.post("/api/admin/history/{vid}/restore")
+    def admin_restore(vid: int, body: SaveSectionInput, authorization: Annotated[str | None, Header()] = None) -> dict:
+        user = admin_user(authorization)
+        old = admin.version(vid)
+        comment = body.comment or f"Restaurou a versão #{vid}"
+        new = admin.save(old["section"], old["data"], base_cfg, user, comment)
+        return apply_and_overview(new, user, old["section"])
+
+    @app.get("/api/admin/history")
+    def admin_history(authorization: Annotated[str | None, Header()] = None) -> list[dict]:
+        admin_user(authorization)
+        return admin.history()
+
+    @app.get("/api/admin/users")
+    def admin_users(authorization: Annotated[str | None, Header()] = None) -> list[dict]:
+        admin_user(authorization)
+        return admin.users()
+
+    @app.post("/api/admin/users", status_code=201)
+    def admin_add_user(body: NewUserInput, authorization: Annotated[str | None, Header()] = None) -> list[dict]:
+        user = admin_user(authorization)
+        admin.add_user(body.username, body.password, user)
+        event("admin_user_created", user=user, new_user=body.username.strip().lower())
+        return admin.users()
+
+    @app.post("/api/admin/password", status_code=204)
+    def admin_password(body: PasswordInput, authorization: Annotated[str | None, Header()] = None) -> Response:
+        user = admin_user(authorization)
+        admin.change_password(user, body.current, body.new)
+        event("admin_password_changed", user=user)
+        return Response(status_code=204)
+
     # ------------------------------------------------------------------ configuração e métricas
     @app.get("/api/config")
     def config() -> AppSettings:
@@ -510,16 +663,16 @@ def create_app(cfg: Settings) -> FastAPI:
             fast_model=cfg.models.fast,
             phase=cfg.pipeline.phase,
             batch_mode=cfg.batch.kind.value,
-            rubric_version=cfg.rubric.version,
+            rubric_version=manager.cfg_base.rubric.version,
             prompts_version=cfg.prompts.version,
             usd_brl_rate=cfg.costs.usd_brl_rate,
             categories=[Option(value=c.value, label=CATEGORY_LABEL[c]) for c in Category],
             symptoms=[Option(value=s.value, label=SYMPTOM_LABEL[s]) for s in Symptom],
             providers=sorted(used_providers(cfg)),
             missing_keys=missing_keys(cfg),
-            signature=cfg.signature(),
+            signature=manager.cfg_base.signature(),
             validation=cfg.validation.model_dump(),
-            rubric=cfg.rubric.model_dump(mode="json", include={"weights", "discount_by_severity", "bands", "confidence"}),
+            rubric=manager.cfg_base.rubric.model_dump(mode="json", include={"weights", "discount_by_severity", "bands", "confidence"}),
             models=model_options(),
             keyed_providers=sorted(p for p, var in KEY_ENV_VAR.items() if os.getenv(var)),
         )
@@ -613,10 +766,10 @@ def create_app(cfg: Settings) -> FastAPI:
         cur_photo, cur_path = photo_facts(tid, cur_folder, file)
         org_photo, org_path = photo_facts(origin, org_folder, origin_file)
         try:
-            dist = min(distance(compute_hashes(cur_path), h) for h in hashes_with_crops(org_path, cfg.rubric.hash_crops))
+            dist = min(distance(compute_hashes(cur_path), h) for h in hashes_with_crops(org_path, manager.cfg_base.rubric.hash_crops))
         except OSError:
             dist = None
-        low = min(cur_photo.detail or 100, org_photo.detail or 100) < cfg.rubric.hash_min_detail
+        low = min(cur_photo.detail or 100, org_photo.detail or 100) < manager.cfg_base.rubric.hash_min_detail
         # momento de cada foto: data e hora do EXIF; sem EXIF (comum em foto reenviada por WhatsApp), o dia do envio
         def moment(ph: PhotoFacts, t: TicketFacts) -> datetime:
             return ph.taken_at or datetime.combine(ph.uploaded_on or t.supplier_submission, datetime.min.time())
@@ -626,7 +779,7 @@ def create_app(cfg: Settings) -> FastAPI:
         basis = "exif" if n_exif == 2 else "mixed" if n_exif == 1 else "dates"
         return ReuseComparison(
             current=cur, current_photo=cur_photo, origin=org, origin_photo=org_photo, distance=dist,
-            limit=cfg.rubric.hash_max_distance_low_detail if low else cfg.rubric.hash_max_distance,
+            limit=manager.cfg_base.rubric.hash_max_distance_low_detail if low else manager.cfg_base.rubric.hash_max_distance,
             basis=basis, origin_moment=o_m, current_moment=c_m, chronology_ok=o_m <= c_m,
             gap_hours=round((c_m - o_m).total_seconds() / 3600, 1),
             same_branch=cur.branch_code == org.branch_code, same_supplier=cur.supplier_cnpj == org.supplier_cnpj,

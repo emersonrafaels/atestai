@@ -13,7 +13,7 @@ export function LlmCallsTab({ p }: { p: Assessment }) {
       <div className="grid gap-3 sm:grid-cols-4">
         <Card label="Chamadas ao modelo" value={String(p.llm_calls.length)} />
         <Card label="Tokens (entrada / saída)" value={`${totalIn.toLocaleString("pt-BR")} / ${totalOut.toLocaleString("pt-BR")}`} />
-        <Card label="Custo da análise" value={p.mode === "api" ? brl4(p.cost_brl) : "simulado"} sub={p.mode === "api" ? `US$ ${p.cost_usd.toFixed(5)}${p.batch_mode === "batch" ? ", com 50% de desconto do batch" : ""}` : undefined} />
+        <Card label="Custo da análise" value={p.mode === "api" ? brl4(p.cost_brl) : "simulado"} sub={p.mode === "api" ? `US$ ${p.cost_usd.toFixed(5)}${p.batch_mode === "batch" ? ", com 50% de desconto do envio em lote" : ""}` : undefined} />
         <Card label="Tempo total" value={`${p.duration_s.toFixed(1)} s`} sub={p.batch_mode === "batch" ? "inclui a espera dos lotes" : undefined} />
       </div>
       <div>
@@ -29,7 +29,7 @@ export function LlmCallsTab({ p }: { p: Assessment }) {
       </div>
       <p className="text-sm text-muted">
         Prompts versão {p.prompts_version} · régua {p.rubric_version}.
-        {p.mode === "simulated" && " Respostas simuladas a partir do gabarito: servem para demonstrar o fluxo, não para medir qualidade."}
+        {p.mode === "simulated" && " Respostas simuladas: servem para demonstrar o fluxo, não para medir qualidade."}
       </p>
       <ol className="space-y-2">
         {p.llm_calls.map((c, i) => (
@@ -40,7 +40,7 @@ export function LlmCallsTab({ p }: { p: Assessment }) {
                 <span className="w-6 text-sm tabular-nums text-muted">{i + 1}</span>
                 <span className="flex-1 font-medium">{TASK_LABELS[c.task] ?? c.task}</span>
                 <span className="hidden text-sm text-muted md:inline">{c.model}</span>
-                {c.via_batch && <span className="rounded bg-blueprint-soft px-1.5 text-[11px] font-semibold text-blueprint" title={c.batch_id ?? ""}>batch</span>}
+                {c.via_batch && <span className="rounded bg-blueprint-soft px-1.5 text-[11px] font-semibold text-blueprint" title={c.batch_id ? `Lote ${c.batch_id}` : ""}>lote</span>}
                 <span className="w-20 text-right text-sm tabular-nums text-muted">
                   {c.from_cache ? "cache" : `${c.duration_s.toFixed(2)} s`}
                 </span>

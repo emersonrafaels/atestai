@@ -2,11 +2,11 @@ import { ArrowRight, ExternalLink, FileSpreadsheet, ImageOff, Lock } from "lucid
 import { ReuseModal } from "./ReuseModal";
 import { useState } from "react";
 import type { Assessment, EvaluatedItem, EvaluatedPhoto, Finding, TicketDetail } from "../api";
-import { brl, num, MOMENT_LABEL } from "../format";
+import { brl, num, MOMENT_LABEL, envLabel } from "../format";
 import { locate, type Located } from "../evidence";
 import type { LightboxItem } from "./ui/Lightbox";
 
-export type GoTo = (tab: "quote" | "photos" | "input", highlight?: { items?: number[]; files?: string[] }) => void;
+export type GoTo = (tab: "assessment" | "scope" | "quote" | "photos" | "calls" | "input", highlight?: { items?: number[]; files?: string[] }) => void;
 
 interface Props {
   f: Finding;
@@ -73,7 +73,7 @@ function QuoteEvidence({ f, loc, goTo }: { f: Finding; loc: Located; goTo: GoTo 
             <tr>
               <th className="px-2.5 py-1.5 font-medium">Linha</th><th className="px-2.5 py-1.5 font-medium">Descrição</th>
               <th className="px-2.5 py-1.5 text-right font-medium">Qtd</th><th className="px-2.5 py-1.5 text-right font-medium">Unitário</th>
-              <th className="px-2.5 py-1.5 text-right font-medium">Total</th><th className="px-2.5 py-1.5 text-right font-medium">Em questão</th>
+              <th className="px-2.5 py-1.5 text-right font-medium">Total</th><th className="px-2.5 py-1.5 text-right font-medium">Potencial divergente</th>
             </tr>
           </thead>
           <tbody className="tabular-nums">
@@ -109,7 +109,7 @@ function QuoteEvidence({ f, loc, goTo }: { f: Finding; loc: Located; goTo: GoTo 
         </table>
       </div>
       <p className="mt-1.5 text-[12px] text-muted">
-        {whole ? "A linha inteira entra no valor em questão." : f.kind === "price_above_reference" ? "Só o que passa da referência (com a tolerância) entra no valor em questão." : "Só o excedente de quantidade entra no valor em questão."}
+        {whole ? "A linha inteira entra no valor potencial divergente." : f.kind === "price_above_reference" ? "Só o que passa da referência (com a tolerância) entra no valor potencial divergente." : "Só o excedente de quantidade entra no valor potencial divergente."}
       </p>
     </div>
   );
@@ -136,7 +136,7 @@ function ScopeEvidence({ p, ticket }: { p: Assessment; ticket: TicketDetail | nu
       <div>
         <div className="mb-1 font-medium">Escopo como foi escrito</div>
         <blockquote className="rounded-md border-l-4 border-warn bg-sheet px-3 py-2 text-[15px] leading-snug">“{ticket?.scope ?? "—"}”</blockquote>
-        {ticket && <div className="mt-1 text-[12px] text-muted">Categoria {ticket.category_label} · sintoma {ticket.symptom_label}{ticket.environment ? ` · ambiente ${ticket.environment}` : ""}</div>}
+        {ticket && <div className="mt-1 text-[12px] text-muted">Categoria {ticket.category_label} · sintoma {ticket.symptom_label}{ticket.environment ? ` · ambiente ${envLabel(ticket.environment)}` : ""}</div>}
       </div>
       {(s.requested_services?.length || s.acceptance_criteria?.length) ? (
         <div className="grid gap-2 md:grid-cols-2">

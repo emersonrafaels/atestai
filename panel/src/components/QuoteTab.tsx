@@ -20,7 +20,7 @@ export function QuoteTab({ p, highlight = [] }: { p: Assessment; highlight?: num
               <th className="px-3 py-2 font-medium">#</th><th className="px-3 py-2 font-medium">Item cobrado e leitura do modelo</th>
               <th className="px-3 py-2 text-right font-medium">Qtd</th><th className="px-3 py-2 text-right font-medium">Unitário</th>
               <th className="px-3 py-2 text-right font-medium">Referência</th><th className="px-3 py-2 text-right font-medium">Total</th>
-              <th className="px-3 py-2 text-right font-medium">Em questão</th>
+              <th className="px-3 py-2 text-right font-medium">Potencial divergente</th>
               <th className="px-3 py-2 font-medium">Classificação</th>
             </tr>
           </thead>
@@ -55,7 +55,7 @@ export function QuoteTab({ p, highlight = [] }: { p: Assessment; highlight?: num
       </div>
       <div className="flex flex-wrap gap-x-8 gap-y-1 text-sm">
         <span>Total orçado <b className="tabular-nums">{brl(p.items.reduce((s, i) => s + i.total_value, 0))}</b></span>
-        <span>Valor em questão <b className="tabular-nums text-bad">{brl(p.amount_at_issue)}</b> ({p.amount_at_issue_pct.toFixed(0)}%)</span>
+        <span>Valor potencial divergente <b className="tabular-nums text-bad">{brl(p.amount_at_issue)}</b> ({p.amount_at_issue_pct.toFixed(0)}%)</span>
         <span className="text-muted">Item fora do escopo, sem justificativa ou duplicado conta inteiro; preço e quantidade acima contam só o excedente.</span>
       </div>
       {p.quote_notes.length > 0 && (

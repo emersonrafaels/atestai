@@ -1,0 +1,36 @@
+{
+  "n": 1,
+  "exact_recommendation": 0,
+  "direction": 1,
+  "checklist": 1,
+  "avg_score_error": 28.0,
+  "by_kind": {
+    "missing_after_photo": {
+      "tp": 0,
+      "fp": 1,
+      "fn": 0
+    },
+    "photo_mismatch": {
+      "tp": 0,
+      "fp": 1,
+      "fn": 0
+    }
+  },
+  "by_ticket": [
+    {
+      "ticket_id": "02000003",
+      "expected": "approve",
+      "obtained": "approve_with_caveats",
+      "expected_score": 100,
+      "obtained_score": 72,
+      "recommendation_ok": false,
+      "direction_ok": true,
+      "checklist_ok": true,
+      "missed": [],
+      "extra": [
+        "missing_after_photo",
+        "photo_mismatch"
+      ]
+    }
+  ]
+}

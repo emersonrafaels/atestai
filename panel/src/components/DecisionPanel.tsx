@@ -285,7 +285,7 @@ export function DecisionPanel({ p, n, rubric, unfounded, toggleUnfounded, focusF
   );
 }
 
-/** Pontos de atenção: travas, confiança, valor em questão, proximidade de faixa e apontamentos decisivos. */
+/** Pontos de atenção: travas, confiança, valor potencial divergente, proximidade de faixa e apontamentos decisivos. */
 function buildAttention(p: Assessment, rubric: RubricInfo): { text: React.ReactNode; finding?: number }[] {
   const out: { text: React.ReactNode; finding?: number }[] = [];
   const idx = (pred: (f: Assessment["findings"][number]) => boolean) => { const i = p.findings.findIndex(pred); return i >= 0 ? i : undefined; };
@@ -318,7 +318,7 @@ function buildAttention(p: Assessment, rubric: RubricInfo): { text: React.ReactN
 
   if (p.amount_at_issue > 0) {
     const biggest = p.findings.reduce((best, f, i) => (f.amount_at_issue > (best < 0 ? 0 : p.findings[best].amount_at_issue) ? i : best), -1);
-    out.push({ text: <><b>{brl(p.amount_at_issue)}</b> em questão ({p.amount_at_issue_pct.toFixed(0)}% do orçado){biggest >= 0 ? <>, a maior parte em “{p.findings[biggest].description.toLowerCase()}”</> : null}.</>, finding: biggest >= 0 ? biggest : undefined });
+    out.push({ text: <><b>{brl(p.amount_at_issue)}</b> de valor potencial divergente ({p.amount_at_issue_pct.toFixed(0)}% do orçado){biggest >= 0 ? <>, a maior parte em “{p.findings[biggest].description.toLowerCase()}”</> : null}.</>, finding: biggest >= 0 ? biggest : undefined });
   }
   return out;
 }

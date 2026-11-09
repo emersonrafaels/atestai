@@ -1,0 +1,77 @@
+{
+  "n": 2,
+  "exact_recommendation": 2,
+  "direction": 2,
+  "checklist": 2,
+  "avg_score_error": 3.0,
+  "by_kind": {
+    "missing_after_photo": {
+      "tp": 1,
+      "fp": 0,
+      "fn": 0
+    },
+    "missing_before_photo": {
+      "tp": 1,
+      "fp": 0,
+      "fn": 0
+    },
+    "out_of_scope_item": {
+      "tp": 2,
+      "fp": 0,
+      "fn": 0
+    },
+    "photo_dated_before": {
+      "tp": 1,
+      "fp": 0,
+      "fn": 0
+    },
+    "photo_mismatch": {
+      "tp": 1,
+      "fp": 0,
+      "fn": 0
+    },
+    "quantity_above_expected": {
+      "tp": 1,
+      "fp": 1,
+      "fn": 0
+    },
+    "reused_photo": {
+      "tp": 1,
+      "fp": 0,
+      "fn": 0
+    },
+    "unjustified_replacement": {
+      "tp": 1,
+      "fp": 0,
+      "fn": 0
+    }
+  },
+  "by_ticket": [
+    {
+      "ticket_id": "00482193",
+      "expected": "return_to_supplier",
+      "obtained": "return_to_supplier",
+      "expected_score": 60,
+      "obtained_score": 60,
+      "recommendation_ok": true,
+      "direction_ok": true,
+      "checklist_ok": true,
+      "missed": [],
+      "extra": []
+    },
+    {
+      "ticket_id": "00517706",
+      "expected": "return_locked",
+      "obtained": "return_locked",
+      "expected_score": 32,
+      "obtained_score": 26,
+      "recommendation_ok": true,
+      "direction_ok": true,
+      "checklist_ok": true,
+      "missed": [],
+      "extra": [
+        "quantity_above_expected"
+      ]
+    }
+  ]
+}

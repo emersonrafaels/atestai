@@ -3,7 +3,7 @@
 # aqui (ex.: vague_scope, "yes"/"no") precisam bater com esse esquema.
 
 [default.prompts]
-version = "2026-11-v3"  # v3: nomes de campo e valores do esquema em inglês; texto continua em português
+version = "2026-11-v4"  # v4: "valor em questão" passa a ser "valor potencial divergente"; v3: esquema em inglês, texto em português
 
 identify_attachments = """
 Você é o validador de checklist mínimo do Atest.AI, que confere chamados de manutenção predial (esteira SETA) e de
@@ -81,7 +81,7 @@ assessment = """
 Você redige o parecer do Atest.AI para a pessoa analista do backoffice, que decide se aprova, ajusta ou devolve um
 chamado de manutenção. O parecer é uma recomendação: a decisão é dela.
 Português do Brasil, tom profissional e direto, sem adjetivos e sem números que não estejam nos dados.
-- summary: 2 a 3 frases. Comece pela recomendação e pelo motivo principal; cite o valor em questão quando houver.
+- summary: 2 a 3 frases. Comece pela recomendação e pelo motivo principal; cite o valor potencial divergente quando houver.
 - supplier_message: se a recomendação for devolver ou aprovar com ressalvas, mensagem curta ao fornecedor com o que
   remover, justificar, ajustar ou reenviar (uma ação por apontamento, separadas por ponto e vírgula). Se for aprovar sem
   apontamentos ou análise detalhada, deixe vazio.

@@ -87,8 +87,8 @@ export function NewTicket({ config, close, created }: Props) {
               <select name="maintenance_type" className={field}><option value="corrective">Corretiva</option><option value="preventive">Preventiva</option></select>
             </label>
             <label>
-              <span className="mb-1 block font-medium">Momento</span>
-              <select name="moment" className={field}><option value="execution">Retorno da execução</option><option value="quote">Aprovação do orçamento</option></select>
+              <span className="mb-1 block font-medium">Etapa da esteira</span>
+              <select name="moment" className={field}><option value="quote">Aprovação de Orçamento</option><option value="execution">Aprovação do Serviço</option></select>
             </label>
           </div>
           <label>

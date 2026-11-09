@@ -1,7 +1,7 @@
 import { CircleCheck, CircleX, FlaskConical, Loader2, Play, Search, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api, type AppSettings, type Dataset, type Recommendation, type Run, type RunSummary, type ValidationReport } from "../api";
-import { brl, brl4, pct, REC, FINDING_LABELS } from "../format";
+import { brl, brl4, pct, REC, FINDING_LABELS, providerLabel } from "../format";
 import { InfoTip, Tooltip } from "./ui/Tooltip";
 import { InfoBox } from "./ui/InfoBox";
 import { Card, Kpi, Meter, SectionNav, type DeltaInfo } from "./ui/Panel";
@@ -129,7 +129,7 @@ export function ValidationView({ config, openCase }: Props) {
                   <Tooltip key={m} className="flex flex-1" content={m === "api" && !config.api_available ? `Sem chave para: ${config.missing_keys.join(", ")}` : m === "api" ? "Chama o modelo de verdade: mede a qualidade real e gera custo" : "Sem custo: mostra o fluxo e as métricas com erro simulado"}>
                     <button type="button" disabled={running || (m === "api" && !config.api_available)} onClick={() => setMode(m)}
                       className={`flex-1 rounded-md px-3 py-1 ${mode === m ? "bg-sheet font-semibold shadow-sm" : "text-muted hover:text-ink"} disabled:pointer-events-none disabled:opacity-40`}>
-                      {m === "simulated" ? "Simulado" : `API (${config.providers.join(", ")})`}
+                      {m === "simulated" ? "Simulado" : `API (${config.providers.map(providerLabel).join(", ")})`}
                     </button>
                   </Tooltip>
                 ))}
@@ -150,7 +150,7 @@ export function ValidationView({ config, openCase }: Props) {
                   {(["sync", "batch"] as const).map((t) => (
                     <button key={t} type="button" disabled={running} onClick={() => setBatchMode(t)}
                       className={`flex-1 rounded-md px-3 py-1 ${batchMode === t ? "bg-sheet font-semibold shadow-sm" : "text-muted hover:text-ink"}`}>
-                      {t === "sync" ? "Síncrono" : "Batch −50%"}
+                      {t === "sync" ? "Síncrono" : "Lote −50%"}
                     </button>
                   ))}
                 </div>
@@ -238,7 +238,7 @@ function Report({ r, execution, config, openCase, prev }: { r: ValidationReport;
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h3 className="largo text-xl font-bold">{execution?.label || execution?.id || "Relatório"}</h3>
           <span className="text-[13px] text-muted">
-            {r.n} chamados com gabarito{r.no_ground_truth ? ` (+${r.no_ground_truth} sem)` : ""} · {execution?.mode === "api" ? `API${execution.batch_mode === "batch" ? " batch" : ""}` : `simulado, ruído ${pct(execution?.simulated_noise ?? 0)}`}
+            {r.n} chamados com gabarito{r.no_ground_truth ? ` (+${r.no_ground_truth} sem)` : ""} · {execution?.mode === "api" ? `API${execution.batch_mode === "batch" ? " em lote" : ""}` : `simulado, ruído ${pct(execution?.simulated_noise ?? 0)}`}
             {execution?.created_at && ` · ${new Date(execution.created_at).toLocaleString("pt-BR")}`}
           </span>
         </div>
@@ -342,7 +342,7 @@ function Report({ r, execution, config, openCase, prev }: { r: ValidationReport;
           </div>
         </Card>
         <div className="space-y-5">
-          <Card help={<InfoTip term="amount" />} title="Valor em questão" sub="Soma do que o gabarito e o Atest.AI colocaram em questão.">
+          <Card help={<InfoTip term="amount" />} title="Valor potencial divergente" sub="Soma do que o gabarito e o Atest.AI apontaram como potencialmente divergente.">
             <AmountCompare expected={r.expected_amount_at_issue} obtained={r.obtained_amount_at_issue} />
             <dl className="mt-3 space-y-1 text-[13px] text-muted">
               <div className="flex justify-between"><dt>Erro médio por chamado</dt><dd className="tabular-nums">{r.amount_at_issue_mae === null ? "—" : brl(r.amount_at_issue_mae)}</dd></div>
@@ -687,7 +687,7 @@ function History({ history, current, open, config }: { history: RunSummary[]; cu
                   <div className="flex items-center gap-2 font-medium">{h.label || h.id}{current === h.id && <span className="rounded bg-blueprint px-1.5 text-[10px] font-semibold uppercase text-white">aberta</span>}</div>
                   <div className="text-[12px] text-muted">{new Date(h.created_at).toLocaleString("pt-BR")}</div>
                 </td>
-                <td className="px-3 py-2 text-[12px] text-muted">{h.mode === "api" ? `API${h.batch_mode === "batch" ? " batch" : ""}` : "simulado"} · {h.signature}</td>
+                <td className="px-3 py-2 text-[12px] text-muted">{h.mode === "api" ? `API${h.batch_mode === "batch" ? " em lote" : ""}` : "simulado"} · {h.signature}</td>
                 <td className="px-3 py-2 text-right">{h.validation!.n}</td>
                 <td className={`px-3 py-2 text-right ${h.validation!.accuracy.value < config.validation.accuracy_min ? "text-bad" : ""}`}>{pct(h.validation!.accuracy.value, 1)}</td>
                 <td className="px-3 py-2 text-right">{h.validation!.kappa?.toFixed(2) ?? "—"}</td>

@@ -1,0 +1,809 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Atest.AI · Documentação</title>
+  <meta name="description" content="Como o Atest.AI analisa chamados de manutenção: fluxo do código, fluxo dos modelos, validações, régua de score e métricas de qualidade.">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="topbar">
+  <button id="menu-btn" class="icon-btn menu-btn" type="button" aria-label="Abrir menu">☰</button>
+  <div class="brand"><span class="brand-mark">AT</span> Atest.AI <small>· documentação v0.3.0</small></div>
+  <nav class="roles" aria-label="Filtrar por papel">
+    <button class="role-btn" data-role="all" aria-pressed="true">Tudo</button>
+    <button class="role-btn" data-role="exec">Executivo</button>
+    <button class="role-btn" data-role="prod">Produto</button>
+    <button class="role-btn" data-role="ds">Ciência de dados</button>
+    <button class="role-btn" data-role="eng">Engenharia</button>
+  </nav>
+  <button id="theme-btn" class="icon-btn theme-btn" type="button">☾ Escuro</button>
+</header>
+
+<div class="layout">
+  <aside class="sidebar" aria-label="Sumário">
+    <div class="label">Começo</div>
+    <a href="#papeis">Como ler este documento</a>
+    <a href="#resumo">Resumo executivo</a>
+    <a href="#problema">O problema e a ideia</a>
+    <div class="label">Como funciona</div>
+    <a href="#jornada">Jornada de um chamado</a>
+    <a href="#decisao">Quem decide o quê</a>
+    <a href="#modelos">Modelos usados</a>
+    <a href="#fluxo-modelos">Fluxo dos modelos</a>
+    <a href="#validacoes">Como as validações são feitas</a>
+    <a href="#apontamentos">Os 14 apontamentos</a>
+    <a href="#regua">Régua e simulador de score</a>
+    <div class="label">Qualidade e resultados</div>
+    <a href="#qualidade">Como medimos a qualidade</a>
+    <a href="#resultados">Status e resultados atuais</a>
+    <a href="#custos">Custos e operação</a>
+    <div class="label">Técnico</div>
+    <a href="#codigo">Fluxo do código</a>
+    <a href="#config">Configuração e execução</a>
+    <a href="#governanca">Rastreabilidade e riscos</a>
+    <div class="label">Fechamento</div>
+    <a href="#roadmap">Próximos passos</a>
+    <a href="#faq">Perguntas frequentes</a>
+    <a href="#glossario">Glossário</a>
+  </aside>
+
+  <main>
+
+  <!-- ================================================================== HERO + PAPÉIS -->
+  <section class="doc" id="papeis" data-roles="exec prod ds eng">
+    <div class="hero">
+      <h1>Atest.AI</h1>
+      <p class="tagline">Um copiloto que confere chamados de manutenção de agências antes da aprovação: o orçamento faz sentido para o que foi pedido? As fotos provam que o serviço foi feito?</p>
+      <div class="motto"><span class="ai">O modelo aponta</span>→<span class="rule">a régua decide</span>→<span class="human">a pessoa analista confirma</span></div>
+    </div>
+
+    <h3 style="margin-top:0">Como ler este documento</h3>
+    <p class="muted">Use os botões no topo para ver só o que interessa ao seu papel. Termos com <span class="term" tabindex="0" data-tip="Passe o mouse (ou toque) para ver a definição. Todos os termos também estão no Glossário, no fim da página.">sublinhado pontilhado</span> têm definição ao passar o mouse. Blocos “Detalhe técnico” podem ser ignorados por quem não é da área.</p>
+
+    <div class="grid c4">
+      <button class="card clickable" data-go-role="exec">
+        <h4>Executivo</h4>
+        <p class="small muted">O que é, por que importa, quanto custa, em que pé está e quais os riscos. Leitura de 5 minutos.</p>
+      </button>
+      <button class="card clickable" data-go-role="prod">
+        <h4>Produto</h4>
+        <p class="small muted">Jornada do chamado, regras de negócio, apontamentos, régua, recomendações e próximos passos.</p>
+      </button>
+      <button class="card clickable" data-go-role="ds">
+        <h4>Ciência de dados</h4>
+        <p class="small muted">Modelos, prompts, saídas estruturadas, conjuntos de dados, métricas, portão de qualidade e limitações.</p>
+      </button>
+      <button class="card clickable" data-go-role="eng">
+        <h4>Engenharia</h4>
+        <p class="small muted">Arquitetura, fluxo do código, camada de provedores, configuração, persistência e como rodar.</p>
+      </button>
+    </div>
+
+    <div class="reading-path callout info" data-for="exec"><strong>Roteiro do executivo</strong>
+      <ol><li>Resumo executivo</li><li>O problema e a ideia</li><li>Jornada de um chamado (clique nos passos)</li><li>Status e resultados atuais: o que já está provado e o que não está</li><li>Custos (com calculadora)</li><li>Riscos e próximos passos</li></ol></div>
+    <div class="reading-path callout info" data-for="prod"><strong>Roteiro de produto</strong>
+      <ol><li>Jornada de um chamado</li><li>Quem decide o quê</li><li>Os 14 apontamentos e a régua (use o simulador)</li><li>Como medimos a qualidade</li><li>Próximos passos e perguntas frequentes</li></ol></div>
+    <div class="reading-path callout info" data-for="ds"><strong>Roteiro de ciência de dados</strong>
+      <ol><li>Modelos usados e fluxo dos modelos</li><li>Como as validações são feitas (IA × regra)</li><li>Régua de score</li><li>Como medimos a qualidade: conjuntos, gabarito, métricas, portão</li><li>Status atual e limitações</li></ol></div>
+    <div class="reading-path callout info" data-for="eng"><strong>Roteiro de engenharia</strong>
+      <ol><li>Fluxo do código</li><li>Fluxo dos modelos e camada de provedores</li><li>Configuração e execução</li><li>Rastreabilidade (o que é gravado em cada chamada)</li></ol></div>
+  </section>
+
+  <!-- ================================================================== RESUMO EXECUTIVO -->
+  <section class="doc" id="resumo" data-roles="exec prod">
+    <div class="section-head"><h2>Resumo executivo</h2><div class="tags"><span class="tag">Executivo</span><span class="tag">Produto</span></div></div>
+    <p class="lead">Hoje, cada chamado de manutenção que volta do fornecedor é conferido à mão: alguém lê o escopo, abre a planilha, compara item a item e olha foto por foto. O Atest.AI faz essa primeira leitura automaticamente e entrega à pessoa analista um <b>parecer explicado</b>, com score, recomendação e as evidências de cada problema encontrado.</p>
+
+    <div class="grid c4">
+      <div class="card kpi"><div class="value">3</div><div class="label">validações: escopo, orçamento × escopo e fotos</div><div class="note">antes delas, um checklist mínimo</div></div>
+      <div class="card kpi"><div class="value">0–100</div><div class="label">score de conformidade, calculado por régua fixa</div><div class="note">a IA não dá nota</div></div>
+      <div class="card kpi"><div class="value">R$ 0,34–0,57</div><div class="label">custo medido por chamado com o modelo real</div><div class="note">3 chamados, modo síncrono; em lote cai pela metade</div></div>
+      <div class="card kpi"><div class="value">26–46 s</div><div class="label">tempo de análise por chamado (síncrono)</div><div class="note">o lote horário é assíncrono</div></div>
+    </div>
+
+    <h3>O que ele entrega</h3>
+    <ul>
+      <li><b>Triagem automática:</b> chamado sem as evidências mínimas volta ao fornecedor na hora, com a lista do que falta, sem ocupar a pessoa analista.</li>
+      <li><b>Parecer explicado:</b> recomendação (aprovar, aprovar com ressalvas, devolver, análise detalhada), o motivo, os apontamentos com a evidência de cada um e o <b>valor em questão</b> em reais.</li>
+      <li><b>Proteção contra fraude simples:</b> foto reaproveitada de outro chamado ou com data anterior à abertura é detectada por regra e trava a aprovação.</li>
+      <li><b>Mensagem pronta ao fornecedor</b> com o que remover, justificar, ajustar ou reenviar.</li>
+    </ul>
+
+    <h3>Em que pé está</h3>
+    <div class="callout warn"><strong>Protótipo funcional, ainda sem validação estatística com o modelo real.</strong>
+      <p>O fluxo completo roda, com painel web, 113 chamados fictícios com gabarito e um portão de qualidade automático. Com o modelo real (Claude Sonnet 5.5), foram analisados 3 chamados distintos: as 3 recomendações bateram com o gabarito, com 2 apontamentos a mais do que o esperado. Isso mostra que o fluxo funciona, mas <b>não é amostra suficiente</b> para afirmar acurácia. O próximo passo é rodar o conjunto de validação inteiro com o modelo real e, depois, chamados históricos reais. Detalhes em <a href="#resultados">Status e resultados</a>.</p></div>
+
+    <h3>Por que dá para confiar no desenho</h3>
+    <div class="grid c3">
+      <div class="card"><h4>A IA não decide sozinha</h4><p class="small">Ela lê e aponta. Score e recomendação saem de uma régua escrita em configuração, auditável e igual para todos os chamados. A decisão final é sempre da pessoa analista.</p></div>
+      <div class="card"><h4>Cada parecer é rastreável</h4><p class="small">Fica gravado qual modelo, qual versão de prompt, qual versão da régua e quanto custou. Dá para reproduzir e comparar versões.</p></div>
+      <div class="card"><h4>Mudança só entra se passar no teste</h4><p class="small">Trocar modelo, prompt ou régua exige passar num <b>portão de qualidade</b> contra um conjunto com respostas conhecidas.</p></div>
+    </div>
+  </section>
+
+  <!-- ================================================================== PROBLEMA -->
+  <section class="doc" id="problema" data-roles="exec prod ds eng">
+    <div class="section-head"><h2>O problema e a ideia</h2><div class="tags"><span class="tag">Todos</span></div></div>
+    <p>As agências abrem chamados de manutenção em duas <span class="term" tabindex="0" data-tip="Linha de atendimento. SETA = manutenção predial (pintura, elétrica, hidráulica, ar-condicionado...). SISR = manutenção de segurança (CFTV, alarme).">esteiras</span>: <b>SETA</b> (predial) e <b>SISR</b> (segurança). O fornecedor executa o serviço e devolve um orçamento e fotos. Antes de pagar, alguém precisa conferir três perguntas:</p>
+    <div class="grid c3">
+      <div class="card"><h4>1. O que exatamente foi pedido?</h4><p class="small muted">O escopo vem em texto livre, às vezes vago (“Verificar porta. Urgente.”).</p></div>
+      <div class="card"><h4>2. O que foi cobrado faz sentido?</h4><p class="small muted">Itens fora do pedido, quantidades acima da área, preço acima da tabela, cobrança em dobro.</p></div>
+      <div class="card"><h4>3. As fotos provam o serviço?</h4><p class="small muted">Foto de outro ambiente, sem foto do resultado, foto ilegível ou reaproveitada de outro chamado.</p></div>
+    </div>
+    <p style="margin-top:14px">Essas perguntas exigem <b>ler texto, ler planilha e olhar foto</b>: trabalho repetitivo, que um modelo de IA multimodal faz bem. Mas a decisão de aprovar ou devolver precisa ser <b>consistente, explicável e auditável</b>, algo que um modelo sozinho não garante. Por isso o Atest.AI separa os papéis:</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Quem</th><th>Faz o quê</th><th>Por quê</th></tr></thead>
+      <tbody>
+        <tr><td><span class="who ai">IA</span></td><td>Lê o escopo, classifica itens do orçamento, descreve cada foto, redige o parecer.</td><td>É boa em linguagem e imagem; é o que hoje toma tempo da pessoa.</td></tr>
+        <tr><td><span class="who rule">Regra</span></td><td>Lê a planilha, compara preço com a tabela, detecta duplicidade, confere data e reaproveitamento de foto, calcula score e recomendação.</td><td>Precisa ser exato, igual para todos e auditável. Regra não “alucina”.</td></tr>
+        <tr><td><span class="who human">Pessoa</span></td><td>Recebe o parecer, decide e dá feedback.</td><td>Responsabilidade e contexto que o sistema não tem. O feedback melhora a próxima versão.</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <!-- ================================================================== JORNADA -->
+  <section class="doc" id="jornada" data-roles="exec prod ds eng">
+    <div class="section-head"><h2>Jornada de um chamado</h2><div class="tags"><span class="tag">Todos</span></div></div>
+    <p class="muted">Clique em cada passo. Os exemplos são casos reais do conjunto de demonstração (dados fictícios).</p>
+    <div class="stepper" id="stepper" role="tablist" aria-label="Passos da análise"></div>
+    <div class="step-detail" id="step-detail" aria-live="polite"></div>
+
+    <h3>Exemplo completo: chamado 00482193 (pintura do backoffice)</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Etapa</th><th>O que foi encontrado</th><th>Resultado</th></tr></thead>
+      <tbody>
+        <tr><td>Checklist</td><td>Orçamento na planilha padrão e fotos do ambiente depois do serviço.</td><td>Completo, segue.</td></tr>
+        <tr><td>Escopo</td><td>“Repintura de paredes e teto do backoffice (aprox. 240 m²)”: claro e coerente com Pintura / Desgaste de acabamento.</td><td>Nota 100</td></tr>
+        <tr><td>Orçamento</td><td>Item 3, pintura de fachada (R$ 3.150), <b>fora do escopo</b>: o pedido era interno. Item 4, massa corrida em 320 m², <b>acima da área</b> de 240 m² (excedente de R$ 232,50).</td><td>Nota 50 (−35 −15)</td></tr>
+        <tr><td>Fotos</td><td>Três fotos de fachada, banheiro e depósito <b>não correspondem</b> ao backoffice. Nenhuma foto do <b>antes</b>.</td><td>Nota 50 (−35 −15)</td></tr>
+        <tr><td>Score</td><td>(100×20 + 50×40 + 50×40) ÷ 100</td><td><b>60 → Devolver ao fornecedor</b></td></tr>
+        <tr><td>Valor em questão</td><td>R$ 3.150,00 + R$ 232,50</td><td><b>R$ 3.382,50</b> (27% do orçamento de R$ 12.480)</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <!-- ================================================================== DECISÃO -->
+  <section class="doc" id="decisao" data-roles="exec prod ds">
+    <div class="section-head"><h2>Quem decide o quê</h2><div class="tags"><span class="tag">Executivo</span><span class="tag">Produto</span><span class="tag">Ciência de dados</span></div></div>
+    <p>A mesma regra vale em todas as etapas: <b>o que é julgamento de linguagem ou imagem fica com a IA; o que é conta, comparação ou decisão fica com regra.</b></p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Etapa</th><th><span class="who ai">IA</span> lê e aponta</th><th><span class="who rule">Regra</span> calcula e decide</th></tr></thead>
+      <tbody>
+        <tr><td><b>Checklist</b></td><td>Identifica cada foto/documento: tipo, antes/depois, legível.</td><td>Lê a planilha. Confere os itens obrigatórios da categoria. Decide completo/incompleto.</td></tr>
+        <tr><td><b>Escopo</b></td><td>Traduz o texto em critérios de aceite. Aponta escopo vago ou incoerente.</td><td>—</td></tr>
+        <tr><td><b>Orçamento</b></td><td>Classifica cada item (aderente, fora do escopo, a justificar), estima quantidade máxima, indica o código da LPU.</td><td>Compara preço × LPU (+10%), procura duplicidade, confere planilha × chamado, calcula excedente e valor em questão.</td></tr>
+        <tr><td><b>Fotos</b></td><td>Descreve cada foto, diz se corresponde ao escopo, se é legível, se há foto do antes e do resultado.</td><td>Data EXIF anterior à abertura. Semelhança com fotos de chamados anteriores (hash perceptual).</td></tr>
+        <tr><td><b>Score</b></td><td>—</td><td>Notas, score, confiança, recomendação, travas.</td></tr>
+        <tr><td><b>Parecer</b></td><td>Redige o resumo e a mensagem ao fornecedor.</td><td>Se a redação falhar, monta o texto por modelo fixo.</td></tr>
+      </tbody>
+    </table></div>
+    <div class="callout ok"><strong>Consequência prática</strong><p>Se a IA errar uma leitura, o erro aparece como um apontamento com evidência (“foto mostra banheiro, não o backoffice”), que a pessoa analista vê e pode descartar. A IA nunca muda a regra de aprovação nem inventa uma nota.</p></div>
+  </section>
+
+  <!-- ================================================================== MODELOS -->
+  <section class="doc" id="modelos" data-roles="prod ds eng">
+    <div class="section-head"><h2>Modelos usados</h2><div class="tags"><span class="tag">Produto</span><span class="tag">Ciência de dados</span><span class="tag">Engenharia</span></div></div>
+    <p>O sistema usa <b>um modelo de linguagem multimodal</b> (lê texto, imagem e PDF) em cinco tarefas, e <b>técnicas determinísticas</b> (sem IA) para o que precisa ser exato.</p>
+
+    <h3>Modelos de linguagem (LLM)</h3>
+    <p>Há dois papéis configuráveis: <b>principal</b> (<code>main</code>), para as tarefas que exigem mais raciocínio, e <b>rápido</b> (<code>fast</code>), para identificação de anexos e redação. Cada tarefa pode ainda ter um modelo próprio.</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Tarefa</th><th>Etapa</th><th>Papel</th><th>Entrada</th><th>Saída estruturada</th><th class="num">Máx. tokens</th></tr></thead>
+      <tbody>
+        <tr><td><code>identify_attachments</code></td><td>Checklist</td><td>rápido</td><td>Resumo do chamado + imagens/PDFs (planilha não vai ao modelo)</td><td><code>AttachmentIdentification</code></td><td class="num">3.000</td></tr>
+        <tr><td><code>scope</code></td><td>Escopo</td><td>principal</td><td>Categoria, sintoma, escopo (só texto)</td><td><code>ScopeReading</code></td><td class="num">2.500</td></tr>
+        <tr><td><code>quote_review</code></td><td>Orçamento</td><td>principal</td><td>Chamado + leitura do escopo + itens; LPU da esteira no prompt de sistema</td><td><code>QuoteReview</code></td><td class="num">4.000</td></tr>
+        <tr><td><code>photos</code></td><td>Fotos</td><td>principal</td><td>Chamado + escopo + itens + fotos (até 1.568 px no maior lado)</td><td><code>PhotoAnalysis</code></td><td class="num">5.000</td></tr>
+        <tr><td><code>assessment</code></td><td>Parecer</td><td>rápido</td><td>Chamado + resultado da régua</td><td><code>AssessmentText</code></td><td class="num">1.200</td></tr>
+      </tbody>
+    </table></div>
+
+    <div class="grid c2">
+      <div class="card">
+        <h4>Configuração atual</h4>
+        <p class="small">Em <code>config/settings.toml</code>, os dois papéis apontam para <b>Claude Sonnet 5.5</b> (<code>anthropic:claude-sonnet-5-5</code>). Não há contingência configurada (bloco <code>[models.fallback]</code> comentado).</p>
+        <p class="small muted">Opção de economia: o papel rápido com Claude Haiku 5.5 custa 20× menos por token (US$ 0,10 / 0,50 por milhão, contra 2,00 / 10,00). Precisa passar no portão de qualidade antes.</p>
+      </div>
+      <div class="card">
+        <h4>Provedores suportados</h4>
+        <p class="small">Trocar é configuração, no formato <code>"provedor:modelo"</code>:</p>
+        <ul class="small">
+          <li><b>Anthropic</b> (Claude): saída estruturada, cache de prompt, <span class="term" tabindex="0" data-tip="Message Batches API: envio assíncrono de muitas requisições juntas, com 50% de desconto. Resposta em minutos ou horas, ideal para o lote horário.">lote assíncrono</span> com 50% de desconto. Testado contra a API real.</li>
+          <li><b>OpenAI</b> e <b>Google Gemini</b>: saída estruturada; sem lote (cai para síncrono). Testados só na conversão de conteúdo, não contra a API real.</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3>Técnicas determinísticas (sem IA)</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Técnica</th><th>Para quê</th><th>Biblioteca / arquivo</th></tr></thead>
+      <tbody>
+        <tr><td>Leitura da planilha por tabela nomeada (<code>tbChamado</code>, <code>tbItens</code>)</td><td>Itens, quantidades, preços e cabeçalho do orçamento, sem depender de IA</td><td><code>openpyxl</code> · <code>repository.read_quote</code></td></tr>
+        <tr><td>Comparação com a <span class="term" tabindex="0" data-tip="Lista de Preços Unitários: tabela de referência com código, descrição, unidade e preço de cada serviço, por esteira.">LPU</span></td><td>Preço acima da referência + 10% (só quando a unidade bate)</td><td><code>data/references/lpu_*.csv</code> · <code>quote.py</code></td></tr>
+        <tr><td>Similaridade de texto (<code>SequenceMatcher</code>)</td><td>Duplicidade: mesma unidade, quantidade e preço e descrição ≥ 80% parecida</td><td><code>difflib</code> · <code>quote.py</code></td></tr>
+        <tr><td><span class="term" tabindex="0" data-tip="Impressão digital de uma imagem que muda pouco quando a imagem é comprimida, redimensionada ou levemente recortada. Duas fotos iguais têm hashes próximos.">Hash perceptual</span> (phash + dhash) com recortes de borda</td><td>Foto reaproveitada de chamado anterior, mesmo reenviada por WhatsApp ou recortada</td><td><code>imagehash</code> · <code>attachments.py</code>, <code>photos.py</code></td></tr>
+        <tr><td>Nível de detalhe da imagem (desvio das bordas)</td><td>Foto escura/tremida exige limite de semelhança mais estrito</td><td><code>Pillow</code> · <code>attachments.detail_level</code></td></tr>
+        <tr><td>Data <span class="term" tabindex="0" data-tip="Metadados gravados pela câmera dentro do arquivo da foto, como data e hora em que foi tirada.">EXIF</span></td><td>Foto tirada antes da abertura do chamado (tolerância de 1 dia)</td><td><code>Pillow</code> · <code>attachments.exif_date</code></td></tr>
+        <tr><td>Régua de score</td><td>Notas, score, confiança, recomendação</td><td><code>score.py</code> · <code>config/rubric.toml</code></td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <!-- ================================================================== FLUXO DOS MODELOS -->
+  <section class="doc" id="fluxo-modelos" data-roles="ds eng">
+    <div class="section-head"><h2>Fluxo dos modelos</h2><div class="tags"><span class="tag">Ciência de dados</span><span class="tag">Engenharia</span></div></div>
+    <p>Por chamado, são <b>5 chamadas ao modelo</b>, em sequência. A saída de uma alimenta as seguintes: a <b>leitura do escopo</b> vira contexto para orçamento e fotos, e os <b>itens classificados</b> viram contexto para as fotos.</p>
+
+    <div class="flow">
+      <div class="flow-row header"><div class="flow-head">Etapa</div><div class="flow-head">IA (chamada ao modelo)</div><div class="flow-head">Regra (determinístico)</div></div>
+      <div class="flow-row">
+        <div class="flow-stage">0 · Checklist<small>checklist.py</small></div>
+        <div class="lane ai"><b>identify_attachments · rápido · visão</b>Cada foto/PDF → categoria, momento, legível, descrição curta</div>
+        <div class="lane rule"><b>read_quote + checklists.toml</b>Planilha lida por regra; requisitos atendidos? Incompleto → <b>encerra</b> (sem score)</div>
+      </div>
+      <div class="flow-arrow">↓ segue só se completo</div>
+      <div class="flow-row">
+        <div class="flow-stage">1 · Escopo<small>scope.py</small></div>
+        <div class="lane ai"><b>scope · principal · texto</b>Local, ambiente, serviços, quantidades, critérios de aceite, evidências esperadas, “antes” aplicável, vago?, coerente?</div>
+        <div class="lane empty">—</div>
+      </div>
+      <div class="flow-arrow">↓ leitura do escopo vai como contexto</div>
+      <div class="flow-row">
+        <div class="flow-stage">2 · Orçamento<small>quote.py</small></div>
+        <div class="lane ai"><b>quote_review · principal · texto + LPU</b>Por item: classificação, motivo, quantidade máx., duplicado de, código LPU</div>
+        <div class="lane rule"><b>Regras de orçamento</b>Preço × LPU, duplicidade textual, planilha × chamado, excedente, valor em questão</div>
+      </div>
+      <div class="flow-arrow">↓ itens do orçamento vão como contexto</div>
+      <div class="flow-row">
+        <div class="flow-stage">3 · Fotos<small>photos.py</small></div>
+        <div class="lane ai"><b>photos · principal · visão</b>Por foto: ambiente, o que mostra, momento, legível, corresponde?, itens cobertos. No conjunto: há antes? há resultado?</div>
+        <div class="lane rule"><b>Integridade (fase 2)</b>Data EXIF; hash perceptual contra o histórico e o lote atual</div>
+      </div>
+      <div class="flow-arrow">↓ todos os apontamentos</div>
+      <div class="flow-row">
+        <div class="flow-stage">4 · Score<small>scoring.py, score.py</small></div>
+        <div class="lane empty">—</div>
+        <div class="lane rule"><b>Régua</b>Filtra pela fase, notas, score, confiança, recomendação, valor em questão</div>
+      </div>
+      <div class="flow-arrow">↓ resultado da régua</div>
+      <div class="flow-row">
+        <div class="flow-stage">5 · Parecer<small>assessment.py</small></div>
+        <div class="lane ai"><b>assessment · rápido · texto</b>Resumo e mensagem ao fornecedor</div>
+        <div class="lane rule"><b>Plano B</b>Se a chamada falhar, texto por modelo fixo (<code>AssessmentWriter.from_template</code>)</div>
+      </div>
+    </div>
+
+    <h3>O caminho de uma chamada ao modelo</h3>
+    <div class="chain">
+      <span class="node">Etapa</span><span class="arrow">→</span>
+      <span class="node">LlmSession.ask(task)</span><span class="arrow">→</span>
+      <span class="node">model_for_task</span><span class="arrow">→</span>
+      <span class="node">cache em disco?</span><span class="arrow">→</span>
+      <span class="node ai">Provider.generate</span><span class="arrow">→</span>
+      <span class="node rule">validação Pydantic</span><span class="arrow">→</span>
+      <span class="node">LlmCall (rastro + custo)</span>
+    </div>
+    <ul>
+      <li><b>Saída estruturada sempre:</b> cada tarefa pede um formato Pydantic (<code>atest/llm_schemas.py</code>), convertido em JSON Schema. As descrições dos campos são instruções ao modelo. Campos extras são proibidos (<code>extra="forbid"</code>).</li>
+      <li><b>Prompts em configuração:</b> <code>config/prompts.toml</code>, em português, com versão. O prompt de sistema vai com cache do provedor.</li>
+      <li><b>Cache em disco:</b> mesma requisição (provedor + modelo + prompt + conteúdo + schema) não é paga duas vezes.</li>
+      <li><b>Contingência:</b> só em erro transitório (sobrecarga, limite de taxa). Erro definitivo não troca de modelo e aparece.</li>
+      <li><b>Lote:</b> no modo <code>batch</code>, as chamadas de todos os chamados em andamento são agrupadas num único lote por provedor (Message Batches, −50%).</li>
+    </ul>
+
+    <details class="tech"><summary>Detalhe técnico: o que o modelo devolve em cada tarefa <span class="badge">schemas</span></summary>
+<pre><code># atest/llm_schemas.py (resumido)
+AttachmentIdentification.attachments[]: index, category, moment, readable, short_description
+ScopeReading: local, environment, equipment, requested_services[], mentioned_quantities[],
+              acceptance_criteria[], expected_evidence[], before_evidence_applicable,
+              consistent_with_category_symptom, coherence_note, vague_scope, vague_reason
+QuoteReview.items[]: n, classification (compliant | out_of_scope | to_justify), reason,
+                     expected_quantity_max (-1 = não estimável), plausible_quantity,
+                     duplicate_of (0 = não), lpu_code (ou NO_REFERENCE)
+PhotoAnalysis: photos[] (index, environment, what_it_shows, moment, readable,
+               matches_scope: yes | no | partial | undetermined, reason, covered_items[]),
+               has_before_photo, has_done_service_photo, done_justification,
+               items_without_photo[], notes
+AssessmentText: summary, supplier_message</code></pre>
+    </details>
+
+    <details class="tech"><summary>Detalhe técnico: decisões de prompt que afetam o resultado <span class="badge">prompts</span></summary>
+      <ul class="small">
+        <li><b>identify_attachments</b> só identifica; está proibido de avaliar preço, escopo ou correspondência (isso vem depois).</li>
+        <li><b>scope</b>: “use só o que está escrito”; escopo curto mas específico <i>não</i> é vago; incoerente só quando o texto descreve outra especialidade.</li>
+        <li><b>quote_review</b>: relacionar item e escopo pelo que o item <i>é e faz</i>, não por palavras iguais; visita técnica, deslocamento e mão de obra são aderentes; <b>não avaliar preço</b> (é regra).</li>
+        <li><b>photos</b>: “seja literal: avalie o que está visível, não o que o fornecedor diz”; peça nova ou ferramenta não comprova resultado; para câmera, só conta a imagem nítida após o reparo.</li>
+        <li><b>assessment</b>: sem adjetivos e sem números que não estejam nos dados.</li>
+      </ul>
+    </details>
+  </section>
+
+  <!-- ================================================================== VALIDAÇÕES -->
+  <section class="doc" id="validacoes" data-roles="prod ds eng">
+    <div class="section-head"><h2>Como as validações são feitas</h2><div class="tags"><span class="tag">Produto</span><span class="tag">Ciência de dados</span><span class="tag">Engenharia</span></div></div>
+
+    <h3>Etapa 0 · Checklist mínimo</h3>
+    <p>Para cada combinação de <b>categoria × tipo de manutenção × momento</b> há uma lista de evidências obrigatórias em <code>config/checklists.toml</code>; vale a regra mais específica. Cada requisito é atendido por pelo menos <b>um anexo legível</b> de uma categoria aceita.</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Categoria (momento execução)</th><th>Evidências obrigatórias além do orçamento</th></tr></thead>
+      <tbody>
+        <tr><td>Padrão (qualquer categoria)</td><td>Foto do serviço executado</td></tr>
+        <tr><td>Pintura</td><td>Foto do ambiente depois</td></tr>
+        <tr><td>Impermeabilização</td><td>Foto do dano antes · foto do local depois</td></tr>
+        <tr><td>Iluminação</td><td>Antes · etiqueta do modelo instalado · depois · luminárias retiradas · termo de conclusão</td></tr>
+        <tr><td>Ar-condicionado</td><td>Fotos dos aparelhos ou filtros após a limpeza</td></tr>
+        <tr><td>Elétrica</td><td>Defeito antes · serviço concluído</td></tr>
+        <tr><td>CFTV</td><td>Foto do equipamento · imagem da câmera ou tela do gravador</td></tr>
+        <tr><td>Alarme (corretiva)</td><td>Dispositivo instalado · central/teclado com teste · termo de conclusão</td></tr>
+        <tr><td>CFTV + alarme (preventiva)</td><td>Tela do gravador · central de alarme · relatório da preventiva</td></tr>
+        <tr><td><i>Momento orçamento</i> (qualquer)</td><td>Foto do problema a ser corrigido</td></tr>
+      </tbody>
+    </table></div>
+    <p class="small muted">Se incompleto: recomendação <b>Devolvido: checklist incompleto</b>, mensagem automática ao fornecedor listando o que falta, sem score, e o chamado não vai para a fila da pessoa analista.</p>
+
+    <h3>Validação 1 · Escopo (peso 20)</h3>
+    <p>A IA lê categoria, sintoma e escopo e produz a leitura estruturada. Dois apontamentos possíveis, ambos de severidade média e ambos <b>reduzem a confiança</b>: <code>vague_scope</code> e <code>inconsistent_scope</code>.</p>
+
+    <h3>Validação 2 · Orçamento × escopo (peso 40)</h3>
+    <ol>
+      <li><b>Leitura da planilha (regra).</b> Abas <code>Chamado</code>/<code>Itens</code> em formato Tabela. Se não abrir ou estiver fora do padrão: a validação não pontua e a confiança cai (redutor <code>unreadable_quote</code>).</li>
+      <li><b>Planilha × chamado (regra).</b> Nº do chamado, categoria, sintoma, escopo (texto normalizado) e soma dos itens × valor orçado (tolerância de R$ 1,00) → <code>spreadsheet_mismatch</code>.</li>
+      <li><b>Classificação de cada item (IA).</b> Aderente / fora do escopo (<code>out_of_scope_item</code>) / a justificar (<code>unjustified_replacement</code>).</li>
+      <li><b>Quantidade (IA + regra).</b> Se a quantidade passa da máxima plausível estimada pela IA → <code>quantity_above_expected</code>; o excedente em R$ é calculado por regra.</li>
+      <li><b>Preço (regra).</b> A IA só indica o código da LPU. Se a unidade bate e o preço unitário passa de referência × 1,10 → <code>price_above_reference</code>, com excedente = (preço − referência) × quantidade. Unidade diferente: não compara e registra observação.</li>
+      <li><b>Duplicidade (IA + regra).</b> A IA indica <code>duplicate_of</code>; a regra também acha linhas com mesma unidade, quantidade e preço e descrição ≥ 80% parecida → <code>duplicate_item</code>.</li>
+      <li><b>Valor em questão (regra).</b> Por item: o item inteiro se algum apontamento questiona o item (fora do escopo, sem justificativa, duplicado); senão a soma dos excedentes, limitada ao total do item.</li>
+    </ol>
+
+    <h3>Validação 3 · Evidências fotográficas (peso 40)</h3>
+    <ol>
+      <li><b>Separação (regra).</b> Fotos de documentos (termo, relatório) não entram na análise de fotos.</li>
+      <li><b>Leitura das fotos (IA, visão).</b> Foto legível que não corresponde → <code>photo_mismatch</code>; ilegível → <code>unreadable_photo</code> (reduz a confiança); momento execução sem foto do resultado → <code>missing_after_photo</code>; “antes” aplicável e ausente → <code>missing_before_photo</code>.</li>
+      <li><b>Data (regra).</b> EXIF anterior à abertura do chamado menos 1 dia → <code>photo_dated_before</code>.</li>
+      <li><b>Reaproveitamento (regra).</b> Cada foto é comparada com as fotos de chamados <b>anteriores</b> (histórico + lote atual). Se a distância for ≤ 14 (ou ≤ 6 quando alguma das fotos tem pouco detalhe) → <code>reused_photo</code>, que é <b>trava</b>.</li>
+    </ol>
+
+    <details class="tech"><summary>Detalhe técnico: como o hash perceptual foi calibrado <span class="badge">integridade</span></summary>
+      <ul class="small">
+        <li>Distância = soma das distâncias de Hamming de <b>phash</b> e <b>dhash</b> (0 = idênticas, 128 = máximo).</li>
+        <li>A foto antiga também é comparada <b>recortada</b> em 2%, 5% e 10% de cada borda: pega cópia reenviada por WhatsApp, print de tela ou recortada, sem afrouxar o limite.</li>
+        <li>Calibração em 248 fotos sintéticas (demonstração + validação): cópias reenviadas ficaram entre 0 e 11; fotos distintas a partir de 18. O limite (14) fica no meio do vão.</li>
+        <li>Foto com pouco detalhe (desvio das bordas &lt; 9 numa miniatura de 256 px) perde poder de distinção: duas fotos escuras diferentes viram hashes parecidos. Nesses casos o limite cai para 6.</li>
+        <li>Hashes são calculados uma vez e guardados em cache (chave inclui tamanho, data de modificação e recortes).</li>
+        <li><b>Precisa ser recalibrado com fotos reais</b> antes de produção.</li>
+      </ul>
+    </details>
+
+    <details class="tech"><summary>Detalhe técnico: Fase 1 × Fase 2 da régua <span class="badge">pipeline.phase</span></summary>
+      <p class="small">A <b>Fase 1</b> é a régua do MVP. A <b>Fase 2</b> (padrão) acrescenta quatro apontamentos de fotos: sem “antes”, ilegível, data anterior e reaproveitamento. Com <code>phase = 1</code>, o índice de fotos nem é montado e esses apontamentos são filtrados antes do score.</p>
+    </details>
+  </section>
+
+  <!-- ================================================================== APONTAMENTOS -->
+  <section class="doc" id="apontamentos" data-roles="prod ds">
+    <div class="section-head"><h2>Os 14 apontamentos</h2><div class="tags"><span class="tag">Produto</span><span class="tag">Ciência de dados</span></div></div>
+    <p>Um <b>apontamento</b> é um problema encontrado, com tipo, severidade e evidência. Cada tipo desconta pontos da nota da sua validação <b>uma única vez</b>, mesmo que apareça em vários itens (todos continuam listados como evidência).</p>
+    <div class="filters">
+      <button class="chip-btn" data-filter-v="all" aria-pressed="true">Todas as validações</button>
+      <button class="chip-btn" data-filter-v="scope" aria-pressed="false">Escopo</button>
+      <button class="chip-btn" data-filter-v="quote" aria-pressed="false">Orçamento</button>
+      <button class="chip-btn" data-filter-v="photos" aria-pressed="false">Fotos</button>
+    </div>
+    <div class="filters">
+      <button class="chip-btn" data-filter-who="all" aria-pressed="true">Qualquer detector</button>
+      <button class="chip-btn" data-filter-who="ai" aria-pressed="false">IA aponta</button>
+      <button class="chip-btn" data-filter-who="mix" aria-pressed="false">IA + regra</button>
+      <button class="chip-btn" data-filter-who="rule" aria-pressed="false">Só regra</button>
+    </div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Apontamento</th><th>Validação</th><th>Severidade</th><th class="num">Desconto</th><th>Detector</th><th>Como é detectado</th><th>Fase</th><th>Valor em questão</th></tr></thead>
+      <tbody id="findings-body"></tbody>
+    </table></div>
+    <p class="small muted">Fonte: <code>config/rubric.toml</code> (versão 2026-11-v3). Descontos por severidade: crítica −60, alta −35, média −15, baixa −5.</p>
+  </section>
+
+  <!-- ================================================================== RÉGUA -->
+  <section class="doc" id="regua" data-roles="exec prod ds eng">
+    <div class="section-head"><h2>Régua e simulador de score</h2><div class="tags"><span class="tag">Todos</span></div></div>
+    <p>A régua é a parte que <b>decide</b>. Ela é determinística: os mesmos apontamentos dão sempre o mesmo resultado.</p>
+    <div class="grid c3">
+      <div class="card"><h4>1. Nota por validação</h4><p class="small">Começa em 100 e desconta cada tipo de apontamento uma vez (mínimo 0).</p></div>
+      <div class="card"><h4>2. Score ponderado</h4><p class="small">Escopo × 20 + Orçamento × 40 + Fotos × 40, dividido por 100.</p></div>
+      <div class="card"><h4>3. Recomendação</h4><p class="small">Pela ordem de precedência abaixo: checklist, trava, confiança, faixas.</p></div>
+    </div>
+
+    <h3>Ordem de precedência da recomendação</h3>
+    <ol class="ladder">
+      <li><div><b>Checklist incompleto</b> → <i>Devolvido: checklist incompleto</i>. Sem score.</div></li>
+      <li><div><b>Trava de integridade</b> (foto reaproveitada) → <i>Devolver (trava)</i>, qualquer que seja a nota.</div></li>
+      <li><div><b>Confiança baixa</b> (2 ou mais <span class="term" tabindex="0" data-tip="Sinais de que a entrada não permite concluir com segurança: escopo vago, escopo incoerente, foto ilegível, orçamento ilegível.">redutores de confiança</span>) → <i>Análise detalhada</i>: a entrada não permite concluir.</div></li>
+      <li><div><b>Faixas do score:</b> ≥ 85 <i>Aprovar</i> · 70 a 84 <i>Aprovar com ressalvas</i> · &lt; 70 <i>Devolver ao fornecedor</i>. Com 1 redutor, a confiança é média e o motivo pede atenção.</div></li>
+    </ol>
+
+    <h3>Simulador</h3>
+    <p class="muted">Marque apontamentos ou escolha um caso real. A conta é a mesma do código (<code>atest/score.py</code>).</p>
+    <div id="simulator">
+      <div class="presets" id="sim-presets"></div>
+      <div class="sim">
+        <div class="card sim-controls">
+          <div class="toggle-row">
+            <label><input type="checkbox" id="sim-checklist" checked> Checklist completo</label>
+            <label><input type="checkbox" id="sim-phase2" checked> Régua Fase 2</label>
+            <label><input type="checkbox" id="sim-unreadable-quote"> Orçamento ilegível</label>
+          </div>
+          <div id="sim-findings"></div>
+        </div>
+        <div class="card sim-out" id="sim-out" aria-live="polite"></div>
+      </div>
+    </div>
+
+    <h3>As seis recomendações</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Recomendação</th><th>Quando</th><th>O que acontece</th><th>“Segue”?</th></tr></thead>
+      <tbody>
+        <tr><td><b>Aprovar</b></td><td>Score ≥ 85, sem trava, confiança não baixa</td><td>Pessoa analista confirma</td><td>Sim</td></tr>
+        <tr><td><b>Aprovar com ressalvas</b></td><td>Score 70–84</td><td>Aprova e envia ressalvas ao fornecedor</td><td>Sim</td></tr>
+        <tr><td><b>Devolver ao fornecedor</b></td><td>Score &lt; 70</td><td>Mensagem com o que corrigir</td><td>Não</td></tr>
+        <tr><td><b>Devolver (trava de integridade)</b></td><td>Foto reaproveitada</td><td>Devolve, qualquer que seja a nota</td><td>Não</td></tr>
+        <tr><td><b>Análise detalhada</b></td><td>Confiança baixa</td><td>Pessoa analista olha com calma</td><td>Não</td></tr>
+        <tr><td><b>Devolvido: checklist incompleto</b></td><td>Falta evidência obrigatória</td><td>Volta ao fornecedor sem passar pela pessoa analista</td><td>Não</td></tr>
+      </tbody>
+    </table></div>
+    <p class="small muted">“Segue” é usado na métrica binária de “pegar problema” (veja Qualidade): só aprovar e aprovar com ressalvas deixam o chamado seguir.</p>
+  </section>
+
+  <!-- ================================================================== QUALIDADE -->
+  <section class="doc" id="qualidade" data-roles="prod ds">
+    <div class="section-head"><h2>Como medimos a qualidade</h2><div class="tags"><span class="tag">Produto</span><span class="tag">Ciência de dados</span></div></div>
+    <p>A qualidade é medida comparando o parecer do sistema com um <span class="term" tabindex="0" data-tip="A resposta certa conhecida de cada chamado: recomendação, score, apontamentos esperados e opcionais. Também chamado de ground truth.">gabarito</span> chamado a chamado. Como os dados reais ainda não estão disponíveis, os conjuntos são <b>sintéticos</b>, com defeitos conhecidos.</p>
+
+    <h3>Conjuntos de dados</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Conjunto</th><th class="num">Chamados</th><th>Como foi feito</th><th>Gabarito</th><th>Distribuição das recomendações</th></tr></thead>
+      <tbody>
+        <tr><td><b>Demonstração</b> (<code>00…</code>)</td><td class="num">13</td><td>Casos do deck e variações</td><td>Escrito à mão</td><td class="small">5 aprovar · 3 ressalvas · 2 checklist · 1 detalhada · 1 trava · 1 devolver</td></tr>
+        <tr><td><b>Validação</b> (<code>0100…</code>)</td><td class="num">80</td><td>10 modelos de serviço × 8, defeitos injetados por sorteio</td><td>Calculado pela régua a partir dos defeitos</td><td class="small">44 aprovar · 16 ressalvas · 10 trava · 5 checklist · 4 devolver · 1 detalhada</td></tr>
+        <tr><td><b>Itaú</b> (<code>0200…</code>)</td><td class="num">20</td><td>10 modelos × 2, fotos fotorrealistas geradas por IA</td><td>Calculado pela régua</td><td class="small">12 aprovar · 3 ressalvas · 3 trava · 1 checklist · 1 devolver</td></tr>
+      </tbody>
+    </table></div>
+    <div class="callout warn"><strong>Classes desbalanceadas</strong><p>Mais da metade dos chamados de validação deveria ser aprovada. Um sistema que aprovasse tudo teria 55% de acurácia. Por isso o relatório traz também <b>kappa de Cohen</b> e <b>acurácia balanceada</b>, que não se deixam enganar por isso, e há poucos exemplos de “análise detalhada” (1) e “devolver” (4): essas classes precisam de mais casos antes de qualquer conclusão sobre elas.</p></div>
+
+    <h3>Métricas</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Métrica</th><th>Em linguagem simples</th><th>Como é calculada</th></tr></thead>
+      <tbody>
+        <tr><td><b>Acurácia da recomendação</b> com IC 95%</td><td>Em quantos chamados a recomendação bateu exatamente com o gabarito.</td><td>Acertos ÷ total; intervalo de confiança por <span class="term" tabindex="0" data-tip="Reamostragem: sorteia o conjunto de chamados com reposição 1.000 vezes e recalcula a métrica, para ver quanto ela varia por acaso.">bootstrap</span> (1.000 reamostras, percentis 2,5 e 97,5).</td></tr>
+        <tr><td><b>Kappa de Cohen</b></td><td>Quanto o sistema concorda com o gabarito além do que concordaria por sorte.</td><td>(observado − esperado ao acaso) ÷ (1 − esperado), sobre a matriz de confusão 6×6.</td></tr>
+        <tr><td><b>Acurácia balanceada</b></td><td>Acurácia dando o mesmo peso a cada recomendação, rara ou comum.</td><td>Média da cobertura de cada classe.</td></tr>
+        <tr><td><b>“Pegar problema”</b>: precisão, cobertura, F1, especificidade</td><td>Visão binária: o chamado deveria parar? O sistema parou?</td><td>Matriz 2×2 sobre “segue / não segue”; IC do F1 por bootstrap.</td></tr>
+        <tr><td><b>F1 dos apontamentos</b> (micro e macro, por tipo)</td><td>O sistema achou os problemas certos, sem inventar?</td><td>Por tipo: VP, FP, FN. Apontamentos <b>opcionais</b> do gabarito não contam como erro.</td></tr>
+        <tr><td><b>Erro do score</b>: MAE, RMSE, viés, Pearson</td><td>Quantos pontos o score erra, em média, e se erra sempre para o mesmo lado.</td><td>Sobre os pares (esperado, obtido); gráfico de dispersão no painel.</td></tr>
+        <tr><td><b>Acurácia do checklist</b></td><td>Completo/incompleto e lista do que falta batem?</td><td>Igualdade exata.</td></tr>
+        <tr><td><b>Recortes</b></td><td>Onde o sistema erra mais?</td><td>Acurácia por categoria e por modelo de serviço; lista dos casos divergentes.</td></tr>
+        <tr><td><b>Valor em questão</b></td><td>O sistema questiona o valor certo em reais?</td><td>Total esperado × obtido e erro médio absoluto.</td></tr>
+        <tr><td><b>Operação</b></td><td>Quanto custa e quanto demora.</td><td>Latência e custo p50/p95, tokens médios.</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>Portão de qualidade</h3>
+    <p>Toda mudança de modelo, prompt ou régua passa por <code>action = "validate"</code>. Se qualquer critério falhar, a versão é <b>reprovada</b> e o processo sai com código 1 (bloqueia o CI).</p>
+    <div class="grid c4">
+      <div class="card kpi"><div class="value">≥ 0,85</div><div class="label">Acurácia da recomendação</div></div>
+      <div class="card kpi"><div class="value">≥ 0,75</div><div class="label">Kappa de Cohen</div></div>
+      <div class="card kpi"><div class="value">≥ 0,80</div><div class="label">F1 micro dos apontamentos</div></div>
+      <div class="card kpi"><div class="value">≤ 8 pts</div><div class="label">Erro médio do score</div></div>
+    </div>
+    <p class="small muted" style="margin-top:10px">Limites em <code>config/settings.toml [validation]</code>.</p>
+
+    <details class="tech"><summary>Detalhe técnico: modo simulado e ruído <span class="badge">SimulatedClient</span></summary>
+      <p class="small">O <b>modo simulado</b> responde a cada tarefa a partir do gabarito, sem chamar a IA e sem custo. Serve para demonstrar o fluxo e testar o encadeamento, mas <b>não mede a qualidade do modelo</b> (acerta 100% por construção). O parâmetro <code>validation.simulated_noise</code> (0 a 1) faz o “modelo simulado” errar cada decisão com aquela probabilidade, para ver as métricas e o portão reagirem.</p>
+    </details>
+    <details class="tech"><summary>Detalhe técnico: como o gabarito sintético é gerado <span class="badge">generator/</span></summary>
+      <p class="small">Para os conjuntos de validação e Itaú, cada modelo de serviço tem um orçamento, escopo e cenas “corretos”. Um sorteio injeta defeitos (item fora do escopo, preço acima da LPU, duplicidade, foto de outro ambiente, foto reaproveitada, data anterior, escopo vago etc.). O gabarito (apontamentos, notas, score, recomendação) é calculado aplicando a própria régua aos defeitos injetados. Ou seja: o gabarito mede se a IA <b>enxerga</b> os defeitos; não testa se a régua está certa do ponto de vista de negócio, o que é responsabilidade de produto.</p>
+    </details>
+  </section>
+
+  <!-- ================================================================== RESULTADOS -->
+  <section class="doc" id="resultados" data-roles="exec prod ds">
+    <div class="section-head"><h2>Status e resultados atuais</h2><div class="tags"><span class="tag">Executivo</span><span class="tag">Produto</span><span class="tag">Ciência de dados</span></div></div>
+    <p class="muted">Levantado do banco de execuções (<code>output/atest.db</code>) em 09/11/2026.</p>
+
+    <h3>Com o modelo real (Claude Sonnet 5.5, modo síncrono)</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Chamado</th><th>Esperado</th><th>Obtido</th><th class="num">Score esp. → obt.</th><th>Diferença</th><th class="num">Custo</th><th class="num">Tempo</th></tr></thead>
+      <tbody>
+        <tr><td>00482193 · pintura</td><td>Devolver</td><td>Devolver ✓</td><td class="num">60 → 60</td><td>—</td><td class="num">R$ 0,57</td><td class="num">46 s</td></tr>
+        <tr><td>00517706 · CFTV</td><td>Trava</td><td>Trava ✓</td><td class="num">32 → 26</td><td class="small">+1 apontamento: quantidade acima do esperado</td><td class="num">R$ 0,51</td><td class="num">32 s</td></tr>
+        <tr><td>02000001 · Itaú</td><td>Aprovar</td><td>Aprovar ✓</td><td class="num">100 → 86</td><td class="small">+1 apontamento: sem foto do serviço concluído</td><td class="num">R$ 0,34</td><td class="num">26 s</td></tr>
+      </tbody>
+    </table></div>
+    <div class="grid c3">
+      <div class="card kpi"><div class="value">3 de 3</div><div class="label">recomendações corretas</div><div class="note">amostra pequena demais para estimar acurácia</div></div>
+      <div class="card kpi"><div class="value">6,7 pts</div><div class="label">erro médio do score</div><div class="note">dentro do limite de 8, em 3 casos</div></div>
+      <div class="card kpi"><div class="value">0 / 2</div><div class="label">problemas perdidos / apontamentos a mais</div><div class="note">o modelo tende a apontar a mais, não a menos</div></div>
+    </div>
+    <div class="callout bad" style="margin-top:14px"><strong>Rodada em lote não concluída</strong><p>Uma tentativa com 10 chamados do conjunto de validação pela Message Batches API terminou sem pareceres: as 10 requisições falharam por queda de conexão (<code>WinError 10054</code>, conexão encerrada pelo host remoto). É um problema de rede no ambiente local, não do modelo, mas significa que <b>ainda não existe medição do portão de qualidade com o modelo real</b>.</p></div>
+
+    <h3>No modo simulado</h3>
+    <p>Rodadas no conjunto Itaú (20 chamados) e em chamados de demonstração acertaram 100%, como esperado: o simulado responde pelo gabarito. Isso valida o <b>encadeamento</b> (pipeline, régua, métricas, painel), não a IA.</p>
+
+    <h3>Leitura honesta</h3>
+    <ul>
+      <li><b>Está provado:</b> o fluxo ponta a ponta funciona com o modelo real, a régua reproduz o gabarito, o custo por chamado é de centavos e os erros observados foram do lado seguro (apontar a mais).</li>
+      <li><b>Não está provado:</b> a acurácia em escala, o comportamento em fotos e orçamentos reais e a calibração do detector de fotos reaproveitadas em fotos reais.</li>
+    </ul>
+  </section>
+
+  <!-- ================================================================== CUSTOS -->
+  <section class="doc" id="custos" data-roles="exec prod eng">
+    <div class="section-head"><h2>Custos e operação</h2><div class="tags"><span class="tag">Executivo</span><span class="tag">Produto</span><span class="tag">Engenharia</span></div></div>
+    <p>O custo vem de <b>tokens</b> (pedaços de texto e imagem) enviados e recebidos do modelo. A maior parte está nas duas tarefas com imagem: identificação dos anexos e análise das fotos.</p>
+
+    <div class="table-wrap"><table>
+      <thead><tr><th>Tarefa</th><th class="num">Tokens de entrada</th><th class="num">Tokens de saída</th><th class="num">Custo médio</th><th class="num">Tempo médio</th></tr></thead>
+      <tbody>
+        <tr><td><code>identify_attachments</code></td><td class="num">4.790</td><td class="num">173</td><td class="num">US$ 0,013</td><td class="num">4,6 s</td></tr>
+        <tr><td><code>scope</code></td><td class="num">110</td><td class="num">234</td><td class="num">US$ 0,005</td><td class="num">2,5 s</td></tr>
+        <tr><td><code>quote_review</code></td><td class="num">443</td><td class="num">337</td><td class="num">US$ 0,007</td><td class="num">3,0 s</td></tr>
+        <tr><td><code>photos</code></td><td class="num">4.891</td><td class="num">828</td><td class="num">US$ 0,020</td><td class="num">6,6 s</td></tr>
+        <tr><td><code>assessment</code></td><td class="num">566</td><td class="num">226</td><td class="num">US$ 0,004</td><td class="num">2,0 s</td></tr>
+      </tbody>
+    </table></div>
+    <p class="small muted">Médias de 4 chamadas reais por tarefa, gravadas em <code>llm_calls</code>. Tokens de entrada não incluem o prompt de sistema em cache (cobrado à parte como escrita/leitura de cache). O custo por chamado registrado nos pareceres variou de R$ 0,34 a R$ 0,57. Preços de Claude Sonnet 5.5: US$ 2,00 (entrada) e US$ 10,00 (saída) por milhão de tokens; câmbio configurado em R$ 5,40.</p>
+
+    <h3>Calculadora</h3>
+    <div class="calc">
+      <div class="card">
+        <div class="field"><label for="calc-volume">Chamados por mês</label>
+          <input type="range" id="calc-volume" min="0" max="50000" step="500" value="5000">
+          <input type="number" id="calc-volume-n" min="0" step="100" value="5000" style="margin-top:6px"></div>
+        <div class="field"><label for="calc-per">Custo por chamado no modo síncrono (R$)</label>
+          <input type="number" id="calc-per" min="0" step="0.01" value="0.47"></div>
+        <div class="field"><label for="calc-mode">Modo de execução</label>
+          <select id="calc-mode"><option value="batch">Lote (Message Batches, −50%)</option><option value="sync">Síncrono</option></select></div>
+        <p class="small muted">R$ 0,47 é a média dos 3 chamados medidos. O volume real não está no código: ajuste para o seu cenário.</p>
+      </div>
+      <div class="card calc-out" id="calc-out" aria-live="polite"></div>
+    </div>
+
+    <h3>Alavancas de custo</h3>
+    <ul>
+      <li><b>Lote horário</b> pela Message Batches API: −50% em entrada e saída. É o padrão do ambiente de produção.</li>
+      <li><b>Cache de prompt</b>: o prompt de sistema (incluindo a LPU) é lido do cache a US$ 0,10 por milhão, 20× mais barato que a entrada normal.</li>
+      <li><b>Cache em disco</b>: reprocessar o mesmo chamado não paga de novo.</li>
+      <li><b>Modelo rápido mais barato</b> (Haiku 5.5) para identificação de anexos e redação, se passar no portão.</li>
+      <li><b>Checklist primeiro</b>: chamado incompleto para depois de 1 chamada ao modelo, não 5.</li>
+    </ul>
+  </section>
+
+  <!-- ================================================================== CÓDIGO -->
+  <section class="doc" id="codigo" data-roles="ds eng">
+    <div class="section-head"><h2>Fluxo do código</h2><div class="tags"><span class="tag">Ciência de dados</span><span class="tag">Engenharia</span></div></div>
+    <p>Python com tipagem e Pydantic v2. O ponto de entrada não recebe argumentos: tudo vem da configuração. O pipeline é uma <b>lista de etapas</b> que compartilham um contexto; trocar, remover ou acrescentar uma etapa é passar outra lista ao orquestrador.</p>
+
+<div class="tree"><span class="k">python main.py</span>
+ └─ load_settings()                       <span class="c"># config.py: Dynaconf (TOML + env ATEST_*) → Settings (Pydantic)</span>
+ └─ Application.run()                     <span class="c"># main.py, escolhe por [execution].action</span>
+     ├─ "panel"    → api.create_app() + uvicorn   <span class="c"># FastAPI + painel React (panel/dist)</span>
+     ├─ "batch"    → BatchRunner.run(tickets)
+     └─ "validate" → DatasetCatalog.ids() → BatchRunner.run() → gate_passed ? exit 0 : exit 1
+
+<span class="k">BatchRunner.run</span>                           <span class="c"># batch.py</span>
+ ├─ ComponentFactory
+ │   ├─ client()        → SimulatedClient | ProviderClient | BatchClient
+ │   ├─ photo_index()   → PhotoIndex (hashes de data/history + data/tickets, só fase 2)
+ │   └─ orchestrator()  → Orchestrator(cfg, References, client, index)
+ ├─ para cada chamado (em paralelo): <span class="k">Orchestrator.analyze(ticket)</span>
+ ├─ Database.save_assessment()            <span class="c"># SQLite: runs, assessments, llm_calls, feedbacks</span>
+ ├─ RunOutputWriter.write()               <span class="c"># output/runs/&lt;id&gt;/</span>
+ └─ GroundTruthEvaluator + ValidationReporter   <span class="c"># métricas e portão</span>
+
+<span class="k">Orchestrator.analyze</span>                      <span class="c"># pipeline.py</span>
+ └─ AnalysisContext (estado do chamado) passa por cada AnalysisStage.run(ctx):
+     ChecklistStage  <span class="a">→ IA identify_attachments</span> <span class="r">+ regra checklist</span>   <span class="c"># pode encerrar (ctx.halt)</span>
+     ScopeStage      <span class="a">→ IA scope</span>
+     QuoteStage      <span class="r">→ read_quote</span> <span class="a">+ IA quote_review</span> <span class="r">+ regras de preço/duplicidade</span>
+     PhotoStage      <span class="a">→ IA photos</span> <span class="r">+ integridade (EXIF, hash)</span>
+     ScoringStage    <span class="r">→ ScoreCalculator (régua)</span>
+     AssessmentStage <span class="a">→ IA assessment</span> <span class="r">(ou texto por regra)</span>
+ └─ Assessment (parecer final, com rastro de cada chamada)</div>
+
+    <h3>Módulos</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Arquivo</th><th>Responsabilidade</th></tr></thead>
+      <tbody>
+        <tr><td><a href="../main.py"><code>main.py</code></a></td><td><code>Application</code>: painel, lote ou validação</td></tr>
+        <tr><td><a href="../atest/config.py"><code>atest/config.py</code></a></td><td>Configuração validada, assinatura da configuração, chaves por provedor</td></tr>
+        <tr><td><a href="../atest/domain.py"><code>atest/domain.py</code></a></td><td>Domínio: <code>Ticket</code>, <code>Quote</code>, <code>Rubric</code>, <code>Finding</code>, <code>Assessment</code>, <code>LlmCall</code> e enums</td></tr>
+        <tr><td><a href="../atest/llm_schemas.py"><code>atest/llm_schemas.py</code></a></td><td>Saídas estruturadas pedidas ao modelo</td></tr>
+        <tr><td><a href="../atest/providers/"><code>atest/providers/</code></a></td><td><code>Provider</code> (ABC) e adaptadores Anthropic, OpenAI, Google; <code>Request</code> neutra com <code>TextPart</code>, <code>ImagePart</code>, <code>DocumentPart</code></td></tr>
+        <tr><td><a href="../atest/llm.py"><code>atest/llm.py</code></a></td><td><code>ProviderClient</code> (cache, contingência), <code>BatchClient</code> (lotes), <code>LlmSession</code> (modelo por tarefa, custo, rastro)</td></tr>
+        <tr><td><a href="../atest/simulated.py"><code>atest/simulated.py</code></a></td><td><code>SimulatedClient</code>: responde pelo gabarito, com ruído opcional</td></tr>
+        <tr><td><a href="../atest/analysis.py"><code>atest/analysis.py</code></a></td><td><code>AnalysisContext</code> e <code>AnalysisStage</code> (contrato das etapas)</td></tr>
+        <tr><td><code>checklist.py</code> · <code>scope.py</code> · <code>quote.py</code> · <code>photos.py</code> · <code>scoring.py</code> · <code>assessment.py</code></td><td>As seis etapas</td></tr>
+        <tr><td><a href="../atest/score.py"><code>atest/score.py</code></a></td><td><code>ScoreCalculator</code>: apontamentos → notas, score, confiança, recomendação</td></tr>
+        <tr><td><a href="../atest/pipeline.py"><code>atest/pipeline.py</code></a></td><td><code>Orchestrator</code> de um chamado</td></tr>
+        <tr><td><a href="../atest/batch.py"><code>atest/batch.py</code></a></td><td><code>ComponentFactory</code>, <code>BatchRunner</code>, <code>RunOutputWriter</code></td></tr>
+        <tr><td><a href="../atest/evaluation.py"><code>evaluation.py</code></a> · <a href="../atest/validation.py"><code>validation.py</code></a></td><td>Comparação com gabarito, métricas, portão de qualidade, catálogo de conjuntos</td></tr>
+        <tr><td><a href="../atest/database.py"><code>atest/database.py</code></a></td><td>SQLite: execuções, pareceres, chamadas, feedbacks, validações</td></tr>
+        <tr><td><code>repository.py</code> · <code>attachments.py</code> · <code>costs.py</code> · <code>observability.py</code> · <code>api.py</code></td><td>Leitura de chamados/planilhas/LPU, anexos e hashes, custo, logs JSON, API do painel</td></tr>
+        <tr><td><code>panel/</code></td><td>React + TypeScript + Tailwind (Vite); <code>dist/</code> servido pelo FastAPI</td></tr>
+        <tr><td><code>generator/</code></td><td>Geração dos conjuntos sintéticos: cenas, simulação de câmera de celular, planilhas, fotos por IA</td></tr>
+        <tr><td><code>examples/</code></td><td>Teste rápido de API e fluxo de revisão humana em LangGraph</td></tr>
+        <tr><td><code>tests/</code></td><td>32 testes: regras, planilhas, fotos, pipeline, provedores, lotes, métricas, API</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>Entradas e saídas</h3>
+    <div class="grid c2">
+      <div class="card"><h4>Entrada</h4>
+        <ul class="small">
+          <li><code>data/tickets/&lt;id&gt;/ticket.json</code> + <code>attachments/</code></li>
+          <li><code>data/history/</code>: chamados antigos para o índice de fotos</li>
+          <li><code>data/references/lpu_seta.csv</code>, <code>lpu_sisr.csv</code></li>
+          <li><code>data/ground_truth/&lt;id&gt;.json</code>: gabarito</li>
+        </ul></div>
+      <div class="card"><h4>Saída</h4>
+        <ul class="small">
+          <li><code>output/runs/&lt;id&gt;/</code>: <code>assessments/</code>, <code>assessments.jsonl</code>, <code>summary.csv</code>, <code>checklist_returns.csv</code>, <code>evaluation.json</code>, <code>validation.json</code></li>
+          <li><code>output/atest.db</code>: tabelas <code>runs</code>, <code>assessments</code>, <code>llm_calls</code>, <code>feedbacks</code></li>
+          <li><code>output/logs/atest.jsonl</code>: um evento por linha, com ids de execução e chamado</li>
+        </ul></div>
+    </div>
+
+    <h3>API do painel</h3>
+<pre><code>GET  /api/config                     GET  /api/datasets              GET /api/metrics
+GET  /api/tickets                    GET  /api/tickets/{id}          POST /api/tickets (upload)
+GET  /api/tickets/{id}/history       GET  /api/tickets/{id}/reuse    DELETE /api/tickets/{id}
+GET  /api/tickets/{id}/attachments/{name}                            GET /api/spreadsheet-template
+POST /api/runs                       GET  /api/runs                  GET /api/runs/{id}
+GET  /api/runs/{id}/validation       GET  /api/validations
+GET  /api/assessments/{id}           GET|POST /api/assessments/{id}/feedback</code></pre>
+
+    <details class="tech"><summary>Por que não LangChain/LangGraph no pipeline <span class="badge">decisão de arquitetura</span></summary>
+      <p class="small">A análise é uma sequência fixa com decisão por regra. A camada própria de provedores mantém o que um framework esconderia: Message Batches (−50%), cache de prompt, custo por chamada, rastro com versão e hash, e testes com o SDK real contra servidor falso. O <b>LangGraph</b> faz sentido <b>em volta</b> da análise: pausa para a pessoa analista que pode durar dias (<code>interrupt()</code>), estado durável, ciclo de complemento com o fornecedor e roteamento. Exemplo rodando em <code>examples/copilot_flow_langgraph.py</code>, em que o <code>Orchestrator</code> inteiro é um nó do grafo.</p>
+    </details>
+  </section>
+
+  <!-- ================================================================== CONFIG -->
+  <section class="doc" id="config" data-roles="eng ds">
+    <div class="section-head"><h2>Configuração e execução</h2><div class="tags"><span class="tag">Engenharia</span><span class="tag">Ciência de dados</span></div></div>
+<pre><code>pip install -r requirements.txt
+cp config/.secrets.toml.example config/.secrets.toml   # chaves de API (só para o modo API)
+python main.py                                         # painel em http://localhost:8000
+python -m pytest -q                                    # 32 testes
+python examples/api_smoke_test.py                      # valida chave e modelo (texto e foto)</code></pre>
+
+    <div class="table-wrap"><table>
+      <thead><tr><th>Arquivo</th><th>Conteúdo</th></tr></thead>
+      <tbody>
+        <tr><td><code>config/settings.toml</code></td><td>Ação, modo, modelos e provedores, lote, caminhos, painel, validação, observabilidade, custos</td></tr>
+        <tr><td><code>config/rubric.toml</code></td><td>Pesos, faixas, descontos, tipos de apontamento, tolerâncias, limites do hash</td></tr>
+        <tr><td><code>config/checklists.toml</code></td><td>Evidências obrigatórias por categoria × manutenção × momento</td></tr>
+        <tr><td><code>config/prompts.toml</code></td><td>Prompts de sistema de cada tarefa, com versão</td></tr>
+        <tr><td><code>config/.secrets.toml</code></td><td>Chaves de API (fora do git)</td></tr>
+      </tbody>
+    </table></div>
+
+    <div class="table-wrap"><table>
+      <thead><tr><th>Chave</th><th>Valores</th><th>Efeito</th></tr></thead>
+      <tbody>
+        <tr><td><code>execution.action</code></td><td><code>panel</code> · <code>batch</code> · <code>validate</code></td><td>O que <code>python main.py</code> faz</td></tr>
+        <tr><td><code>execution.mode</code></td><td><code>simulated</code> · <code>api</code></td><td>Gabarito sem custo ou modelo real</td></tr>
+        <tr><td><code>batch.kind</code></td><td><code>sync</code> · <code>batch</code></td><td>Uma requisição por vez ou Message Batches</td></tr>
+        <tr><td><code>pipeline.phase</code></td><td><code>1</code> · <code>2</code></td><td>Régua do MVP ou com integridade das fotos</td></tr>
+        <tr><td><code>models.main</code> / <code>models.fast</code></td><td><code>"provedor:modelo"</code></td><td>Modelo de cada papel</td></tr>
+        <tr><td><code>models.tasks.&lt;tarefa&gt;</code></td><td><code>"provedor:modelo"</code></td><td>Modelo específico de uma tarefa</td></tr>
+        <tr><td><code>models.fallback.&lt;papel&gt;</code></td><td><code>"provedor:modelo"</code></td><td>Contingência em erro transitório</td></tr>
+      </tbody>
+    </table></div>
+    <p>Ambientes <code>[default]</code>, <code>[development]</code> e <code>[production]</code>, escolhidos por <code>ATEST_ENV</code>. Produção usa <code>action = "batch"</code>, <code>mode = "api"</code> e <code>batch.kind = "batch"</code>. Qualquer chave pode ser sobrescrita por variável de ambiente:</p>
+<pre><code>ATEST_ENV=production python main.py
+ATEST_MODELS__MAIN="openai:&lt;modelo&gt;" python main.py
+ATEST_EXECUTION__ACTION=validate ATEST_EXECUTION__MODE=api python main.py</code></pre>
+    <p class="small muted">A configuração é validada por Pydantic ao carregar: erro de digitação no TOML falha na hora, não no meio de um lote.</p>
+  </section>
+
+  <!-- ================================================================== GOVERNANÇA -->
+  <section class="doc" id="governanca" data-roles="exec ds eng">
+    <div class="section-head"><h2>Rastreabilidade, governança e riscos</h2><div class="tags"><span class="tag">Executivo</span><span class="tag">Ciência de dados</span><span class="tag">Engenharia</span></div></div>
+
+    <h3>O que fica gravado</h3>
+    <div class="grid c2">
+      <div class="card"><h4>Em cada parecer</h4>
+        <ul class="small"><li>Versão da régua e dos prompts</li><li>Assinatura da configuração (hash de régua + prompts + modelos + parâmetros + fase)</li><li>Modelos usados, modo (simulado/API), síncrono/lote, fase</li><li>Tempo de cada etapa, custo em USD e BRL</li><li>Todas as chamadas ao modelo, com a resposta</li></ul></div>
+      <div class="card"><h4>Em cada chamada ao modelo</h4>
+        <ul class="small"><li>Tarefa, provedor, modelo configurado e <b>modelo efetivo</b> devolvido pelo provedor</li><li><code>prompt_version</code>, <code>prompt_hash</code> (texto efetivo), <code>schema_hash</code></li><li>Tokens (entrada, saída, cache), custo, duração</li><li>Se veio do cache, se foi em lote e o id do lote</li></ul></div>
+    </div>
+    <p style="margin-top:12px"><b>Feedback do copiloto:</b> cada parecer pode receber “aceitar”, “ajustar” ou “discordar”, com a decisão final e os apontamentos indevidos. Isso é gravado e vira dado rotulado para a próxima validação.</p>
+
+    <h3>Riscos e mitigação</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Risco</th><th>Impacto</th><th>Mitigação atual</th><th>O que falta</th></tr></thead>
+      <tbody>
+        <tr><td>IA lê errado uma foto ou item</td><td>Apontamento indevido ou problema não visto</td><td>Régua decide; cada apontamento tem evidência; pessoa confirma; portão de qualidade</td><td>Medir em escala com o modelo real</td></tr>
+        <tr><td>Dados sintéticos não representam o real</td><td>Métricas otimistas</td><td>Fotos com simulação de câmera e fotorrealistas; defeitos variados</td><td>Validar com chamados históricos reais</td></tr>
+        <tr><td>Detector de foto reaproveitada calibrado em fotos sintéticas</td><td>Falso positivo trava um chamado legítimo (ou o contrário)</td><td>Limite no meio do vão; limite estrito para foto com pouco detalhe</td><td>Recalibrar com fotos reais</td></tr>
+        <tr><td>Texto ou imagem do fornecedor tentando instruir a IA</td><td>Leitura enviesada</td><td>Saída estruturada fechada; preço, duplicidade, data, hash e decisão são regra</td><td>Casos de teste adversariais</td></tr>
+        <tr><td>Mudança do modelo pelo provedor</td><td>Comportamento muda sem aviso</td><td>Modelo efetivo gravado em cada chamada</td><td>Fixar snapshots datados em produção</td></tr>
+        <tr><td>Dados pessoais em fotos reais (rostos, placas)</td><td>LGPD</td><td>Hoje todos os dados são fictícios</td><td>Política de anonimização e retenção antes de usar fotos reais</td></tr>
+        <tr><td>Instabilidade de rede/provedor</td><td>Lote sem resultado (já ocorreu)</td><td>Retentativas, contingência em erro transitório, erros por chamado registrados</td><td>Reprocessamento automático dos chamados com erro</td></tr>
+        <tr><td>Uso da marca Itaú no conjunto de demonstração</td><td>Uso indevido de marca</td><td>Só para demonstração interna; agências, fornecedores e valores fictícios</td><td>—</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <!-- ================================================================== ROADMAP -->
+  <section class="doc" id="roadmap" data-roles="exec prod">
+    <div class="section-head"><h2>Próximos passos</h2><div class="tags"><span class="tag">Executivo</span><span class="tag">Produto</span></div></div>
+    <ol>
+      <li><b>Rodar o portão de qualidade com o modelo real</b> nos 80 chamados de validação e nos 20 do Itaú (custo estimado de dezenas de reais) e publicar o relatório.</li>
+      <li><b>Validação com histórico real:</b> chamados antigos já decididos, no formato de <code>data/tickets/&lt;id&gt;/</code>, com a decisão da pessoa analista como gabarito.</li>
+      <li><b>Recalibrar o detector de fotos reaproveitadas</b> com fotos reais.</li>
+      <li><b>Testar o papel rápido com Haiku 5.5</b> e decidir pelo portão.</li>
+      <li><b>Piloto em modo copiloto</b> com um grupo de analistas, medindo concordância, tempo economizado e uso do feedback.</li>
+      <li><b>Fluxo de revisão em LangGraph</b> em produção: pausa para a pessoa, pedido de complemento ao fornecedor e reanálise.</li>
+      <li><b>Testar OpenAI e Gemini contra a API real</b>, se houver interesse em contingência entre provedores.</li>
+    </ol>
+  </section>
+
+  <!-- ================================================================== FAQ -->
+  <section class="doc" id="faq" data-roles="exec prod">
+    <div class="section-head"><h2>Perguntas frequentes</h2><div class="tags"><span class="tag">Executivo</span><span class="tag">Produto</span></div></div>
+    <details class="tech"><summary>A IA aprova chamados sozinha?</summary><p>Não. Ela sugere. A recomendação sai da régua e a decisão é sempre da pessoa analista. A única ação automática é devolver ao fornecedor um chamado sem as evidências mínimas, por regra.</p></details>
+    <details class="tech"><summary>E se a IA errar?</summary><p>O erro aparece como um apontamento com evidência que a pessoa pode descartar. Nos testes com o modelo real, os erros foram apontar a mais (mais cautela), não deixar passar problema. O feedback da pessoa é gravado para medir e corrigir.</p></details>
+    <details class="tech"><summary>Dá para mudar a régua (pesos, faixas, severidade)?</summary><p>Sim, editando <code>config/rubric.toml</code>, sem mexer no código. A boa prática é subir a versão da régua e rodar o portão de qualidade antes de publicar.</p></details>
+    <details class="tech"><summary>Ficamos presos a um fornecedor de IA?</summary><p>Não. Anthropic, OpenAI e Google estão implementados atrás da mesma interface, e a troca é uma linha de configuração. Hoje só a Anthropic foi testada contra a API real.</p></details>
+    <details class="tech"><summary>Quanto custa?</summary><p>Centavos por chamado: R$ 0,34 a R$ 0,57 medidos no modo síncrono, cerca da metade no lote horário. Use a calculadora em <a href="#custos">Custos</a>.</p></details>
+    <details class="tech"><summary>Os dados usados são reais?</summary><p>Não. Agências, fornecedores, CNPJs, valores e fotos são fictícios. As fotos do conjunto Itaú foram geradas por IA para demonstração interna.</p></details>
+    <details class="tech"><summary>Por que o score do “Verificar porta. Urgente.” é alto e mesmo assim não aprova?</summary><p>Porque o escopo vago e a foto ilegível somam dois redutores de confiança. Com confiança baixa, a régua manda para análise detalhada, qualquer que seja o score: não há informação suficiente para concluir.</p></details>
+  </section>
+
+  <!-- ================================================================== GLOSSÁRIO -->
+  <section class="doc" id="glossario" data-roles="exec prod ds eng">
+    <div class="section-head"><h2>Glossário</h2><div class="tags"><span class="tag">Todos</span></div></div>
+    <div class="table-wrap"><table>
+      <tbody>
+        <tr><td><b>Apontamento</b></td><td>Problema encontrado numa validação, com tipo, severidade, evidência e, quando houver, valor em questão.</td></tr>
+        <tr><td><b>Assinatura da configuração</b></td><td>Hash de régua, prompts, modelos e parâmetros. Dois pareceres com a mesma assinatura foram gerados nas mesmas condições.</td></tr>
+        <tr><td><b>Bootstrap</b></td><td>Reamostragem para estimar o intervalo de confiança de uma métrica.</td></tr>
+        <tr><td><b>Chamado</b></td><td>Pedido de manutenção aberto pela agência, com categoria, sintoma e escopo.</td></tr>
+        <tr><td><b>Checklist mínimo</b></td><td>Evidências obrigatórias por tipo de serviço. Sem elas, o chamado volta ao fornecedor.</td></tr>
+        <tr><td><b>Confiança</b></td><td>Alta, média ou baixa, conforme o número de redutores (escopo vago/incoerente, foto ou orçamento ilegível).</td></tr>
+        <tr><td><b>Copiloto</b></td><td>Modo de uso em que o sistema sugere e a pessoa decide.</td></tr>
+        <tr><td><b>EXIF</b></td><td>Metadados da foto gravados pela câmera, como a data em que foi tirada.</td></tr>
+        <tr><td><b>Escopo</b></td><td>Descrição em texto livre do que deve ser feito.</td></tr>
+        <tr><td><b>F1</b></td><td>Média harmônica entre precisão (não apontar à toa) e cobertura (não deixar passar).</td></tr>
+        <tr><td><b>Fase 1 / Fase 2</b></td><td>Versões da régua. A Fase 2 inclui foto do antes, ilegibilidade, data e reaproveitamento de fotos.</td></tr>
+        <tr><td><b>Gabarito (ground truth)</b></td><td>A resposta certa conhecida de cada chamado de teste.</td></tr>
+        <tr><td><b>Hash perceptual</b></td><td>Impressão digital de imagem que pouco muda com compressão ou recorte; serve para achar fotos repetidas.</td></tr>
+        <tr><td><b>Kappa de Cohen</b></td><td>Concordância com o gabarito descontado o acaso. 0 = sorte, 1 = perfeito.</td></tr>
+        <tr><td><b>LLM</b></td><td>Modelo de linguagem (como o Claude), aqui multimodal: lê texto, imagem e PDF.</td></tr>
+        <tr><td><b>LPU</b></td><td>Lista de Preços Unitários de referência, por esteira.</td></tr>
+        <tr><td><b>Message Batches</b></td><td>Envio assíncrono em lote à API da Anthropic, com 50% de desconto.</td></tr>
+        <tr><td><b>Modo simulado</b></td><td>Execução que responde pelo gabarito, sem IA e sem custo; não mede qualidade.</td></tr>
+        <tr><td><b>Portão de qualidade</b></td><td>Teste automático que reprova uma versão se as métricas ficarem abaixo dos limites.</td></tr>
+        <tr><td><b>Régua</b></td><td>Regras fixas que transformam apontamentos em notas, score e recomendação.</td></tr>
+        <tr><td><b>Saída estruturada</b></td><td>Resposta do modelo num formato JSON fixo, validado pelo código.</td></tr>
+        <tr><td><b>SETA / SISR</b></td><td>Esteiras de manutenção predial / de segurança.</td></tr>
+        <tr><td><b>Sintoma</b></td><td>A queixa do chamado numa expressão (ex.: imagem degradada, infiltração).</td></tr>
+        <tr><td><b>Token</b></td><td>Unidade de texto/imagem cobrada pelo provedor de IA.</td></tr>
+        <tr><td><b>Trava de integridade</b></td><td>Apontamento que devolve o chamado qualquer que seja a nota (hoje: foto reaproveitada).</td></tr>
+        <tr><td><b>Valor em questão</b></td><td>Quanto do orçamento está questionado: o item inteiro ou só o excedente.</td></tr>
+      </tbody>
+    </table></div>
+
+    <footer class="doc-foot">
+      Atest.AI v0.3.0 · régua 2026-11-v3 · prompts 2026-11-v3. Esta página reflete o código e a configuração em 09/11/2026; números de execução vêm de <code>output/atest.db</code>. Todos os dados são fictícios.
+    </footer>
+  </section>
+
+  </main>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

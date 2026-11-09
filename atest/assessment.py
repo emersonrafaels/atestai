@@ -44,7 +44,7 @@ class AssessmentWriter:
         return (
             f"RECOMENDAÇÃO: {Recommendation(result['recommendation']).label}. {result['recommendation_reason']}\n"
             f"Score: {result['score']} | Notas: {result['grades']} | Confiança: {result['confidence']}\n"
-            f"Valor em questão: {brl(result['amount_at_issue'])} ({result['amount_at_issue_pct']:.0f}% do orçamento)\n"
+            f"Valor potencial divergente: {brl(result['amount_at_issue'])} ({result['amount_at_issue_pct']:.0f}% do orçamento)\n"
             f"APONTAMENTOS:\n{findings}"
         )
 
@@ -58,7 +58,7 @@ class AssessmentWriter:
             examples = "; ".join(f"{f['description'].lower()} ({f['reference'] or f['evidence']})" for f in findings[:4])
             parts.append(f"{len(findings)} apontamento(s): {examples}.")
         if result["amount_at_issue"]:
-            parts.append(f"Valor em questão: {brl(result['amount_at_issue'])} ({result['amount_at_issue_pct']:.0f}% do orçamento).")
+            parts.append(f"Valor potencial divergente: {brl(result['amount_at_issue'])} ({result['amount_at_issue_pct']:.0f}% do orçamento).")
         message = ""
         needs_action = rec in (Recommendation.RETURN_TO_SUPPLIER, Recommendation.RETURN_LOCKED, Recommendation.APPROVE_WITH_CAVEATS)
         if needs_action and findings:

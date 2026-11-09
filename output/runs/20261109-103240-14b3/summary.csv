@@ -1,0 +1,2 @@
+ticket_id;workstream;category;symptom;supplier;quoted_value;recommendation;score;scope_grade;quote_grade;photo_grade;confidence;finding_types;amount_at_issue;cost_brl;summary
+02000002;SETA;waterproofing;moisture_infiltration;Fornecedor Delta Impermeabilizações Ltda.;594.0;approve;100;100;100;100;high;;0.0;0.0;Aprovar. Score de 85 ou mais, sem travas.

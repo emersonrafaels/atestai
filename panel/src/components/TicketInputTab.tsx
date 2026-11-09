@@ -1,6 +1,7 @@
 import { FileSpreadsheet } from "lucide-react";
 import type { TicketDetail } from "../api";
-import { brl, num } from "../format";
+import { brl, num, envLabel, MAINTENANCE_LABEL, STAGE_LABEL, STAGE_DOCS } from "../format";
+import { InfoTip } from "./ui/Tooltip";
 import type { LightboxItem } from "./ui/Lightbox";
 
 /** O que chegou do Salesforce: escopo, categoria, sintoma, planilha de orçamento e anexos. */
@@ -18,12 +19,17 @@ export function TicketInputTab({ ch, openPhoto }: { ch: TicketDetail; openPhoto:
         <dl className="grid grid-cols-2 gap-x-4 gap-y-3 rounded-xl border border-line bg-sheet p-5 text-sm md:grid-cols-1">
           <div><dt className="text-muted">Categoria</dt><dd className="font-semibold">{ch.category_label}</dd></div>
           <div><dt className="text-muted">Sintoma</dt><dd className="font-semibold">{ch.symptom_label}</dd></div>
-          <div><dt className="text-muted">Momento</dt><dd>{ch.moment === "quote" ? "Aprovação do orçamento" : "Retorno da execução"} ({ch.maintenance_type})</dd></div>
+          <div><dt className="flex items-center gap-1 text-muted">Tipo de manutenção <InfoTip term="maintenance" size={12} /></dt><dd className="font-semibold">{MAINTENANCE_LABEL[ch.maintenance_type] ?? ch.maintenance_type}</dd></div>
+          <div>
+            <dt className="flex items-center gap-1 text-muted">Etapa da esteira <InfoTip term="stage" size={12} /></dt>
+            <dd className="font-semibold">{STAGE_LABEL[ch.moment] ?? ch.moment}</dd>
+            <dd className="mt-1 text-[12px] text-muted">Nesta etapa o fornecedor envia: {(STAGE_DOCS[ch.moment] ?? []).join(", ").toLowerCase()}.</dd>
+          </div>
         </dl>
       </section>
 
       <dl className="grid grid-cols-2 gap-4 text-sm md:grid-cols-4">
-        <div><dt className="text-muted">Agência</dt><dd>{ch.branch}, {ch.environment}</dd></div>
+        <div><dt className="text-muted">Agência</dt><dd>{ch.branch}{ch.environment ? `, ${envLabel(ch.environment)}` : ""}</dd></div>
         <div><dt className="text-muted">Fornecedor</dt><dd>{ch.supplier}</dd></div>
         <div><dt className="text-muted">Abertura / envio</dt><dd className="tabular-nums">{fmtData(ch.dates.opening)} / {fmtData(ch.dates.supplier_submission)}</dd></div>
         <div><dt className="text-muted">Valor orçado</dt><dd className="font-semibold tabular-nums">{brl(ch.quoted_value)}</dd></div>

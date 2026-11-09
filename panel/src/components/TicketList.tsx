@@ -1,7 +1,9 @@
-import { Check, CircleCheck, CircleX, Image as ImageIcon, Info, Loader2, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { Check, Image as ImageIcon, Info, Loader2, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { useState } from "react";
 import type { TicketSummary, Dataset, Run } from "../api";
-import { REC } from "../format";
+import { REC, MAINTENANCE_LABEL, STAGE_LABEL, STAGE_SHORT } from "../format";
 import { StageProgress } from "./StageProgress";
+import { ScorePill } from "./ScoreBadge";
 import { InfoTip, Tooltip } from "./ui/Tooltip";
 
 interface Props {
@@ -22,7 +24,13 @@ interface Props {
 }
 
 export function TicketList(p: Props) {
-  const visible = p.tickets.filter((c) => (p.streamFilter === "all" || c.workstream === p.streamFilter) && (p.dataset === "all" || c.dataset === p.dataset));
+  // filtros de classificação: etapa da esteira e tipo de manutenção
+  const [stage, setStage] = useState<"all" | "quote" | "execution">("all");
+  const [kind, setKind] = useState<"all" | "corrective" | "preventive">("all");
+  const visible = p.tickets.filter((c) => (p.streamFilter === "all" || c.workstream === p.streamFilter) && (p.dataset === "all" || c.dataset === p.dataset)
+    && (stage === "all" || c.moment === stage) && (kind === "all" || c.maintenance_type === kind));
+  const inScope = p.tickets.filter((c) => (p.streamFilter === "all" || c.workstream === p.streamFilter) && (p.dataset === "all" || c.dataset === p.dataset));
+  const count = (f: (c: TicketSummary) => boolean) => inScope.filter(f).length;
   const allMarked = visible.length > 0 && visible.every((c) => p.selected.has(c.ticket_id));
   const markedVisible = visible.filter((c) => p.selected.has(c.ticket_id)).length;
   if (p.collapsed) return <Rail {...p} visible={visible} />;
@@ -56,13 +64,34 @@ export function TicketList(p: Props) {
           Marcar todos
         </label>
       </div>
+      <div className="grid grid-cols-2 gap-2 border-b border-line px-4 py-2 text-[13px]">
+        <label className="min-w-0">
+          <span className="mb-0.5 flex items-center gap-1 text-[11px] font-medium uppercase tracking-wide text-muted">Etapa <InfoTip term="stage" size={11} /></span>
+          <select value={stage} onChange={(e) => setStage(e.target.value as typeof stage)} className={`w-full rounded-md border bg-sheet px-1.5 py-1 ${stage !== "all" ? "border-blueprint text-blueprint" : "border-line"}`}>
+            <option value="all">Todas ({inScope.length})</option>
+            <option value="quote">{STAGE_LABEL.quote} ({count((c) => c.moment === "quote")})</option>
+            <option value="execution">{STAGE_LABEL.execution} ({count((c) => c.moment === "execution")})</option>
+          </select>
+        </label>
+        <label className="min-w-0">
+          <span className="mb-0.5 flex items-center gap-1 text-[11px] font-medium uppercase tracking-wide text-muted">Tipo <InfoTip term="maintenance" size={11} /></span>
+          <select value={kind} onChange={(e) => setKind(e.target.value as typeof kind)} className={`w-full rounded-md border bg-sheet px-1.5 py-1 ${kind !== "all" ? "border-blueprint text-blueprint" : "border-line"}`}>
+            <option value="all">Todos ({inScope.length})</option>
+            <option value="corrective">Corretiva ({count((c) => c.maintenance_type === "corrective")})</option>
+            <option value="preventive">Preventiva ({count((c) => c.maintenance_type === "preventive")})</option>
+          </select>
+        </label>
+      </div>
       <div className="flex items-center justify-between border-b border-line bg-paper/50 px-4 py-1.5 text-[12px] text-muted">
-        <span>{visible.length} chamado{visible.length === 1 ? "" : "s"}</span>
+        <span>
+          {visible.length} chamado{visible.length === 1 ? "" : "s"}
+          {(stage !== "all" || kind !== "all") && <button onClick={() => { setStage("all"); setKind("all"); }} className="ml-1.5 font-medium text-blueprint hover:underline">limpar filtros</button>}
+        </span>
         <span className={markedVisible ? "font-medium text-blueprint" : ""}>{markedVisible} marcado{markedVisible === 1 ? "" : "s"} para analisar</span>
       </div>
       <ul className="min-h-0 flex-1 overflow-y-auto">
         {!visible.length && (
-          <li className="px-6 py-10 text-center text-sm text-muted">Nenhum chamado neste filtro. Troque o conjunto ou a esteira acima.</li>
+          <li className="px-6 py-10 text-center text-sm text-muted">Nenhum chamado neste filtro. Troque o conjunto, a esteira, a etapa ou o tipo acima.</li>
         )}
         {visible.map((c) => {
           const st = p.execution?.tickets[c.ticket_id];
@@ -87,26 +116,22 @@ export function TicketList(p: Props) {
                 <div className="mt-0.5 text-[13px] font-medium">
                   {c.category_label} <span className="text-muted">— {c.symptom_label}</span>
                 </div>
+                <div className="mt-1 flex flex-wrap gap-1 text-[11px] font-semibold">
+                  <span className={`rounded px-1.5 ${c.maintenance_type === "preventive" ? "bg-[#e3f2ea] text-ok" : "bg-[#fdf1dc] text-warn"}`}>{MAINTENANCE_LABEL[c.maintenance_type] ?? c.maintenance_type}</span>
+                  <span className="rounded bg-paper px-1.5 text-ink/70" title={STAGE_LABEL[c.moment]}>Aprov. {STAGE_SHORT[c.moment]?.toLowerCase() ?? c.moment}</span>
+                </div>
                 <p className="mt-1 line-clamp-2 text-[13px] leading-snug text-muted">{c.scope}</p>
                 <div className="mt-2 flex items-center gap-3 text-[12px] text-muted">
                   <span className="flex items-center gap-1"><ImageIcon size={13} /> {c.n_photos}</span>
                   {!done && !st && c.last && (
-                    <span className="font-medium" style={{ color: REC[c.last.recommendation].color }}>
-                      Último: {c.last.score !== null ? `score ${c.last.score}` : "↩"} · {REC[c.last.recommendation].short}{c.last.feedback ? " · com decisão" : ""}
-                    </span>
+                    <span className="flex items-center gap-1.5"><span className="text-[11px] uppercase tracking-wide">último</span><ScorePill score={c.last.score} recommendation={c.last.recommendation} decided={!!c.last.feedback} muted /></span>
                   )}
-                  {c.expected && !done && !c.last && <span title="Decisão esperada, definida por especialistas">Gabarito: {REC[c.expected.recommendation].short}{c.expected.score !== null ? ` (score ${c.expected.score})` : ""}</span>}
                   {st && st.status !== "done" && st.status !== "error" && (
                     <span className="flex items-center gap-2">{st.status === "queue" ? "Na fila" : <StageProgress state={st} compact />}</span>
                   )}
                   {st?.status === "error" && <span className="font-medium text-bad">Erro</span>}
                   {done && (
-                    <span className="flex items-center gap-1.5 font-semibold" style={{ color: REC[done.recommendation].color }}>
-                      {done.score !== null ? `score ${done.score}` : "↩"} · {REC[done.recommendation].short}
-                      {st?.comparison && (st.comparison.recommendation_ok
-                        ? <CircleCheck size={14} className="text-ok" aria-label="igual ao gabarito" />
-                        : <CircleX size={14} className="text-bad" aria-label="diferente do gabarito" />)}
-                    </span>
+                    <ScorePill score={done.score} recommendation={done.recommendation} />
                   )}
                 </div>
               </button>
@@ -164,6 +189,7 @@ function Rail(p: Props & { visible: TicketSummary[] }) {
                 <>
                   <b>{c.ticket_id}</b> · {c.workstream}<br />
                   {c.category_label} · {c.symptom_label}<br />
+                  {MAINTENANCE_LABEL[c.maintenance_type] ?? c.maintenance_type} · {STAGE_LABEL[c.moment] ?? c.moment}<br />
                   <span className="opacity-80">{c.branch}</span><br />
                   {running ? "Analisando…" : failed ? "Erro na análise" : rec ? <>{REC[rec].label}{score !== null ? ` · score ${score}` : ""}</> : "Ainda não analisado"}
                   {isMarked ? " · marcado" : ""}
