@@ -1,0 +1,67 @@
+{
+  "ticket_id": "00530121",
+  "workstream": "SETA",
+  "maintenance_type": "corrective",
+  "moment": "execution",
+  "category": "waterproofing",
+  "symptom": "moisture_infiltration",
+  "branch": {
+    "code": "0207",
+    "name": "Ag. Jardim",
+    "environment": "backoffice"
+  },
+  "supplier": {
+    "name": "Fornecedor Delta Impermeabilizações Ltda.",
+    "cnpj": "45.678.901/0001-23"
+  },
+  "requested_scope": "Infiltração no teto e na parede do fundo do backoffice, próximo ao ar-condicionado: tratar a origem com impermeabilização, recompor o forro de gesso danificado (aprox. 4 m²) e repintar a área afetada (aprox. 12 m² de parede e 4 m² de teto).",
+  "quoted_value": 1452.0,
+  "dates": {
+    "opening": "2026-09-10",
+    "supplier_submission": "2026-10-03",
+    "manager_review": "2026-10-05"
+  },
+  "status": "forwarded_to_backoffice",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "dataset": "demo",
+  "attachments": [
+    {
+      "file_name": "Orcamento_DLT-445-26.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 7911,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-03"
+    },
+    {
+      "file_name": "IMG_20260911_083305.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 165005,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-03"
+    },
+    {
+      "file_name": "IMG_20260911_083512.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 190827,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-03"
+    },
+    {
+      "file_name": "IMG_20261002_161020.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 174052,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-03"
+    },
+    {
+      "file_name": "IMG_20261002_161244.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 195932,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-03"
+    }
+  ]
+}

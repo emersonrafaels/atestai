@@ -1,0 +1,411 @@
+{
+  "ticket_id": "02000008",
+  "workstream": "SISR",
+  "category": "cctv",
+  "symptom": "degraded_image",
+  "maintenance_type": "corrective",
+  "moment": "execution",
+  "branch": {
+    "code": "7142",
+    "name": "Itaú Ag. Liberdade",
+    "environment": "parking"
+  },
+  "supplier": "Fornecedor Beta Sistemas de Segurança Ltda.",
+  "quoted_value": 460.0,
+  "requested_scope": "Câmera do parking com imagem desfocada: limpeza e ajuste de foco.",
+  "generated_at": "2026-11-09T04:41:45.445074",
+  "rubric_version": "2026-11-v3",
+  "prompts_version": "2026-11-v3",
+  "config_signature": "294d860f8d37",
+  "phase": 2,
+  "mode": "simulated",
+  "batch_mode": "sync",
+  "models": {
+    "main": "anthropic:claude-sonnet-5-5",
+    "fast": "anthropic:claude-sonnet-5-5"
+  },
+  "run_id": "20261109-044142-ff78",
+  "record_id": 11,
+  "checklist": {
+    "category": "cctv",
+    "maintenance": "corrective",
+    "moment": "execution",
+    "complete": true,
+    "uploaded": 3,
+    "total": 3,
+    "requirements": [
+      {
+        "id": "quote",
+        "description": "Orçamento na planilha Excel padrão",
+        "met": true,
+        "attachments": [
+          "Orcamento_BET-V0008.xlsx"
+        ]
+      },
+      {
+        "id": "equipment_photo",
+        "description": "Foto do equipamento atendido",
+        "met": true,
+        "attachments": [
+          "IMG_20261028_102122.jpg"
+        ]
+      },
+      {
+        "id": "screen_photo",
+        "description": "Imagem da câmera ou tela do gravador",
+        "met": true,
+        "attachments": [
+          "IMG_20261028_084325.jpg",
+          "IMG_20261028_092443.jpg"
+        ]
+      }
+    ],
+    "missing": []
+  },
+  "attachments": [
+    {
+      "index": 1,
+      "name": "Orcamento_BET-V0008.xlsx",
+      "category": "quote_doc",
+      "moment": "undetermined",
+      "readable": true,
+      "short_description": "Orçamento BET-V0008: 2 itens, R$ 460.00"
+    },
+    {
+      "index": 2,
+      "name": "IMG_20261028_084325.jpg",
+      "category": "cctv_screen_photo",
+      "moment": "before",
+      "readable": true,
+      "short_description": "Imagem da câmera desfocada"
+    },
+    {
+      "index": 3,
+      "name": "IMG_20261028_092443.jpg",
+      "category": "cctv_screen_photo",
+      "moment": "after",
+      "readable": true,
+      "short_description": "Imagem da câmera nítida após o ajuste"
+    },
+    {
+      "index": 4,
+      "name": "IMG_20261028_102122.jpg",
+      "category": "equipment_photo",
+      "moment": "after",
+      "readable": true,
+      "short_description": "Câmera instalada na parede"
+    }
+  ],
+  "recommendation": "approve",
+  "recommendation_reason": "Score de 85 ou mais, sem travas",
+  "score": 100,
+  "grades": {
+    "scope": 100,
+    "quote": 100,
+    "photos": 100
+  },
+  "confidence": "high",
+  "confidence_reducers": [],
+  "findings": [],
+  "amount_at_issue": 0.0,
+  "amount_at_issue_pct": 0.0,
+  "scope": {
+    "local": "(simulado)",
+    "environment": "(simulado)",
+    "equipment": "",
+    "requested_services": [
+      "(simulado a partir do gabarito)"
+    ],
+    "mentioned_quantities": [],
+    "acceptance_criteria": [
+      "(simulado)"
+    ],
+    "expected_evidence": [],
+    "before_evidence_applicable": true,
+    "consistent_with_category_symptom": true,
+    "coherence_note": "",
+    "vague_scope": false,
+    "vague_reason": ""
+  },
+  "items": [
+    {
+      "n": 1,
+      "description": "Visita técnica e deslocamento",
+      "unit": "vb",
+      "quantity": 1.0,
+      "unit_value": 280.0,
+      "total_value": 280.0,
+      "classification": "compliant",
+      "reason": "(simulado) aderente",
+      "lpu_code": "SIS-001",
+      "reference_price": 280.0,
+      "expected_quantity_max": null,
+      "amount_at_issue": 0.0,
+      "findings": []
+    },
+    {
+      "n": 2,
+      "description": "Limpeza e ajuste de foco da câmera",
+      "unit": "un",
+      "quantity": 1.0,
+      "unit_value": 180.0,
+      "total_value": 180.0,
+      "classification": "compliant",
+      "reason": "(simulado) aderente",
+      "lpu_code": "CFTV-001",
+      "reference_price": 180.0,
+      "expected_quantity_max": null,
+      "amount_at_issue": 0.0,
+      "findings": []
+    }
+  ],
+  "quote_notes": [],
+  "photos": [
+    {
+      "file": "IMG_20261028_084325.jpg",
+      "environment": "",
+      "what_it_shows": "Imagem da câmera desfocada",
+      "moment": "before",
+      "readable": true,
+      "matches_scope": "yes",
+      "reason": "(simulado)",
+      "covered_items": [],
+      "exif_date": "2026-10-28T08:15:00",
+      "reused_from": null,
+      "integrity_signals": []
+    },
+    {
+      "file": "IMG_20261028_092443.jpg",
+      "environment": "",
+      "what_it_shows": "Imagem da câmera nítida após o ajuste",
+      "moment": "after",
+      "readable": true,
+      "matches_scope": "yes",
+      "reason": "(simulado)",
+      "covered_items": [],
+      "exif_date": "2026-10-28T09:15:00",
+      "reused_from": null,
+      "integrity_signals": []
+    },
+    {
+      "file": "IMG_20261028_102122.jpg",
+      "environment": "",
+      "what_it_shows": "Câmera instalada na parede",
+      "moment": "after",
+      "readable": true,
+      "matches_scope": "yes",
+      "reason": "(simulado)",
+      "covered_items": [],
+      "exif_date": "2026-10-28T10:15:00",
+      "reused_from": null,
+      "integrity_signals": []
+    }
+  ],
+  "photo_summary": {
+    "has_before_photo": true,
+    "has_done_service_photo": true,
+    "done_justification": "(simulado)",
+    "items_without_photo": [],
+    "notes": ""
+  },
+  "summary": "Aprovar. Score de 85 ou mais, sem travas.",
+  "supplier_message": "",
+  "llm_calls": [
+    {
+      "task": "identify_attachments",
+      "provider": "simulated",
+      "model": "simulado (anthropic:claude-sonnet-5-5)",
+      "resolved_model": "",
+      "prompt_version": "",
+      "prompt_hash": "",
+      "schema_hash": "",
+      "start": "2026-11-09T04:41:44.700931",
+      "duration_s": 0.0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 0,
+      "cost_usd": 0.0,
+      "from_cache": false,
+      "simulated": true,
+      "via_batch": false,
+      "batch_id": null,
+      "response": {
+        "attachments": [
+          {
+            "index": 2,
+            "category": "cctv_screen_photo",
+            "moment": "before",
+            "readable": true,
+            "short_description": "Imagem da câmera desfocada"
+          },
+          {
+            "index": 3,
+            "category": "cctv_screen_photo",
+            "moment": "after",
+            "readable": true,
+            "short_description": "Imagem da câmera nítida após o ajuste"
+          },
+          {
+            "index": 4,
+            "category": "equipment_photo",
+            "moment": "after",
+            "readable": true,
+            "short_description": "Câmera instalada na parede"
+          }
+        ]
+      }
+    },
+    {
+      "task": "scope",
+      "provider": "simulated",
+      "model": "simulado (anthropic:claude-sonnet-5-5)",
+      "resolved_model": "",
+      "prompt_version": "",
+      "prompt_hash": "",
+      "schema_hash": "",
+      "start": "2026-11-09T04:41:44.705306",
+      "duration_s": 0.0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 0,
+      "cost_usd": 0.0,
+      "from_cache": false,
+      "simulated": true,
+      "via_batch": false,
+      "batch_id": null,
+      "response": {
+        "local": "(simulado)",
+        "environment": "(simulado)",
+        "equipment": "",
+        "requested_services": [
+          "(simulado a partir do gabarito)"
+        ],
+        "mentioned_quantities": [],
+        "acceptance_criteria": [
+          "(simulado)"
+        ],
+        "expected_evidence": [],
+        "before_evidence_applicable": true,
+        "consistent_with_category_symptom": true,
+        "coherence_note": "",
+        "vague_scope": false,
+        "vague_reason": ""
+      }
+    },
+    {
+      "task": "quote_review",
+      "provider": "simulated",
+      "model": "simulado (anthropic:claude-sonnet-5-5)",
+      "resolved_model": "",
+      "prompt_version": "",
+      "prompt_hash": "",
+      "schema_hash": "",
+      "start": "2026-11-09T04:41:44.747924",
+      "duration_s": 0.0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 0,
+      "cost_usd": 0.0,
+      "from_cache": false,
+      "simulated": true,
+      "via_batch": false,
+      "batch_id": null,
+      "response": {
+        "items": [
+          {
+            "n": 1,
+            "classification": "compliant",
+            "reason": "(simulado) aderente",
+            "expected_quantity_max": -1.0,
+            "plausible_quantity": true,
+            "duplicate_of": 0,
+            "lpu_code": "SIS-001"
+          },
+          {
+            "n": 2,
+            "classification": "compliant",
+            "reason": "(simulado) aderente",
+            "expected_quantity_max": -1.0,
+            "plausible_quantity": true,
+            "duplicate_of": 0,
+            "lpu_code": "CFTV-001"
+          }
+        ],
+        "notes": ""
+      }
+    },
+    {
+      "task": "photos",
+      "provider": "simulated",
+      "model": "simulado (anthropic:claude-sonnet-5-5)",
+      "resolved_model": "",
+      "prompt_version": "",
+      "prompt_hash": "",
+      "schema_hash": "",
+      "start": "2026-11-09T04:41:44.916684",
+      "duration_s": 0.0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 0,
+      "cost_usd": 0.0,
+      "from_cache": false,
+      "simulated": true,
+      "via_batch": false,
+      "batch_id": null,
+      "response": {
+        "photos": [
+          {
+            "index": 2,
+            "environment": "",
+            "what_it_shows": "Imagem da câmera desfocada",
+            "moment": "before",
+            "readable": true,
+            "matches_scope": "yes",
+            "reason": "(simulado)",
+            "covered_items": []
+          },
+          {
+            "index": 3,
+            "environment": "",
+            "what_it_shows": "Imagem da câmera nítida após o ajuste",
+            "moment": "after",
+            "readable": true,
+            "matches_scope": "yes",
+            "reason": "(simulado)",
+            "covered_items": []
+          },
+          {
+            "index": 4,
+            "environment": "",
+            "what_it_shows": "Câmera instalada na parede",
+            "moment": "after",
+            "readable": true,
+            "matches_scope": "yes",
+            "reason": "(simulado)",
+            "covered_items": []
+          }
+        ],
+        "has_before_photo": true,
+        "has_done_service_photo": true,
+        "done_justification": "(simulado)",
+        "items_without_photo": [],
+        "notes": ""
+      }
+    }
+  ],
+  "duration_s": 0.96,
+  "stage_durations_s": {
+    "checklist": 0.215,
+    "scope": 0.003,
+    "quote": 0.043,
+    "photos": 0.685,
+    "score": 0.0,
+    "assessment": 0.007
+  },
+  "cost_usd": 0.0,
+  "cost_brl": 0.0
+}

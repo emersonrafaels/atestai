@@ -1,0 +1,61 @@
+{
+  "ticket_id": "01000072",
+  "workstream": "SETA",
+  "maintenance_type": "corrective",
+  "moment": "execution",
+  "category": "waterproofing",
+  "symptom": "moisture_infiltration",
+  "branch": {
+    "code": "0886",
+    "name": "Ag. Perdizes",
+    "environment": "kitchen"
+  },
+  "supplier": {
+    "name": "Fornecedor Delta Impermeabilizações Ltda.",
+    "cnpj": "45.678.901/0001-23"
+  },
+  "requested_scope": "Verificar kitchen. Urgente.",
+  "quoted_value": 1762.45,
+  "dates": {
+    "opening": "2026-11-07",
+    "supplier_submission": "2026-11-09",
+    "manager_review": "2026-11-10"
+  },
+  "status": "forwarded_to_backoffice",
+  "origin": "dataset",
+  "dataset": "validation",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "attachments": [
+    {
+      "file_name": "Orcamento_DEL-V0072.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 7679,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-09"
+    },
+    {
+      "file_name": "IMG_20261108_082220.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 165795,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-09"
+    },
+    {
+      "file_name": "IMG_20261108_095412.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 137198,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-09"
+    },
+    {
+      "file_name": "WhatsApp Image 2026-11-09 at 15.35.17.jpeg",
+      "content_type": "image/jpeg",
+      "size_bytes": 73703,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-09"
+    }
+  ]
+}

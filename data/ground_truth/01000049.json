@@ -1,0 +1,107 @@
+{
+  "ticket_id": "01000049",
+  "dataset": "validation",
+  "service_template": "sensor",
+  "defects": [],
+  "workstream": "SISR",
+  "moment": "execution",
+  "maintenance_type": "corrective",
+  "category": "alarm",
+  "symptom": "false_alarm",
+  "before_applicable": true,
+  "quoted_value": 530.0,
+  "amount_at_issue": 0.0,
+  "items": [
+    {
+      "n": 1,
+      "description": "Visita técnica",
+      "unit": "vb",
+      "quantity": 1,
+      "unit_value": 280.0,
+      "total_value": 280.0,
+      "classification": "compliant",
+      "lpu_code": "SIS-001",
+      "reference_price": 280.0,
+      "findings": [],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    },
+    {
+      "n": 2,
+      "description": "Sensor IVP com fio",
+      "unit": "un",
+      "quantity": 1,
+      "unit_value": 140.0,
+      "total_value": 140.0,
+      "classification": "compliant",
+      "lpu_code": "ALA-002",
+      "reference_price": 140.0,
+      "findings": [],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    },
+    {
+      "n": 3,
+      "description": "Mão de obra substituição de sensor",
+      "unit": "un",
+      "quantity": 1,
+      "unit_value": 110.0,
+      "total_value": 110.0,
+      "classification": "compliant",
+      "lpu_code": "ALA-003",
+      "reference_price": 110.0,
+      "findings": [],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    }
+  ],
+  "attachments": {
+    "Orcamento_KAP-V0049.xlsx": {
+      "category": "quote_doc",
+      "moment": "undetermined",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Orçamento"
+    },
+    "IMG_20261101_082610.jpg": {
+      "category": "equipment_photo",
+      "moment": "before",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Sensor antigo amarelado"
+    },
+    "IMG_20261102_091847.jpg": {
+      "category": "equipment_photo",
+      "moment": "after",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Sensor novo instalado"
+    },
+    "IMG_20261102_101252.jpg": {
+      "category": "alarm_panel_photo",
+      "moment": "after",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Teclado indicando zona OK"
+    },
+    "IMG_20261103_190400.jpg": {
+      "category": "completion_certificate_doc",
+      "moment": "after",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Termo de conclusão assinado"
+    }
+  },
+  "checklist_ok": true,
+  "missing": [],
+  "findings": [],
+  "optional": [],
+  "grades": {
+    "scope": 100,
+    "quote": 100,
+    "photos": 100
+  },
+  "score": 100,
+  "recommendation": "approve",
+  "confidence": "high"
+}

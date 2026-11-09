@@ -1,0 +1,132 @@
+{
+  "ticket_id": "00530121",
+  "workstream": "SETA",
+  "moment": "execution",
+  "maintenance_type": "corrective",
+  "category": "waterproofing",
+  "symptom": "moisture_infiltration",
+  "before_applicable": true,
+  "dataset": "demo",
+  "quoted_value": 1452.0,
+  "items": [
+    {
+      "n": 1,
+      "description": "Impermeabilização com manta líquida acrílica na origem da infiltração",
+      "unit": "m²",
+      "quantity": 6,
+      "unit_value": 68.0,
+      "total_value": 408.0,
+      "classification": "compliant",
+      "lpu_code": "IMP-001",
+      "reference_price": 68.0,
+      "findings": [],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    },
+    {
+      "n": 2,
+      "description": "Recorte e recomposição de forro de gesso",
+      "unit": "m²",
+      "quantity": 4,
+      "unit_value": 95.0,
+      "total_value": 380.0,
+      "classification": "compliant",
+      "lpu_code": "IMP-002",
+      "reference_price": 95.0,
+      "findings": [],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    },
+    {
+      "n": 3,
+      "description": "Fundo preparador antimofo",
+      "unit": "m²",
+      "quantity": 16,
+      "unit_value": 6.5,
+      "total_value": 104.0,
+      "classification": "compliant",
+      "lpu_code": "IMP-003",
+      "reference_price": 6.5,
+      "findings": [],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    },
+    {
+      "n": 4,
+      "description": "Pintura de parede em látex acrílico, 2 demãos",
+      "unit": "m²",
+      "quantity": 12,
+      "unit_value": 35.0,
+      "total_value": 420.0,
+      "classification": "compliant",
+      "lpu_code": "PIN-001",
+      "reference_price": 35.0,
+      "findings": [],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    },
+    {
+      "n": 5,
+      "description": "Pintura de forro em látex, 2 demãos",
+      "unit": "m²",
+      "quantity": 4,
+      "unit_value": 35.0,
+      "total_value": 140.0,
+      "classification": "compliant",
+      "lpu_code": "PIN-002",
+      "reference_price": 35.0,
+      "findings": [],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    }
+  ],
+  "attachments": {
+    "Orcamento_DLT-445-26.xlsx": {
+      "category": "quote_doc",
+      "moment": "undetermined",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Orçamento (planilha Excel padrão)"
+    },
+    "IMG_20260911_083305.jpg": {
+      "category": "room_before_photo",
+      "moment": "before",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Mancha de infiltração e mofo no forro"
+    },
+    "IMG_20260911_083512.jpg": {
+      "category": "room_before_photo",
+      "moment": "before",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Parede do fundo com mancha e pintura descascando"
+    },
+    "IMG_20261002_161020.jpg": {
+      "category": "room_after_photo",
+      "moment": "after",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Forro recomposto e pintado"
+    },
+    "IMG_20261002_161244.jpg": {
+      "category": "room_after_photo",
+      "moment": "after",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Parede do fundo recuperada e pintada"
+    }
+  },
+  "checklist_ok": true,
+  "missing": [],
+  "findings": [],
+  "optional": [],
+  "grades": {
+    "scope": 100,
+    "quote": 100,
+    "photos": 100
+  },
+  "score": 100,
+  "recommendation": "approve",
+  "confidence": "high"
+}

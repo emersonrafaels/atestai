@@ -1,0 +1,126 @@
+{
+  "ticket_id": "01000068",
+  "dataset": "validation",
+  "service_template": "camera",
+  "defects": [
+    "out_of_scope",
+    "duplicate",
+    "inconsistent"
+  ],
+  "workstream": "SISR",
+  "moment": "execution",
+  "maintenance_type": "corrective",
+  "category": "cctv",
+  "symptom": "finish_wear",
+  "before_applicable": true,
+  "quoted_value": 1865.0,
+  "amount_at_issue": 1405.0,
+  "items": [
+    {
+      "n": 1,
+      "description": "Visita técnica e deslocamento",
+      "unit": "vb",
+      "quantity": 1,
+      "unit_value": 280.0,
+      "total_value": 280.0,
+      "classification": "compliant",
+      "lpu_code": "SIS-001",
+      "reference_price": 280.0,
+      "findings": [],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    },
+    {
+      "n": 2,
+      "description": "Limpeza e ajuste de foco da câmera",
+      "unit": "un",
+      "quantity": 1,
+      "unit_value": 180.0,
+      "total_value": 180.0,
+      "classification": "compliant",
+      "lpu_code": "CFTV-001",
+      "reference_price": 180.0,
+      "findings": [],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    },
+    {
+      "n": 3,
+      "description": "Cabo UTP cat6 novo",
+      "unit": "m",
+      "quantity": 25,
+      "unit_value": 45.0,
+      "total_value": 1125.0,
+      "classification": "out_of_scope",
+      "lpu_code": "CFTV-003",
+      "reference_price": 45.0,
+      "findings": [
+        "out_of_scope_item"
+      ],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    },
+    {
+      "n": 4,
+      "description": "Visita técnica e deslocamento",
+      "unit": "vb",
+      "quantity": 1,
+      "unit_value": 280.0,
+      "total_value": 280.0,
+      "classification": "compliant",
+      "lpu_code": "SIS-001",
+      "reference_price": 280.0,
+      "findings": [
+        "duplicate_item"
+      ],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    }
+  ],
+  "attachments": {
+    "Orcamento_BET-V0068.xlsx": {
+      "category": "quote_doc",
+      "moment": "undetermined",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Orçamento"
+    },
+    "IMG_20261107_085334.jpg": {
+      "category": "cctv_screen_photo",
+      "moment": "before",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Imagem da câmera desfocada"
+    },
+    "IMG_20261108_095157.jpg": {
+      "category": "cctv_screen_photo",
+      "moment": "after",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Imagem da câmera nítida após o ajuste"
+    },
+    "IMG_20261108_103821.jpg": {
+      "category": "equipment_photo",
+      "moment": "after",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Câmera instalada na parede"
+    }
+  },
+  "checklist_ok": true,
+  "missing": [],
+  "findings": [
+    "duplicate_item",
+    "inconsistent_scope",
+    "out_of_scope_item"
+  ],
+  "optional": [],
+  "grades": {
+    "scope": 85,
+    "quote": 30,
+    "photos": 100
+  },
+  "score": 69,
+  "recommendation": "return_to_supplier",
+  "confidence": "medium"
+}

@@ -1,0 +1,54 @@
+{
+  "ticket_id": "01000075",
+  "workstream": "SETA",
+  "maintenance_type": "corrective",
+  "moment": "execution",
+  "category": "electrical",
+  "symptom": "electrical_failure",
+  "branch": {
+    "code": "1232",
+    "name": "Ag. Santana",
+    "environment": "salão de atendimento"
+  },
+  "supplier": {
+    "name": "Fornecedor Eta Elétrica e Manutenção Ltda.",
+    "cnpj": "78.901.234/0001-56"
+  },
+  "requested_scope": "Substituir 7 tomadas danificadas no salão de atendimento, uma com sinais de queima.",
+  "quoted_value": 553.0,
+  "dates": {
+    "opening": "2026-11-08",
+    "supplier_submission": "2026-11-10",
+    "manager_review": "2026-11-11"
+  },
+  "status": "forwarded_to_backoffice",
+  "origin": "dataset",
+  "dataset": "validation",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "attachments": [
+    {
+      "file_name": "Orcamento_ETA-V0075.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 7609,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-10"
+    },
+    {
+      "file_name": "IMG_20261109_083244.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 154744,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-10"
+    },
+    {
+      "file_name": "IMG_20261109_092455.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 160625,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-10"
+    }
+  ]
+}

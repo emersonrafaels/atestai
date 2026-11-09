@@ -1,0 +1,28 @@
+code;description;unit;reference_price
+PIN-001;Pintura interna em látex acrílico, paredes, 2 demãos;m²;35.00
+PIN-002;Pintura de teto/forro em látex, 2 demãos;m²;35.00
+PIN-003;Pintura de fachada com tinta acrílica externa;m²;38.00
+PIN-004;Aplicação de massa corrida PVA/acrílica;m²;3.10
+PIN-005;Lixamento e preparação de superfície;m²;4.50
+IMP-001;Tratamento de infiltração com manta líquida/impermeabilizante;m²;68.00
+IMP-002;Recomposição de forro de gesso (recorte e reposição);m²;95.00
+IMP-003;Aplicação de fundo preparador antimofo;m²;6.50
+ELE-001;Luminária LED de embutir 60x60, 40 W;un;385.00
+ELE-002;Mão de obra de instalação de luminária;un;80.00
+ELE-003;Descarte de luminárias e lâmpadas (logística reversa);vb;360.00
+ELE-004;Tomada 2P+T 10 A com placa;un;28.00
+ELE-005;Mão de obra de substituição de tomada;un;35.00
+ELE-006;Disjuntor DIN monopolar até 32 A;un;32.00
+ELE-007;Mão de obra de substituição de disjuntor;un;60.00
+ELE-008;Lâmpada LED tubular T8 18 W;un;22.00
+ELE-009;Mão de obra de troca de lâmpada;un;25.00
+HVAC-001;Limpeza preventiva de split até 24.000 BTU (evaporadora + condensadora);un;180.00
+HVAC-002;Higienização com bactericida (por aparelho);un;45.00
+HVAC-003;Verificação de pressões e carga de gás (por aparelho);un;60.00
+HID-001;Sifão de PVC para pia;un;38.00
+HID-002;"Registro de pressão 3/4""";un;95.00
+HID-003;Mão de obra hidráulica;h;85.00
+SER-001;Mola aérea (fecha-porta) para porta até 80 kg;un;420.00
+SER-002;Mão de obra de instalação de mola aérea;un;150.00
+SER-003;Regulagem de porta e dobradiças;un;90.00
+GER-001;Visita técnica e deslocamento (SETA);vb;150.00

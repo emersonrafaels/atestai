@@ -1,0 +1,81 @@
+{
+  "ticket_id": "00482193",
+  "workstream": "SETA",
+  "maintenance_type": "corrective",
+  "moment": "execution",
+  "category": "painting",
+  "symptom": "finish_wear",
+  "branch": {
+    "code": "0418",
+    "name": "Ag. Centro",
+    "environment": "backoffice"
+  },
+  "supplier": {
+    "name": "Fornecedor Alfa Manutenção Predial Ltda.",
+    "cnpj": "12.345.678/0001-90"
+  },
+  "requested_scope": "Repintura de paredes e teto do backoffice (aprox. 240 m²), cor padrão da agência.",
+  "quoted_value": 12480.0,
+  "dates": {
+    "opening": "2026-09-18",
+    "supplier_submission": "2026-09-29",
+    "manager_review": "2026-10-01"
+  },
+  "status": "forwarded_to_backoffice",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "dataset": "demo",
+  "attachments": [
+    {
+      "file_name": "Orcamento_ALF-2026-0912.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 7747,
+      "sent_by": "supplier",
+      "data_upload": "2026-09-29"
+    },
+    {
+      "file_name": "IMG_20260928_101522.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 179123,
+      "sent_by": "supplier",
+      "data_upload": "2026-09-29"
+    },
+    {
+      "file_name": "IMG_20260928_101610.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 161321,
+      "sent_by": "supplier",
+      "data_upload": "2026-09-29"
+    },
+    {
+      "file_name": "IMG_20260928_101745.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 184427,
+      "sent_by": "supplier",
+      "data_upload": "2026-09-29"
+    },
+    {
+      "file_name": "IMG_20260928_113002.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 215220,
+      "sent_by": "supplier",
+      "data_upload": "2026-09-29"
+    },
+    {
+      "file_name": "IMG_20260928_114215.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 187950,
+      "sent_by": "supplier",
+      "data_upload": "2026-09-29"
+    },
+    {
+      "file_name": "IMG_20260928_114840.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 204631,
+      "sent_by": "supplier",
+      "data_upload": "2026-09-29"
+    }
+  ]
+}

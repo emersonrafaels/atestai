@@ -1,0 +1,68 @@
+{
+  "ticket_id": "01000059",
+  "workstream": "SISR",
+  "maintenance_type": "corrective",
+  "moment": "execution",
+  "category": "alarm",
+  "symptom": "false_alarm",
+  "branch": {
+    "code": "0333",
+    "name": "Ag. Ipiranga",
+    "environment": "treasury"
+  },
+  "supplier": {
+    "name": "Fornecedor Kappa Alarmes Ltda.",
+    "cnpj": "01.234.567/0001-89"
+  },
+  "requested_scope": "Sensor IVP da treasury com disparos falsos: substituir o sensor e testar a zona.",
+  "quoted_value": 564.21,
+  "dates": {
+    "opening": "2026-11-03",
+    "supplier_submission": "2026-11-06",
+    "manager_review": "2026-11-07"
+  },
+  "status": "forwarded_to_backoffice",
+  "origin": "dataset",
+  "dataset": "validation",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "attachments": [
+    {
+      "file_name": "Orcamento_KAP-V0059.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 7623,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-06"
+    },
+    {
+      "file_name": "IMG_20261105_084418.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 173990,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-06"
+    },
+    {
+      "file_name": "IMG_20261105_095648.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 193678,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-06"
+    },
+    {
+      "file_name": "WhatsApp Image 2026-11-06 at 15.25.31.jpeg",
+      "content_type": "image/jpeg",
+      "size_bytes": 90148,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-06"
+    },
+    {
+      "file_name": "IMG_20261106_190400.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 204473,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-06"
+    }
+  ]
+}

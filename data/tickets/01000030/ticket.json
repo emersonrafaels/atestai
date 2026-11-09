@@ -1,0 +1,61 @@
+{
+  "ticket_id": "01000030",
+  "workstream": "SISR",
+  "maintenance_type": "preventive",
+  "moment": "execution",
+  "category": "cctv_and_alarm",
+  "symptom": "preventive_maintenance",
+  "branch": {
+    "code": "0102",
+    "name": "Ag. Barra Funda",
+    "environment": "agência inteira"
+  },
+  "supplier": {
+    "name": "Fornecedor Iota Segurança Eletrônica Ltda.",
+    "cnpj": "90.123.456/0001-78"
+  },
+  "requested_scope": "Verificar agência inteira. Urgente.",
+  "quoted_value": 3461.16,
+  "dates": {
+    "opening": "2026-10-24",
+    "supplier_submission": "2026-10-29",
+    "manager_review": "2026-10-30"
+  },
+  "status": "forwarded_to_backoffice",
+  "origin": "dataset",
+  "dataset": "validation",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "attachments": [
+    {
+      "file_name": "Orcamento_IOT-V0030.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 7718,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-29"
+    },
+    {
+      "file_name": "IMG_20261028_084329.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 190853,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-29"
+    },
+    {
+      "file_name": "IMG_20261028_093446.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 165465,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-29"
+    },
+    {
+      "file_name": "IMG_20261029_190300.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 190865,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-29"
+    }
+  ]
+}

@@ -1,0 +1,74 @@
+{
+  "ticket_id": "00517706",
+  "workstream": "SISR",
+  "maintenance_type": "corrective",
+  "moment": "execution",
+  "category": "cctv",
+  "symptom": "degraded_image",
+  "branch": {
+    "code": "0533",
+    "name": "Ag. Norte",
+    "environment": "self_service"
+  },
+  "supplier": {
+    "name": "Fornecedor Beta Sistemas de Segurança Ltda.",
+    "cnpj": "23.456.789/0001-01"
+  },
+  "requested_scope": "Câmera 04 do autoatendimento com imagem desfocada: limpeza e ajuste de foco.",
+  "quoted_value": 4260.0,
+  "dates": {
+    "opening": "2026-09-22",
+    "supplier_submission": "2026-09-30",
+    "manager_review": "2026-10-01"
+  },
+  "status": "forwarded_to_backoffice",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "dataset": "demo",
+  "attachments": [
+    {
+      "file_name": "Orcamento_BETA-OS-7781.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 7717,
+      "sent_by": "supplier",
+      "data_upload": "2026-09-30"
+    },
+    {
+      "file_name": "IMG_20260930_142210.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 199808,
+      "sent_by": "supplier",
+      "data_upload": "2026-09-30"
+    },
+    {
+      "file_name": "WhatsApp Image 2026-09-30 at 15.02.11.jpeg",
+      "content_type": "image/jpeg",
+      "size_bytes": 84539,
+      "sent_by": "supplier",
+      "data_upload": "2026-09-30"
+    },
+    {
+      "file_name": "IMG_20260930_150318.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 186895,
+      "sent_by": "supplier",
+      "data_upload": "2026-09-30"
+    },
+    {
+      "file_name": "IMG_20260930_143940.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 208124,
+      "sent_by": "supplier",
+      "data_upload": "2026-09-30"
+    },
+    {
+      "file_name": "IMG_20260930_160512.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 182804,
+      "sent_by": "supplier",
+      "data_upload": "2026-09-30"
+    }
+  ]
+}

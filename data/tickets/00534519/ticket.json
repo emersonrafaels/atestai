@@ -1,0 +1,60 @@
+{
+  "ticket_id": "00534519",
+  "workstream": "SETA",
+  "maintenance_type": "corrective",
+  "moment": "execution",
+  "category": "electrical",
+  "symptom": "electrical_failure",
+  "branch": {
+    "code": "0455",
+    "name": "Ag. Lapa",
+    "environment": "service"
+  },
+  "supplier": {
+    "name": "Fornecedor Eta Elétrica e Manutenção Ltda.",
+    "cnpj": "78.901.234/0001-56"
+  },
+  "requested_scope": "Substituir 6 tomadas danificadas na área de atendimento (uma com sinais de queima) e o disjuntor do circuito 14 do quadro de distribuição, que está desarmando.",
+  "quoted_value": 654.0,
+  "dates": {
+    "opening": "2026-10-03",
+    "supplier_submission": "2026-10-08",
+    "manager_review": "2026-10-09"
+  },
+  "status": "forwarded_to_backoffice",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "dataset": "demo",
+  "attachments": [
+    {
+      "file_name": "Orcamento_ETA-2026-331.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 7791,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-08"
+    },
+    {
+      "file_name": "IMG_20261004_112003.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 174869,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-08"
+    },
+    {
+      "file_name": "IMG_20261007_143320.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 170696,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-08"
+    },
+    {
+      "file_name": "IMG_20261007_144105.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 213846,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-08"
+    }
+  ]
+}

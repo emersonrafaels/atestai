@@ -1,0 +1,47 @@
+{
+  "ticket_id": "01000021",
+  "workstream": "SETA",
+  "maintenance_type": "corrective",
+  "moment": "execution",
+  "category": "painting",
+  "symptom": "finish_wear",
+  "branch": {
+    "code": "0774",
+    "name": "Ag. Vila Mariana",
+    "environment": "salão de atendimento"
+  },
+  "supplier": {
+    "name": "Fornecedor Alfa Manutenção Predial Ltda.",
+    "cnpj": "12.345.678/0001-90"
+  },
+  "requested_scope": "Repintura das paredes do salão de atendimento (aprox. 101 m²), cor padrão da agência.",
+  "quoted_value": 3848.1,
+  "dates": {
+    "opening": "2026-10-21",
+    "supplier_submission": "2026-10-25",
+    "manager_review": "2026-10-26"
+  },
+  "status": "forwarded_to_backoffice",
+  "origin": "dataset",
+  "dataset": "validation",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "attachments": [
+    {
+      "file_name": "Orcamento_ALF-V0021.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 7632,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-25"
+    },
+    {
+      "file_name": "IMG_20261022_081110.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 165959,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-25"
+    }
+  ]
+}

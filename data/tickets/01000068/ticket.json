@@ -1,0 +1,61 @@
+{
+  "ticket_id": "01000068",
+  "workstream": "SISR",
+  "maintenance_type": "corrective",
+  "moment": "execution",
+  "category": "cctv",
+  "symptom": "finish_wear",
+  "branch": {
+    "code": "1343",
+    "name": "Ag. Tucuruvi",
+    "environment": "corridor"
+  },
+  "supplier": {
+    "name": "Fornecedor Beta Sistemas de Segurança Ltda.",
+    "cnpj": "23.456.789/0001-01"
+  },
+  "requested_scope": "Câmera do corridor com imagem desfocada: limpeza e ajuste de foco.",
+  "quoted_value": 1865.0,
+  "dates": {
+    "opening": "2026-11-06",
+    "supplier_submission": "2026-11-09",
+    "manager_review": "2026-11-10"
+  },
+  "status": "forwarded_to_backoffice",
+  "origin": "dataset",
+  "dataset": "validation",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "attachments": [
+    {
+      "file_name": "Orcamento_BET-V0068.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 7675,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-09"
+    },
+    {
+      "file_name": "IMG_20261107_085334.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 185486,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-09"
+    },
+    {
+      "file_name": "IMG_20261108_095157.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 224168,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-09"
+    },
+    {
+      "file_name": "IMG_20261108_103821.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 179499,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-09"
+    }
+  ]
+}

@@ -1,0 +1,87 @@
+{
+  "ticket_id": "01000025",
+  "dataset": "validation",
+  "service_template": "outlets",
+  "defects": [
+    "price",
+    "spreadsheet"
+  ],
+  "workstream": "SETA",
+  "moment": "execution",
+  "maintenance_type": "corrective",
+  "category": "electrical",
+  "symptom": "electrical_failure",
+  "before_applicable": true,
+  "quoted_value": 197.66,
+  "amount_at_issue": 27.78,
+  "items": [
+    {
+      "n": 1,
+      "description": "Tomada 2P+T 10A com placa",
+      "unit": "un",
+      "quantity": 3,
+      "unit_value": 37.26,
+      "total_value": 111.78,
+      "classification": "compliant",
+      "lpu_code": "ELE-004",
+      "reference_price": 28.0,
+      "findings": [
+        "price_above_reference"
+      ],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    },
+    {
+      "n": 2,
+      "description": "Mão de obra substituição de tomada",
+      "unit": "un",
+      "quantity": 3,
+      "unit_value": 35.0,
+      "total_value": 105.0,
+      "classification": "compliant",
+      "lpu_code": "ELE-005",
+      "reference_price": 35.0,
+      "findings": [],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    }
+  ],
+  "attachments": {
+    "Orcamento_ETA-V0025.xlsx": {
+      "category": "quote_doc",
+      "moment": "undetermined",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Orçamento"
+    },
+    "IMG_20261024_081842.jpg": {
+      "category": "room_before_photo",
+      "moment": "before",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Tomada com marcas de queima"
+    },
+    "IMG_20261028_092523.jpg": {
+      "category": "room_after_photo",
+      "moment": "after",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Tomadas novas instaladas"
+    }
+  },
+  "checklist_ok": true,
+  "missing": [],
+  "findings": [
+    "price_above_reference",
+    "spreadsheet_mismatch"
+  ],
+  "optional": [],
+  "grades": {
+    "scope": 100,
+    "quote": 70,
+    "photos": 100
+  },
+  "score": 88,
+  "recommendation": "approve",
+  "confidence": "high"
+}

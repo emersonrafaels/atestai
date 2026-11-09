@@ -1,0 +1,60 @@
+{
+  "ticket_id": "00538890",
+  "workstream": "SISR",
+  "maintenance_type": "corrective",
+  "moment": "execution",
+  "category": "cctv",
+  "symptom": "no_image",
+  "branch": {
+    "code": "0590",
+    "name": "Ag. Santo Amaro",
+    "environment": "parking"
+  },
+  "supplier": {
+    "name": "Fornecedor Beta Sistemas de Segurança Ltda.",
+    "cnpj": "23.456.789/0001-01"
+  },
+  "requested_scope": "Câmera 07 do estacionamento sem imagem no gravador desde 25/09. Diagnosticar e corrigir.",
+  "quoted_value": 640.0,
+  "dates": {
+    "opening": "2026-09-25",
+    "supplier_submission": "2026-10-09",
+    "manager_review": "2026-10-10"
+  },
+  "status": "forwarded_to_backoffice",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "dataset": "demo",
+  "attachments": [
+    {
+      "file_name": "Orcamento_BETA-OS-7840.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 7702,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-09"
+    },
+    {
+      "file_name": "IMG_20261008_160240.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 216730,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-09"
+    },
+    {
+      "file_name": "IMG_20261008_165502.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 188214,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-09"
+    },
+    {
+      "file_name": "IMG_20261008_171015.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 222794,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-09"
+    }
+  ]
+}

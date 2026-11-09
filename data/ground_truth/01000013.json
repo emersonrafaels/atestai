@@ -1,0 +1,100 @@
+{
+  "ticket_id": "01000013",
+  "dataset": "validation",
+  "service_template": "lamps",
+  "defects": [],
+  "workstream": "SETA",
+  "moment": "execution",
+  "maintenance_type": "corrective",
+  "category": "lighting",
+  "symptom": "poor_lighting",
+  "before_applicable": true,
+  "quoted_value": 329.0,
+  "amount_at_issue": 0.0,
+  "items": [
+    {
+      "n": 1,
+      "description": "Lâmpada LED tubular T8 18W",
+      "unit": "un",
+      "quantity": 7,
+      "unit_value": 22.0,
+      "total_value": 154.0,
+      "classification": "compliant",
+      "lpu_code": "ELE-008",
+      "reference_price": 22.0,
+      "findings": [],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    },
+    {
+      "n": 2,
+      "description": "Mão de obra troca de lâmpada",
+      "unit": "un",
+      "quantity": 7,
+      "unit_value": 25.0,
+      "total_value": 175.0,
+      "classification": "compliant",
+      "lpu_code": "ELE-009",
+      "reference_price": 25.0,
+      "findings": [],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    }
+  ],
+  "attachments": {
+    "Orcamento_GAM-V0013.xlsx": {
+      "category": "quote_doc",
+      "moment": "undetermined",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Orçamento"
+    },
+    "IMG_20261020_082859.jpg": {
+      "category": "room_before_photo",
+      "moment": "before",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Ambiente com lâmpadas apagadas"
+    },
+    "IMG_20261022_094149.jpg": {
+      "category": "room_after_photo",
+      "moment": "after",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Teto com lâmpadas acesas"
+    },
+    "IMG_20261022_103725.jpg": {
+      "category": "label_photo",
+      "moment": "after",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Etiqueta do produto instalado"
+    },
+    "IMG_20261022_113242.jpg": {
+      "category": "removed_items_photo",
+      "moment": "after",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Lâmpadas antigas retiradas"
+    },
+    "IMG_20261023_190500.jpg": {
+      "category": "completion_certificate_doc",
+      "moment": "after",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Termo de conclusão assinado"
+    }
+  },
+  "checklist_ok": true,
+  "missing": [],
+  "findings": [],
+  "optional": [],
+  "grades": {
+    "scope": 100,
+    "quote": 100,
+    "photos": 100
+  },
+  "score": 100,
+  "recommendation": "approve",
+  "confidence": "high"
+}

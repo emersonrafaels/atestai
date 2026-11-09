@@ -1,0 +1,53 @@
+{
+  "ticket_id": "00523310",
+  "workstream": "SETA",
+  "maintenance_type": "corrective",
+  "moment": "execution",
+  "category": "lighting",
+  "symptom": "poor_lighting",
+  "branch": {
+    "code": "0611",
+    "name": "Ag. Sul",
+    "environment": "backoffice"
+  },
+  "supplier": {
+    "name": "Fornecedor Gama Instalações Elétricas Ltda.",
+    "cnpj": "34.567.890/0001-12"
+  },
+  "requested_scope": "Troca de 12 luminárias do backoffice por modelo LED padrão da agência.",
+  "quoted_value": 5940.0,
+  "dates": {
+    "opening": "2026-09-24",
+    "supplier_submission": "2026-10-01",
+    "manager_review": "2026-10-02"
+  },
+  "status": "forwarded_to_backoffice",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "dataset": "demo",
+  "attachments": [
+    {
+      "file_name": "Orcamento_GAMA-1029.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 7694,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-01"
+    },
+    {
+      "file_name": "IMG_20260925_090412.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 179167,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-01"
+    },
+    {
+      "file_name": "IMG_20260930_171133.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 197944,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-01"
+    }
+  ]
+}

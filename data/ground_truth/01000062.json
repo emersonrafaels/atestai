@@ -1,0 +1,122 @@
+{
+  "ticket_id": "01000062",
+  "dataset": "validation",
+  "service_template": "infiltration",
+  "defects": [
+    "does_not_match",
+    "out_of_scope"
+  ],
+  "workstream": "SETA",
+  "moment": "execution",
+  "maintenance_type": "corrective",
+  "category": "waterproofing",
+  "symptom": "moisture_infiltration",
+  "before_applicable": true,
+  "quoted_value": 1796.0,
+  "amount_at_issue": 1400.0,
+  "items": [
+    {
+      "n": 1,
+      "description": "Impermeabilização com manta líquida",
+      "unit": "m²",
+      "quantity": 2,
+      "unit_value": 68.0,
+      "total_value": 136.0,
+      "classification": "compliant",
+      "lpu_code": "IMP-001",
+      "reference_price": 68.0,
+      "findings": [],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    },
+    {
+      "n": 2,
+      "description": "Recomposição de forro de gesso",
+      "unit": "m²",
+      "quantity": 2,
+      "unit_value": 95.0,
+      "total_value": 190.0,
+      "classification": "compliant",
+      "lpu_code": "IMP-002",
+      "reference_price": 95.0,
+      "findings": [],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    },
+    {
+      "n": 3,
+      "description": "Pintura de forro em látex",
+      "unit": "m²",
+      "quantity": 2,
+      "unit_value": 35.0,
+      "total_value": 70.0,
+      "classification": "compliant",
+      "lpu_code": "PIN-002",
+      "reference_price": 35.0,
+      "findings": [],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    },
+    {
+      "n": 4,
+      "description": "Pintura de paredes do salão",
+      "unit": "m²",
+      "quantity": 40,
+      "unit_value": 35.0,
+      "total_value": 1400.0,
+      "classification": "out_of_scope",
+      "lpu_code": "PIN-001",
+      "reference_price": 35.0,
+      "findings": [
+        "out_of_scope_item"
+      ],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    }
+  ],
+  "attachments": {
+    "Orcamento_DEL-V0062.xlsx": {
+      "category": "quote_doc",
+      "moment": "undetermined",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Orçamento"
+    },
+    "IMG_20261105_084058.jpg": {
+      "category": "room_before_photo",
+      "moment": "before",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Forro com mancha de infiltração e mofo"
+    },
+    "IMG_20261106_091532.jpg": {
+      "category": "room_after_photo",
+      "moment": "after",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Forro recomposto e pintado"
+    },
+    "IMG_20261107_175200.jpg": {
+      "category": "room_after_photo",
+      "moment": "after",
+      "matches_scope": false,
+      "readable": true,
+      "description": "Fachada externa da agência"
+    }
+  },
+  "checklist_ok": true,
+  "missing": [],
+  "findings": [
+    "out_of_scope_item",
+    "photo_mismatch"
+  ],
+  "optional": [],
+  "grades": {
+    "scope": 100,
+    "quote": 65,
+    "photos": 65
+  },
+  "score": 72,
+  "recommendation": "approve_with_caveats",
+  "confidence": "high"
+}

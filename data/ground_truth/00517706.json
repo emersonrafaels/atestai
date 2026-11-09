@@ -1,0 +1,139 @@
+{
+  "ticket_id": "00517706",
+  "workstream": "SISR",
+  "moment": "execution",
+  "maintenance_type": "corrective",
+  "category": "cctv",
+  "symptom": "degraded_image",
+  "before_applicable": true,
+  "dataset": "demo",
+  "quoted_value": 4260.0,
+  "items": [
+    {
+      "n": 1,
+      "description": "Visita técnica e deslocamento",
+      "unit": "vb",
+      "quantity": 1,
+      "unit_value": 280.0,
+      "total_value": 280.0,
+      "classification": "compliant",
+      "lpu_code": "SIS-001",
+      "reference_price": 280.0,
+      "findings": [],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    },
+    {
+      "n": 2,
+      "description": "Limpeza e ajuste de foco da câmera 04",
+      "unit": "un",
+      "quantity": 1,
+      "unit_value": 180.0,
+      "total_value": 180.0,
+      "classification": "compliant",
+      "lpu_code": "CFTV-001",
+      "reference_price": 180.0,
+      "findings": [],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    },
+    {
+      "n": 3,
+      "description": "Câmera IP bullet nova 4 MP",
+      "unit": "un",
+      "quantity": 1,
+      "unit_value": 2450.0,
+      "total_value": 2450.0,
+      "classification": "to_justify",
+      "lpu_code": "CFTV-002",
+      "reference_price": 2300.0,
+      "findings": [
+        "unjustified_replacement"
+      ],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    },
+    {
+      "n": 4,
+      "description": "Cabeamento UTP cat6 novo",
+      "unit": "m",
+      "quantity": 30,
+      "unit_value": 45.0,
+      "total_value": 1350.0,
+      "classification": "out_of_scope",
+      "lpu_code": "CFTV-003",
+      "reference_price": 45.0,
+      "findings": [
+        "out_of_scope_item"
+      ],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    }
+  ],
+  "attachments": {
+    "Orcamento_BETA-OS-7781.xlsx": {
+      "category": "quote_doc",
+      "moment": "undetermined",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Orçamento (planilha Excel padrão)"
+    },
+    "IMG_20260930_142210.jpg": {
+      "category": "cctv_screen_photo",
+      "moment": "before",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Imagem da câmera 04 desfocada, autoatendimento"
+    },
+    "WhatsApp Image 2026-09-30 at 15.02.11.jpeg": {
+      "category": "equipment_photo",
+      "moment": "undetermined",
+      "matches_scope": false,
+      "readable": true,
+      "description": "Câmera dome no forro (foto de outro chamado)",
+      "reused_from": "00498812/IMG_20260614_093822.jpg"
+    },
+    "IMG_20260930_150318.jpg": {
+      "category": "cctv_screen_photo",
+      "moment": "after",
+      "matches_scope": false,
+      "readable": true,
+      "description": "Imagem de câmera de corredor (foto de outro chamado)",
+      "reused_from": "00498812/IMG_20260614_094103.jpg"
+    },
+    "IMG_20260930_143940.jpg": {
+      "category": "equipment_photo",
+      "moment": "undetermined",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Rack com NVR e switch, sem falha aparente"
+    },
+    "IMG_20260930_160512.jpg": {
+      "category": "equipment_photo",
+      "moment": "undetermined",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Câmera bullet desmontada na bancada"
+    }
+  },
+  "checklist_ok": true,
+  "missing": [],
+  "findings": [
+    "unjustified_replacement",
+    "out_of_scope_item",
+    "reused_photo",
+    "missing_after_photo",
+    "photo_dated_before"
+  ],
+  "optional": [
+    "photo_mismatch"
+  ],
+  "grades": {
+    "scope": 100,
+    "quote": 30,
+    "photos": 0
+  },
+  "score": 32,
+  "recommendation": "return_locked",
+  "confidence": "high"
+}

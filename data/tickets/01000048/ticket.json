@@ -1,0 +1,61 @@
+{
+  "ticket_id": "01000048",
+  "workstream": "SISR",
+  "maintenance_type": "corrective",
+  "moment": "execution",
+  "category": "cctv",
+  "symptom": "degraded_image",
+  "branch": {
+    "code": "0886",
+    "name": "Ag. Perdizes",
+    "environment": "parking"
+  },
+  "supplier": {
+    "name": "Fornecedor Beta Sistemas de Segurança Ltda.",
+    "cnpj": "23.456.789/0001-01"
+  },
+  "requested_scope": "Câmera do parking com imagem desfocada: limpeza e ajuste de foco.",
+  "quoted_value": 460.0,
+  "dates": {
+    "opening": "2026-10-30",
+    "supplier_submission": "2026-11-02",
+    "manager_review": "2026-11-03"
+  },
+  "status": "forwarded_to_backoffice",
+  "origin": "dataset",
+  "dataset": "validation",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "attachments": [
+    {
+      "file_name": "Orcamento_BET-V0048.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 7592,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-02"
+    },
+    {
+      "file_name": "IMG_20261031_084514.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 181572,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-02"
+    },
+    {
+      "file_name": "IMG_20261101_095913.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 179979,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-02"
+    },
+    {
+      "file_name": "IMG_20261101_102044.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 185874,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-02"
+    }
+  ]
+}

@@ -1,0 +1,67 @@
+{
+  "ticket_id": "00537215",
+  "workstream": "SISR",
+  "maintenance_type": "corrective",
+  "moment": "execution",
+  "category": "alarm",
+  "symptom": "false_alarm",
+  "branch": {
+    "code": "0266",
+    "name": "Ag. Tatuapé",
+    "environment": "treasury"
+  },
+  "supplier": {
+    "name": "Fornecedor Kappa Alarmes Ltda.",
+    "cnpj": "01.234.567/0001-89"
+  },
+  "requested_scope": "Sensor IVP da tesouraria com disparos falsos recorrentes: substituir o sensor e testar a zona na central.",
+  "quoted_value": 565.0,
+  "dates": {
+    "opening": "2026-10-04",
+    "supplier_submission": "2026-10-08",
+    "manager_review": "2026-10-09"
+  },
+  "status": "forwarded_to_backoffice",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "dataset": "demo",
+  "attachments": [
+    {
+      "file_name": "Orcamento_KP-5521.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 7667,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-08"
+    },
+    {
+      "file_name": "IMG_20261007_090110.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 181480,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-08"
+    },
+    {
+      "file_name": "IMG_20261007_093022.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 169840,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-08"
+    },
+    {
+      "file_name": "IMG_20261007_093540.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 184269,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-08"
+    },
+    {
+      "file_name": "IMG_20261007_094512.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 196914,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-08"
+    }
+  ]
+}

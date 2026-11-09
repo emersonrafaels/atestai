@@ -1,0 +1,61 @@
+{
+  "ticket_id": "01000054",
+  "workstream": "SETA",
+  "maintenance_type": "preventive",
+  "moment": "execution",
+  "category": "air_conditioning",
+  "symptom": "preventive_maintenance",
+  "branch": {
+    "code": "0102",
+    "name": "Ag. Barra Funda",
+    "environment": "salão de atendimento"
+  },
+  "supplier": {
+    "name": "Fornecedor Épsilon Climatização Ltda.",
+    "cnpj": "56.789.012/0001-34"
+  },
+  "requested_scope": "Manutenção preventiva (PMOC) dos 2 aparelhos split do salão de atendimento: limpeza, higienização e verificação.",
+  "quoted_value": 570.0,
+  "dates": {
+    "opening": "2026-11-01",
+    "supplier_submission": "2026-11-05",
+    "manager_review": "2026-11-06"
+  },
+  "status": "forwarded_to_backoffice",
+  "origin": "dataset",
+  "dataset": "validation",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "attachments": [
+    {
+      "file_name": "Orcamento_EPS-V0054.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 7702,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-05"
+    },
+    {
+      "file_name": "IMG_20261102_081053.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 204044,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-05"
+    },
+    {
+      "file_name": "IMG_20261104_094059.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 186861,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-05"
+    },
+    {
+      "file_name": "IMG_20261104_105254.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 245388,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-05"
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+.cache/
+saida/
+__pycache__/
+.env
+config/.secrets.toml
+# biblioteca bruta de fotos (reais ou geradas por IA); os chamados gerados a partir dela ficam em data/tickets/
+data/real_photos*/
+.pytest_cache/
+.ruff_cache/
+painel/node_modules/

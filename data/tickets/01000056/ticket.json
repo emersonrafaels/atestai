@@ -1,0 +1,47 @@
+{
+  "ticket_id": "01000056",
+  "workstream": "SETA",
+  "maintenance_type": "corrective",
+  "moment": "quote",
+  "category": "plumbing",
+  "symptom": "leak",
+  "branch": {
+    "code": "0102",
+    "name": "Ag. Barra Funda",
+    "environment": "kitchen"
+  },
+  "supplier": {
+    "name": "Fornecedor Theta Hidráulica Ltda.",
+    "cnpj": "89.012.345/0001-67"
+  },
+  "requested_scope": "Vazamento no sifão da pia da kitchen. Trocar o sifão.",
+  "quoted_value": 358.0,
+  "dates": {
+    "opening": "2026-11-02",
+    "supplier_submission": "2026-11-07",
+    "manager_review": "2026-11-08"
+  },
+  "status": "forwarded_to_backoffice",
+  "origin": "dataset",
+  "dataset": "validation",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "attachments": [
+    {
+      "file_name": "Orcamento_THE-V0056.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 7609,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-07"
+    },
+    {
+      "file_name": "IMG_20261103_083131.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 179814,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-07"
+    }
+  ]
+}

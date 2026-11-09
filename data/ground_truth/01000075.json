@@ -1,0 +1,85 @@
+{
+  "ticket_id": "01000075",
+  "dataset": "validation",
+  "service_template": "outlets",
+  "defects": [
+    "quantity"
+  ],
+  "workstream": "SETA",
+  "moment": "execution",
+  "maintenance_type": "corrective",
+  "category": "electrical",
+  "symptom": "electrical_failure",
+  "before_applicable": true,
+  "quoted_value": 553.0,
+  "amount_at_issue": 112.0,
+  "items": [
+    {
+      "n": 1,
+      "description": "Tomada 2P+T 10A com placa",
+      "unit": "un",
+      "quantity": 11,
+      "unit_value": 28.0,
+      "total_value": 308.0,
+      "classification": "compliant",
+      "lpu_code": "ELE-004",
+      "reference_price": 28.0,
+      "findings": [
+        "quantity_above_expected"
+      ],
+      "optional_findings": [],
+      "expected_quantity_max": 7
+    },
+    {
+      "n": 2,
+      "description": "Mão de obra substituição de tomada",
+      "unit": "un",
+      "quantity": 7,
+      "unit_value": 35.0,
+      "total_value": 245.0,
+      "classification": "compliant",
+      "lpu_code": "ELE-005",
+      "reference_price": 35.0,
+      "findings": [],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    }
+  ],
+  "attachments": {
+    "Orcamento_ETA-V0075.xlsx": {
+      "category": "quote_doc",
+      "moment": "undetermined",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Orçamento"
+    },
+    "IMG_20261109_083244.jpg": {
+      "category": "room_before_photo",
+      "moment": "before",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Tomada com marcas de queima"
+    },
+    "IMG_20261109_092455.jpg": {
+      "category": "room_after_photo",
+      "moment": "after",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Tomadas novas instaladas"
+    }
+  },
+  "checklist_ok": true,
+  "missing": [],
+  "findings": [
+    "quantity_above_expected"
+  ],
+  "optional": [],
+  "grades": {
+    "scope": 100,
+    "quote": 85,
+    "photos": 100
+  },
+  "score": 94,
+  "recommendation": "approve",
+  "confidence": "high"
+}

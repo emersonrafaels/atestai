@@ -1,0 +1,53 @@
+{
+  "ticket_id": "00498812",
+  "workstream": "SISR",
+  "maintenance_type": "corrective",
+  "moment": "execution",
+  "category": "cctv",
+  "symptom": "no_image",
+  "branch": {
+    "code": "0874",
+    "name": "Ag. Oeste",
+    "environment": "corridor"
+  },
+  "supplier": {
+    "name": "Fornecedor Beta Sistemas de Segurança Ltda.",
+    "cnpj": "23.456.789/0001-01"
+  },
+  "requested_scope": "Câmera 02 do corredor sem imagem. Verificar e corrigir.",
+  "quoted_value": null,
+  "dates": {
+    "opening": "2026-06-08",
+    "supplier_submission": "2026-06-14",
+    "manager_review": "2026-06-15"
+  },
+  "status": "approved",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "dataset": "demo",
+  "attachments": [
+    {
+      "file_name": "IMG_20260614_093822.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 166678,
+      "sent_by": "supplier",
+      "data_upload": "2026-06-14"
+    },
+    {
+      "file_name": "IMG_20260614_094103.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 210351,
+      "sent_by": "supplier",
+      "data_upload": "2026-06-14"
+    },
+    {
+      "file_name": "IMG_20260614_094530.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 208898,
+      "sent_by": "supplier",
+      "data_upload": "2026-06-14"
+    }
+  ]
+}

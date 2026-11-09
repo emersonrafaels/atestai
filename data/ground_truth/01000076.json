@@ -1,0 +1,136 @@
+{
+  "ticket_id": "01000076",
+  "dataset": "validation",
+  "service_template": "sink",
+  "defects": [
+    "out_of_scope",
+    "inconsistent",
+    "reused",
+    "duplicate"
+  ],
+  "workstream": "SETA",
+  "moment": "quote",
+  "maintenance_type": "corrective",
+  "category": "plumbing",
+  "symptom": "false_alarm",
+  "before_applicable": true,
+  "quoted_value": 548.0,
+  "amount_at_issue": 275.0,
+  "items": [
+    {
+      "n": 1,
+      "description": "Visita técnica",
+      "unit": "vb",
+      "quantity": 1,
+      "unit_value": 150.0,
+      "total_value": 150.0,
+      "classification": "compliant",
+      "lpu_code": "GER-001",
+      "reference_price": 150.0,
+      "findings": [],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    },
+    {
+      "n": 2,
+      "description": "Sifão PVC para pia",
+      "unit": "un",
+      "quantity": 1,
+      "unit_value": 38.0,
+      "total_value": 38.0,
+      "classification": "compliant",
+      "lpu_code": "HID-001",
+      "reference_price": 38.0,
+      "findings": [],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    },
+    {
+      "n": 3,
+      "description": "Mão de obra hidráulica",
+      "unit": "h",
+      "quantity": 1,
+      "unit_value": 85.0,
+      "total_value": 85.0,
+      "classification": "compliant",
+      "lpu_code": "HID-003",
+      "reference_price": 85.0,
+      "findings": [],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    },
+    {
+      "n": 4,
+      "description": "Registro de pressão 3/4",
+      "unit": "un",
+      "quantity": 2,
+      "unit_value": 95.0,
+      "total_value": 190.0,
+      "classification": "out_of_scope",
+      "lpu_code": "HID-002",
+      "reference_price": 95.0,
+      "findings": [
+        "out_of_scope_item"
+      ],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    },
+    {
+      "n": 5,
+      "description": "Mão de obra hidráulica",
+      "unit": "h",
+      "quantity": 1,
+      "unit_value": 85.0,
+      "total_value": 85.0,
+      "classification": "compliant",
+      "lpu_code": "HID-003",
+      "reference_price": 85.0,
+      "findings": [
+        "duplicate_item"
+      ],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    }
+  ],
+  "attachments": {
+    "Orcamento_THE-V0076.xlsx": {
+      "category": "quote_doc",
+      "moment": "undetermined",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Orçamento"
+    },
+    "IMG_20261110_085646.jpg": {
+      "category": "room_before_photo",
+      "moment": "before",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Sifão vazando sob a pia"
+    },
+    "WhatsApp Image 2026-11-15 at 15.12.23.jpeg": {
+      "category": "room_before_photo",
+      "moment": "before",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Sifão vazando sob a pia",
+      "reused_from": "01000066/IMG_20261106_083032.jpg"
+    }
+  },
+  "checklist_ok": true,
+  "missing": [],
+  "findings": [
+    "duplicate_item",
+    "inconsistent_scope",
+    "out_of_scope_item",
+    "reused_photo"
+  ],
+  "optional": [],
+  "grades": {
+    "scope": 85,
+    "quote": 30,
+    "photos": 40
+  },
+  "score": 45,
+  "recommendation": "return_locked",
+  "confidence": "medium"
+}

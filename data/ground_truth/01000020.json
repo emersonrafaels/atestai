@@ -1,0 +1,109 @@
+{
+  "ticket_id": "01000020",
+  "dataset": "validation",
+  "service_template": "preventive",
+  "defects": [
+    "quantity",
+    "price"
+  ],
+  "workstream": "SISR",
+  "moment": "execution",
+  "maintenance_type": "preventive",
+  "category": "cctv_and_alarm",
+  "symptom": "preventive_maintenance",
+  "before_applicable": false,
+  "quoted_value": 992.08,
+  "amount_at_issue": 222.6,
+  "items": [
+    {
+      "n": 1,
+      "description": "Visita técnica e deslocamento",
+      "unit": "vb",
+      "quantity": 1,
+      "unit_value": 280.0,
+      "total_value": 280.0,
+      "classification": "compliant",
+      "lpu_code": "SIS-001",
+      "reference_price": 280.0,
+      "findings": [],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    },
+    {
+      "n": 2,
+      "description": "Teste preventivo de câmera",
+      "unit": "un",
+      "quantity": 12,
+      "unit_value": 42.84,
+      "total_value": 514.08,
+      "classification": "compliant",
+      "lpu_code": "CFTV-007",
+      "reference_price": 35.0,
+      "findings": [
+        "quantity_above_expected",
+        "price_above_reference"
+      ],
+      "optional_findings": [],
+      "expected_quantity_max": 9
+    },
+    {
+      "n": 3,
+      "description": "Teste preventivo de sensor",
+      "unit": "un",
+      "quantity": 9,
+      "unit_value": 22.0,
+      "total_value": 198.0,
+      "classification": "compliant",
+      "lpu_code": "ALA-001",
+      "reference_price": 22.0,
+      "findings": [],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    }
+  ],
+  "attachments": {
+    "Orcamento_IOT-V0020.xlsx": {
+      "category": "quote_doc",
+      "moment": "undetermined",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Orçamento"
+    },
+    "IMG_20261024_081246.jpg": {
+      "category": "cctv_screen_photo",
+      "moment": "after",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Monitor do NVR com as câmeras funcionando"
+    },
+    "IMG_20261024_092350.jpg": {
+      "category": "alarm_panel_photo",
+      "moment": "after",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Central de alarme pronta"
+    },
+    "IMG_20261025_190300.jpg": {
+      "category": "technical_report_doc",
+      "moment": "after",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Relatório de preventiva"
+    }
+  },
+  "checklist_ok": true,
+  "missing": [],
+  "findings": [
+    "price_above_reference",
+    "quantity_above_expected"
+  ],
+  "optional": [],
+  "grades": {
+    "scope": 100,
+    "quote": 70,
+    "photos": 100
+  },
+  "score": 88,
+  "recommendation": "approve",
+  "confidence": "high"
+}

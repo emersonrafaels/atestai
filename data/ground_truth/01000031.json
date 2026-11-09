@@ -1,0 +1,79 @@
+{
+  "ticket_id": "01000031",
+  "dataset": "validation",
+  "service_template": "painting",
+  "defects": [],
+  "workstream": "SETA",
+  "moment": "execution",
+  "maintenance_type": "corrective",
+  "category": "painting",
+  "symptom": "finish_wear",
+  "before_applicable": true,
+  "quoted_value": 6057.9,
+  "amount_at_issue": 0.0,
+  "items": [
+    {
+      "n": 1,
+      "description": "Pintura látex acrílico em paredes, 2 demãos",
+      "unit": "m²",
+      "quantity": 159,
+      "unit_value": 35.0,
+      "total_value": 5565.0,
+      "classification": "compliant",
+      "lpu_code": "PIN-001",
+      "reference_price": 35.0,
+      "findings": [],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    },
+    {
+      "n": 2,
+      "description": "Massa corrida para correção de paredes",
+      "unit": "m²",
+      "quantity": 159,
+      "unit_value": 3.1,
+      "total_value": 492.9,
+      "classification": "compliant",
+      "lpu_code": "PIN-004",
+      "reference_price": 3.1,
+      "findings": [],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    }
+  ],
+  "attachments": {
+    "Orcamento_ALF-V0031.xlsx": {
+      "category": "quote_doc",
+      "moment": "undetermined",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Orçamento"
+    },
+    "IMG_20261026_085558.jpg": {
+      "category": "room_before_photo",
+      "moment": "before",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Paredes manchadas e descascando"
+    },
+    "IMG_20261027_095410.jpg": {
+      "category": "room_after_photo",
+      "moment": "after",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Ambiente com paredes pintadas"
+    }
+  },
+  "checklist_ok": true,
+  "missing": [],
+  "findings": [],
+  "optional": [],
+  "grades": {
+    "scope": 100,
+    "quote": 100,
+    "photos": 100
+  },
+  "score": 100,
+  "recommendation": "approve",
+  "confidence": "high"
+}

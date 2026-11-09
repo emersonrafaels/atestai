@@ -1,0 +1,61 @@
+{
+  "ticket_id": "01000062",
+  "workstream": "SETA",
+  "maintenance_type": "corrective",
+  "moment": "execution",
+  "category": "waterproofing",
+  "symptom": "moisture_infiltration",
+  "branch": {
+    "code": "0661",
+    "name": "Ag. Saúde",
+    "environment": "kitchen"
+  },
+  "supplier": {
+    "name": "Fornecedor Delta Impermeabilizações Ltda.",
+    "cnpj": "45.678.901/0001-23"
+  },
+  "requested_scope": "Infiltração no forro do kitchen: tratar a origem e recompor o forro de gesso (aprox. 2 m²).",
+  "quoted_value": 1796.0,
+  "dates": {
+    "opening": "2026-11-04",
+    "supplier_submission": "2026-11-07",
+    "manager_review": "2026-11-08"
+  },
+  "status": "forwarded_to_backoffice",
+  "origin": "dataset",
+  "dataset": "validation",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "attachments": [
+    {
+      "file_name": "Orcamento_DEL-V0062.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 7726,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-07"
+    },
+    {
+      "file_name": "IMG_20261105_084058.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 183561,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-07"
+    },
+    {
+      "file_name": "IMG_20261106_091532.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 149047,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-07"
+    },
+    {
+      "file_name": "IMG_20261107_175200.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 184053,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-07"
+    }
+  ]
+}

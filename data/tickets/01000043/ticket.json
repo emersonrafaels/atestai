@@ -1,0 +1,75 @@
+{
+  "ticket_id": "01000043",
+  "workstream": "SETA",
+  "maintenance_type": "corrective",
+  "moment": "execution",
+  "category": "lighting",
+  "symptom": "false_alarm",
+  "branch": {
+    "code": "1232",
+    "name": "Ag. Santana",
+    "environment": "backoffice"
+  },
+  "supplier": {
+    "name": "Fornecedor Gama Instalações Elétricas Ltda.",
+    "cnpj": "34.567.890/0001-12"
+  },
+  "requested_scope": "Trocar as 8 lâmpadas tubulares queimadas do backoffice.",
+  "quoted_value": 552.0,
+  "dates": {
+    "opening": "2026-10-29",
+    "supplier_submission": "2026-10-31",
+    "manager_review": "2026-11-01"
+  },
+  "status": "forwarded_to_backoffice",
+  "origin": "dataset",
+  "dataset": "validation",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "attachments": [
+    {
+      "file_name": "Orcamento_GAM-V0043.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 7623,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-31"
+    },
+    {
+      "file_name": "IMG_20261030_085524.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 187801,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-31"
+    },
+    {
+      "file_name": "IMG_20261030_093812.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 135039,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-31"
+    },
+    {
+      "file_name": "IMG_20261030_104611.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 184460,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-31"
+    },
+    {
+      "file_name": "IMG_20261030_112827.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 203949,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-31"
+    },
+    {
+      "file_name": "IMG_20261031_190500.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 189313,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-31"
+    }
+  ]
+}

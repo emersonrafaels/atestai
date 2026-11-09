@@ -1,0 +1,61 @@
+{
+  "ticket_id": "01000044",
+  "workstream": "SETA",
+  "maintenance_type": "preventive",
+  "moment": "execution",
+  "category": "air_conditioning",
+  "symptom": "preventive_maintenance",
+  "branch": {
+    "code": "1454",
+    "name": "Ag. Jabaquara",
+    "environment": "salão de atendimento"
+  },
+  "supplier": {
+    "name": "Fornecedor Épsilon Climatização Ltda.",
+    "cnpj": "56.789.012/0001-34"
+  },
+  "requested_scope": "Verificar salão de atendimento. Urgente.",
+  "quoted_value": 1710.0,
+  "dates": {
+    "opening": "2026-10-29",
+    "supplier_submission": "2026-11-01",
+    "manager_review": "2026-11-02"
+  },
+  "status": "forwarded_to_backoffice",
+  "origin": "dataset",
+  "dataset": "validation",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "attachments": [
+    {
+      "file_name": "Orcamento_EPS-V0044.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 7658,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-01"
+    },
+    {
+      "file_name": "IMG_20261030_084335.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 232155,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-01"
+    },
+    {
+      "file_name": "IMG_20261031_093645.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 162048,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-01"
+    },
+    {
+      "file_name": "IMG_20261031_103554.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 205713,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-01"
+    }
+  ]
+}

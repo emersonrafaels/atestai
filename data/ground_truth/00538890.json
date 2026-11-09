@@ -1,0 +1,118 @@
+{
+  "ticket_id": "00538890",
+  "workstream": "SISR",
+  "moment": "execution",
+  "maintenance_type": "corrective",
+  "category": "cctv",
+  "symptom": "no_image",
+  "before_applicable": true,
+  "dataset": "demo",
+  "quoted_value": 640.0,
+  "items": [
+    {
+      "n": 1,
+      "description": "Visita técnica e deslocamento",
+      "unit": "vb",
+      "quantity": 1,
+      "unit_value": 280.0,
+      "total_value": 280.0,
+      "classification": "compliant",
+      "lpu_code": "SIS-001",
+      "reference_price": 280.0,
+      "findings": [],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    },
+    {
+      "n": 2,
+      "description": "Fonte 12V 5A",
+      "unit": "un",
+      "quantity": 1,
+      "unit_value": 160.0,
+      "total_value": 160.0,
+      "classification": "compliant",
+      "lpu_code": "CFTV-004",
+      "reference_price": 160.0,
+      "findings": [],
+      "optional_findings": [
+        "unjustified_replacement"
+      ],
+      "expected_quantity_max": null
+    },
+    {
+      "n": 3,
+      "description": "Mão de obra substituição de fonte",
+      "unit": "un",
+      "quantity": 1,
+      "unit_value": 120.0,
+      "total_value": 120.0,
+      "classification": "compliant",
+      "lpu_code": "CFTV-006",
+      "reference_price": 120.0,
+      "findings": [],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    },
+    {
+      "n": 4,
+      "description": "Conector balun e reconexão",
+      "unit": "un",
+      "quantity": 2,
+      "unit_value": 40.0,
+      "total_value": 80.0,
+      "classification": "compliant",
+      "lpu_code": "CFTV-005",
+      "reference_price": 40.0,
+      "findings": [],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    }
+  ],
+  "attachments": {
+    "Orcamento_BETA-OS-7840.xlsx": {
+      "category": "quote_doc",
+      "moment": "undetermined",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Orçamento (planilha Excel padrão)"
+    },
+    "IMG_20261008_160240.jpg": {
+      "category": "cctv_screen_photo",
+      "moment": "before",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Monitor com a CAM 07 'SEM SINAL'"
+    },
+    "IMG_20261008_165502.jpg": {
+      "category": "equipment_photo",
+      "moment": "after",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Fonte 12 V nova na caixa de passagem"
+    },
+    "IMG_20261008_171015.jpg": {
+      "category": "other",
+      "moment": "undetermined",
+      "matches_scope": null,
+      "readable": false,
+      "description": "Foto escura e tremida, ilegível"
+    }
+  },
+  "checklist_ok": true,
+  "missing": [],
+  "findings": [
+    "unreadable_photo",
+    "missing_after_photo"
+  ],
+  "optional": [
+    "unjustified_replacement"
+  ],
+  "grades": {
+    "scope": 100,
+    "quote": 100,
+    "photos": 60
+  },
+  "score": 84,
+  "recommendation": "approve_with_caveats",
+  "confidence": "medium"
+}

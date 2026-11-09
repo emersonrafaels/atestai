@@ -1,0 +1,53 @@
+{
+  "ticket_id": "00535003",
+  "workstream": "SETA",
+  "maintenance_type": "corrective",
+  "moment": "quote",
+  "category": "plumbing",
+  "symptom": "leak",
+  "branch": {
+    "code": "0380",
+    "name": "Ag. Moema",
+    "environment": "kitchen"
+  },
+  "supplier": {
+    "name": "Fornecedor Theta Hidráulica Ltda.",
+    "cnpj": "89.012.345/0001-67"
+  },
+  "requested_scope": "Vazamento no sifão da pia da copa, com água acumulando no armário. Trocar o sifão e o registro de pressão da pia, que não fecha totalmente.",
+  "quoted_value": 420.0,
+  "dates": {
+    "opening": "2026-10-05",
+    "supplier_submission": "2026-10-07",
+    "manager_review": "2026-10-08"
+  },
+  "status": "forwarded_to_backoffice",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "dataset": "demo",
+  "attachments": [
+    {
+      "file_name": "Orcamento_TH 1187.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 7710,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-07"
+    },
+    {
+      "file_name": "IMG_20261006_090215.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 193634,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-07"
+    },
+    {
+      "file_name": "IMG_20261006_090340.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 179253,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-07"
+    }
+  ]
+}

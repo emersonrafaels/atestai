@@ -1,0 +1,75 @@
+{
+  "ticket_id": "01000013",
+  "workstream": "SETA",
+  "maintenance_type": "corrective",
+  "moment": "execution",
+  "category": "lighting",
+  "symptom": "poor_lighting",
+  "branch": {
+    "code": "1343",
+    "name": "Ag. Tucuruvi",
+    "environment": "corridor"
+  },
+  "supplier": {
+    "name": "Fornecedor Gama Instalações Elétricas Ltda.",
+    "cnpj": "34.567.890/0001-12"
+  },
+  "requested_scope": "Trocar as 7 lâmpadas tubulares queimadas do corridor.",
+  "quoted_value": 329.0,
+  "dates": {
+    "opening": "2026-10-19",
+    "supplier_submission": "2026-10-23",
+    "manager_review": "2026-10-24"
+  },
+  "status": "forwarded_to_backoffice",
+  "origin": "dataset",
+  "dataset": "validation",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "attachments": [
+    {
+      "file_name": "Orcamento_GAM-V0013.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 7587,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-23"
+    },
+    {
+      "file_name": "IMG_20261020_082859.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 192887,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-23"
+    },
+    {
+      "file_name": "IMG_20261022_094149.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 148471,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-23"
+    },
+    {
+      "file_name": "IMG_20261022_103725.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 213263,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-23"
+    },
+    {
+      "file_name": "IMG_20261022_113242.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 182231,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-23"
+    },
+    {
+      "file_name": "IMG_20261023_190500.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 191372,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-23"
+    }
+  ]
+}

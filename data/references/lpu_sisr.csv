@@ -1,0 +1,14 @@
+code;description;unit;reference_price
+SIS-001;Visita técnica e deslocamento (SISR);vb;280.00
+CFTV-001;Limpeza e ajuste de foco de câmera;un;180.00
+CFTV-002;Câmera IP bullet 4 MP;un;2300.00
+CFTV-003;Cabo UTP cat6 instalado;m;45.00
+CFTV-004;Fonte de alimentação 12 V 5 A;un;160.00
+CFTV-005;Conector/balun e reconexão;un;40.00
+CFTV-006;Mão de obra de substituição de fonte/conectores;un;120.00
+CFTV-007;Teste preventivo de câmera (por câmera);un;35.00
+ALA-001;Teste preventivo de sensor de alarme (por sensor);un;22.00
+ALA-002;Sensor infravermelho passivo (IVP) com fio;un;140.00
+ALA-003;Mão de obra de substituição de sensor;un;110.00
+ALA-004;Botão de pânico sem fio;un;260.00
+ALA-005;Mão de obra de instalação e programação de botão de pânico;un;150.00

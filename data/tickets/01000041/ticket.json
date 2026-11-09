@@ -1,0 +1,54 @@
+{
+  "ticket_id": "01000041",
+  "workstream": "SETA",
+  "maintenance_type": "corrective",
+  "moment": "execution",
+  "category": "painting",
+  "symptom": "finish_wear",
+  "branch": {
+    "code": "1343",
+    "name": "Ag. Tucuruvi",
+    "environment": "backoffice"
+  },
+  "supplier": {
+    "name": "Fornecedor Alfa Manutenção Predial Ltda.",
+    "cnpj": "12.345.678/0001-90"
+  },
+  "requested_scope": "Repintura das paredes do backoffice (aprox. 70 m²), cor padrão da agência.",
+  "quoted_value": 2725.1,
+  "dates": {
+    "opening": "2026-10-28",
+    "supplier_submission": "2026-11-01",
+    "manager_review": "2026-11-02"
+  },
+  "status": "forwarded_to_backoffice",
+  "origin": "dataset",
+  "dataset": "validation",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "attachments": [
+    {
+      "file_name": "Orcamento_ALF-V0041.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 7631,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-01"
+    },
+    {
+      "file_name": "IMG_20261029_084055.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 208251,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-01"
+    },
+    {
+      "file_name": "IMG_20261031_093651.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 137439,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-01"
+    }
+  ]
+}

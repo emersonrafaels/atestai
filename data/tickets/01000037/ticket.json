@@ -1,0 +1,40 @@
+{
+  "ticket_id": "01000037",
+  "workstream": "SETA",
+  "maintenance_type": "corrective",
+  "moment": "execution",
+  "category": "metalwork",
+  "symptom": "mechanical_failure",
+  "branch": {
+    "code": "0774",
+    "name": "Ag. Vila Mariana",
+    "environment": "treasury"
+  },
+  "supplier": {
+    "name": "Fornecedor Zeta Serralheria e Portas ME",
+    "cnpj": "67.890.123/0001-45"
+  },
+  "requested_scope": "Porta do treasury não fecha sozinha: trocar a mola aérea e regular.",
+  "quoted_value": 660.0,
+  "dates": {
+    "opening": "2026-10-27",
+    "supplier_submission": "2026-10-30",
+    "manager_review": "2026-10-31"
+  },
+  "status": "forwarded_to_backoffice",
+  "origin": "dataset",
+  "dataset": "validation",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "attachments": [
+    {
+      "file_name": "Orcamento_ZET-V0037.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 7626,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-30"
+    }
+  ]
+}

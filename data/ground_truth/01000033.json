@@ -1,0 +1,122 @@
+{
+  "ticket_id": "01000033",
+  "dataset": "validation",
+  "service_template": "lamps",
+  "defects": [
+    "date_before",
+    "out_of_scope"
+  ],
+  "workstream": "SETA",
+  "moment": "execution",
+  "maintenance_type": "corrective",
+  "category": "lighting",
+  "symptom": "poor_lighting",
+  "before_applicable": true,
+  "quoted_value": 1728.0,
+  "amount_at_issue": 1540.0,
+  "items": [
+    {
+      "n": 1,
+      "description": "Lâmpada LED tubular T8 18W",
+      "unit": "un",
+      "quantity": 4,
+      "unit_value": 22.0,
+      "total_value": 88.0,
+      "classification": "compliant",
+      "lpu_code": "ELE-008",
+      "reference_price": 22.0,
+      "findings": [],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    },
+    {
+      "n": 2,
+      "description": "Mão de obra troca de lâmpada",
+      "unit": "un",
+      "quantity": 4,
+      "unit_value": 25.0,
+      "total_value": 100.0,
+      "classification": "compliant",
+      "lpu_code": "ELE-009",
+      "reference_price": 25.0,
+      "findings": [],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    },
+    {
+      "n": 3,
+      "description": "Luminária LED de embutir 60x60",
+      "unit": "un",
+      "quantity": 4,
+      "unit_value": 385.0,
+      "total_value": 1540.0,
+      "classification": "out_of_scope",
+      "lpu_code": "ELE-001",
+      "reference_price": 385.0,
+      "findings": [
+        "out_of_scope_item"
+      ],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    }
+  ],
+  "attachments": {
+    "Orcamento_GAM-V0033.xlsx": {
+      "category": "quote_doc",
+      "moment": "undetermined",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Orçamento"
+    },
+    "IMG_20261026_082510.jpg": {
+      "category": "room_before_photo",
+      "moment": "before",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Ambiente com lâmpadas apagadas"
+    },
+    "IMG_20261030_092524.jpg": {
+      "category": "room_after_photo",
+      "moment": "after",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Teto com lâmpadas acesas"
+    },
+    "IMG_20261030_102712.jpg": {
+      "category": "label_photo",
+      "moment": "after",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Etiqueta do produto instalado"
+    },
+    "IMG_20261030_115810.jpg": {
+      "category": "removed_items_photo",
+      "moment": "after",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Lâmpadas antigas retiradas"
+    },
+    "IMG_20261031_190500.jpg": {
+      "category": "completion_certificate_doc",
+      "moment": "after",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Termo de conclusão assinado"
+    }
+  },
+  "checklist_ok": true,
+  "missing": [],
+  "findings": [
+    "out_of_scope_item",
+    "photo_dated_before"
+  ],
+  "optional": [],
+  "grades": {
+    "scope": 100,
+    "quote": 65,
+    "photos": 85
+  },
+  "score": 80,
+  "recommendation": "approve_with_caveats",
+  "confidence": "high"
+}

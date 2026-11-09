@@ -1,0 +1,474 @@
+{
+  "ticket_id": "02000018",
+  "workstream": "SISR",
+  "category": "cctv",
+  "symptom": "degraded_image",
+  "maintenance_type": "corrective",
+  "moment": "execution",
+  "branch": {
+    "code": "2809",
+    "name": "Itaú Ag. Vila Madalena",
+    "environment": "self_service"
+  },
+  "supplier": "Fornecedor Beta Sistemas de Segurança Ltda.",
+  "quoted_value": 2459.59,
+  "requested_scope": "Câmera do self_service com imagem desfocada: limpeza e ajuste de foco.",
+  "generated_at": "2026-11-09T04:43:11.237879",
+  "rubric_version": "2026-11-v3",
+  "prompts_version": "2026-11-v3",
+  "config_signature": "294d860f8d37",
+  "phase": 2,
+  "mode": "simulated",
+  "batch_mode": "sync",
+  "models": {
+    "main": "anthropic:claude-sonnet-5-5",
+    "fast": "anthropic:claude-sonnet-5-5"
+  },
+  "run_id": "20261109-044252-2475",
+  "record_id": 40,
+  "checklist": {
+    "category": "cctv",
+    "maintenance": "corrective",
+    "moment": "execution",
+    "complete": true,
+    "uploaded": 3,
+    "total": 3,
+    "requirements": [
+      {
+        "id": "quote",
+        "description": "Orçamento na planilha Excel padrão",
+        "met": true,
+        "attachments": [
+          "Orcamento_BET-V0018.xlsx"
+        ]
+      },
+      {
+        "id": "equipment_photo",
+        "description": "Foto do equipamento atendido",
+        "met": true,
+        "attachments": [
+          "IMG_20261104_091733.jpg"
+        ]
+      },
+      {
+        "id": "screen_photo",
+        "description": "Imagem da câmera ou tela do gravador",
+        "met": true,
+        "attachments": [
+          "IMG_20261031_081145.jpg"
+        ]
+      }
+    ],
+    "missing": []
+  },
+  "attachments": [
+    {
+      "index": 1,
+      "name": "Orcamento_BET-V0018.xlsx",
+      "category": "quote_doc",
+      "moment": "undetermined",
+      "readable": true,
+      "short_description": "Orçamento BET-V0018: 3 itens, R$ 2,760.00"
+    },
+    {
+      "index": 2,
+      "name": "IMG_20261031_081145.jpg",
+      "category": "cctv_screen_photo",
+      "moment": "before",
+      "readable": true,
+      "short_description": "Imagem da câmera desfocada"
+    },
+    {
+      "index": 3,
+      "name": "IMG_20261104_091733.jpg",
+      "category": "equipment_photo",
+      "moment": "after",
+      "readable": true,
+      "short_description": "Câmera instalada na parede"
+    }
+  ],
+  "recommendation": "return_to_supplier",
+  "recommendation_reason": "Score abaixo de 70, com apontamentos",
+  "score": 66,
+  "grades": {
+    "scope": 100,
+    "quote": 50,
+    "photos": 65
+  },
+  "confidence": "high",
+  "confidence_reducers": [],
+  "findings": [
+    {
+      "kind": "spreadsheet_mismatch",
+      "validation": "quote",
+      "severity": "medium",
+      "discount": 15,
+      "description": "Planilha divergente do chamado (categoria, sintoma, escopo ou valor)",
+      "evidence": "Soma dos itens r$ 2.760,00 × valor orçado no chamado r$ 2.459,59",
+      "reference": "Orcamento_BET-V0018.xlsx",
+      "lock": false,
+      "reduces_confidence": false,
+      "phase": 1,
+      "amount_at_issue": 0.0
+    },
+    {
+      "kind": "unjustified_replacement",
+      "validation": "quote",
+      "severity": "high",
+      "discount": 35,
+      "description": "Troca ou peça sem justificativa técnica",
+      "evidence": "(simulado) a justificar",
+      "reference": "item 3: Câmera IP bullet nova 4MP",
+      "lock": false,
+      "reduces_confidence": false,
+      "phase": 1,
+      "amount_at_issue": 2300.0
+    },
+    {
+      "kind": "missing_after_photo",
+      "validation": "photos",
+      "severity": "high",
+      "discount": 35,
+      "description": "Sem foto do serviço concluído",
+      "evidence": "(simulado)",
+      "reference": "",
+      "lock": false,
+      "reduces_confidence": false,
+      "phase": 1,
+      "amount_at_issue": 0.0
+    }
+  ],
+  "amount_at_issue": 2300.0,
+  "amount_at_issue_pct": 83.3,
+  "scope": {
+    "local": "(simulado)",
+    "environment": "(simulado)",
+    "equipment": "",
+    "requested_services": [
+      "(simulado a partir do gabarito)"
+    ],
+    "mentioned_quantities": [],
+    "acceptance_criteria": [
+      "(simulado)"
+    ],
+    "expected_evidence": [],
+    "before_evidence_applicable": true,
+    "consistent_with_category_symptom": true,
+    "coherence_note": "",
+    "vague_scope": false,
+    "vague_reason": ""
+  },
+  "items": [
+    {
+      "n": 1,
+      "description": "Visita técnica e deslocamento",
+      "unit": "vb",
+      "quantity": 1.0,
+      "unit_value": 280.0,
+      "total_value": 280.0,
+      "classification": "compliant",
+      "reason": "(simulado) aderente",
+      "lpu_code": "SIS-001",
+      "reference_price": 280.0,
+      "expected_quantity_max": null,
+      "amount_at_issue": 0.0,
+      "findings": []
+    },
+    {
+      "n": 2,
+      "description": "Limpeza e ajuste de foco da câmera",
+      "unit": "un",
+      "quantity": 1.0,
+      "unit_value": 180.0,
+      "total_value": 180.0,
+      "classification": "compliant",
+      "reason": "(simulado) aderente",
+      "lpu_code": "CFTV-001",
+      "reference_price": 180.0,
+      "expected_quantity_max": null,
+      "amount_at_issue": 0.0,
+      "findings": []
+    },
+    {
+      "n": 3,
+      "description": "Câmera IP bullet nova 4MP",
+      "unit": "un",
+      "quantity": 1.0,
+      "unit_value": 2300.0,
+      "total_value": 2300.0,
+      "classification": "to_justify",
+      "reason": "(simulado) a justificar",
+      "lpu_code": "CFTV-002",
+      "reference_price": 2300.0,
+      "expected_quantity_max": null,
+      "amount_at_issue": 2300.0,
+      "findings": [
+        {
+          "kind": "unjustified_replacement",
+          "validation": "quote",
+          "severity": "high",
+          "discount": 35,
+          "description": "Troca ou peça sem justificativa técnica",
+          "evidence": "(simulado) a justificar",
+          "reference": "item 3: Câmera IP bullet nova 4MP",
+          "lock": false,
+          "reduces_confidence": false,
+          "phase": 1,
+          "amount_at_issue": 2300.0
+        }
+      ]
+    }
+  ],
+  "quote_notes": [],
+  "photos": [
+    {
+      "file": "IMG_20261031_081145.jpg",
+      "environment": "",
+      "what_it_shows": "Imagem da câmera desfocada",
+      "moment": "before",
+      "readable": true,
+      "matches_scope": "yes",
+      "reason": "(simulado)",
+      "covered_items": [],
+      "exif_date": "2026-10-31T08:15:00",
+      "reused_from": null,
+      "integrity_signals": []
+    },
+    {
+      "file": "IMG_20261104_091733.jpg",
+      "environment": "",
+      "what_it_shows": "Câmera instalada na parede",
+      "moment": "after",
+      "readable": true,
+      "matches_scope": "yes",
+      "reason": "(simulado)",
+      "covered_items": [],
+      "exif_date": "2026-11-04T09:15:00",
+      "reused_from": null,
+      "integrity_signals": []
+    }
+  ],
+  "photo_summary": {
+    "has_before_photo": true,
+    "has_done_service_photo": false,
+    "done_justification": "(simulado)",
+    "items_without_photo": [],
+    "notes": ""
+  },
+  "summary": "Devolver ao fornecedor. Score abaixo de 70, com apontamentos. 3 apontamento(s): planilha divergente do chamado (categoria, sintoma, escopo ou valor) (Orcamento_BET-V0018.xlsx); troca ou peça sem justificativa técnica (item 3: Câmera IP bullet nova 4MP); sem foto do serviço concluído ((simulado)). Valor em questão: R$ 2.300,00 (83% do orçamento).",
+  "supplier_message": "Corrigir a planilha para refletir o chamado (Orcamento_BET-V0018.xlsx); enviar laudo técnico que justifique o item 3: Câmera IP bullet nova 4MP; enviar foto que comprove o serviço concluído.",
+  "llm_calls": [
+    {
+      "task": "identify_attachments",
+      "provider": "simulated",
+      "model": "simulado (anthropic:claude-sonnet-5-5)",
+      "resolved_model": "",
+      "prompt_version": "",
+      "prompt_hash": "",
+      "schema_hash": "",
+      "start": "2026-11-09T04:43:08.765297",
+      "duration_s": 0.39,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 0,
+      "cost_usd": 0.0,
+      "from_cache": false,
+      "simulated": true,
+      "via_batch": false,
+      "batch_id": null,
+      "response": {
+        "attachments": [
+          {
+            "index": 2,
+            "category": "cctv_screen_photo",
+            "moment": "before",
+            "readable": true,
+            "short_description": "Imagem da câmera desfocada"
+          },
+          {
+            "index": 3,
+            "category": "equipment_photo",
+            "moment": "after",
+            "readable": true,
+            "short_description": "Câmera instalada na parede"
+          }
+        ]
+      }
+    },
+    {
+      "task": "scope",
+      "provider": "simulated",
+      "model": "simulado (anthropic:claude-sonnet-5-5)",
+      "resolved_model": "",
+      "prompt_version": "",
+      "prompt_hash": "",
+      "schema_hash": "",
+      "start": "2026-11-09T04:43:09.151913",
+      "duration_s": 0.53,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 0,
+      "cost_usd": 0.0,
+      "from_cache": false,
+      "simulated": true,
+      "via_batch": false,
+      "batch_id": null,
+      "response": {
+        "local": "(simulado)",
+        "environment": "(simulado)",
+        "equipment": "",
+        "requested_services": [
+          "(simulado a partir do gabarito)"
+        ],
+        "mentioned_quantities": [],
+        "acceptance_criteria": [
+          "(simulado)"
+        ],
+        "expected_evidence": [],
+        "before_evidence_applicable": true,
+        "consistent_with_category_symptom": true,
+        "coherence_note": "",
+        "vague_scope": false,
+        "vague_reason": ""
+      }
+    },
+    {
+      "task": "quote_review",
+      "provider": "simulated",
+      "model": "simulado (anthropic:claude-sonnet-5-5)",
+      "resolved_model": "",
+      "prompt_version": "",
+      "prompt_hash": "",
+      "schema_hash": "",
+      "start": "2026-11-09T04:43:09.696884",
+      "duration_s": 0.39,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 0,
+      "cost_usd": 0.0,
+      "from_cache": false,
+      "simulated": true,
+      "via_batch": false,
+      "batch_id": null,
+      "response": {
+        "items": [
+          {
+            "n": 1,
+            "classification": "compliant",
+            "reason": "(simulado) aderente",
+            "expected_quantity_max": -1.0,
+            "plausible_quantity": true,
+            "duplicate_of": 0,
+            "lpu_code": "SIS-001"
+          },
+          {
+            "n": 2,
+            "classification": "compliant",
+            "reason": "(simulado) aderente",
+            "expected_quantity_max": -1.0,
+            "plausible_quantity": true,
+            "duplicate_of": 0,
+            "lpu_code": "CFTV-001"
+          },
+          {
+            "n": 3,
+            "classification": "to_justify",
+            "reason": "(simulado) a justificar",
+            "expected_quantity_max": -1.0,
+            "plausible_quantity": true,
+            "duplicate_of": 0,
+            "lpu_code": "CFTV-002"
+          }
+        ],
+        "notes": ""
+      }
+    },
+    {
+      "task": "photos",
+      "provider": "simulated",
+      "model": "simulado (anthropic:claude-sonnet-5-5)",
+      "resolved_model": "",
+      "prompt_version": "",
+      "prompt_hash": "",
+      "schema_hash": "",
+      "start": "2026-11-09T04:43:10.163034",
+      "duration_s": 0.31,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 0,
+      "cost_usd": 0.0,
+      "from_cache": false,
+      "simulated": true,
+      "via_batch": false,
+      "batch_id": null,
+      "response": {
+        "photos": [
+          {
+            "index": 2,
+            "environment": "",
+            "what_it_shows": "Imagem da câmera desfocada",
+            "moment": "before",
+            "readable": true,
+            "matches_scope": "yes",
+            "reason": "(simulado)",
+            "covered_items": []
+          },
+          {
+            "index": 3,
+            "environment": "",
+            "what_it_shows": "Câmera instalada na parede",
+            "moment": "after",
+            "readable": true,
+            "matches_scope": "yes",
+            "reason": "(simulado)",
+            "covered_items": []
+          }
+        ],
+        "has_before_photo": true,
+        "has_done_service_photo": false,
+        "done_justification": "(simulado)",
+        "items_without_photo": [],
+        "notes": ""
+      }
+    },
+    {
+      "task": "assessment",
+      "provider": "simulated",
+      "model": "simulado (anthropic:claude-sonnet-5-5)",
+      "resolved_model": "",
+      "prompt_version": "",
+      "prompt_hash": "",
+      "schema_hash": "",
+      "start": "2026-11-09T04:43:10.729711",
+      "duration_s": 0.51,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 0,
+      "cost_usd": 0.0,
+      "from_cache": false,
+      "simulated": true,
+      "via_batch": false,
+      "batch_id": null,
+      "response": {
+        "summary": "Devolver ao fornecedor. Score abaixo de 70, com apontamentos. 3 apontamento(s): planilha divergente do chamado (categoria, sintoma, escopo ou valor) (Orcamento_BET-V0018.xlsx); troca ou peça sem justificativa técnica (item 3: Câmera IP bullet nova 4MP); sem foto do serviço concluído ((simulado)). Valor em questão: R$ 2.300,00 (83% do orçamento).",
+        "supplier_message": "Corrigir a planilha para refletir o chamado (Orcamento_BET-V0018.xlsx); enviar laudo técnico que justifique o item 3: Câmera IP bullet nova 4MP; enviar foto que comprove o serviço concluído."
+      }
+    }
+  ],
+  "duration_s": 2.59,
+  "stage_durations_s": {
+    "checklist": 0.505,
+    "scope": 0.528,
+    "quote": 0.411,
+    "photos": 0.635,
+    "score": 0.0,
+    "assessment": 0.508
+  },
+  "cost_usd": 0.0,
+  "cost_brl": 0.0
+}

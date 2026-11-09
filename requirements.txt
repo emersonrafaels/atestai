@@ -1,0 +1,23 @@
+pydantic>=2.10
+dynaconf>=3.2
+fastapi>=0.115
+uvicorn>=0.32
+python-multipart>=0.0.9
+openpyxl>=3.1
+pillow>=11
+imagehash>=4.3
+numpy>=2
+
+# provedores de LLM (instale os que a configuração usar)
+anthropic>=2.6
+openai>=1.60          # opcional: modelos "openai:..."
+google-genai>=1.0     # opcional: modelos "google:..."
+
+# fluxo de revisão humana (exemplos/fluxo_copiloto_langgraph.py)
+langgraph>=1.0        # opcional
+
+# gerar o dataset
+piexif>=1.1
+
+# testes
+pytest>=8

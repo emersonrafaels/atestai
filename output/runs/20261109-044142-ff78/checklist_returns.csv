@@ -1,0 +1,4 @@
+ticket_id;supplier;missing;supplier_message
+02000011;Fornecedor Alfa Manutenção Predial Ltda.;after_photo;"Olá, Fornecedor Alfa Manutenção Predial Ltda. O chamado 02000011 foi devolvido porque faltam evidências obrigatórias para análise:
+- foto do ambiente depois do serviço.
+Reenvie os itens pelo próprio chamado. O prazo de aprovação conta a partir do envio completo."

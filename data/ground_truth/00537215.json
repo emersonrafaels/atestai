@@ -1,0 +1,108 @@
+{
+  "ticket_id": "00537215",
+  "workstream": "SISR",
+  "moment": "execution",
+  "maintenance_type": "corrective",
+  "category": "alarm",
+  "symptom": "false_alarm",
+  "before_applicable": true,
+  "dataset": "demo",
+  "quoted_value": 565.0,
+  "items": [
+    {
+      "n": 1,
+      "description": "Visita técnica",
+      "unit": "vb",
+      "quantity": 1,
+      "unit_value": 280.0,
+      "total_value": 280.0,
+      "classification": "compliant",
+      "lpu_code": "SIS-001",
+      "reference_price": 280.0,
+      "findings": [],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    },
+    {
+      "n": 2,
+      "description": "Sensor infravermelho passivo IVP com fio",
+      "unit": "un",
+      "quantity": 1,
+      "unit_value": 175.0,
+      "total_value": 175.0,
+      "classification": "compliant",
+      "lpu_code": "ALA-002",
+      "reference_price": 140.0,
+      "findings": [
+        "price_above_reference"
+      ],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    },
+    {
+      "n": 3,
+      "description": "Mão de obra substituição de sensor e teste de zona",
+      "unit": "un",
+      "quantity": 1,
+      "unit_value": 110.0,
+      "total_value": 110.0,
+      "classification": "compliant",
+      "lpu_code": "ALA-003",
+      "reference_price": 110.0,
+      "findings": [],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    }
+  ],
+  "attachments": {
+    "Orcamento_KP-5521.xlsx": {
+      "category": "quote_doc",
+      "moment": "undetermined",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Orçamento (planilha Excel padrão)"
+    },
+    "IMG_20261007_090110.jpg": {
+      "category": "equipment_photo",
+      "moment": "before",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Sensor IVP antigo, amarelado e com lente trincada"
+    },
+    "IMG_20261007_093022.jpg": {
+      "category": "equipment_photo",
+      "moment": "after",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Sensor IVP novo instalado"
+    },
+    "IMG_20261007_093540.jpg": {
+      "category": "alarm_panel_photo",
+      "moment": "after",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Teclado da central indicando zona OK"
+    },
+    "IMG_20261007_094512.jpg": {
+      "category": "completion_certificate_doc",
+      "moment": "after",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Termo de conclusão assinado"
+    }
+  },
+  "checklist_ok": true,
+  "missing": [],
+  "findings": [
+    "price_above_reference"
+  ],
+  "optional": [],
+  "grades": {
+    "scope": 100,
+    "quote": 85,
+    "photos": 100
+  },
+  "score": 94,
+  "recommendation": "approve",
+  "confidence": "high"
+}

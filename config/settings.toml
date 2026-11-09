@@ -1,0 +1,124 @@
+# Atest.AI — configuração principal (Dynaconf)
+#
+# Ambientes: [default] vale para todos; [development] e [production] sobrescrevem.
+# Escolha o ambiente com a variável ATEST_ENV (padrão: development).
+# Qualquer chave pode ser sobrescrita por variável de ambiente com prefixo ATEST_,
+# usando "__" para níveis:  ATEST_MODELS__MAIN="claude-opus-5-5"   ATEST_PIPELINE__PHASE=1
+# Segredos (ANTHROPIC_API_KEY) ficam em config/.secrets.toml (fora do git) ou no ambiente.
+
+[default]
+version = "0.3.0"
+
+[default.execution]
+# o que `python main.py` faz: "panel" sobe o painel web; "batch" roda os chamados e grava as saídas;
+# "validate" roda o conjunto de validação e aplica o portão de qualidade (use no CI antes de publicar prompt/modelo novo)
+action = "panel"
+mode = "simulated"          # "api" chama o provedor configurado; "simulated" responde pelo gabarito (sem custo, não mede qualidade)
+tickets = []              # vazio = todos os chamados da pasta de dados
+evaluate_against_ground_truth = true
+
+[default.models]
+# Formato "provedor:modelo". Provedores prontos: anthropic, openai, google (Gemini). Sem prefixo = llm.default_provider.
+# Fixe snapshots (ids com data) em produção; o id efetivamente usado pelo provedor fica gravado em cada chamada.
+main = "anthropic:claude-sonnet-5-5"   # escopo, orçamento × escopo, fotos
+fast = "anthropic:claude-sonnet-5-5"       # identificação dos anexos, redação do parecer
+
+[default.models.tasks]
+# sobrescreve o modelo de uma tarefa (identify_attachments, scope, quote_review, photos, assessment). Exemplos:
+# photos = "google:<modelo-gemini>"
+# assessment = "openai:<modelo-openai>"
+
+[default.models.fallback]
+# usado só se o modelo do papel falhar por erro transitório (sobrecarga, limite de taxa, indisponibilidade)
+# main = "openai:<modelo-openai>"
+# fast = "google:<modelo-gemini>"
+
+[default.llm]
+default_provider = "anthropic"
+max_tokens = 8000
+effort = ""                # vazio = padrão do modelo; ou low | medium | high | xhigh | max
+timeout_s = 180
+max_retries = 4
+image_max_side = 1568
+use_disk_cache = true    # não paga duas vezes pela mesma requisição
+
+[default.pipeline]
+phase = 2                   # 1 = régua do MVP; 2 = inclui "antes", ilegibilidade, reaproveitamento e data das fotos
+parallel = 3               # chamados em paralelo no modo síncrono
+
+[default.batch]
+# "sync": uma requisição por vez (resposta em segundos)
+# "batch": Message Batches API (assíncrona, 50% mais barata; ideal para o batch horário)
+kind = "sync"
+batch_collect_window_s = 2.0      # espera para juntar as requisições de todos os chamados num mesmo lote
+batch_poll_interval_s = 20  # intervalo entre consultas de status do lote
+batch_max_hours = 24
+
+[default.paths]
+data = "data"
+output = "output"
+cache = ".cache/llm"
+database = "output/atest.db"
+logs = "output/logs"
+upload_id_prefix = "9"   # chamados enviados pelo painel recebem ids 9xxxxxxx
+
+[default.panel]
+host = "0.0.0.0"
+port = 8000
+simulated_delay_s = 0.45   # só para o progresso ficar visível na demonstração
+
+[default.validation]
+# portão de qualidade (ação "validate" e aba Validação do painel)
+dataset = "validation"
+accuracy_min = 0.85         # recomendação igual ao gabarito
+kappa_min = 0.75            # concordância além do acaso
+finding_f1_min = 0.80  # F1 micro dos apontamentos
+score_error_max = 8.0        # erro absoluto médio do score (pontos)
+bootstrap_samples = 1000   # intervalos de confiança de 95%
+simulated_noise = 0.0        # só no modo simulado: probabilidade de o "modelo" errar cada decisão (para ver as métricas reagirem)
+
+[default.observability]
+level = "INFO"
+log_json = true            # um evento por linha em output/logs/atest.jsonl
+log_console = true
+
+[default.costs]
+# Preços em USD por milhão de tokens. Conferidos em nov/2026 na página de preços da Anthropic;
+# revise antes de usar em orçamento oficial.
+usd_brl_rate = 5.40
+batch_discount = 0.50      # Message Batches API cobra metade em entrada e saída
+
+[default.costs.prices.claude-sonnet-5-5]
+input = 2.00
+output = 10.00
+cache_write = 2.50
+cache_read = 0.10
+
+[default.costs.prices.claude-haiku-5-5]
+input = 0.10
+output = 0.50
+cache_write = 0.125
+cache_read = 0.01
+
+[default.costs.prices.claude-opus-5-5]
+input = 4.00
+output = 20.00
+cache_write = 5.00
+cache_read = 0.20
+
+# ----------------------------------------------------------------------------------------------
+[development]
+[development.observability]
+level = "INFO"
+
+[production]
+[production.execution]
+action = "batch"
+mode = "api"
+evaluate_against_ground_truth = false
+[production.batch]
+kind = "batch"
+[production.panel]
+simulated_delay_s = 0
+[production.observability]
+log_console = false

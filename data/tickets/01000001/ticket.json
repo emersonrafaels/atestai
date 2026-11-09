@@ -1,0 +1,54 @@
+{
+  "ticket_id": "01000001",
+  "workstream": "SETA",
+  "maintenance_type": "corrective",
+  "moment": "execution",
+  "category": "painting",
+  "symptom": "finish_wear",
+  "branch": {
+    "code": "1010",
+    "name": "Ag. Morumbi",
+    "environment": "backoffice"
+  },
+  "supplier": {
+    "name": "Fornecedor Alfa Manutenção Predial Ltda.",
+    "cnpj": "12.345.678/0001-90"
+  },
+  "requested_scope": "Repintura das paredes do backoffice (aprox. 84 m²), cor padrão da agência.",
+  "quoted_value": 3200.4,
+  "dates": {
+    "opening": "2026-10-15",
+    "supplier_submission": "2026-10-17",
+    "manager_review": "2026-10-18"
+  },
+  "status": "forwarded_to_backoffice",
+  "origin": "dataset",
+  "dataset": "validation",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "attachments": [
+    {
+      "file_name": "Orcamento_ALF-V0001.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 7629,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-17"
+    },
+    {
+      "file_name": "IMG_20261016_085128.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 164965,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-17"
+    },
+    {
+      "file_name": "IMG_20261016_095919.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 190013,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-17"
+    }
+  ]
+}

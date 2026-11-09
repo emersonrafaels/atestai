@@ -1,0 +1,92 @@
+{
+  "ticket_id": "01000015",
+  "dataset": "validation",
+  "service_template": "outlets",
+  "defects": [
+    "unreadable",
+    "spreadsheet"
+  ],
+  "workstream": "SETA",
+  "moment": "execution",
+  "maintenance_type": "corrective",
+  "category": "electrical",
+  "symptom": "electrical_failure",
+  "before_applicable": true,
+  "quoted_value": 189.0,
+  "amount_at_issue": 0.0,
+  "items": [
+    {
+      "n": 1,
+      "description": "Tomada 2P+T 10A com placa",
+      "unit": "un",
+      "quantity": 3,
+      "unit_value": 28.0,
+      "total_value": 84.0,
+      "classification": "compliant",
+      "lpu_code": "ELE-004",
+      "reference_price": 28.0,
+      "findings": [],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    },
+    {
+      "n": 2,
+      "description": "Mão de obra substituição de tomada",
+      "unit": "un",
+      "quantity": 3,
+      "unit_value": 35.0,
+      "total_value": 105.0,
+      "classification": "compliant",
+      "lpu_code": "ELE-005",
+      "reference_price": 35.0,
+      "findings": [],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    }
+  ],
+  "attachments": {
+    "Orcamento_ETA-V0015.xlsx": {
+      "category": "quote_doc",
+      "moment": "undetermined",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Orçamento"
+    },
+    "IMG_20261020_083252.jpg": {
+      "category": "room_before_photo",
+      "moment": "before",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Tomada com marcas de queima"
+    },
+    "IMG_20261023_094129.jpg": {
+      "category": "room_after_photo",
+      "moment": "after",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Tomadas novas instaladas"
+    },
+    "IMG_20261024_181900.jpg": {
+      "category": "other",
+      "moment": "undetermined",
+      "matches_scope": null,
+      "readable": false,
+      "description": "Foto escura e tremida"
+    }
+  },
+  "checklist_ok": true,
+  "missing": [],
+  "findings": [
+    "spreadsheet_mismatch",
+    "unreadable_photo"
+  ],
+  "optional": [],
+  "grades": {
+    "scope": 100,
+    "quote": 85,
+    "photos": 95
+  },
+  "score": 92,
+  "recommendation": "approve",
+  "confidence": "medium"
+}

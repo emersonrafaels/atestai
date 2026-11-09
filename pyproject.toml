@@ -1,0 +1,15 @@
+[project]
+name = "atest-ai"
+version = "0.2.0"
+description = "Atest.AI — validação inteligente de orçamentos e evidências de manutenção (SETA/SISR)"
+requires-python = ">=3.11"
+
+[tool.ruff]
+line-length = 150
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]

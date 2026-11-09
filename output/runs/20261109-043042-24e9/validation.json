@@ -1,0 +1,229 @@
+{
+  "n": 1,
+  "no_ground_truth": 0,
+  "classes": [
+    "approve",
+    "approve_with_caveats",
+    "detailed_review",
+    "return_to_supplier",
+    "return_locked",
+    "checklist_returned"
+  ],
+  "matrix": [
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      1,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  ],
+  "accuracy": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+  },
+  "balanced_accuracy": 1.0,
+  "kappa": null,
+  "problem_catch": {
+    "tp": 1,
+    "fp": 0,
+    "fn": 0,
+    "tn": 0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "specificity": null
+  },
+  "problem_catch_f1_ci": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+  },
+  "checklist_accuracy": 1.0,
+  "findings": [
+    {
+      "kind": "missing_after_photo",
+      "support": 1,
+      "tp": 1,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    {
+      "kind": "reused_photo",
+      "support": 1,
+      "tp": 1,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    {
+      "kind": "photo_dated_before",
+      "support": 1,
+      "tp": 1,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    {
+      "kind": "out_of_scope_item",
+      "support": 1,
+      "tp": 1,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    {
+      "kind": "unjustified_replacement",
+      "support": 1,
+      "tp": 1,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    {
+      "kind": "quantity_above_expected",
+      "support": 0,
+      "tp": 0,
+      "fp": 1,
+      "fn": 0,
+      "precision": 0.0,
+      "recall": null,
+      "f1": null
+    }
+  ],
+  "findings_micro": {
+    "tp": 5,
+    "fp": 1,
+    "fn": 0,
+    "tn": 0,
+    "precision": 0.8333333333333334,
+    "recall": 1.0,
+    "f1": 0.9090909090909091,
+    "specificity": 0.0
+  },
+  "finding_macro_f1": 1.0,
+  "score_pairs": [
+    {
+      "ticket_id": "00517706",
+      "expected": 32,
+      "obtained": 26
+    }
+  ],
+  "score_mae": 6.0,
+  "score_rmse": 6.0,
+  "score_bias": -6.0,
+  "score_pearson": null,
+  "expected_amount_at_issue": 0.0,
+  "obtained_amount_at_issue": 0.0,
+  "amount_at_issue_mae": null,
+  "by_category": [
+    {
+      "name": "cctv",
+      "n": 1,
+      "hits": 1,
+      "accuracy": 1.0
+    }
+  ],
+  "by_service_template": [
+    {
+      "name": "demo",
+      "n": 1,
+      "hits": 1,
+      "accuracy": 1.0
+    }
+  ],
+  "operations": {
+    "latency_p50_s": 32.04,
+    "latency_p95_s": 32.04,
+    "avg_cost_brl": 0.5098,
+    "p95_cost_brl": 0.5098,
+    "total_cost_brl": 0.5098,
+    "avg_input_tokens": 19754.0,
+    "avg_output_tokens": 3487.0
+  },
+  "mismatches": [],
+  "gate": [
+    {
+      "metric": "Acurácia da recomendação",
+      "value": 1.0,
+      "limit": 0.85,
+      "direction": ">=",
+      "passed": true
+    },
+    {
+      "metric": "Kappa de Cohen",
+      "value": null,
+      "limit": 0.75,
+      "direction": ">=",
+      "passed": false
+    },
+    {
+      "metric": "F1 dos apontamentos (micro)",
+      "value": 0.9090909090909091,
+      "limit": 0.8,
+      "direction": ">=",
+      "passed": true
+    },
+    {
+      "metric": "Erro médio do score",
+      "value": 6.0,
+      "limit": 8.0,
+      "direction": "<=",
+      "passed": true
+    }
+  ],
+  "gate_passed": false
+}

@@ -1,0 +1,54 @@
+{
+  "ticket_id": "01000002",
+  "workstream": "SETA",
+  "maintenance_type": "corrective",
+  "moment": "execution",
+  "category": "waterproofing",
+  "symptom": "moisture_infiltration",
+  "branch": {
+    "code": "0991",
+    "name": "Ag. Campo Belo",
+    "environment": "backoffice"
+  },
+  "supplier": {
+    "name": "Fornecedor Delta Impermeabilizações Ltda.",
+    "cnpj": "45.678.901/0001-23"
+  },
+  "requested_scope": "Infiltração no forro do backoffice: tratar a origem e recompor o forro de gesso (aprox. 7 m²).",
+  "quoted_value": 1386.0,
+  "dates": {
+    "opening": "2026-10-15",
+    "supplier_submission": "2026-10-21",
+    "manager_review": "2026-10-22"
+  },
+  "status": "forwarded_to_backoffice",
+  "origin": "dataset",
+  "dataset": "validation",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "attachments": [
+    {
+      "file_name": "Orcamento_DEL-V0002.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 7681,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-21"
+    },
+    {
+      "file_name": "IMG_20261016_085735.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 135010,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-21"
+    },
+    {
+      "file_name": "IMG_20261020_094745.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 155222,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-21"
+    }
+  ]
+}

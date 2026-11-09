@@ -1,0 +1,68 @@
+{
+  "ticket_id": "01000080",
+  "workstream": "SISR",
+  "maintenance_type": "preventive",
+  "moment": "execution",
+  "category": "cctv_and_alarm",
+  "symptom": "preventive_maintenance",
+  "branch": {
+    "code": "0102",
+    "name": "Ag. Barra Funda",
+    "environment": "agência inteira"
+  },
+  "supplier": {
+    "name": "Fornecedor Iota Segurança Eletrônica Ltda.",
+    "cnpj": "90.123.456/0001-78"
+  },
+  "requested_scope": "Preventiva semestral do sistema de segurança da agência: teste das 5 câmeras e dos sensores do alarme, com relatório.",
+  "quoted_value": 771.76,
+  "dates": {
+    "opening": "2026-11-10",
+    "supplier_submission": "2026-11-14",
+    "manager_review": "2026-11-15"
+  },
+  "status": "forwarded_to_backoffice",
+  "origin": "dataset",
+  "dataset": "validation",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "attachments": [
+    {
+      "file_name": "Orcamento_IOT-V0080.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 7708,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-14"
+    },
+    {
+      "file_name": "IMG_20261113_084342.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 163011,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-14"
+    },
+    {
+      "file_name": "IMG_20261113_091712.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 163241,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-14"
+    },
+    {
+      "file_name": "WhatsApp Image 2026-11-14 at 15.21.49.jpeg",
+      "content_type": "image/jpeg",
+      "size_bytes": 96354,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-14"
+    },
+    {
+      "file_name": "IMG_20261114_190400.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 205205,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-14"
+    }
+  ]
+}

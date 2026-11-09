@@ -1,0 +1,487 @@
+{
+  "n": 20,
+  "no_ground_truth": 0,
+  "classes": [
+    "approve",
+    "approve_with_caveats",
+    "detailed_review",
+    "return_to_supplier",
+    "return_locked",
+    "checklist_returned"
+  ],
+  "matrix": [
+    [
+      12,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      3,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      1,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      3,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      1
+    ]
+  ],
+  "accuracy": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+  },
+  "balanced_accuracy": 1.0,
+  "kappa": 1.0,
+  "problem_catch": {
+    "tp": 5,
+    "fp": 0,
+    "fn": 0,
+    "tn": 15,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "specificity": 1.0
+  },
+  "problem_catch_f1_ci": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+  },
+  "checklist_accuracy": 1.0,
+  "findings": [
+    {
+      "kind": "price_above_reference",
+      "support": 3,
+      "tp": 3,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    {
+      "kind": "reused_photo",
+      "support": 3,
+      "tp": 3,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    {
+      "kind": "out_of_scope_item",
+      "support": 3,
+      "tp": 3,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    {
+      "kind": "quantity_above_expected",
+      "support": 2,
+      "tp": 2,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    {
+      "kind": "unreadable_photo",
+      "support": 2,
+      "tp": 2,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    {
+      "kind": "photo_mismatch",
+      "support": 2,
+      "tp": 2,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    {
+      "kind": "duplicate_item",
+      "support": 2,
+      "tp": 2,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    {
+      "kind": "spreadsheet_mismatch",
+      "support": 2,
+      "tp": 2,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    {
+      "kind": "photo_dated_before",
+      "support": 1,
+      "tp": 1,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    {
+      "kind": "missing_after_photo",
+      "support": 1,
+      "tp": 1,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    {
+      "kind": "unjustified_replacement",
+      "support": 1,
+      "tp": 1,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    {
+      "kind": "vague_scope",
+      "support": 1,
+      "tp": 1,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    }
+  ],
+  "findings_micro": {
+    "tp": 23,
+    "fp": 0,
+    "fn": 0,
+    "tn": 0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "specificity": null
+  },
+  "finding_macro_f1": 1.0,
+  "score_pairs": [
+    {
+      "ticket_id": "02000001",
+      "expected": 100,
+      "obtained": 100
+    },
+    {
+      "ticket_id": "02000002",
+      "expected": 100,
+      "obtained": 100
+    },
+    {
+      "ticket_id": "02000003",
+      "expected": 100,
+      "obtained": 100
+    },
+    {
+      "ticket_id": "02000004",
+      "expected": 100,
+      "obtained": 100
+    },
+    {
+      "ticket_id": "02000005",
+      "expected": 100,
+      "obtained": 100
+    },
+    {
+      "ticket_id": "02000006",
+      "expected": 100,
+      "obtained": 100
+    },
+    {
+      "ticket_id": "02000007",
+      "expected": 100,
+      "obtained": 100
+    },
+    {
+      "ticket_id": "02000008",
+      "expected": 100,
+      "obtained": 100
+    },
+    {
+      "ticket_id": "02000009",
+      "expected": 100,
+      "obtained": 100
+    },
+    {
+      "ticket_id": "02000010",
+      "expected": 100,
+      "obtained": 100
+    },
+    {
+      "ticket_id": "02000012",
+      "expected": 94,
+      "obtained": 94
+    },
+    {
+      "ticket_id": "02000013",
+      "expected": 92,
+      "obtained": 92
+    },
+    {
+      "ticket_id": "02000014",
+      "expected": 48,
+      "obtained": 48
+    },
+    {
+      "ticket_id": "02000015",
+      "expected": 74,
+      "obtained": 74
+    },
+    {
+      "ticket_id": "02000016",
+      "expected": 80,
+      "obtained": 80
+    },
+    {
+      "ticket_id": "02000017",
+      "expected": 54,
+      "obtained": 54
+    },
+    {
+      "ticket_id": "02000018",
+      "expected": 66,
+      "obtained": 66
+    },
+    {
+      "ticket_id": "02000019",
+      "expected": 77,
+      "obtained": 77
+    },
+    {
+      "ticket_id": "02000020",
+      "expected": 62,
+      "obtained": 62
+    }
+  ],
+  "score_mae": 0.0,
+  "score_rmse": 0.0,
+  "score_bias": 0.0,
+  "score_pearson": 1.0,
+  "expected_amount_at_issue": 7155.68,
+  "obtained_amount_at_issue": 7155.68,
+  "amount_at_issue_mae": 0.0,
+  "by_category": [
+    {
+      "name": "painting",
+      "n": 2,
+      "hits": 2,
+      "accuracy": 1.0
+    },
+    {
+      "name": "waterproofing",
+      "n": 2,
+      "hits": 2,
+      "accuracy": 1.0
+    },
+    {
+      "name": "lighting",
+      "n": 2,
+      "hits": 2,
+      "accuracy": 1.0
+    },
+    {
+      "name": "air_conditioning",
+      "n": 2,
+      "hits": 2,
+      "accuracy": 1.0
+    },
+    {
+      "name": "electrical",
+      "n": 2,
+      "hits": 2,
+      "accuracy": 1.0
+    },
+    {
+      "name": "plumbing",
+      "n": 2,
+      "hits": 2,
+      "accuracy": 1.0
+    },
+    {
+      "name": "metalwork",
+      "n": 2,
+      "hits": 2,
+      "accuracy": 1.0
+    },
+    {
+      "name": "cctv",
+      "n": 2,
+      "hits": 2,
+      "accuracy": 1.0
+    },
+    {
+      "name": "alarm",
+      "n": 2,
+      "hits": 2,
+      "accuracy": 1.0
+    },
+    {
+      "name": "cctv_and_alarm",
+      "n": 2,
+      "hits": 2,
+      "accuracy": 1.0
+    }
+  ],
+  "by_service_template": [
+    {
+      "name": "painting",
+      "n": 2,
+      "hits": 2,
+      "accuracy": 1.0
+    },
+    {
+      "name": "infiltration",
+      "n": 2,
+      "hits": 2,
+      "accuracy": 1.0
+    },
+    {
+      "name": "lamps",
+      "n": 2,
+      "hits": 2,
+      "accuracy": 1.0
+    },
+    {
+      "name": "hvac",
+      "n": 2,
+      "hits": 2,
+      "accuracy": 1.0
+    },
+    {
+      "name": "outlets",
+      "n": 2,
+      "hits": 2,
+      "accuracy": 1.0
+    },
+    {
+      "name": "sink",
+      "n": 2,
+      "hits": 2,
+      "accuracy": 1.0
+    },
+    {
+      "name": "door",
+      "n": 2,
+      "hits": 2,
+      "accuracy": 1.0
+    },
+    {
+      "name": "camera",
+      "n": 2,
+      "hits": 2,
+      "accuracy": 1.0
+    },
+    {
+      "name": "sensor",
+      "n": 2,
+      "hits": 2,
+      "accuracy": 1.0
+    },
+    {
+      "name": "preventive",
+      "n": 2,
+      "hits": 2,
+      "accuracy": 1.0
+    }
+  ],
+  "operations": {
+    "latency_p50_s": 0.72,
+    "latency_p95_s": 1.3570000000000002,
+    "avg_cost_brl": 0.0,
+    "p95_cost_brl": 0.0,
+    "total_cost_brl": 0.0,
+    "avg_input_tokens": 0.0,
+    "avg_output_tokens": 0.0
+  },
+  "mismatches": [],
+  "gate": [
+    {
+      "metric": "Acurácia da recomendação",
+      "value": 1.0,
+      "limit": 0.85,
+      "direction": ">=",
+      "passed": true
+    },
+    {
+      "metric": "Kappa de Cohen",
+      "value": 1.0,
+      "limit": 0.75,
+      "direction": ">=",
+      "passed": true
+    },
+    {
+      "metric": "F1 dos apontamentos (micro)",
+      "value": 1.0,
+      "limit": 0.8,
+      "direction": ">=",
+      "passed": true
+    },
+    {
+      "metric": "Erro médio do score",
+      "value": 0.0,
+      "limit": 8.0,
+      "direction": "<=",
+      "passed": true
+    }
+  ],
+  "gate_passed": true
+}

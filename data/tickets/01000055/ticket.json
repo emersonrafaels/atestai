@@ -1,0 +1,54 @@
+{
+  "ticket_id": "01000055",
+  "workstream": "SETA",
+  "maintenance_type": "corrective",
+  "moment": "execution",
+  "category": "electrical",
+  "symptom": "electrical_failure",
+  "branch": {
+    "code": "0558",
+    "name": "Ag. Penha",
+    "environment": "backoffice"
+  },
+  "supplier": {
+    "name": "Fornecedor Eta Elétrica e Manutenção Ltda.",
+    "cnpj": "78.901.234/0001-56"
+  },
+  "requested_scope": "Substituir 4 tomadas danificadas no backoffice, uma com sinais de queima.",
+  "quoted_value": 252.0,
+  "dates": {
+    "opening": "2026-11-02",
+    "supplier_submission": "2026-11-05",
+    "manager_review": "2026-11-06"
+  },
+  "status": "forwarded_to_backoffice",
+  "origin": "dataset",
+  "dataset": "validation",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "attachments": [
+    {
+      "file_name": "Orcamento_ETA-V0055.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 7600,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-05"
+    },
+    {
+      "file_name": "IMG_20261103_081539.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 164287,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-05"
+    },
+    {
+      "file_name": "IMG_20261104_091956.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 155904,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-05"
+    }
+  ]
+}

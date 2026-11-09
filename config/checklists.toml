@@ -1,0 +1,118 @@
+# Checklist mínimo de evidências por CATEGORIA do chamado (+ tipo de manutenção e momento).
+# Vale a regra mais específica que casar; "*" casa com qualquer valor.
+# Cada requisito é atendido por pelo menos um anexo legível de uma das categorias aceitas.
+
+[default.checklists.attachment_categories]
+quote_doc = "Orçamento do fornecedor (planilha Excel padrão)"
+completion_certificate_doc = "Termo de conclusão assinado pela agência"
+technical_report_doc = "Relatório técnico, laudo ou relatório de preventiva"
+room_before_photo = "Foto do local ou do problema ANTES do serviço (dano, defeito, estado anterior)"
+room_after_photo = "Foto do local DEPOIS do serviço concluído"
+equipment_photo = "Foto aproximada de equipamento ou componente (câmera, sensor, fonte, aparelho, peça)"
+label_photo = "Foto da etiqueta ou placa de identificação de um produto instalado"
+removed_items_photo = "Foto dos materiais ou equipamentos retirados"
+cctv_screen_photo = "Imagem de câmera de segurança ou foto do monitor do gravador"
+alarm_panel_photo = "Foto da central de alarme ou do teclado"
+other = "Qualquer outra coisa"
+
+# ------------------------------------------------------------------------------------------------
+[[default.checklists.rules]]
+category = "*"
+maintenance = "*"
+moment = "quote"
+requirements = [
+  { id = "quote", description = "Orçamento na planilha Excel padrão", accepted = ["quote_doc"] },
+  { id = "problem_photo", description = "Foto do problema a ser corrigido", accepted = ["room_before_photo", "equipment_photo", "cctv_screen_photo"] },
+]
+
+[[default.checklists.rules]]
+category = "*"
+maintenance = "*"
+moment = "execution"
+requirements = [
+  { id = "quote", description = "Orçamento na planilha Excel padrão", accepted = ["quote_doc"] },
+  { id = "service_photo", description = "Foto do serviço executado", accepted = ["room_after_photo", "equipment_photo"] },
+]
+
+[[default.checklists.rules]]
+category = "painting"
+maintenance = "*"
+moment = "execution"
+requirements = [
+  { id = "quote", description = "Orçamento na planilha Excel padrão", accepted = ["quote_doc"] },
+  { id = "after_photo", description = "Foto do ambiente depois do serviço", accepted = ["room_after_photo"] },
+]
+
+[[default.checklists.rules]]
+category = "waterproofing"
+maintenance = "*"
+moment = "execution"
+requirements = [
+  { id = "quote", description = "Orçamento na planilha Excel padrão", accepted = ["quote_doc"] },
+  { id = "before_photo", description = "Foto do dano antes do serviço", accepted = ["room_before_photo"] },
+  { id = "after_photo", description = "Foto do local depois do serviço", accepted = ["room_after_photo"] },
+]
+
+[[default.checklists.rules]]
+category = "lighting"
+maintenance = "*"
+moment = "execution"
+requirements = [
+  { id = "quote", description = "Orçamento na planilha Excel padrão", accepted = ["quote_doc"] },
+  { id = "before_photo", description = "Foto do ambiente antes do serviço", accepted = ["room_before_photo"] },
+  { id = "label_photo", description = "Foto da etiqueta do modelo instalado", accepted = ["label_photo"] },
+  { id = "after_photo", description = "Foto do ambiente depois do serviço", accepted = ["room_after_photo"] },
+  { id = "removed_items_photo", description = "Foto das luminárias retiradas", accepted = ["removed_items_photo"] },
+  { id = "certificate", description = "Termo de conclusão assinado pela agência", accepted = ["completion_certificate_doc"] },
+]
+
+[[default.checklists.rules]]
+category = "air_conditioning"
+maintenance = "*"
+moment = "execution"
+requirements = [
+  { id = "quote", description = "Orçamento na planilha Excel padrão", accepted = ["quote_doc"] },
+  { id = "equipment_photos", description = "Fotos dos aparelhos ou filtros após a limpeza", accepted = ["equipment_photo", "room_after_photo"] },
+]
+
+[[default.checklists.rules]]
+category = "electrical"
+maintenance = "*"
+moment = "execution"
+requirements = [
+  { id = "quote", description = "Orçamento na planilha Excel padrão", accepted = ["quote_doc"] },
+  { id = "before_photo", description = "Foto do defeito antes do serviço", accepted = ["room_before_photo"] },
+  { id = "after_photo", description = "Foto do serviço concluído", accepted = ["room_after_photo", "equipment_photo"] },
+]
+
+[[default.checklists.rules]]
+category = "cctv"
+maintenance = "*"
+moment = "execution"
+requirements = [
+  { id = "quote", description = "Orçamento na planilha Excel padrão", accepted = ["quote_doc"] },
+  { id = "equipment_photo", description = "Foto do equipamento atendido", accepted = ["equipment_photo"] },
+  { id = "screen_photo", description = "Imagem da câmera ou tela do gravador", accepted = ["cctv_screen_photo"] },
+]
+
+[[default.checklists.rules]]
+category = "alarm"
+maintenance = "corrective"
+moment = "execution"
+requirements = [
+  { id = "quote", description = "Orçamento na planilha Excel padrão", accepted = ["quote_doc"] },
+  { id = "equipment_photo", description = "Foto do dispositivo instalado", accepted = ["equipment_photo"] },
+  { id = "panel_photo", description = "Foto da central ou do teclado com o teste", accepted = ["alarm_panel_photo"] },
+  { id = "certificate", description = "Termo de conclusão assinado pela agência", accepted = ["completion_certificate_doc"] },
+]
+
+[[default.checklists.rules]]
+category = "cctv_and_alarm"
+maintenance = "preventive"
+moment = "execution"
+requirements = [
+  { id = "quote", description = "Orçamento na planilha Excel padrão", accepted = ["quote_doc"] },
+  { id = "screen_photo", description = "Tela do gravador com as câmeras testadas", accepted = ["cctv_screen_photo"] },
+  { id = "panel_photo", description = "Foto da central de alarme ou do teclado", accepted = ["alarm_panel_photo"] },
+  { id = "report", description = "Relatório da preventiva", accepted = ["technical_report_doc", "completion_certificate_doc"] },
+]

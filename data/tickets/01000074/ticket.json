@@ -1,0 +1,54 @@
+{
+  "ticket_id": "01000074",
+  "workstream": "SETA",
+  "maintenance_type": "preventive",
+  "moment": "execution",
+  "category": "air_conditioning",
+  "symptom": "preventive_maintenance",
+  "branch": {
+    "code": "0991",
+    "name": "Ag. Campo Belo",
+    "environment": "salão de atendimento"
+  },
+  "supplier": {
+    "name": "Fornecedor Épsilon Climatização Ltda.",
+    "cnpj": "56.789.012/0001-34"
+  },
+  "requested_scope": "Manutenção preventiva (PMOC) dos 2 aparelhos split do salão de atendimento: limpeza, higienização e verificação.",
+  "quoted_value": 1620.0,
+  "dates": {
+    "opening": "2026-11-08",
+    "supplier_submission": "2026-11-14",
+    "manager_review": "2026-11-15"
+  },
+  "status": "forwarded_to_backoffice",
+  "origin": "dataset",
+  "dataset": "validation",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "attachments": [
+    {
+      "file_name": "Orcamento_EPS-V0074.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 7757,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-14"
+    },
+    {
+      "file_name": "IMG_20261113_083751.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 149364,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-14"
+    },
+    {
+      "file_name": "IMG_20261113_093540.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 237729,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-14"
+    }
+  ]
+}

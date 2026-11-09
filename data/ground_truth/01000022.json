@@ -1,0 +1,131 @@
+{
+  "ticket_id": "01000022",
+  "dataset": "validation",
+  "service_template": "infiltration",
+  "defects": [
+    "out_of_scope",
+    "duplicate"
+  ],
+  "workstream": "SETA",
+  "moment": "execution",
+  "maintenance_type": "corrective",
+  "category": "waterproofing",
+  "symptom": "moisture_infiltration",
+  "before_applicable": true,
+  "quoted_value": 3158.0,
+  "amount_at_issue": 1970.0,
+  "items": [
+    {
+      "n": 1,
+      "description": "Impermeabilização com manta líquida",
+      "unit": "m²",
+      "quantity": 6,
+      "unit_value": 68.0,
+      "total_value": 408.0,
+      "classification": "compliant",
+      "lpu_code": "IMP-001",
+      "reference_price": 68.0,
+      "findings": [],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    },
+    {
+      "n": 2,
+      "description": "Recomposição de forro de gesso",
+      "unit": "m²",
+      "quantity": 6,
+      "unit_value": 95.0,
+      "total_value": 570.0,
+      "classification": "compliant",
+      "lpu_code": "IMP-002",
+      "reference_price": 95.0,
+      "findings": [],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    },
+    {
+      "n": 3,
+      "description": "Pintura de forro em látex",
+      "unit": "m²",
+      "quantity": 6,
+      "unit_value": 35.0,
+      "total_value": 210.0,
+      "classification": "compliant",
+      "lpu_code": "PIN-002",
+      "reference_price": 35.0,
+      "findings": [],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    },
+    {
+      "n": 4,
+      "description": "Pintura de paredes do salão",
+      "unit": "m²",
+      "quantity": 40,
+      "unit_value": 35.0,
+      "total_value": 1400.0,
+      "classification": "out_of_scope",
+      "lpu_code": "PIN-001",
+      "reference_price": 35.0,
+      "findings": [
+        "out_of_scope_item"
+      ],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    },
+    {
+      "n": 5,
+      "description": "Recomposição de forro de gesso",
+      "unit": "m²",
+      "quantity": 6,
+      "unit_value": 95.0,
+      "total_value": 570.0,
+      "classification": "compliant",
+      "lpu_code": "IMP-002",
+      "reference_price": 95.0,
+      "findings": [
+        "duplicate_item"
+      ],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    }
+  ],
+  "attachments": {
+    "Orcamento_DEL-V0022.xlsx": {
+      "category": "quote_doc",
+      "moment": "undetermined",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Orçamento"
+    },
+    "IMG_20261023_083321.jpg": {
+      "category": "room_before_photo",
+      "moment": "before",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Forro com mancha de infiltração e mofo"
+    },
+    "IMG_20261027_093636.jpg": {
+      "category": "room_after_photo",
+      "moment": "after",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Forro recomposto e pintado"
+    }
+  },
+  "checklist_ok": true,
+  "missing": [],
+  "findings": [
+    "duplicate_item",
+    "out_of_scope_item"
+  ],
+  "optional": [],
+  "grades": {
+    "scope": 100,
+    "quote": 30,
+    "photos": 100
+  },
+  "score": 72,
+  "recommendation": "approve_with_caveats",
+  "confidence": "high"
+}

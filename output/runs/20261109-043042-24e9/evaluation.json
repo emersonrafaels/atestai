@@ -1,0 +1,55 @@
+{
+  "n": 1,
+  "exact_recommendation": 1,
+  "direction": 1,
+  "checklist": 1,
+  "avg_score_error": 6.0,
+  "by_kind": {
+    "missing_after_photo": {
+      "tp": 1,
+      "fp": 0,
+      "fn": 0
+    },
+    "out_of_scope_item": {
+      "tp": 1,
+      "fp": 0,
+      "fn": 0
+    },
+    "photo_dated_before": {
+      "tp": 1,
+      "fp": 0,
+      "fn": 0
+    },
+    "quantity_above_expected": {
+      "tp": 0,
+      "fp": 1,
+      "fn": 0
+    },
+    "reused_photo": {
+      "tp": 1,
+      "fp": 0,
+      "fn": 0
+    },
+    "unjustified_replacement": {
+      "tp": 1,
+      "fp": 0,
+      "fn": 0
+    }
+  },
+  "by_ticket": [
+    {
+      "ticket_id": "00517706",
+      "expected": "return_locked",
+      "obtained": "return_locked",
+      "expected_score": 32,
+      "obtained_score": 26,
+      "recommendation_ok": true,
+      "direction_ok": true,
+      "checklist_ok": true,
+      "missed": [],
+      "extra": [
+        "quantity_above_expected"
+      ]
+    }
+  ]
+}

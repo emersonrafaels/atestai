@@ -1,0 +1,75 @@
+{
+  "ticket_id": "01000079",
+  "workstream": "SISR",
+  "maintenance_type": "corrective",
+  "moment": "execution",
+  "category": "alarm",
+  "symptom": "moisture_infiltration",
+  "branch": {
+    "code": "0661",
+    "name": "Ag. Saúde",
+    "environment": "back_office"
+  },
+  "supplier": {
+    "name": "Fornecedor Kappa Alarmes Ltda.",
+    "cnpj": "01.234.567/0001-89"
+  },
+  "requested_scope": "Sensor IVP da back_office com disparos falsos: substituir o sensor e testar a zona.",
+  "quoted_value": 530.0,
+  "dates": {
+    "opening": "2026-11-10",
+    "supplier_submission": "2026-11-16",
+    "manager_review": "2026-11-17"
+  },
+  "status": "forwarded_to_backoffice",
+  "origin": "dataset",
+  "dataset": "validation",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "attachments": [
+    {
+      "file_name": "Orcamento_KAP-V0079.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 7630,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-16"
+    },
+    {
+      "file_name": "IMG_20261111_081736.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 178510,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-16"
+    },
+    {
+      "file_name": "IMG_20261115_093239.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 169249,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-16"
+    },
+    {
+      "file_name": "IMG_20261115_105510.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 171917,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-16"
+    },
+    {
+      "file_name": "IMG_20261116_181600.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 238511,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-16"
+    },
+    {
+      "file_name": "IMG_20261116_190500.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 193902,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-16"
+    }
+  ]
+}

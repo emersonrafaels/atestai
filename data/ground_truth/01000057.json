@@ -1,0 +1,79 @@
+{
+  "ticket_id": "01000057",
+  "dataset": "validation",
+  "service_template": "door",
+  "defects": [
+    "checklist"
+  ],
+  "workstream": "SETA",
+  "moment": "execution",
+  "maintenance_type": "corrective",
+  "category": "metalwork",
+  "symptom": "mechanical_failure",
+  "before_applicable": false,
+  "quoted_value": 660.0,
+  "amount_at_issue": 0.0,
+  "items": [
+    {
+      "n": 1,
+      "description": "Mola aérea nova",
+      "unit": "un",
+      "quantity": 1,
+      "unit_value": 420.0,
+      "total_value": 420.0,
+      "classification": "compliant",
+      "lpu_code": "SER-001",
+      "reference_price": 420.0,
+      "findings": [],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    },
+    {
+      "n": 2,
+      "description": "Instalação de mola aérea",
+      "unit": "un",
+      "quantity": 1,
+      "unit_value": 150.0,
+      "total_value": 150.0,
+      "classification": "compliant",
+      "lpu_code": "SER-002",
+      "reference_price": 150.0,
+      "findings": [],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    },
+    {
+      "n": 3,
+      "description": "Regulagem de porta",
+      "unit": "un",
+      "quantity": 1,
+      "unit_value": 90.0,
+      "total_value": 90.0,
+      "classification": "compliant",
+      "lpu_code": "SER-003",
+      "reference_price": 90.0,
+      "findings": [],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    }
+  ],
+  "attachments": {
+    "Orcamento_ZET-V0057.xlsx": {
+      "category": "quote_doc",
+      "moment": "undetermined",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Orçamento"
+    }
+  },
+  "checklist_ok": false,
+  "missing": [
+    "service_photo"
+  ],
+  "findings": [],
+  "optional": [],
+  "grades": null,
+  "score": null,
+  "recommendation": "checklist_returned",
+  "confidence": null
+}

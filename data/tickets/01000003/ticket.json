@@ -1,0 +1,75 @@
+{
+  "ticket_id": "01000003",
+  "workstream": "SETA",
+  "maintenance_type": "corrective",
+  "moment": "execution",
+  "category": "lighting",
+  "symptom": "poor_lighting",
+  "branch": {
+    "code": "0333",
+    "name": "Ag. Ipiranga",
+    "environment": "backoffice"
+  },
+  "supplier": {
+    "name": "Fornecedor Gama Instalações Elétricas Ltda.",
+    "cnpj": "34.567.890/0001-12"
+  },
+  "requested_scope": "Trocar as 12 lâmpadas tubulares queimadas do backoffice.",
+  "quoted_value": 564.0,
+  "dates": {
+    "opening": "2026-10-15",
+    "supplier_submission": "2026-10-21",
+    "manager_review": "2026-10-22"
+  },
+  "status": "forwarded_to_backoffice",
+  "origin": "dataset",
+  "dataset": "validation",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "attachments": [
+    {
+      "file_name": "Orcamento_GAM-V0003.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 7586,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-21"
+    },
+    {
+      "file_name": "IMG_20261016_084619.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 167967,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-21"
+    },
+    {
+      "file_name": "IMG_20261020_093719.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 152074,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-21"
+    },
+    {
+      "file_name": "IMG_20261020_101357.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 219077,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-21"
+    },
+    {
+      "file_name": "IMG_20261020_115030.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 212473,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-21"
+    },
+    {
+      "file_name": "IMG_20261021_190500.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 193808,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-21"
+    }
+  ]
+}

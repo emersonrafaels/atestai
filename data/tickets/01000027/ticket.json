@@ -1,0 +1,61 @@
+{
+  "ticket_id": "01000027",
+  "workstream": "SETA",
+  "maintenance_type": "corrective",
+  "moment": "execution",
+  "category": "metalwork",
+  "symptom": "mechanical_failure",
+  "branch": {
+    "code": "0661",
+    "name": "Ag. Saúde",
+    "environment": "treasury"
+  },
+  "supplier": {
+    "name": "Fornecedor Zeta Serralheria e Portas ME",
+    "cnpj": "67.890.123/0001-45"
+  },
+  "requested_scope": "Porta do treasury não fecha sozinha: trocar a mola aérea e regular.",
+  "quoted_value": 800.0,
+  "dates": {
+    "opening": "2026-10-23",
+    "supplier_submission": "2026-10-26",
+    "manager_review": "2026-10-27"
+  },
+  "status": "forwarded_to_backoffice",
+  "origin": "dataset",
+  "dataset": "validation",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "attachments": [
+    {
+      "file_name": "Orcamento_ZET-V0027.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 7672,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-26"
+    },
+    {
+      "file_name": "IMG_20261025_083556.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 174100,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-26"
+    },
+    {
+      "file_name": "IMG_20261025_093111.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 170192,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-26"
+    },
+    {
+      "file_name": "IMG_20261026_175800.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 210481,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-26"
+    }
+  ]
+}

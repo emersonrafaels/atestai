@@ -1,0 +1,119 @@
+# Régua do score de conformidade (deck v26). O modelo aponta; esta régua decide.
+# Alterar aqui muda notas, score e recomendação sem tocar no código. Suba a versão a cada mudança.
+
+[default.rubric]
+version = "2026-11-v3"  # v3: chaves e valores em inglês (mesmas regras da v2)
+
+# peso de cada validação no score (somam 100)
+weights = { scope = 20, quote = 40, photos = 40 }
+
+# desconto por severidade; cada tipo de apontamento desconta uma vez por validação
+discount_by_severity = { critical = 60, high = 35, medium = 15, low = 5 }
+
+# da maior faixa para a menor
+bands = [
+  { score_min = 85, recommendation = "approve" },
+  { score_min = 70, recommendation = "approve_with_caveats" },
+  { score_min = 0, recommendation = "return_to_supplier" },
+]
+
+# quantos "redutores de confiança" levam a confiança média/baixa (baixa → análise detalhada)
+confidence = { medium_with_n_reducers = 1, low_with_n_reducers = 2 }
+
+price_tolerance_pct = 10     # acima da referência + tolerância vira apontamento
+# Semelhança das fotos: phash + dhash (0 = idênticas, 128 = máximo), comparando também com recortes da foto antiga.
+# Calibração (conjuntos de demonstração + validação, 248 fotos): cópias reenviadas ficaram em 0–11 e fotos distintas
+# a partir de 18. O limite fica no meio do vão. Recalibre com fotos reais (generator/ e output/ ajudam a medir).
+hash_max_distance = 14
+hash_max_distance_low_detail = 6  # foto escura/tremida: hash perde poder de distinção, só cópia quase idêntica conta
+hash_crops = [0.02, 0.05, 0.10]  # a foto antiga também é comparada recortada (fração de cada borda): pega cópia reenviada ou recortada
+hash_min_detail = 9.0     # abaixo disso a foto é "pouco detalhe" (desvio das bordas numa miniatura 256 px)
+hash_method = "phash + dhash (soma das distâncias de Hamming)"
+spreadsheet_value_tolerance = 1.00   # R$ de diferença aceitos entre planilha e chamado
+photo_date_tolerance_days = 1
+
+# --- tipos de apontamento -----------------------------------------------------------------------
+# amount_at_issue: "item" (o item inteiro), "excess" (só o que passa da referência/quantidade) ou "none"
+
+[default.rubric.finding_types.vague_scope]
+validation = "scope"
+severity = "medium"
+reduces_confidence = true
+description = "Escopo vago ou sem ambiente definido"
+
+[default.rubric.finding_types.inconsistent_scope]
+validation = "scope"
+severity = "medium"
+reduces_confidence = true
+description = "Escopo incoerente com a categoria ou o sintoma"
+
+[default.rubric.finding_types.out_of_scope_item]
+validation = "quote"
+severity = "high"
+amount_at_issue = "item"
+description = "Item fora do escopo"
+
+[default.rubric.finding_types.unjustified_replacement]
+validation = "quote"
+severity = "high"
+amount_at_issue = "item"
+description = "Troca ou peça sem justificativa técnica"
+
+[default.rubric.finding_types.duplicate_item]
+validation = "quote"
+severity = "high"
+amount_at_issue = "item"
+description = "Item cobrado em duplicidade"
+
+[default.rubric.finding_types.quantity_above_expected]
+validation = "quote"
+severity = "medium"
+amount_at_issue = "excess"
+description = "Quantidade acima do esperado"
+
+[default.rubric.finding_types.price_above_reference]
+validation = "quote"
+severity = "medium"
+amount_at_issue = "excess"
+description = "Preço acima da referência"
+
+[default.rubric.finding_types.spreadsheet_mismatch]
+validation = "quote"
+severity = "medium"
+description = "Planilha divergente do chamado (categoria, sintoma, escopo ou valor)"
+
+[default.rubric.finding_types.photo_mismatch]
+validation = "photos"
+severity = "high"
+description = "Foto não corresponde ao escopo"
+
+[default.rubric.finding_types.missing_after_photo]
+validation = "photos"
+severity = "high"
+description = "Sem foto do serviço concluído"
+
+[default.rubric.finding_types.missing_before_photo]
+validation = "photos"
+severity = "medium"
+phase = 2
+description = "Sem foto do \"antes\""
+
+[default.rubric.finding_types.unreadable_photo]
+validation = "photos"
+severity = "low"
+phase = 2
+reduces_confidence = true
+description = "Foto ilegível"
+
+[default.rubric.finding_types.photo_dated_before]
+validation = "photos"
+severity = "medium"
+phase = 2
+description = "Foto com data anterior à abertura do chamado"
+
+[default.rubric.finding_types.reused_photo]
+validation = "photos"
+severity = "critical"
+phase = 2
+lock = true
+description = "Foto reaproveitada de outro chamado"

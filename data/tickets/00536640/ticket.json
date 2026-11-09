@@ -1,0 +1,67 @@
+{
+  "ticket_id": "00536640",
+  "workstream": "SISR",
+  "maintenance_type": "preventive",
+  "moment": "execution",
+  "category": "cctv_and_alarm",
+  "symptom": "preventive_maintenance",
+  "branch": {
+    "code": "0712",
+    "name": "Ag. Leste",
+    "environment": "agência inteira"
+  },
+  "supplier": {
+    "name": "Fornecedor Iota Segurança Eletrônica Ltda.",
+    "cnpj": "90.123.456/0001-78"
+  },
+  "requested_scope": "Manutenção preventiva semestral do sistema de segurança: teste das 8 câmeras e dos 12 sensores do alarme, verificação da central e do gravador (NVR) e emissão de relatório.",
+  "quoted_value": 824.0,
+  "dates": {
+    "opening": "2026-10-01",
+    "supplier_submission": "2026-10-03",
+    "manager_review": "2026-10-06"
+  },
+  "status": "forwarded_to_backoffice",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "dataset": "demo",
+  "attachments": [
+    {
+      "file_name": "Orcamento_IOTA-PRV-2026-02.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 7725,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-03"
+    },
+    {
+      "file_name": "IMG_20261003_101144.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 223891,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-03"
+    },
+    {
+      "file_name": "IMG_20261003_102530.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 175183,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-03"
+    },
+    {
+      "file_name": "IMG_20261003_104012.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 178410,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-03"
+    },
+    {
+      "file_name": "IMG_20261003_113000.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 204175,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-03"
+    }
+  ]
+}

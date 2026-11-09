@@ -1,0 +1,54 @@
+{
+  "ticket_id": "01000076",
+  "workstream": "SETA",
+  "maintenance_type": "corrective",
+  "moment": "quote",
+  "category": "plumbing",
+  "symptom": "false_alarm",
+  "branch": {
+    "code": "0661",
+    "name": "Ag. Saúde",
+    "environment": "cozinha dos funcionários"
+  },
+  "supplier": {
+    "name": "Fornecedor Theta Hidráulica Ltda.",
+    "cnpj": "89.012.345/0001-67"
+  },
+  "requested_scope": "Vazamento no sifão da pia da cozinha dos funcionários. Trocar o sifão.",
+  "quoted_value": 548.0,
+  "dates": {
+    "opening": "2026-11-09",
+    "supplier_submission": "2026-11-15",
+    "manager_review": "2026-11-16"
+  },
+  "status": "forwarded_to_backoffice",
+  "origin": "dataset",
+  "dataset": "validation",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "attachments": [
+    {
+      "file_name": "Orcamento_THE-V0076.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 7706,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-15"
+    },
+    {
+      "file_name": "IMG_20261110_085646.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 185729,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-15"
+    },
+    {
+      "file_name": "WhatsApp Image 2026-11-15 at 15.12.23.jpeg",
+      "content_type": "image/jpeg",
+      "size_bytes": 91148,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-15"
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "ticket_id": "00533402",
+  "workstream": "SETA",
+  "maintenance_type": "corrective",
+  "moment": "execution",
+  "category": "metalwork",
+  "symptom": "mechanical_failure",
+  "branch": {
+    "code": "0129",
+    "name": "Ag. Vila Nova",
+    "environment": "backoffice"
+  },
+  "supplier": {
+    "name": "Fornecedor Zeta Serralheria e Portas ME",
+    "cnpj": "67.890.123/0001-45"
+  },
+  "requested_scope": "Verificar porta. Urgente.",
+  "quoted_value": 660.0,
+  "dates": {
+    "opening": "2026-10-02",
+    "supplier_submission": "2026-10-06",
+    "manager_review": "2026-10-07"
+  },
+  "status": "forwarded_to_backoffice",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "dataset": "demo",
+  "attachments": [
+    {
+      "file_name": "Orcamento_ZT-0088.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 7612,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-06"
+    },
+    {
+      "file_name": "IMG_20261006_154402.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 174354,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-06"
+    },
+    {
+      "file_name": "IMG_20261006_154431.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 183818,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-06"
+    },
+    {
+      "file_name": "IMG_20261006_154515.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 237549,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-06"
+    }
+  ]
+}

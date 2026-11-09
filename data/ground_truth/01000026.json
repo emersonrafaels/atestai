@@ -1,0 +1,90 @@
+{
+  "ticket_id": "01000026",
+  "dataset": "validation",
+  "service_template": "sink",
+  "defects": [
+    "inconsistent"
+  ],
+  "workstream": "SETA",
+  "moment": "quote",
+  "maintenance_type": "corrective",
+  "category": "plumbing",
+  "symptom": "false_alarm",
+  "before_applicable": true,
+  "quoted_value": 358.0,
+  "amount_at_issue": 0.0,
+  "items": [
+    {
+      "n": 1,
+      "description": "Visita técnica",
+      "unit": "vb",
+      "quantity": 1,
+      "unit_value": 150.0,
+      "total_value": 150.0,
+      "classification": "compliant",
+      "lpu_code": "GER-001",
+      "reference_price": 150.0,
+      "findings": [],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    },
+    {
+      "n": 2,
+      "description": "Sifão PVC para pia",
+      "unit": "un",
+      "quantity": 1,
+      "unit_value": 38.0,
+      "total_value": 38.0,
+      "classification": "compliant",
+      "lpu_code": "HID-001",
+      "reference_price": 38.0,
+      "findings": [],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    },
+    {
+      "n": 3,
+      "description": "Mão de obra hidráulica",
+      "unit": "h",
+      "quantity": 2,
+      "unit_value": 85.0,
+      "total_value": 170.0,
+      "classification": "compliant",
+      "lpu_code": "HID-003",
+      "reference_price": 85.0,
+      "findings": [],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    }
+  ],
+  "attachments": {
+    "Orcamento_THE-V0026.xlsx": {
+      "category": "quote_doc",
+      "moment": "undetermined",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Orçamento"
+    },
+    "IMG_20261024_081054.jpg": {
+      "category": "room_before_photo",
+      "moment": "before",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Sifão vazando sob a pia"
+    }
+  },
+  "checklist_ok": true,
+  "missing": [],
+  "findings": [
+    "inconsistent_scope"
+  ],
+  "optional": [],
+  "grades": {
+    "scope": 85,
+    "quote": 100,
+    "photos": 100
+  },
+  "score": 97,
+  "recommendation": "approve",
+  "confidence": "medium"
+}

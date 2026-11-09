@@ -1,0 +1,311 @@
+{
+  "n": 20,
+  "exact_recommendation": 20,
+  "direction": 20,
+  "checklist": 20,
+  "avg_score_error": 0.0,
+  "by_kind": {
+    "duplicate_item": {
+      "tp": 2,
+      "fp": 0,
+      "fn": 0
+    },
+    "missing_after_photo": {
+      "tp": 1,
+      "fp": 0,
+      "fn": 0
+    },
+    "out_of_scope_item": {
+      "tp": 3,
+      "fp": 0,
+      "fn": 0
+    },
+    "photo_dated_before": {
+      "tp": 1,
+      "fp": 0,
+      "fn": 0
+    },
+    "photo_mismatch": {
+      "tp": 2,
+      "fp": 0,
+      "fn": 0
+    },
+    "price_above_reference": {
+      "tp": 3,
+      "fp": 0,
+      "fn": 0
+    },
+    "quantity_above_expected": {
+      "tp": 2,
+      "fp": 0,
+      "fn": 0
+    },
+    "reused_photo": {
+      "tp": 3,
+      "fp": 0,
+      "fn": 0
+    },
+    "spreadsheet_mismatch": {
+      "tp": 2,
+      "fp": 0,
+      "fn": 0
+    },
+    "unjustified_replacement": {
+      "tp": 1,
+      "fp": 0,
+      "fn": 0
+    },
+    "unreadable_photo": {
+      "tp": 2,
+      "fp": 0,
+      "fn": 0
+    },
+    "vague_scope": {
+      "tp": 1,
+      "fp": 0,
+      "fn": 0
+    }
+  },
+  "by_ticket": [
+    {
+      "ticket_id": "02000001",
+      "expected": "approve",
+      "obtained": "approve",
+      "expected_score": 100,
+      "obtained_score": 100,
+      "recommendation_ok": true,
+      "direction_ok": true,
+      "checklist_ok": true,
+      "missed": [],
+      "extra": []
+    },
+    {
+      "ticket_id": "02000002",
+      "expected": "approve",
+      "obtained": "approve",
+      "expected_score": 100,
+      "obtained_score": 100,
+      "recommendation_ok": true,
+      "direction_ok": true,
+      "checklist_ok": true,
+      "missed": [],
+      "extra": []
+    },
+    {
+      "ticket_id": "02000003",
+      "expected": "approve",
+      "obtained": "approve",
+      "expected_score": 100,
+      "obtained_score": 100,
+      "recommendation_ok": true,
+      "direction_ok": true,
+      "checklist_ok": true,
+      "missed": [],
+      "extra": []
+    },
+    {
+      "ticket_id": "02000004",
+      "expected": "approve",
+      "obtained": "approve",
+      "expected_score": 100,
+      "obtained_score": 100,
+      "recommendation_ok": true,
+      "direction_ok": true,
+      "checklist_ok": true,
+      "missed": [],
+      "extra": []
+    },
+    {
+      "ticket_id": "02000005",
+      "expected": "approve",
+      "obtained": "approve",
+      "expected_score": 100,
+      "obtained_score": 100,
+      "recommendation_ok": true,
+      "direction_ok": true,
+      "checklist_ok": true,
+      "missed": [],
+      "extra": []
+    },
+    {
+      "ticket_id": "02000006",
+      "expected": "approve",
+      "obtained": "approve",
+      "expected_score": 100,
+      "obtained_score": 100,
+      "recommendation_ok": true,
+      "direction_ok": true,
+      "checklist_ok": true,
+      "missed": [],
+      "extra": []
+    },
+    {
+      "ticket_id": "02000007",
+      "expected": "approve",
+      "obtained": "approve",
+      "expected_score": 100,
+      "obtained_score": 100,
+      "recommendation_ok": true,
+      "direction_ok": true,
+      "checklist_ok": true,
+      "missed": [],
+      "extra": []
+    },
+    {
+      "ticket_id": "02000008",
+      "expected": "approve",
+      "obtained": "approve",
+      "expected_score": 100,
+      "obtained_score": 100,
+      "recommendation_ok": true,
+      "direction_ok": true,
+      "checklist_ok": true,
+      "missed": [],
+      "extra": []
+    },
+    {
+      "ticket_id": "02000009",
+      "expected": "approve",
+      "obtained": "approve",
+      "expected_score": 100,
+      "obtained_score": 100,
+      "recommendation_ok": true,
+      "direction_ok": true,
+      "checklist_ok": true,
+      "missed": [],
+      "extra": []
+    },
+    {
+      "ticket_id": "02000010",
+      "expected": "approve",
+      "obtained": "approve",
+      "expected_score": 100,
+      "obtained_score": 100,
+      "recommendation_ok": true,
+      "direction_ok": true,
+      "checklist_ok": true,
+      "missed": [],
+      "extra": []
+    },
+    {
+      "ticket_id": "02000011",
+      "expected": "checklist_returned",
+      "obtained": "checklist_returned",
+      "expected_score": null,
+      "obtained_score": null,
+      "recommendation_ok": true,
+      "direction_ok": true,
+      "checklist_ok": true,
+      "missed": [],
+      "extra": []
+    },
+    {
+      "ticket_id": "02000012",
+      "expected": "approve",
+      "obtained": "approve",
+      "expected_score": 94,
+      "obtained_score": 94,
+      "recommendation_ok": true,
+      "direction_ok": true,
+      "checklist_ok": true,
+      "missed": [],
+      "extra": []
+    },
+    {
+      "ticket_id": "02000013",
+      "expected": "approve",
+      "obtained": "approve",
+      "expected_score": 92,
+      "obtained_score": 92,
+      "recommendation_ok": true,
+      "direction_ok": true,
+      "checklist_ok": true,
+      "missed": [],
+      "extra": []
+    },
+    {
+      "ticket_id": "02000014",
+      "expected": "return_locked",
+      "obtained": "return_locked",
+      "expected_score": 48,
+      "obtained_score": 48,
+      "recommendation_ok": true,
+      "direction_ok": true,
+      "checklist_ok": true,
+      "missed": [],
+      "extra": []
+    },
+    {
+      "ticket_id": "02000015",
+      "expected": "approve_with_caveats",
+      "obtained": "approve_with_caveats",
+      "expected_score": 74,
+      "obtained_score": 74,
+      "recommendation_ok": true,
+      "direction_ok": true,
+      "checklist_ok": true,
+      "missed": [],
+      "extra": []
+    },
+    {
+      "ticket_id": "02000016",
+      "expected": "approve_with_caveats",
+      "obtained": "approve_with_caveats",
+      "expected_score": 80,
+      "obtained_score": 80,
+      "recommendation_ok": true,
+      "direction_ok": true,
+      "checklist_ok": true,
+      "missed": [],
+      "extra": []
+    },
+    {
+      "ticket_id": "02000017",
+      "expected": "return_locked",
+      "obtained": "return_locked",
+      "expected_score": 54,
+      "obtained_score": 54,
+      "recommendation_ok": true,
+      "direction_ok": true,
+      "checklist_ok": true,
+      "missed": [],
+      "extra": []
+    },
+    {
+      "ticket_id": "02000018",
+      "expected": "return_to_supplier",
+      "obtained": "return_to_supplier",
+      "expected_score": 66,
+      "obtained_score": 66,
+      "recommendation_ok": true,
+      "direction_ok": true,
+      "checklist_ok": true,
+      "missed": [],
+      "extra": []
+    },
+    {
+      "ticket_id": "02000019",
+      "expected": "approve_with_caveats",
+      "obtained": "approve_with_caveats",
+      "expected_score": 77,
+      "obtained_score": 77,
+      "recommendation_ok": true,
+      "direction_ok": true,
+      "checklist_ok": true,
+      "missed": [],
+      "extra": []
+    },
+    {
+      "ticket_id": "02000020",
+      "expected": "return_locked",
+      "obtained": "return_locked",
+      "expected_score": 62,
+      "obtained_score": 62,
+      "recommendation_ok": true,
+      "direction_ok": true,
+      "checklist_ok": true,
+      "missed": [],
+      "extra": []
+    }
+  ]
+}

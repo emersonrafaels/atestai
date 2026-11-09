@@ -1,0 +1,209 @@
+{
+  "n": 1,
+  "no_ground_truth": 0,
+  "classes": [
+    "approve",
+    "approve_with_caveats",
+    "detailed_review",
+    "return_to_supplier",
+    "return_locked",
+    "checklist_returned"
+  ],
+  "matrix": [
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      1,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  ],
+  "accuracy": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+  },
+  "balanced_accuracy": 1.0,
+  "kappa": null,
+  "problem_catch": {
+    "tp": 1,
+    "fp": 0,
+    "fn": 0,
+    "tn": 0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "specificity": null
+  },
+  "problem_catch_f1_ci": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+  },
+  "checklist_accuracy": 1.0,
+  "findings": [
+    {
+      "kind": "missing_before_photo",
+      "support": 1,
+      "tp": 1,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    {
+      "kind": "photo_mismatch",
+      "support": 1,
+      "tp": 1,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    {
+      "kind": "out_of_scope_item",
+      "support": 1,
+      "tp": 1,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    {
+      "kind": "quantity_above_expected",
+      "support": 1,
+      "tp": 1,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    }
+  ],
+  "findings_micro": {
+    "tp": 4,
+    "fp": 0,
+    "fn": 0,
+    "tn": 0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "specificity": null
+  },
+  "finding_macro_f1": 1.0,
+  "score_pairs": [
+    {
+      "ticket_id": "00482193",
+      "expected": 60,
+      "obtained": 60
+    }
+  ],
+  "score_mae": 0.0,
+  "score_rmse": 0.0,
+  "score_bias": 0.0,
+  "score_pearson": null,
+  "expected_amount_at_issue": 0.0,
+  "obtained_amount_at_issue": 0.0,
+  "amount_at_issue_mae": null,
+  "by_category": [
+    {
+      "name": "painting",
+      "n": 1,
+      "hits": 1,
+      "accuracy": 1.0
+    }
+  ],
+  "by_service_template": [
+    {
+      "name": "demo",
+      "n": 1,
+      "hits": 1,
+      "accuracy": 1.0
+    }
+  ],
+  "operations": {
+    "latency_p50_s": 45.74,
+    "latency_p95_s": 45.74,
+    "avg_cost_brl": 0.5678,
+    "p95_cost_brl": 0.5678,
+    "total_cost_brl": 0.5678,
+    "avg_input_tokens": 23447.0,
+    "avg_output_tokens": 3702.0
+  },
+  "mismatches": [],
+  "gate": [
+    {
+      "metric": "Acurácia da recomendação",
+      "value": 1.0,
+      "limit": 0.85,
+      "direction": ">=",
+      "passed": true
+    },
+    {
+      "metric": "Kappa de Cohen",
+      "value": null,
+      "limit": 0.75,
+      "direction": ">=",
+      "passed": false
+    },
+    {
+      "metric": "F1 dos apontamentos (micro)",
+      "value": 1.0,
+      "limit": 0.8,
+      "direction": ">=",
+      "passed": true
+    },
+    {
+      "metric": "Erro médio do score",
+      "value": 0.0,
+      "limit": 8.0,
+      "direction": "<=",
+      "passed": true
+    }
+  ],
+  "gate_passed": false
+}

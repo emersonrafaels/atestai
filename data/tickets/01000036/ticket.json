@@ -1,0 +1,47 @@
+{
+  "ticket_id": "01000036",
+  "workstream": "SETA",
+  "maintenance_type": "corrective",
+  "moment": "quote",
+  "category": "plumbing",
+  "symptom": "leak",
+  "branch": {
+    "code": "0215",
+    "name": "Ag. Butantã",
+    "environment": "cozinha dos funcionários"
+  },
+  "supplier": {
+    "name": "Fornecedor Theta Hidráulica Ltda.",
+    "cnpj": "89.012.345/0001-67"
+  },
+  "requested_scope": "Vazamento no sifão da pia da cozinha dos funcionários. Trocar o sifão.",
+  "quoted_value": 607.69,
+  "dates": {
+    "opening": "2026-10-26",
+    "supplier_submission": "2026-10-30",
+    "manager_review": "2026-10-31"
+  },
+  "status": "forwarded_to_backoffice",
+  "origin": "dataset",
+  "dataset": "validation",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "attachments": [
+    {
+      "file_name": "Orcamento_THE-V0036.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 7651,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-30"
+    },
+    {
+      "file_name": "IMG_20261027_083723.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 165196,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-30"
+    }
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "ticket_id": "01000065",
+  "workstream": "SETA",
+  "maintenance_type": "corrective",
+  "moment": "execution",
+  "category": "electrical",
+  "symptom": "electrical_failure",
+  "branch": {
+    "code": "0102",
+    "name": "Ag. Barra Funda",
+    "environment": "salão de atendimento"
+  },
+  "supplier": {
+    "name": "Fornecedor Eta Elétrica e Manutenção Ltda.",
+    "cnpj": "78.901.234/0001-56"
+  },
+  "requested_scope": "Substituir 8 tomadas danificadas no salão de atendimento, uma com sinais de queima.",
+  "quoted_value": 917.44,
+  "dates": {
+    "opening": "2026-11-05",
+    "supplier_submission": "2026-11-07",
+    "manager_review": "2026-11-08"
+  },
+  "status": "forwarded_to_backoffice",
+  "origin": "dataset",
+  "dataset": "validation",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "attachments": [
+    {
+      "file_name": "Orcamento_ETA-V0065.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 7660,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-07"
+    },
+    {
+      "file_name": "IMG_20261106_082415.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 159447,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-07"
+    },
+    {
+      "file_name": "IMG_20261106_093843.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 171118,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-07"
+    },
+    {
+      "file_name": "IMG_20261107_181700.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 234698,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-07"
+    }
+  ]
+}

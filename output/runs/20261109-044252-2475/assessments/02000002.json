@@ -1,0 +1,420 @@
+{
+  "ticket_id": "02000002",
+  "workstream": "SETA",
+  "category": "waterproofing",
+  "symptom": "moisture_infiltration",
+  "maintenance_type": "corrective",
+  "moment": "execution",
+  "branch": {
+    "code": "5531",
+    "name": "Itaú Ag. Moema",
+    "environment": "backoffice"
+  },
+  "supplier": "Fornecedor Delta Impermeabilizações Ltda.",
+  "quoted_value": 594.0,
+  "requested_scope": "Infiltração no forro do backoffice: tratar a origem e recompor o forro de gesso (aprox. 3 m²).",
+  "generated_at": "2026-11-09T04:42:57.750428",
+  "rubric_version": "2026-11-v3",
+  "prompts_version": "2026-11-v3",
+  "config_signature": "294d860f8d37",
+  "phase": 2,
+  "mode": "simulated",
+  "batch_mode": "sync",
+  "models": {
+    "main": "anthropic:claude-sonnet-5-5",
+    "fast": "anthropic:claude-sonnet-5-5"
+  },
+  "run_id": "20261109-044252-2475",
+  "record_id": 24,
+  "checklist": {
+    "category": "waterproofing",
+    "maintenance": "corrective",
+    "moment": "execution",
+    "complete": true,
+    "uploaded": 3,
+    "total": 3,
+    "requirements": [
+      {
+        "id": "quote",
+        "description": "Orçamento na planilha Excel padrão",
+        "met": true,
+        "attachments": [
+          "Orcamento_DEL-V0002.xlsx"
+        ]
+      },
+      {
+        "id": "before_photo",
+        "description": "Foto do dano antes do serviço",
+        "met": true,
+        "attachments": [
+          "IMG_20261026_084837.jpg"
+        ]
+      },
+      {
+        "id": "after_photo",
+        "description": "Foto do local depois do serviço",
+        "met": true,
+        "attachments": [
+          "IMG_20261028_095944.jpg"
+        ]
+      }
+    ],
+    "missing": []
+  },
+  "attachments": [
+    {
+      "index": 1,
+      "name": "Orcamento_DEL-V0002.xlsx",
+      "category": "quote_doc",
+      "moment": "undetermined",
+      "readable": true,
+      "short_description": "Orçamento DEL-V0002: 3 itens, R$ 594.00"
+    },
+    {
+      "index": 2,
+      "name": "IMG_20261026_084837.jpg",
+      "category": "room_before_photo",
+      "moment": "before",
+      "readable": true,
+      "short_description": "Forro com mancha de infiltração e mofo"
+    },
+    {
+      "index": 3,
+      "name": "IMG_20261028_095944.jpg",
+      "category": "room_after_photo",
+      "moment": "after",
+      "readable": true,
+      "short_description": "Forro recomposto e pintado"
+    }
+  ],
+  "recommendation": "approve",
+  "recommendation_reason": "Score de 85 ou mais, sem travas",
+  "score": 100,
+  "grades": {
+    "scope": 100,
+    "quote": 100,
+    "photos": 100
+  },
+  "confidence": "high",
+  "confidence_reducers": [],
+  "findings": [],
+  "amount_at_issue": 0.0,
+  "amount_at_issue_pct": 0.0,
+  "scope": {
+    "local": "(simulado)",
+    "environment": "(simulado)",
+    "equipment": "",
+    "requested_services": [
+      "(simulado a partir do gabarito)"
+    ],
+    "mentioned_quantities": [],
+    "acceptance_criteria": [
+      "(simulado)"
+    ],
+    "expected_evidence": [],
+    "before_evidence_applicable": true,
+    "consistent_with_category_symptom": true,
+    "coherence_note": "",
+    "vague_scope": false,
+    "vague_reason": ""
+  },
+  "items": [
+    {
+      "n": 1,
+      "description": "Impermeabilização com manta líquida",
+      "unit": "m²",
+      "quantity": 3.0,
+      "unit_value": 68.0,
+      "total_value": 204.0,
+      "classification": "compliant",
+      "reason": "(simulado) aderente",
+      "lpu_code": "IMP-001",
+      "reference_price": 68.0,
+      "expected_quantity_max": null,
+      "amount_at_issue": 0.0,
+      "findings": []
+    },
+    {
+      "n": 2,
+      "description": "Recomposição de forro de gesso",
+      "unit": "m²",
+      "quantity": 3.0,
+      "unit_value": 95.0,
+      "total_value": 285.0,
+      "classification": "compliant",
+      "reason": "(simulado) aderente",
+      "lpu_code": "IMP-002",
+      "reference_price": 95.0,
+      "expected_quantity_max": null,
+      "amount_at_issue": 0.0,
+      "findings": []
+    },
+    {
+      "n": 3,
+      "description": "Pintura de forro em látex",
+      "unit": "m²",
+      "quantity": 3.0,
+      "unit_value": 35.0,
+      "total_value": 105.0,
+      "classification": "compliant",
+      "reason": "(simulado) aderente",
+      "lpu_code": "PIN-002",
+      "reference_price": 35.0,
+      "expected_quantity_max": null,
+      "amount_at_issue": 0.0,
+      "findings": []
+    }
+  ],
+  "quote_notes": [],
+  "photos": [
+    {
+      "file": "IMG_20261026_084837.jpg",
+      "environment": "",
+      "what_it_shows": "Forro com mancha de infiltração e mofo",
+      "moment": "before",
+      "readable": true,
+      "matches_scope": "yes",
+      "reason": "(simulado)",
+      "covered_items": [],
+      "exif_date": "2026-10-26T08:15:00",
+      "reused_from": null,
+      "integrity_signals": []
+    },
+    {
+      "file": "IMG_20261028_095944.jpg",
+      "environment": "",
+      "what_it_shows": "Forro recomposto e pintado",
+      "moment": "after",
+      "readable": true,
+      "matches_scope": "yes",
+      "reason": "(simulado)",
+      "covered_items": [],
+      "exif_date": "2026-10-28T09:15:00",
+      "reused_from": null,
+      "integrity_signals": []
+    }
+  ],
+  "photo_summary": {
+    "has_before_photo": true,
+    "has_done_service_photo": true,
+    "done_justification": "(simulado)",
+    "items_without_photo": [],
+    "notes": ""
+  },
+  "summary": "Aprovar. Score de 85 ou mais, sem travas.",
+  "supplier_message": "",
+  "llm_calls": [
+    {
+      "task": "identify_attachments",
+      "provider": "simulated",
+      "model": "simulado (anthropic:claude-sonnet-5-5)",
+      "resolved_model": "",
+      "prompt_version": "",
+      "prompt_hash": "",
+      "schema_hash": "",
+      "start": "2026-11-09T04:42:53.176592",
+      "duration_s": 0.63,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 0,
+      "cost_usd": 0.0,
+      "from_cache": false,
+      "simulated": true,
+      "via_batch": false,
+      "batch_id": null,
+      "response": {
+        "attachments": [
+          {
+            "index": 2,
+            "category": "room_before_photo",
+            "moment": "before",
+            "readable": true,
+            "short_description": "Forro com mancha de infiltração e mofo"
+          },
+          {
+            "index": 3,
+            "category": "room_after_photo",
+            "moment": "after",
+            "readable": true,
+            "short_description": "Forro recomposto e pintado"
+          }
+        ]
+      }
+    },
+    {
+      "task": "scope",
+      "provider": "simulated",
+      "model": "simulado (anthropic:claude-sonnet-5-5)",
+      "resolved_model": "",
+      "prompt_version": "",
+      "prompt_hash": "",
+      "schema_hash": "",
+      "start": "2026-11-09T04:42:53.810044",
+      "duration_s": 0.36,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 0,
+      "cost_usd": 0.0,
+      "from_cache": false,
+      "simulated": true,
+      "via_batch": false,
+      "batch_id": null,
+      "response": {
+        "local": "(simulado)",
+        "environment": "(simulado)",
+        "equipment": "",
+        "requested_services": [
+          "(simulado a partir do gabarito)"
+        ],
+        "mentioned_quantities": [],
+        "acceptance_criteria": [
+          "(simulado)"
+        ],
+        "expected_evidence": [],
+        "before_evidence_applicable": true,
+        "consistent_with_category_symptom": true,
+        "coherence_note": "",
+        "vague_scope": false,
+        "vague_reason": ""
+      }
+    },
+    {
+      "task": "quote_review",
+      "provider": "simulated",
+      "model": "simulado (anthropic:claude-sonnet-5-5)",
+      "resolved_model": "",
+      "prompt_version": "",
+      "prompt_hash": "",
+      "schema_hash": "",
+      "start": "2026-11-09T04:42:54.188279",
+      "duration_s": 0.46,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 0,
+      "cost_usd": 0.0,
+      "from_cache": false,
+      "simulated": true,
+      "via_batch": false,
+      "batch_id": null,
+      "response": {
+        "items": [
+          {
+            "n": 1,
+            "classification": "compliant",
+            "reason": "(simulado) aderente",
+            "expected_quantity_max": -1.0,
+            "plausible_quantity": true,
+            "duplicate_of": 0,
+            "lpu_code": "IMP-001"
+          },
+          {
+            "n": 2,
+            "classification": "compliant",
+            "reason": "(simulado) aderente",
+            "expected_quantity_max": -1.0,
+            "plausible_quantity": true,
+            "duplicate_of": 0,
+            "lpu_code": "IMP-002"
+          },
+          {
+            "n": 3,
+            "classification": "compliant",
+            "reason": "(simulado) aderente",
+            "expected_quantity_max": -1.0,
+            "plausible_quantity": true,
+            "duplicate_of": 0,
+            "lpu_code": "PIN-002"
+          }
+        ],
+        "notes": ""
+      }
+    },
+    {
+      "task": "photos",
+      "provider": "simulated",
+      "model": "simulado (anthropic:claude-sonnet-5-5)",
+      "resolved_model": "",
+      "prompt_version": "",
+      "prompt_hash": "",
+      "schema_hash": "",
+      "start": "2026-11-09T04:42:54.729938",
+      "duration_s": 0.33,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 0,
+      "cost_usd": 0.0,
+      "from_cache": false,
+      "simulated": true,
+      "via_batch": false,
+      "batch_id": null,
+      "response": {
+        "photos": [
+          {
+            "index": 2,
+            "environment": "",
+            "what_it_shows": "Forro com mancha de infiltração e mofo",
+            "moment": "before",
+            "readable": true,
+            "matches_scope": "yes",
+            "reason": "(simulado)",
+            "covered_items": []
+          },
+          {
+            "index": 3,
+            "environment": "",
+            "what_it_shows": "Forro recomposto e pintado",
+            "moment": "after",
+            "readable": true,
+            "matches_scope": "yes",
+            "reason": "(simulado)",
+            "covered_items": []
+          }
+        ],
+        "has_before_photo": true,
+        "has_done_service_photo": true,
+        "done_justification": "(simulado)",
+        "items_without_photo": [],
+        "notes": ""
+      }
+    },
+    {
+      "task": "assessment",
+      "provider": "simulated",
+      "model": "simulado (anthropic:claude-sonnet-5-5)",
+      "resolved_model": "",
+      "prompt_version": "",
+      "prompt_hash": "",
+      "schema_hash": "",
+      "start": "2026-11-09T04:42:57.356540",
+      "duration_s": 0.39,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 0,
+      "cost_usd": 0.0,
+      "from_cache": false,
+      "simulated": true,
+      "via_batch": false,
+      "batch_id": null,
+      "response": {
+        "summary": "Aprovar. Score de 85 ou mais, sem travas.",
+        "supplier_message": ""
+      }
+    }
+  ],
+  "duration_s": 4.84,
+  "stage_durations_s": {
+    "checklist": 0.899,
+    "scope": 0.361,
+    "quote": 0.475,
+    "photos": 2.708,
+    "score": 0.0,
+    "assessment": 0.394
+  },
+  "cost_usd": 0.0,
+  "cost_brl": 0.0
+}

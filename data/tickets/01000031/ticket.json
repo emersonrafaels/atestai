@@ -1,0 +1,54 @@
+{
+  "ticket_id": "01000031",
+  "workstream": "SETA",
+  "maintenance_type": "corrective",
+  "moment": "execution",
+  "category": "painting",
+  "symptom": "finish_wear",
+  "branch": {
+    "code": "0558",
+    "name": "Ag. Penha",
+    "environment": "backoffice"
+  },
+  "supplier": {
+    "name": "Fornecedor Alfa Manutenção Predial Ltda.",
+    "cnpj": "12.345.678/0001-90"
+  },
+  "requested_scope": "Repintura das paredes do backoffice (aprox. 159 m²), cor padrão da agência.",
+  "quoted_value": 6057.9,
+  "dates": {
+    "opening": "2026-10-25",
+    "supplier_submission": "2026-10-28",
+    "manager_review": "2026-10-29"
+  },
+  "status": "forwarded_to_backoffice",
+  "origin": "dataset",
+  "dataset": "validation",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "attachments": [
+    {
+      "file_name": "Orcamento_ALF-V0031.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 7634,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-28"
+    },
+    {
+      "file_name": "IMG_20261026_085558.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 166131,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-28"
+    },
+    {
+      "file_name": "IMG_20261027_095410.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 207909,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-28"
+    }
+  ]
+}

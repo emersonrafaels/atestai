@@ -1,0 +1,61 @@
+{
+  "ticket_id": "01000070",
+  "workstream": "SISR",
+  "maintenance_type": "preventive",
+  "moment": "execution",
+  "category": "cctv_and_alarm",
+  "symptom": "preventive_maintenance",
+  "branch": {
+    "code": "1232",
+    "name": "Ag. Santana",
+    "environment": "agência inteira"
+  },
+  "supplier": {
+    "name": "Fornecedor Iota Segurança Eletrônica Ltda.",
+    "cnpj": "90.123.456/0001-78"
+  },
+  "requested_scope": "Preventiva semestral do sistema de segurança da agência: teste das 6 câmeras e dos sensores do alarme, com relatório.",
+  "quoted_value": 724.18,
+  "dates": {
+    "opening": "2026-11-07",
+    "supplier_submission": "2026-11-12",
+    "manager_review": "2026-11-13"
+  },
+  "status": "forwarded_to_backoffice",
+  "origin": "dataset",
+  "dataset": "validation",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "attachments": [
+    {
+      "file_name": "Orcamento_IOT-V0070.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 7693,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-12"
+    },
+    {
+      "file_name": "IMG_20261111_083235.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 195522,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-12"
+    },
+    {
+      "file_name": "IMG_20261111_094530.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 190121,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-12"
+    },
+    {
+      "file_name": "IMG_20261112_190300.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 178997,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-12"
+    }
+  ]
+}
