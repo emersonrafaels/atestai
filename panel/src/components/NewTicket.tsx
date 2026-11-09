@@ -88,7 +88,7 @@ export function NewTicket({ config, close, created }: Props) {
             </label>
             <label>
               <span className="mb-1 block font-medium">Etapa da esteira</span>
-              <select name="moment" className={field}><option value="quote">Aprovação de Orçamento</option><option value="execution">Aprovação do Serviço</option></select>
+              <select name="moment" className={field}><option value="quote">Aprovação de Orçamento</option><option value="execution">Atestação do Serviço</option></select>
             </label>
           </div>
           <label>

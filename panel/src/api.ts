@@ -21,6 +21,7 @@ export interface Expected {
 export interface LastAssessment {
   assessment_id: number;
   run_id: string | null;
+  generated_at: string;
   recommendation: Recommendation;
   score: number | null;
   mode: string;
@@ -487,6 +488,8 @@ export interface RunRequest {
   main_model?: string;
   fast_model?: string;
   provider?: string;
+  /** executa o agente de novo, sem reaproveitar respostas salvas no cache */
+  refresh?: boolean;
 }
 
 async function ask<T>(url: string, init?: RequestInit): Promise<T> {

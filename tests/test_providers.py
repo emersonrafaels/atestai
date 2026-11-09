@@ -452,3 +452,35 @@ def test_validation_report_with_and_without_noise(cfg, demo):
     noisy = BatchRunner(cfg.with_overrides(**{"validation.simulated_noise": 0.5})).run(demo).validation
     assert noisy.accuracy.value < 1 and noisy.mismatches
     assert noisy.accuracy.ci_low <= noisy.accuracy.value <= noisy.accuracy.ci_high
+
+
+def test_iara_fills_omitted_list_and_text_fields_but_not_booleans():
+    """Backend sem schema estrito omitiu 'items_without_photo' (erro visto em produção): lista/texto entram vazios."""
+    import copy
+
+    import pytest
+    from pydantic import ValidationError
+
+    from atest.llm_schemas import PhotoAnalysis
+    from atest.providers.iara import parse_output
+
+    photo = {"index": 2, "environment": "backoffice", "what_it_shows": "parede", "moment": "after", "readable": True,
+             "matches_scope": "yes", "reason": "ok", "covered_items": [1]}
+    base = {"photos": [photo], "has_before_photo": True, "has_done_service_photo": True, "done_justification": "ok", "notes": ""}
+
+    obj, repairs = parse_output(copy.deepcopy(base), PhotoAnalysis)
+    assert obj.items_without_photo == [] and any("items_without_photo" in r for r in repairs)
+
+    nested = copy.deepcopy(base)
+    del nested["photos"][0]["reason"], nested["notes"]
+    obj, _ = parse_output(nested, PhotoAnalysis)
+    assert obj.photos[0].reason == "" and obj.notes == ""
+
+    no_bool = copy.deepcopy(base)
+    del no_bool["has_before_photo"]
+    with pytest.raises(ValidationError):  # inventar booleano mudaria a análise
+        parse_output(no_bool, PhotoAnalysis)
+
+    for unrelated in ({}, {"resultado": "ok"}):  # resposta vazia ou de outro formato não vira "nada a apontar"
+        with pytest.raises(ValidationError):
+            parse_output(dict(unrelated), PhotoAnalysis)

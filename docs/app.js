@@ -38,7 +38,7 @@ const FINDINGS = {
   inconsistent_scope: {
     v: "scope", sev: "medium", phase: 1, reducer: true, amount: "—", who: "ai",
     label: "Escopo incoerente com a categoria ou o sintoma",
-    how: "O modelo compara o texto do escopo com a categoria e o sintoma informados (consistent_with_category_symptom).",
+    how: "O modelo compara o texto do escopo com a categoria e o sintoma informados.",
   },
   out_of_scope_item: {
     v: "quote", sev: "high", phase: 1, amount: "item inteiro", who: "ai",
@@ -107,56 +107,56 @@ const WHO_LABEL = { ai: "IA aponta", rule: "Regra", mix: "IA + regra" };
 // ============================================================================ jornada de um chamado
 const STEPS = [
   {
-    t: "Entrada", who: ["human"], code: "data/tickets/&lt;id&gt;/ticket.json · atest/repository.py",
+    t: "Entrada", stage: "Antes da análise", who: ["human"], code: "data/tickets/&lt;id&gt;/ticket.json · atest/repository.py",
     what: "A agência abre o chamado com <b>categoria</b> (ex.: pintura, CFTV), <b>sintoma</b> (a queixa em uma expressão) e <b>escopo</b> em texto livre. O fornecedor executa e envia o <b>orçamento</b> (sempre na planilha Excel padrão) e as <b>fotos</b>. A pessoa gestora faz a primeira checagem e encaminha ao backoffice.",
     input: ["Chamado (categoria, sintoma, escopo, datas, esteira SETA/SISR)", "Planilha Excel com abas Chamado e Itens", "Fotos e documentos (termo, laudo)"],
     output: ["Chamado carregado e validado (modelo Pydantic Ticket)"],
     example: "Chamado 00482193: “Repintura de paredes e teto do backoffice (aprox. 240 m²)”. Orçamento de R$ 12.480 com 4 itens e 6 fotos.",
   },
   {
-    t: "0 · Checklist mínimo", who: ["rule", "ai"], code: "atest/checklist.py · config/checklists.toml",
+    t: "Checklist mínimo", stage: "Etapa 0 · triagem", who: ["rule", "ai"], code: "atest/checklist.py · config/checklists.toml",
     what: "Confere se chegaram as evidências obrigatórias para aquele tipo de serviço. A planilha é lida por <b>regra</b>. Cada foto ou documento é <b>identificado pela IA</b> (o que é, se é antes ou depois, se dá para ler). A decisão completo/incompleto é <b>regra</b>.",
     input: ["Anexos do chamado", "Regras do checklist por categoria × tipo de manutenção × momento"],
     output: ["Lista de requisitos atendidos e faltantes", "Se faltar algo: devolução automática com mensagem ao fornecedor, <b>sem score</b>"],
     example: "Troca de 12 luminárias (00523310) sem foto do depois, sem foto das luminárias retiradas e sem termo assinado: devolvido no checklist, nem chega à pessoa analista.",
   },
   {
-    t: "1 · Escopo", who: ["ai"], code: "atest/scope.py · tarefa scope",
+    t: "Escopo", stage: "Validação 1 · peso 20", who: ["ai"], code: "atest/scope.py · tarefa scope",
     what: "A IA traduz o texto livre do escopo em <b>critérios de aceite verificáveis</b>: local, ambiente, serviços pedidos, quantidades citadas, que fotos comprovariam o resultado e se faz sentido exigir foto do “antes”. Também aponta escopo <b>vago</b> ou <b>incoerente</b>.",
     input: ["Categoria, sintoma e escopo do chamado"],
     output: ["Leitura estruturada do escopo (usada pelas etapas seguintes)", "Apontamentos possíveis: escopo vago, escopo incoerente"],
     example: "“Verificar porta. Urgente.” (00533402) é vago: qual porta? qual defeito? Vira apontamento e reduz a confiança.",
   },
   {
-    t: "2 · Orçamento × escopo", who: ["ai", "rule"], code: "atest/quote.py · tarefa quote_review",
+    t: "Orçamento × escopo", stage: "Validação 2 · peso 40", who: ["ai", "rule"], code: "atest/quote.py · tarefa quote_review",
     what: "Item a item, a IA decide se o que foi cobrado tem relação com o que foi pedido (aderente, fora do escopo, a justificar), estima a quantidade máxima plausível e indica o código equivalente na tabela de preços de referência (<b>LPU</b>). As <b>regras</b> comparam preço com a LPU, procuram duplicidade, conferem planilha × chamado e calculam o <b>valor em questão</b>.",
     input: ["Itens da planilha", "Leitura do escopo", "LPU da esteira (SETA ou SISR)"],
     output: ["Cada item classificado, com motivo", "Apontamentos de orçamento", "Valor em questão (R$ e % do orçamento)"],
     example: "Em 00482193, “pintura de fachada” (R$ 3.150) está fora do escopo (o pedido era interno) e a massa corrida veio com 320 m² para uma área de 240 m² (excedente de R$ 232,50).",
   },
   {
-    t: "3 · Evidências fotográficas", who: ["ai", "rule"], code: "atest/photos.py · tarefa photos",
+    t: "Evidências fotográficas", stage: "Validação 3 · peso 40", who: ["ai", "rule"], code: "atest/photos.py · tarefa photos",
     what: "A IA olha <b>foto a foto</b>: onde foi tirada, o que mostra, se é antes ou depois, se é legível e se corresponde ao escopo; e no conjunto, se alguma foto comprova o serviço concluído. As <b>regras de integridade</b> conferem a data da foto (EXIF) e se ela é cópia de foto de outro chamado (hash perceptual).",
     input: ["Fotos do chamado", "Leitura do escopo e itens do orçamento", "Índice de fotos de chamados anteriores"],
     output: ["Leitura de cada foto", "Apontamentos de fotos e de integridade"],
     example: "Em 00517706 (câmera desfocada), duas fotos eram cópias de fotos de outro chamado, aberto em junho: trava de integridade, devolve qualquer que seja a nota.",
   },
   {
-    t: "4 · Score", who: ["rule"], code: "atest/score.py · atest/scoring.py · config/rubric.toml",
+    t: "Score", stage: "Régua", who: ["rule"], code: "atest/score.py · atest/scoring.py · config/rubric.toml",
     what: "A <b>régua</b> transforma os apontamentos em nota por validação (escopo, orçamento, fotos), score de 0 a 100, nível de confiança e recomendação. <b>O modelo não dá nota.</b> Mudar pesos, faixas ou descontos é mudar um arquivo de configuração, sem tocar no código.",
     input: ["Todos os apontamentos", "Régua (pesos 20/40/40, descontos por severidade, faixas 85/70)"],
     output: ["Notas, score, confiança, recomendação e motivo"],
     example: "00482193: escopo 100, orçamento 50, fotos 50 → score 60 → Devolver ao fornecedor.",
   },
   {
-    t: "5 · Parecer", who: ["ai"], code: "atest/assessment.py · tarefa assessment",
+    t: "Parecer", stage: "Redação", who: ["ai"], code: "atest/assessment.py · tarefa assessment",
     what: "A IA <b>redige</b> o resumo para a pessoa analista e a mensagem ao fornecedor a partir do resultado da régua. Ela não muda a decisão. Se a redação falhar, um texto por regra é usado: o parecer nunca deixa de sair.",
     input: ["Resultado da régua e apontamentos"],
     output: ["Resumo (2 a 3 frases)", "Mensagem ao fornecedor (uma ação por apontamento)"],
     example: "“Remover o item 3 (pintura de fachada), que está fora do escopo; justificar ou ajustar a quantidade do item 4; substituir as fotos que não mostram o backoffice; enviar foto do estado anterior.”",
   },
   {
-    t: "Pessoa analista", who: ["human"], code: "panel/ · atest/api.py · tabela feedbacks",
+    t: "Pessoa analista", stage: "Depois da análise", who: ["human"], code: "panel/ · atest/api.py · tabela feedbacks",
     what: "Modo <b>copiloto</b>: a pessoa analista vê o parecer, as evidências e o motivo de cada apontamento no painel e decide. Ela pode <b>aceitar</b>, <b>ajustar</b> ou <b>discordar</b>; o feedback fica gravado e vira dado rotulado para a próxima validação.",
     input: ["Parecer com evidências"],
     output: ["Decisão final", "Feedback (aceitar, ajustar, discordar, apontamentos indevidos)"],
@@ -196,36 +196,162 @@ function initTheme() {
 }
 
 // ============================================================================ papéis (filtro de leitura)
+const ROLE_NAME = { exec: "Executivo", prod: "Produto", ds: "Ciência de dados", eng: "Engenharia" };
+
 function initRoles() {
   const buttons = $$(".role-btn");
-  const apply = (role) => {
+  const sections = $$("section.doc");
+  const banner = $("#role-banner");
+  const apply = (role, scrollTop) => {
+    let shown = 0;
     buttons.forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.role === role)));
-    $$("section.doc").forEach((s) => {
-      const roles = (s.dataset.roles || "").split(" ");
-      const hide = role !== "all" && !roles.includes(role);
+    sections.forEach((s) => {
+      const hide = role !== "all" && !(s.dataset.roles || "").split(" ").includes(role);
+      if (!hide) shown++;
       s.classList.toggle("hidden-by-role", hide);
-      const link = $(`.sidebar a[href="#${s.id}"]`);
+      const link = $(`#nav-links a[href="#${s.id}"]`);
       if (link) link.classList.toggle("hidden-by-role", hide);
     });
     $$(".reading-path").forEach((p) => p.classList.toggle("show", p.dataset.for === role));
+    banner.hidden = role === "all";
+    if (role !== "all") {
+      $("[data-banner-text]", banner).innerHTML = `Mostrando <b>${shown}</b> de ${sections.length} seções para <b>${ROLE_NAME[role]}</b>.`;
+    }
+    refreshNavGroups();
     store.set("atest-doc-role", role);
+    if (scrollTop) scrollTo({ top: 0, behavior: "smooth" });
   };
-  buttons.forEach((b) => b.addEventListener("click", () => apply(b.dataset.role)));
+  buttons.forEach((b) => b.addEventListener("click", () => apply(b.dataset.role, true)));
+  $("#role-reset").addEventListener("click", () => apply("all", false));
   $$("[data-go-role]").forEach((c) =>
     c.addEventListener("click", () => {
-      apply(c.dataset.goRole);
-      $("#papeis").scrollIntoView();
+      apply(c.dataset.goRole, false);
+      $(`.reading-path[data-for="${c.dataset.goRole}"]`).scrollIntoView({ behavior: "smooth", block: "center" });
     })
   );
-  apply(store.get("atest-doc-role") || "all");
+  apply(store.get("atest-doc-role") || "all", false);
+}
+
+// esconde os títulos de grupo do sumário quando nenhum link do grupo está visível
+function refreshNavGroups() {
+  let label = null;
+  let visible = 0;
+  let total = 0;
+  const close = () => label && label.classList.toggle("empty", visible === 0);
+  $$("#nav-links > *").forEach((el) => {
+    if (el.classList.contains("label")) {
+      close();
+      label = el;
+      visible = 0;
+    } else if (!el.classList.contains("hidden-by-role") && !el.classList.contains("no-match")) {
+      visible++;
+      total++;
+    }
+  });
+  close();
+  $("#nav-empty").classList.toggle("show", total === 0);
+}
+
+// ============================================================================ busca no sumário
+function initSearch() {
+  const input = $("#nav-search");
+  const norm = (s) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+  const index = $$("#nav-links a").map((a) => {
+    const section = document.getElementById(a.getAttribute("href").slice(1));
+    return { a, text: norm(`${a.textContent} ${section ? section.textContent : ""}`) };
+  });
+  const visible = () => index.filter(({ a }) => !a.classList.contains("no-match") && !a.classList.contains("hidden-by-role"));
+  input.addEventListener("input", () => {
+    const words = norm(input.value.trim()).split(/\s+/).filter(Boolean);
+    index.forEach(({ a, text }) => a.classList.toggle("no-match", words.length > 0 && !words.every((w) => text.includes(w))));
+    refreshNavGroups();
+  });
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      const first = visible()[0];
+      if (first) first.a.click();
+    } else if (e.key === "Escape") {
+      input.value = "";
+      input.dispatchEvent(new Event("input"));
+      input.blur();
+    }
+  });
+  document.addEventListener("keydown", (e) => {
+    const typing = /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName);
+    if ((e.key === "/" && !typing) || ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k")) {
+      e.preventDefault();
+      document.body.classList.add("nav-open");
+      input.focus();
+      input.select();
+    }
+  });
+}
+
+// ============================================================================ pequenos auxílios de leitura
+function toast(message) {
+  const t = $("#toast");
+  t.textContent = message;
+  t.classList.add("show");
+  clearTimeout(toast.timer);
+  toast.timer = setTimeout(() => t.classList.remove("show"), 1600);
+}
+
+function initAnchors() {
+  $$("section.doc").forEach((s) => {
+    const h = $(".section-head h2", s);
+    if (!h) return;
+    const a = document.createElement("a");
+    a.className = "anchor";
+    a.href = `#${s.id}`;
+    a.textContent = "#";
+    a.setAttribute("aria-label", "Copiar o link desta seção");
+    a.addEventListener("click", async (e) => {
+      e.preventDefault();
+      history.replaceState(null, "", `#${s.id}`);
+      s.scrollIntoView({ behavior: "smooth" });
+      try {
+        await navigator.clipboard.writeText(location.href);
+        toast("Link da seção copiado");
+      } catch {
+        toast("O link está na barra de endereço");
+      }
+    });
+    h.appendChild(a);
+  });
+}
+
+function initScrollUi() {
+  const bar = $("#read-progress");
+  const top = $("#to-top");
+  const onScroll = () => {
+    const h = document.documentElement;
+    const max = h.scrollHeight - h.clientHeight;
+    bar.style.width = `${max > 0 ? (h.scrollTop / max) * 100 : 0}%`;
+    top.classList.toggle("show", h.scrollTop > 700);
+  };
+  addEventListener("scroll", onScroll, { passive: true });
+  onScroll();
+  top.addEventListener("click", () => scrollTo({ top: 0, behavior: "smooth" }));
+}
+
+function initTools() {
+  const btn = $("#toggle-details");
+  btn.addEventListener("click", () => {
+    const all = $$("details.tech");
+    const open = !all.every((d) => d.open);
+    all.forEach((d) => (d.open = open));
+    btn.textContent = open ? "Recolher detalhes técnicos" : "Expandir detalhes técnicos";
+  });
+  $("#print-btn").addEventListener("click", () => print());
+  $("#nav-backdrop").addEventListener("click", () => document.body.classList.remove("nav-open"));
 }
 
 // ============================================================================ navegação
 function initNav() {
   $("#menu-btn").addEventListener("click", () => document.body.classList.toggle("nav-open"));
-  $$(".sidebar a").forEach((a) => a.addEventListener("click", () => document.body.classList.remove("nav-open")));
+  $$("#nav-links a").forEach((a) => a.addEventListener("click", () => document.body.classList.remove("nav-open")));
 
-  const links = new Map($$(".sidebar a").map((a) => [a.getAttribute("href").slice(1), a]));
+  const links = new Map($$("#nav-links a").map((a) => [a.getAttribute("href").slice(1), a]));
   const observer = new IntersectionObserver(
     (entries) => {
       entries.forEach((e) => {
@@ -262,42 +388,83 @@ function initCopy() {
 }
 
 // ============================================================================ jornada
+let showStep = () => {};
+
 function initJourney() {
   const bar = $("#stepper");
   const detail = $("#step-detail");
-  STEPS.forEach((s, i) => {
+  const progress = $("#step-progress > span");
+  const buttons = STEPS.map((s, i) => {
     const b = document.createElement("button");
     b.className = "step";
     b.type = "button";
+    b.id = `step-tab-${i}`;
     b.setAttribute("role", "tab");
-    b.innerHTML = `<span class="n">PASSO ${i + 1}</span><span class="t">${s.t}</span>${s.who.map((w) => WHO_PILL[w]).join(" ")}`;
+    b.setAttribute("aria-controls", "step-detail");
+    b.innerHTML = `<span class="num">${i + 1}</span><span class="t">${s.t}</span><span class="pills">${s.who.map((w) => WHO_PILL[w]).join("")}</span>`;
     b.addEventListener("click", () => show(i));
     bar.appendChild(b);
+    return b;
   });
+
+  // setas do teclado entre os passos (padrão de abas)
+  bar.addEventListener("keydown", (e) => {
+    const i = buttons.indexOf(document.activeElement);
+    const next = { ArrowRight: i + 1, ArrowLeft: i - 1, Home: 0, End: STEPS.length - 1 }[e.key];
+    if (i < 0 || next === undefined || next < 0 || next >= STEPS.length) return;
+    e.preventDefault();
+    show(next);
+    buttons[next].focus();
+  });
+
   function show(i) {
     const s = STEPS[i];
-    $$(".step", bar).forEach((b, j) => b.setAttribute("aria-selected", String(i === j)));
+    const prev = STEPS[i - 1];
+    const next = STEPS[i + 1];
+    buttons.forEach((b, j) => {
+      b.setAttribute("aria-selected", String(i === j));
+      b.tabIndex = i === j ? 0 : -1;
+      b.classList.toggle("done", j < i);
+    });
+    progress.style.width = `${((i + 1) / STEPS.length) * 100}%`;
+    detail.setAttribute("aria-labelledby", `step-tab-${i}`);
     detail.innerHTML = `
-      <div class="card">
-        <div class="meta">${s.who.map((w) => WHO_PILL[w]).join(" ")} <code>${s.code}</code></div>
-        <h3 style="margin-top:0">${s.t}</h3>
+      <div class="card step-card">
+        <div class="meta"><span class="stage-tag">${s.stage}</span>${s.who.map((w) => WHO_PILL[w]).join("")}<code>${s.code}</code></div>
+        <h3>${s.t}</h3>
         <p>${s.what}</p>
         <div class="io">
           <div class="card"><h5>Entra</h5><ul>${s.input.map((x) => `<li>${x}</li>`).join("")}</ul></div>
           <div class="card"><h5>Sai</h5><ul>${s.output.map((x) => `<li>${x}</li>`).join("")}</ul></div>
         </div>
         <div class="callout info"><strong>Exemplo</strong><p>${s.example}</p></div>
-        <div class="small muted">${i > 0 ? `<a href="#" data-step="${i - 1}">← ${STEPS[i - 1].t}</a>` : ""}
-          ${i < STEPS.length - 1 ? `<span style="float:right"><a href="#" data-step="${i + 1}">${STEPS[i + 1].t} →</a></span>` : ""}</div>
+        <nav class="step-nav" aria-label="Navegar entre os passos">
+          ${prev ? `<button type="button" class="step-nav-btn" data-step="${i - 1}"><span class="dir">← Anterior</span><span class="name">${prev.t}</span></button>` : "<span></span>"}
+          <span class="step-count">Passo ${i + 1} de ${STEPS.length}</span>
+          ${next ? `<button type="button" class="step-nav-btn next" data-step="${i + 1}"><span class="dir">Próximo →</span><span class="name">${next.t}</span></button>` : "<span></span>"}
+        </nav>
       </div>`;
-    $$("[data-step]", detail).forEach((a) =>
-      a.addEventListener("click", (e) => {
-        e.preventDefault();
-        show(Number(a.dataset.step));
-      })
-    );
+    $$("[data-step]", detail).forEach((b) => b.addEventListener("click", () => show(Number(b.dataset.step))));
   }
+  showStep = show;
   show(0);
+}
+
+// fluxo resumido no topo da página: atalho para cada passo da jornada
+function initHeroFlow() {
+  const box = $("#hero-flow");
+  STEPS.forEach((s, i) => {
+    if (i) box.insertAdjacentHTML("beforeend", '<span class="sep" aria-hidden="true">→</span>');
+    const kind = s.who.includes("ai") && s.who.includes("rule") ? "mix" : s.who[0];
+    const b = document.createElement("button");
+    b.type = "button";
+    b.innerHTML = `<i class="dot ${kind}"></i>${s.t.replace(/^\d+ · /, "")}`;
+    b.addEventListener("click", () => {
+      showStep(i);
+      $("#jornada").scrollIntoView();
+    });
+    box.appendChild(b);
+  });
 }
 
 // ============================================================================ tabela de apontamentos
@@ -310,13 +477,12 @@ function initFindingsTable() {
       .map(
         ([k, f]) => `<tr>
           <td><b>${f.label}</b><br><code>${k}</code></td>
-          <td>${VALIDATION_LABEL[f.v]}</td>
+          <td class="nowrap">${VALIDATION_LABEL[f.v]}<br><span class="small muted">${f.phase === 2 ? "Fase 2" : "Fase 1"}</span></td>
           <td><span class="sev ${f.sev}">${SEV_LABEL[f.sev]}</span></td>
           <td class="num">−${DISCOUNT[f.sev]}</td>
           <td>${WHO_PILL[f.who]}</td>
           <td class="small">${f.how}${f.lock ? " <b>Trava.</b>" : ""}${f.reducer ? " <b>Reduz a confiança.</b>" : ""}</td>
-          <td class="nowrap">${f.phase === 2 ? "Fase 2" : "Fase 1"}</td>
-          <td class="nowrap small">${f.amount}</td>
+          <td class="small">${f.amount}</td>
         </tr>`
       )
       .join("");
@@ -379,6 +545,18 @@ const PRESETS = [
   { name: "Checklist incompleto · 00523310", findings: [], checklistOk: false },
 ];
 
+// lista de descontos aplicados: explica de onde vem cada nota
+function deductionList(selected, r) {
+  if (!selected.length) return '<p class="small muted deductions-empty">Nenhum apontamento: as três notas ficam em 100.</p>';
+  const rows = selected.map((k) => {
+    const f = FINDINGS[k];
+    const ignored = !r.active.includes(k);
+    const value = ignored ? '<span class="small muted">ignorado na Fase 1</span>' : `<span class="sev ${f.sev}">−${DISCOUNT[f.sev]}</span>`;
+    return `<li class="${ignored ? "off" : ""}"><span>${f.label} <span class="muted">· ${VALIDATION_LABEL[f.v]}</span></span>${value}</li>`;
+  });
+  return `<div class="deductions-title">Descontos aplicados</div><ul class="deductions">${rows.join("")}</ul>`;
+}
+
 function initSimulator() {
   const box = $("#sim-findings");
   ["scope", "quote", "photos"].forEach((v) => {
@@ -412,8 +590,9 @@ function initSimulator() {
   const update = () => {
     const phase = $("#sim-phase2").checked ? 2 : 1;
     $$(".check", box).forEach((l) => l.classList.toggle("disabled", FINDINGS[l.dataset.k].phase > phase));
+    const selected = $$("input[type=checkbox]:checked", box).map((c) => c.value);
     const r = compute({
-      findings: $$("input[type=checkbox]:checked", box).map((c) => c.value),
+      findings: selected,
       phase,
       checklistOk: $("#sim-checklist").checked,
       unreadableQuote: $("#sim-unreadable-quote").checked,
@@ -430,7 +609,8 @@ function initSimulator() {
       <div class="small muted" style="margin:4px 0 10px">Confiança <b>${conf}</b>${r.reducers.length ? ` · redutores: ${r.reducers.map((x) => `<code>${x}</code>`).join(" ")}` : ""}</div>
       ${Object.keys(WEIGHTS).map((v) => `<div class="grade-row"><span>${VALIDATION_LABEL[v]} <span class="w">×${WEIGHTS[v]}</span></span><div class="bar"><span style="width:${r.grades[v]}%"></span></div><b class="num">${r.grades[v]}</b></div>`).join("")}
       <div class="reco ${r.reco}">${RECO[r.reco]}<small>${r.reason}</small></div>
-      <div class="formula">(${r.grades.scope}×20 + ${r.grades.quote}×40 + ${r.grades.photos}×40) ÷ 100 = ${r.score}</div>`;
+      <div class="formula">(${r.grades.scope}×20 + ${r.grades.quote}×40 + ${r.grades.photos}×40) ÷ 100 = ${r.score}</div>
+      ${deductionList(selected, r)}`;
   };
   $$("input", $("#simulator")).forEach((i) => i.addEventListener("change", () => {
     $$(".chip-btn", presets).forEach((x) => x.setAttribute("aria-pressed", "false"));
@@ -467,9 +647,14 @@ function initCostCalc() {
 document.addEventListener("DOMContentLoaded", () => {
   initTheme();
   initRoles();
+  initSearch();
   initNav();
+  initAnchors();
+  initScrollUi();
+  initTools();
   initCopy();
   initJourney();
+  initHeroFlow();
   initFindingsTable();
   initSimulator();
   initCostCalc();

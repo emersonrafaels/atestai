@@ -13,6 +13,7 @@ import { StageProgress } from "./components/StageProgress";
 import { TicketList } from "./components/TicketList";
 import { OperationsView } from "./components/OperationsView";
 import { NewTicket } from "./components/NewTicket";
+import { RerunDialog } from "./components/RerunDialog";
 import { ValidationView } from "./components/ValidationView";
 import { brl4, REC, DEFAULT_RUBRIC, ENV_NAME, MAINTENANCE_LABEL } from "./format";
 import { Tour, tourDone, type TourStep } from "./components/ui/Tour";
@@ -183,19 +184,46 @@ export default function App() {
   const providerModels = (config?.models ?? []).filter((m) => m.provider === provider);
   const currentChoice = findChoice(config, provider);
 
-  const run = async () => {
+  const start = async (ids: string[], o: { refresh?: boolean; keepFocus?: boolean } = {}) => {
     setError(null);
     try {
-      const ids = tickets.map((c) => c.ticket_id).filter((id) => selected.has(id));
       const ex = await api.run({ tickets: ids, mode, batch_mode: batchMode, phase, provider: provider || undefined,
-        main_model: withProvider(mainModel, provider), fast_model: withProvider(fastModel, provider) });
+        main_model: withProvider(mainModel, provider), fast_model: withProvider(fastModel, provider), refresh: o.refresh });
       setRun(ex);
-      if (!focus || !selected.has(focus)) setFocus(ids[0]);
+      if (!o.keepFocus && (!focus || !ids.includes(focus))) setFocus(ids[0]);
       track(ex.id);
     } catch (e) {
       setError((e as Error).message);
     }
   };
+
+  // no modo API, chamado com parecer salvo de uma execução real: pergunta antes de chamar a API de novo
+  const [rerunAsk, setRerunAsk] = useState<TicketSummary[] | null>(null);
+  const [openSaved, setOpenSaved] = useState<string | null>(null);
+  const marked = tickets.filter((c) => selected.has(c.ticket_id));
+  const run = () => {
+    const saved = mode === "api" ? marked.filter((c) => c.last?.mode === "api") : [];
+    if (saved.length) setRerunAsk(saved);
+    else start(marked.map((c) => c.ticket_id));
+  };
+  const reuseSaved = (saved: TicketSummary[]) => {
+    setRerunAsk(null);
+    const savedIds = new Set(saved.map((c) => c.ticket_id));
+    const rest = marked.map((c) => c.ticket_id).filter((id) => !savedIds.has(id));
+    const target = focus && savedIds.has(focus) ? focus : saved[0].ticket_id;
+    // sem execução na tela, o painel mostra o último parecer salvo de cada chamado
+    if (rest.length) start(rest, { keepFocus: true }); else setRun(null);
+    setFocus(target);
+    setOpenSaved(target);
+  };
+  const rerun = () => {
+    setRerunAsk(null);
+    start(marked.map((c) => c.ticket_id), { refresh: true });
+  };
+  // abre o parecer salvo assim que ele carregar
+  useEffect(() => {
+    if (openSaved && savedAssessment?.ticket_id === openSaved && !focusState) { setTab("assessment"); setOpenSaved(null); }
+  }, [openSaved, savedAssessment, focusState, setTab]);
 
   // quando o chamado em foco termina, abre o parecer
   const focusDone = focusState?.status === "done";
@@ -510,6 +538,10 @@ export default function App() {
         }} />
       )}
 
+      {rerunAsk && (
+        <RerunDialog saved={rerunAsk} total={marked.length} onClose={() => setRerunAsk(null)}
+          useSaved={() => reuseSaved(rerunAsk)} rerun={rerun} />
+      )}
       {photos && <Lightbox items={photos.items} start={photos.index} onClose={() => setPhotos(null)} />}
       {glossaryOpen && <GlossaryDialog onClose={() => setGlossaryOpen(false)} />}
       <Tour steps={tourSteps} open={tourOpen} onClose={() => setTourOpen(false)} />

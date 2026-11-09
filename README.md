@@ -108,7 +108,7 @@ Modelos: o catálogo da IARA fica em `[default.llm.provider_options.iara.models]
 | `pdf_mode` | `"file"` (PDF enviado como arquivo) | `"text"` (texto extraído localmente com `pypdf`) |
 | `enable_polling` | `true` | `false` |
 
-Alguns modelos pela IARA (ex.: Claude via Bedrock) devolvem campos lista/objeto como string com JSON dentro, às vezes com o objeto inteiro repetido (`{"attachments": "{\"attachments\": [...]}"}`). O adaptador corrige isso antes de validar, só onde o schema pede lista/objeto, e registra o evento `iara_json_repaired` no log. Texto livre que não é JSON continua sendo erro.
+Alguns modelos pela IARA (ex.: Claude via Bedrock) devolvem campos lista/objeto como string com JSON dentro, às vezes com o objeto inteiro repetido (`{"attachments": "{\"attachments\": [...]}"}`). O adaptador corrige isso antes de validar, só onde o schema pede lista/objeto, e registra o evento `iara_json_repaired` (nível INFO, só no `output/logs/atest.jsonl`, sem aviso no terminal). Texto livre que não é JSON continua sendo erro.
 
 A Batch API da IARA ainda não está integrada: no modo Lote, as chamadas para `iara:` saem síncronas e sem o desconto de lote. Os preços em `[default.costs.prices."iara:gpt-4.1"]` são os de lista da OpenAI, só como referência.
 

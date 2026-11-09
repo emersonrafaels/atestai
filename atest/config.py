@@ -80,6 +80,7 @@ class LlmSettings(_Section):
     max_retries: int = Field(4, ge=0)
     image_max_side: int = 1568
     use_disk_cache: bool = True
+    refresh_cache: bool = Field(False, description="Ignora as respostas já salvas no cache em disco (chama o modelo de novo), mas grava as novas")
     provider_options: dict[str, dict[str, Any]] = Field(
         default_factory=dict, description="Opções extras por provedor, repassadas à sua fábrica (ex.: [llm.provider_options.iara])"
     )

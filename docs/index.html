@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+<div class="read-progress" id="read-progress" aria-hidden="true"></div>
 
 <header class="topbar">
   <button id="menu-btn" class="icon-btn menu-btn" type="button" aria-label="Abrir menu">☰</button>
@@ -24,6 +25,11 @@
 
 <div class="layout">
   <aside class="sidebar" aria-label="Sumário">
+    <div class="nav-search">
+      <input type="search" id="nav-search" placeholder="Buscar na documentação" aria-label="Buscar na documentação" autocomplete="off">
+      <kbd>/</kbd>
+    </div>
+    <nav id="nav-links">
     <div class="label">Começo</div>
     <a href="#papeis">Como ler este documento</a>
     <a href="#resumo">Resumo executivo</a>
@@ -48,9 +54,19 @@
     <a href="#roadmap">Próximos passos</a>
     <a href="#faq">Perguntas frequentes</a>
     <a href="#glossario">Glossário</a>
+    </nav>
+    <p class="nav-empty" id="nav-empty">Nada encontrado. Tente outra palavra ou mostre todos os papéis.</p>
+    <div class="sidebar-tools">
+      <button type="button" class="tool-btn" id="toggle-details">Expandir detalhes técnicos</button>
+      <button type="button" class="tool-btn" id="print-btn">Imprimir ou salvar em PDF</button>
+    </div>
   </aside>
 
   <main>
+  <div class="role-banner" id="role-banner" hidden>
+    <span data-banner-text></span>
+    <button type="button" id="role-reset">Mostrar tudo</button>
+  </div>
 
   <!-- ================================================================== HERO + PAPÉIS -->
   <section class="doc" id="papeis" data-roles="exec prod ds eng">
@@ -58,27 +74,38 @@
       <h1>Atest.AI</h1>
       <p class="tagline">Um copiloto que confere chamados de manutenção de agências antes da aprovação: o orçamento faz sentido para o que foi pedido? As fotos provam que o serviço foi feito?</p>
       <div class="motto"><span class="ai">O modelo aponta</span>→<span class="rule">a régua decide</span>→<span class="human">a pessoa analista confirma</span></div>
+      <div class="hero-flow-wrap">
+        <div class="legend">
+          <span><i class="dot ai"></i>IA</span><span><i class="dot rule"></i>Regra</span><span><i class="dot mix"></i>IA + regra</span><span><i class="dot human"></i>Pessoa</span>
+          <span class="muted">· clique numa etapa para ver os detalhes</span>
+        </div>
+        <div class="hero-flow" id="hero-flow"></div>
+      </div>
     </div>
 
     <h3 style="margin-top:0">Como ler este documento</h3>
     <p class="muted">Use os botões no topo para ver só o que interessa ao seu papel. Termos com <span class="term" tabindex="0" data-tip="Passe o mouse (ou toque) para ver a definição. Todos os termos também estão no Glossário, no fim da página.">sublinhado pontilhado</span> têm definição ao passar o mouse. Blocos “Detalhe técnico” podem ser ignorados por quem não é da área.</p>
 
     <div class="grid c4">
-      <button class="card clickable" data-go-role="exec">
+      <button class="card clickable role-card" data-go-role="exec" style="--c: var(--accent)">
         <h4>Executivo</h4>
-        <p class="small muted">O que é, por que importa, quanto custa, em que pé está e quais os riscos. Leitura de 5 minutos.</p>
+        <p class="small muted">O que é, por que importa, quanto custa, em que pé está e quais os riscos.</p>
+        <span class="role-time">~5 min · ver roteiro →</span>
       </button>
-      <button class="card clickable" data-go-role="prod">
+      <button class="card clickable role-card" data-go-role="prod" style="--c: var(--human)">
         <h4>Produto</h4>
         <p class="small muted">Jornada do chamado, regras de negócio, apontamentos, régua, recomendações e próximos passos.</p>
+        <span class="role-time">~12 min · ver roteiro →</span>
       </button>
-      <button class="card clickable" data-go-role="ds">
+      <button class="card clickable role-card" data-go-role="ds" style="--c: var(--ai)">
         <h4>Ciência de dados</h4>
         <p class="small muted">Modelos, prompts, saídas estruturadas, conjuntos de dados, métricas, portão de qualidade e limitações.</p>
+        <span class="role-time">~15 min · ver roteiro →</span>
       </button>
-      <button class="card clickable" data-go-role="eng">
+      <button class="card clickable role-card" data-go-role="eng" style="--c: var(--rule)">
         <h4>Engenharia</h4>
         <p class="small muted">Arquitetura, fluxo do código, camada de provedores, configuração, persistência e como rodar.</p>
+        <span class="role-time">~12 min · ver roteiro →</span>
       </button>
     </div>
 
@@ -149,7 +176,8 @@
     <div class="section-head"><h2>Jornada de um chamado</h2><div class="tags"><span class="tag">Todos</span></div></div>
     <p class="muted">Clique em cada passo. Os exemplos são casos reais do conjunto de demonstração (dados fictícios).</p>
     <div class="stepper" id="stepper" role="tablist" aria-label="Passos da análise"></div>
-    <div class="step-detail" id="step-detail" aria-live="polite"></div>
+    <div class="step-progress" id="step-progress" aria-hidden="true"><span></span></div>
+    <div class="step-detail" id="step-detail" role="tabpanel" aria-live="polite"></div>
 
     <h3>Exemplo completo: chamado 00482193 (pintura do backoffice)</h3>
     <div class="table-wrap"><table>
@@ -213,6 +241,7 @@
         <ul class="small">
           <li><b>Anthropic</b> (Claude): saída estruturada, cache de prompt, <span class="term" tabindex="0" data-tip="Message Batches API: envio assíncrono de muitas requisições juntas, com 50% de desconto. Resposta em minutos ou horas, ideal para o lote horário.">lote assíncrono</span> com 50% de desconto. Testado contra a API real.</li>
           <li><b>OpenAI</b> e <b>Google Gemini</b>: saída estruturada; sem lote (cai para síncrono). Testados só na conversão de conteúdo, não contra a API real.</li>
+          <li><b>IARA GenAI</b> (plataforma de LLM do Itaú): dentro do banco, todo LLM passa por ela, com backends Azure OpenAI, Bedrock ou Vertex (ex.: <code>iara:gpt-4.1</code>). Sem lote integrado ainda. Testada só com cliente falso, ainda não contra a IARA real.</li>
         </ul>
       </div>
     </div>
@@ -399,7 +428,7 @@ AssessmentText: summary, supplier_message</code></pre>
       <button class="chip-btn" data-filter-who="rule" aria-pressed="false">Só regra</button>
     </div>
     <div class="table-wrap"><table>
-      <thead><tr><th>Apontamento</th><th>Validação</th><th>Severidade</th><th class="num">Desconto</th><th>Detector</th><th>Como é detectado</th><th>Fase</th><th>Valor em questão</th></tr></thead>
+      <thead><tr><th>Apontamento</th><th>Validação</th><th>Severidade</th><th class="num">Desconto</th><th>Detector</th><th>Como é detectado</th><th>Em questão</th></tr></thead>
       <tbody id="findings-body"></tbody>
     </table></div>
     <p class="small muted">Fonte: <code>config/rubric.toml</code> (versão 2026-11-v3). Descontos por severidade: crítica −60, alta −35, média −15, baixa −5.</p>
@@ -684,7 +713,8 @@ python examples/api_smoke_test.py                      # valida chave e modelo (
         <tr><td><code>config/rubric.toml</code></td><td>Pesos, faixas, descontos, tipos de apontamento, tolerâncias, limites do hash</td></tr>
         <tr><td><code>config/checklists.toml</code></td><td>Evidências obrigatórias por categoria × manutenção × momento</td></tr>
         <tr><td><code>config/prompts.toml</code></td><td>Prompts de sistema de cada tarefa, com versão</td></tr>
-        <tr><td><code>config/.secrets.toml</code></td><td>Chaves de API (fora do git)</td></tr>
+        <tr><td><code>config/.secrets.toml</code></td><td>Chaves de API e credenciais da IARA (fora do git)</td></tr>
+        <tr><td><code>config/settings.local.toml</code></td><td>Ajustes só desta máquina, ex.: usar a IARA dentro do Itaú (fora do git; modelo em <code>config/settings.itau.toml.example</code>)</td></tr>
       </tbody>
     </table></div>
 
@@ -746,6 +776,7 @@ ATEST_EXECUTION__ACTION=validate ATEST_EXECUTION__MODE=api python main.py</code>
       <li><b>Testar o papel rápido com Haiku 5.5</b> e decidir pelo portão.</li>
       <li><b>Piloto em modo copiloto</b> com um grupo de analistas, medindo concordância, tempo economizado e uso do feedback.</li>
       <li><b>Fluxo de revisão em LangGraph</b> em produção: pausa para a pessoa, pedido de complemento ao fornecedor e reanálise.</li>
+      <li><b>Rodar pela IARA real dentro do banco</b>: confirmar saída estruturada com JSON Schema, PDF como arquivo e contagem de tokens, e integrar a Batch API da IARA para ter o desconto de lote.</li>
       <li><b>Testar OpenAI e Gemini contra a API real</b>, se houver interesse em contingência entre provedores.</li>
     </ol>
   </section>
@@ -756,7 +787,7 @@ ATEST_EXECUTION__ACTION=validate ATEST_EXECUTION__MODE=api python main.py</code>
     <details class="tech"><summary>A IA aprova chamados sozinha?</summary><p>Não. Ela sugere. A recomendação sai da régua e a decisão é sempre da pessoa analista. A única ação automática é devolver ao fornecedor um chamado sem as evidências mínimas, por regra.</p></details>
     <details class="tech"><summary>E se a IA errar?</summary><p>O erro aparece como um apontamento com evidência que a pessoa pode descartar. Nos testes com o modelo real, os erros foram apontar a mais (mais cautela), não deixar passar problema. O feedback da pessoa é gravado para medir e corrigir.</p></details>
     <details class="tech"><summary>Dá para mudar a régua (pesos, faixas, severidade)?</summary><p>Sim, editando <code>config/rubric.toml</code>, sem mexer no código. A boa prática é subir a versão da régua e rodar o portão de qualidade antes de publicar.</p></details>
-    <details class="tech"><summary>Ficamos presos a um fornecedor de IA?</summary><p>Não. Anthropic, OpenAI e Google estão implementados atrás da mesma interface, e a troca é uma linha de configuração. Hoje só a Anthropic foi testada contra a API real.</p></details>
+    <details class="tech"><summary>Ficamos presos a um fornecedor de IA?</summary><p>Não. Anthropic, OpenAI, Google e a IARA (plataforma interna do Itaú) estão implementados atrás da mesma interface, e a troca é uma linha de configuração. Hoje só a Anthropic foi testada contra a API real.</p></details>
     <details class="tech"><summary>Quanto custa?</summary><p>Centavos por chamado: R$ 0,34 a R$ 0,57 medidos no modo síncrono, cerca da metade no lote horário. Use a calculadora em <a href="#custos">Custos</a>.</p></details>
     <details class="tech"><summary>Os dados usados são reais?</summary><p>Não. Agências, fornecedores, CNPJs, valores e fotos são fictícios. As fotos do conjunto Itaú foram geradas por IA para demonstração interna.</p></details>
     <details class="tech"><summary>Por que o score do “Verificar porta. Urgente.” é alto e mesmo assim não aprova?</summary><p>Porque o escopo vago e a foto ilegível somam dois redutores de confiança. Com confiança baixa, a régua manda para análise detalhada, qualquer que seja o score: não há informação suficiente para concluir.</p></details>
@@ -803,6 +834,10 @@ ATEST_EXECUTION__ACTION=validate ATEST_EXECUTION__MODE=api python main.py</code>
 
   </main>
 </div>
+
+<div class="nav-backdrop" id="nav-backdrop" aria-hidden="true"></div>
+<button type="button" class="to-top" id="to-top" aria-label="Voltar ao topo">↑</button>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script src="app.js"></script>
 </body>

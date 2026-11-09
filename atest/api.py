@@ -72,6 +72,7 @@ class LastAssessment(BaseModel):
 
     assessment_id: int
     run_id: str | None
+    generated_at: str
     recommendation: str
     score: int | None
     mode: str
@@ -189,6 +190,7 @@ class RunRequest(BaseModel):
     main_model: str | None = None
     fast_model: str | None = None
     provider: str | None = Field(None, description="provedor escolhido no painel (um de panel.providers); sem ele, vale a configuração")
+    refresh: bool = Field(False, description="executa o agente de novo, sem reaproveitar respostas do modelo salvas no cache em disco")
 
 
 class TicketState(BaseModel):
@@ -371,6 +373,7 @@ class RunManager:
             "batch.kind": request.batch_mode,
             "models.main": request.main_model or base.models.main,
             "models.fast": request.fast_model or base.models.fast,
+            "llm.refresh_cache": request.refresh,
         }
         if request.provider:
             choice = next((c for c in provider_choices(base) if c.id == request.provider), None)
@@ -527,6 +530,7 @@ def create_app(cfg: Settings) -> FastAPI:
             LastAssessment(
                 assessment_id=hist[0]["id"],
                 run_id=hist[0]["run_id"],
+                generated_at=hist[0]["generated_at"],
                 recommendation=hist[0]["recommendation"],
                 score=hist[0]["score"],
                 mode=hist[0]["mode"],

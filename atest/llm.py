@@ -91,7 +91,7 @@ class ProviderClient:
         return self.cfg.cache_dir / f"{req.task}_{prov}_{req.key(output, prov)[:24]}.json"
 
     def _from_cache(self, prov: str, req: Request, output: type[T]) -> tuple[T, LlmCall] | None:
-        if not self.cfg.llm.use_disk_cache:
+        if not self.cfg.llm.use_disk_cache or self.cfg.llm.refresh_cache:
             return None
         file = self._file(prov, req, output)
         if not file.exists():

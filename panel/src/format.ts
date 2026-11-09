@@ -136,7 +136,7 @@ export const GLOSSARY: Record<string, { term: string; text: string }> = {
   phase: { term: "Fase da régua", text: "Fase 1 é o MVP: não cobra foto do antes nem checa ilegibilidade e reaproveitamento. Fase 2 inclui essas checagens." },
   mode: { term: "Modo", text: "Simulado demonstra o fluxo com respostas simuladas, sem chamar o modelo e sem custo. API chama o modelo de verdade e gera custo." },
   batch: { term: "Envio em lote", text: "Os pedidos vão juntos para a API de lotes do provedor (Message Batches). Custa metade, mas o resultado demora mais." },
-  stage: { term: "Etapa da esteira", text: "Aprovação de Orçamento: o fornecedor envia escopo, orçamento e fotos do antes. Aprovação do Serviço: além disso, envia as fotos do depois e os demais documentos do checklist da categoria." },
+  stage: { term: "Etapa da esteira", text: "Aprovação de Orçamento: o fornecedor envia escopo, orçamento e fotos do antes. Atestação do Serviço: além disso, envia as fotos do depois e os demais documentos do checklist da categoria." },
   maintenance: { term: "Tipo de manutenção", text: "Corretiva: conserta um problema que apareceu. Preventiva: manutenção programada para evitar problemas (ex.: limpeza mensal do ar-condicionado)." },
   ground_truth: { term: "Gabarito", text: "A decisão esperada para o chamado, definida por especialistas. Serve para medir se o Atest.AI acertou." },
   accuracy: { term: "Acurácia", text: "Percentual de chamados em que a recomendação do Atest.AI foi igual à do gabarito. O IC 95% mostra a faixa provável do valor real." },
@@ -157,8 +157,9 @@ export const GLOSSARY: Record<string, { term: string; text: string }> = {
 
 // ============================================================================ classificação do chamado (valores da API → português)
 export const MAINTENANCE_LABEL: Record<string, string> = { corrective: "Corretiva", preventive: "Preventiva" };
-export const STAGE_LABEL: Record<string, string> = { quote: "Aprovação de Orçamento", execution: "Aprovação do Serviço" };
-export const STAGE_SHORT: Record<string, string> = { quote: "Orçamento", execution: "Serviço" };
+export const STAGE_LABEL: Record<string, string> = { quote: "Aprovação de Orçamento", execution: "Atestação do Serviço" };
+/** rótulo curto da etapa, para selos nos cards */
+export const STAGE_SHORT: Record<string, string> = { quote: "Aprov. orçamento", execution: "Atest. serviço" };
 /** O que o fornecedor envia em cada etapa da esteira. */
 export const STAGE_DOCS: Record<string, string[]> = {
   quote: ["Escopo", "Orçamento (planilha padrão)", "Fotos do antes"],

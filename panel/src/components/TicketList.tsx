@@ -118,7 +118,7 @@ export function TicketList(p: Props) {
                 </div>
                 <div className="mt-1 flex flex-wrap gap-1 text-[11px] font-semibold">
                   <span className={`rounded px-1.5 ${c.maintenance_type === "preventive" ? "bg-[#e3f2ea] text-ok" : "bg-[#fdf1dc] text-warn"}`}>{MAINTENANCE_LABEL[c.maintenance_type] ?? c.maintenance_type}</span>
-                  <span className="rounded bg-paper px-1.5 text-ink/70" title={STAGE_LABEL[c.moment]}>Aprov. {STAGE_SHORT[c.moment]?.toLowerCase() ?? c.moment}</span>
+                  <span className="rounded bg-paper px-1.5 text-ink/70" title={STAGE_LABEL[c.moment]}>{STAGE_SHORT[c.moment] ?? c.moment}</span>
                 </div>
                 <p className="mt-1 line-clamp-2 text-[13px] leading-snug text-muted">{c.scope}</p>
                 <div className="mt-2 flex items-center gap-3 text-[12px] text-muted">

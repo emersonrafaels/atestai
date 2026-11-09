@@ -23,7 +23,7 @@ const daysBetween = (a?: string | null, b?: string | null) =>
   a && b ? Math.round((new Date(`${b.slice(0, 10)}T12:00:00`).getTime() - new Date(`${a.slice(0, 10)}T12:00:00`).getTime()) / 86400000) : null;
 
 /**
- * Linha do tempo da esteira: abertura → aprovação de orçamento → execução → aprovação do serviço.
+ * Linha do tempo da esteira: abertura → aprovação de orçamento → execução → atestação do serviço.
  * Destaca em qual etapa este chamado está e o que o fornecedor envia em cada uma.
  */
 export function StageTimeline({ ticket }: { ticket: TicketDetail }) {
@@ -46,7 +46,7 @@ export function StageTimeline({ ticket }: { ticket: TicketDetail }) {
       when: quote ? "Depois da aprovação" : "Concluída", detail: quote ? "Só começa depois que o orçamento for aprovado" : "Serviço executado pelo fornecedor",
     },
     {
-      key: "service", title: "Aprovação do Serviço", icon: <ShieldCheck size={15} />, state: quote ? "next" : "current",
+      key: "service", title: "Atestação do Serviço", icon: <ShieldCheck size={15} />, state: quote ? "next" : "current",
       when: quote ? "Próxima etapa" : sentLine, detail: quote ? "Virá com as fotos do depois e os demais documentos" : "O fornecedor enviou as evidências do serviço concluído",
       docs: STAGE_DOCS.execution,
     },

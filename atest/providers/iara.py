@@ -19,14 +19,15 @@ from __future__ import annotations
 
 import io
 import json
-import logging
 import os
 import random
 import re
 import time
+import types
+import typing
 from typing import Any
 
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError
 
 from ..observability import event
 from .base import DocumentPart, ImagePart, Provider, ProviderError, ProviderResponse, Request, T, TextPart, Usage
@@ -119,6 +120,10 @@ def parse_output(data: Any, output: type[T], max_rounds: int = 20) -> tuple[T, l
     string é o objeto inteiro de novo: {"attachments": "{\\"attachments\\": [...]}"}. Também acontece a resposta toda vir
     como string ou embrulhada numa chave só ({"AttachmentIdentification": {...}}). A correção só age onde o schema espera
     lista/objeto e recebeu texto; o resultado continua validado pelo Pydantic. Devolve o objeto e as correções aplicadas.
+
+    Backends que não aplicam o schema à risca (json_object, prompt, alguns modelos via Bedrock) às vezes omitem um campo
+    obrigatório. Campo de lista ou texto que faltou entra vazio ([] / ""), e campo que aceita nulo entra como null;
+    faltar booleano, número ou objeto continua sendo erro, porque inventar esses valores mudaria a análise.
     """
     repairs: list[str] = []
     for _ in range(max_rounds):
@@ -139,6 +144,8 @@ def parse_output(data: Any, output: type[T], max_rounds: int = 20) -> tuple[T, l
                     data = inner
                     repairs.append(f"objeto embrulhado em '{key}'")
                     continue
+            if _fill_missing(data, e, output, repairs):  # último recurso: resposta parcial no formato certo
+                continue
             raise
     return output.model_validate(data), repairs
 
@@ -170,6 +177,60 @@ def _repair(data: Any, error: ValidationError, repairs: list[str]) -> bool:
             parent[key] = value
             repairs.append(f"'{'.'.join(map(str, loc))}' veio como string com JSON")
         fixed = True
+    return fixed
+
+
+def _empty_value(annotation: Any) -> tuple[bool, Any]:
+    """Valor neutro para um campo omitido: lista → [], texto → "", opcional → None. (False, None) se não houver."""
+    origin = typing.get_origin(annotation)
+    args = typing.get_args(annotation)
+    if origin in (typing.Union, types.UnionType) and type(None) in args:
+        return True, None
+    if annotation is str:
+        return True, ""
+    if annotation in (list, set, tuple) or origin in (list, set, tuple):
+        return True, []
+    return False, None
+
+
+def _field_annotation(model: type[BaseModel], loc: tuple) -> Any:
+    """Anotação do campo no caminho de um erro de validação, descendo por submodelos e listas de submodelos."""
+    current: Any = model
+    for step in loc:
+        if isinstance(step, int):  # índice de lista: o tipo é o do elemento
+            args = typing.get_args(current)
+            current = args[0] if args else Any
+            continue
+        if not (isinstance(current, type) and issubclass(current, BaseModel)) or step not in current.model_fields:
+            return None
+        current = current.model_fields[step].annotation
+    return current
+
+
+def _fill_missing(data: Any, error: ValidationError, output: type[BaseModel], repairs: list[str]) -> bool:
+    """Preenche, no lugar, os campos obrigatórios omitidos que têm valor neutro (ver parse_output)."""
+    fixed = False
+    for err in error.errors():
+        loc = err["loc"]
+        if err["type"] != "missing" or not loc or isinstance(loc[-1], int):
+            continue
+        ok, value = _empty_value(_field_annotation(output, loc))
+        if not ok:
+            continue
+        parent = data
+        try:
+            for step in loc[:-1]:
+                parent = parent[step]
+        except (KeyError, IndexError, TypeError):
+            continue
+        model = _field_annotation(output, loc[:-1]) if loc[:-1] else output
+        fields = set(model.model_fields) if isinstance(model, type) and issubclass(model, BaseModel) else set()
+        # só completa uma resposta parcial do formato certo: tem algum campo esperado e nenhum desconhecido
+        partial = isinstance(parent, dict) and bool(set(parent) & fields) and set(parent) <= fields
+        if partial and loc[-1] not in parent:
+            parent[loc[-1]] = value
+            repairs.append(f"'{'.'.join(map(str, loc))}' omitido; preenchido com {json.dumps(value)}")
+            fixed = True
     return fixed
 
 
@@ -346,7 +407,9 @@ class IaraProvider(Provider):
         except ValidationError as e:
             raise ProviderError(f"[{req.task}] resposta fora do schema {output.__name__}: {e}") from e
         if repairs:
-            event("iara_json_repaired", logging.WARNING, task=req.task, model=model, backend=backend, repairs=repairs)
+            # comportamento esperado de alguns backends (ex.: Claude via Bedrock) e já corrigido: fica só no log JSON,
+            # sem aviso no console (que mostra WARNING ou acima)
+            event("iara_json_repaired", task=req.task, model=model, backend=backend, repairs=repairs)
         u = _get(resp, "usage")
         cache = _get(_get(u, "prompt_tokens_details"), "cached_tokens", 0) or 0
         prompt = _get(u, "prompt_tokens", 0) or 0
