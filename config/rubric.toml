@@ -2,13 +2,15 @@
 # Alterar aqui muda notas, score e recomendação sem tocar no código. Suba a versão a cada mudança.
 
 [default.rubric]
-version = "2026-11-v3"  # v3: chaves e valores em inglês (mesmas regras da v2)
+version = "2026-11-v5"  # v5: escopo vago alto, quantidade não verificável, item sem foto e valor divergente relevante; v4: absorção entre tipos (absorbs) e foto do depois com local não confirmado; v3: chaves em inglês
 
 # peso de cada validação no score (somam 100)
 weights = { scope = 20, quote = 40, photos = 40 }
 
 # desconto por severidade; cada tipo de apontamento desconta uma vez por validação
 discount_by_severity = { critical = 60, high = 35, medium = 15, low = 5 }
+# absorbs = ["tipo"] num tipo de apontamento: se os dois aparecem na mesma validação, o absorvido segue como evidência,
+# mas não desconta (é o mesmo problema visto por outro ângulo; descontar os dois puniria duas vezes)
 
 # da maior faixa para a menor
 bands = [
@@ -31,13 +33,16 @@ hash_min_detail = 9.0     # abaixo disso a foto é "pouco detalhe" (desvio das b
 hash_method = "phash + dhash (soma das distâncias de Hamming)"
 spreadsheet_value_tolerance = 1.00   # R$ de diferença aceitos entre planilha e chamado
 photo_date_tolerance_days = 1
+# valor potencial divergente a partir desta fração do orçamento gera o apontamento relevant_amount_at_issue
+# (cada tipo desconta uma vez; isto pesa a materialidade quando muitos itens têm o mesmo problema)
+relevant_amount_at_issue_pct = 50
 
 # --- tipos de apontamento -----------------------------------------------------------------------
 # amount_at_issue: "item" (o item inteiro), "excess" (só o que passa da referência/quantidade) ou "none"
 
 [default.rubric.finding_types.vague_scope]
 validation = "scope"
-severity = "medium"
+severity = "high"  # escopo vago impede conferir orçamento e fotos
 reduces_confidence = true
 description = "Escopo vago ou sem ambiente definido"
 
@@ -71,6 +76,18 @@ severity = "medium"
 amount_at_issue = "excess"
 description = "Quantidade acima do esperado"
 
+[default.rubric.finding_types.unverifiable_quantity]
+validation = "quote"
+severity = "medium"
+reduces_confidence = true
+amount_at_issue = "item"
+description = "Quantidade não verificável pelo escopo"
+
+[default.rubric.finding_types.relevant_amount_at_issue]
+validation = "quote"
+severity = "medium"
+description = "Valor potencial divergente relevante no orçamento"
+
 [default.rubric.finding_types.price_above_reference]
 validation = "quote"
 severity = "medium"
@@ -91,6 +108,18 @@ description = "Foto não corresponde ao escopo"
 validation = "photos"
 severity = "high"
 description = "Sem foto do serviço concluído"
+absorbs = ["photo_mismatch"]  # a foto "do depois" de outro ambiente já é o motivo de faltar a prova do serviço
+
+[default.rubric.finding_types.after_photo_unconfirmed_location]
+validation = "photos"
+severity = "medium"
+reduces_confidence = true
+description = "Foto do depois sem local confirmado"
+
+[default.rubric.finding_types.item_without_photo]
+validation = "photos"
+severity = "medium"
+description = "Item cobrado sem evidência fotográfica"
 
 [default.rubric.finding_types.missing_before_photo]
 validation = "photos"

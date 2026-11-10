@@ -8,13 +8,13 @@
   "branch": {
     "code": "0447",
     "name": "Ag. Mooca",
-    "environment": "corridor"
+    "environment": "corredor"
   },
   "supplier": {
     "name": "Fornecedor Gama Instalações Elétricas Ltda.",
     "cnpj": "34.567.890/0001-12"
   },
-  "requested_scope": "Trocar as 6 lâmpadas tubulares queimadas do corridor.",
+  "requested_scope": "Trocar as 6 lâmpadas tubulares queimadas do corredor.",
   "quoted_value": 1822.0,
   "dates": {
     "opening": "2026-11-01",
@@ -32,7 +32,7 @@
     {
       "file_name": "Orcamento_GAM-V0053.xlsx",
       "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      "size_bytes": 7640,
+      "size_bytes": 7620,
       "sent_by": "supplier",
       "data_upload": "2026-11-04"
     },
@@ -53,7 +53,7 @@
     {
       "file_name": "IMG_20261103_101137.jpg",
       "content_type": "image/jpeg",
-      "size_bytes": 220684,
+      "size_bytes": 218378,
       "sent_by": "supplier",
       "data_upload": "2026-11-04"
     },
@@ -67,14 +67,14 @@
     {
       "file_name": "IMG_20261104_183700.jpg",
       "content_type": "image/jpeg",
-      "size_bytes": 201988,
+      "size_bytes": 201947,
       "sent_by": "supplier",
       "data_upload": "2026-11-04"
     },
     {
       "file_name": "IMG_20261104_190600.jpg",
       "content_type": "image/jpeg",
-      "size_bytes": 205163,
+      "size_bytes": 201618,
       "sent_by": "supplier",
       "data_upload": "2026-11-04"
     }

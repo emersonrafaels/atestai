@@ -1,0 +1,47 @@
+{
+  "ticket_id": "02000038",
+  "workstream": "SETA",
+  "maintenance_type": "preventive",
+  "moment": "quote",
+  "category": "air_conditioning",
+  "symptom": "preventive_maintenance",
+  "branch": {
+    "code": "9013",
+    "name": "Itaú Ag. Água Branca",
+    "environment": "backoffice"
+  },
+  "supplier": {
+    "name": "Fornecedor Épsilon Climatização Ltda.",
+    "cnpj": "56.789.012/0001-34"
+  },
+  "requested_scope": "Verificar o backoffice. Urgente.",
+  "quoted_value": 2407.23,
+  "dates": {
+    "opening": "2026-11-06",
+    "supplier_submission": "2026-11-09",
+    "manager_review": "2026-11-10"
+  },
+  "status": "forwarded_to_backoffice",
+  "origin": "dataset",
+  "dataset": "itau",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "attachments": [
+    {
+      "file_name": "Orcamento_EPS-V0038.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 7657,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-09"
+    },
+    {
+      "file_name": "IMG_20261107_085036.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 227834,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-09"
+    }
+  ]
+}

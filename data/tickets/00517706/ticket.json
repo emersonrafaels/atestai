@@ -8,7 +8,7 @@
   "branch": {
     "code": "0533",
     "name": "Ag. Norte",
-    "environment": "self_service"
+    "environment": "autoatendimento"
   },
   "supplier": {
     "name": "Fornecedor Beta Sistemas de Segurança Ltda.",
@@ -31,14 +31,14 @@
     {
       "file_name": "Orcamento_BETA-OS-7781.xlsx",
       "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      "size_bytes": 7717,
+      "size_bytes": 7691,
       "sent_by": "supplier",
       "data_upload": "2026-09-30"
     },
     {
       "file_name": "IMG_20260930_142210.jpg",
       "content_type": "image/jpeg",
-      "size_bytes": 199808,
+      "size_bytes": 199523,
       "sent_by": "supplier",
       "data_upload": "2026-09-30"
     },
@@ -52,21 +52,21 @@
     {
       "file_name": "IMG_20260930_150318.jpg",
       "content_type": "image/jpeg",
-      "size_bytes": 186895,
+      "size_bytes": 186894,
       "sent_by": "supplier",
       "data_upload": "2026-09-30"
     },
     {
       "file_name": "IMG_20260930_143940.jpg",
       "content_type": "image/jpeg",
-      "size_bytes": 208124,
+      "size_bytes": 208063,
       "sent_by": "supplier",
       "data_upload": "2026-09-30"
     },
     {
       "file_name": "IMG_20260930_160512.jpg",
       "content_type": "image/jpeg",
-      "size_bytes": 182804,
+      "size_bytes": 182725,
       "sent_by": "supplier",
       "data_upload": "2026-09-30"
     }

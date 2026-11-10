@@ -88,3 +88,20 @@ def test_disabled_rules_change_the_analysis_and_reset_restores(admin_cfg):
     c.post("/api/admin/config/rubric/reset", headers=h, json={"comment": "volta"})
     assert _run(c, "00517706")["recommendation"] == "return_locked"
     assert c.get("/api/config").json()["rubric_version"] == admin_cfg.rubric.version
+
+
+def test_absorbs_is_validated_and_old_saved_versions_get_new_types(admin_cfg):
+    rub = admin_cfg.rubric.model_dump(mode="json")
+    rub["finding_types"]["missing_after_photo"]["absorbs"] = ["out_of_scope_item"]  # outra validação
+    with pytest.raises(AdminError, match="mesma validação"):
+        validate_section("rubric", rub, admin_cfg)
+
+    # versão salva antes de existir o tipo novo e o campo absorbs: os dois vêm do código
+    saved = admin_cfg.rubric.model_dump(mode="json")
+    del saved["finding_types"]["after_photo_unconfirmed_location"]
+    del saved["finding_types"]["missing_after_photo"]["absorbs"]
+    saved["finding_types"]["photo_mismatch"]["severity"] = "medium"
+    merged = AdminStore.merge_finding_types(admin_cfg, saved["finding_types"])
+    assert "after_photo_unconfirmed_location" in merged
+    assert merged["missing_after_photo"]["absorbs"] == ["photo_mismatch"]
+    assert merged["photo_mismatch"]["severity"] == "medium"  # o que foi salvo continua valendo

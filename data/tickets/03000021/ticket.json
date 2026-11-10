@@ -1,0 +1,54 @@
+{
+  "ticket_id": "03000021",
+  "workstream": "SETA",
+  "maintenance_type": "corrective",
+  "moment": "execution",
+  "category": "metalwork",
+  "symptom": "mechanical_failure",
+  "branch": {
+    "code": "1121",
+    "name": "Ag. Lapa de Baixo",
+    "environment": "backoffice"
+  },
+  "supplier": {
+    "name": "Fornecedor Zeta Serralheria e Portas ME",
+    "cnpj": "67.890.123/0001-45"
+  },
+  "requested_scope": "Porta do backoffice não fecha sozinha: trocar a mola aérea e regular.",
+  "quoted_value": 660.0,
+  "dates": {
+    "opening": "2026-11-10",
+    "supplier_submission": "2026-11-14",
+    "manager_review": "2026-11-15"
+  },
+  "status": "forwarded_to_backoffice",
+  "origin": "dataset",
+  "dataset": "scenarios",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "attachments": [
+    {
+      "file_name": "Orcamento_ZET-V0021.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 7609,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-14"
+    },
+    {
+      "file_name": "IMG_20261113_081759.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 161102,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-14"
+    },
+    {
+      "file_name": "IMG_20261113_091911.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 191641,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-14"
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 import { AlertTriangle, ChevronRight, Loader2, RefreshCw, Search } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { api, type RunSummary, type OperationsView as M } from "../api";
-import { brl, brl4, pct, REC, TASK_LABELS, FINDING_LABELS } from "../format";
+import { brl, brl4, pct, REC, TASK_LABELS, findingLabel } from "../format";
 import { InfoTip, Tooltip } from "./ui/Tooltip";
 import { InfoBox } from "./ui/InfoBox";
 import { Card, Kpi, Meter, ago } from "./ui/Panel";
@@ -134,7 +134,7 @@ export function OperationsView({ openRun }: { openRun: (id: string) => void }) {
                     const max = m.unfounded_findings.reduce((s, x) => Math.max(s, x.n), 1);
                     return (
                       <li key={a.kind}>
-                        <div className="mb-0.5 flex justify-between gap-2"><span>{FINDING_LABELS[a.kind] ?? a.kind}{i === 0 && <span className="ml-1.5 rounded bg-[#fdf1dc] px-1 text-[10px] font-semibold uppercase text-warn">revisar primeiro</span>}</span><b className="tabular-nums">{a.n}</b></div>
+                        <div className="mb-0.5 flex justify-between gap-2"><span>{findingLabel(a.kind)}{i === 0 && <span className="ml-1.5 rounded bg-[#fdf1dc] px-1 text-[10px] font-semibold uppercase text-warn">revisar primeiro</span>}</span><b className="tabular-nums">{a.n}</b></div>
                         <Meter value={a.n} max={max} color="#eda100" height={6} />
                       </li>
                     );

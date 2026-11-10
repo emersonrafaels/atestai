@@ -87,19 +87,21 @@
   "checklist_ok": true,
   "missing": [],
   "findings": [
-    "vague_scope",
-    "unreadable_photo"
+    "unreadable_photo",
+    "vague_scope"
   ],
   "optional": [
+    "item_without_photo",
+    "missing_before_photo",
     "unjustified_replacement",
-    "missing_before_photo"
+    "unverifiable_quantity"
   ],
   "grades": {
-    "scope": 85,
+    "scope": 65,
     "quote": 100,
     "photos": 95
   },
-  "score": 97,
+  "score": 91,
   "recommendation": "detailed_review",
   "confidence": "low"
 }

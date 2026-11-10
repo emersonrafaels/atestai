@@ -25,7 +25,8 @@ from pydantic import ValidationError
 
 from .config import AdminSettings, Checklists, Settings
 from .database import Database
-from .domain import Category, Rubric
+from .domain import MAINTENANCE_PT, MOMENT_PT, SEVERITY_PT, Category, Rubric
+from .formatting import pt_validation_error
 
 Section = Literal["rubric", "checklists"]
 SECTIONS: tuple[Section, ...] = ("rubric", "checklists")
@@ -102,8 +103,7 @@ def validate_section(section: Section, data: dict[str, Any], base: Settings) -> 
     try:
         model = Rubric.model_validate(data) if section == "rubric" else Checklists.model_validate(data)
     except ValidationError as e:
-        first = e.errors()[0]
-        raise AdminError(f"Valor inválido em {'.'.join(str(x) for x in first['loc'])}: {first['msg']}", 422) from e
+        raise AdminError(f"Valor inválido: {pt_validation_error(e.errors())}", 422) from e
 
     if isinstance(model, Rubric):
         if sum(model.weights.values()) != 100:
@@ -115,6 +115,13 @@ def validate_section(section: Section, data: dict[str, Any], base: Settings) -> 
             raise AdminError("As faixas precisam começar em 0, ter mínimos diferentes e ficar entre 0 e 100.", 422)
         if set(model.finding_types) != set(base.rubric.finding_types):
             raise AdminError("Os tipos de apontamento são definidos no código: dá para ativar, desativar e ajustar, mas não criar ou apagar.", 422)
+        for kind, spec in model.finding_types.items():
+            for other in spec.absorbs:
+                target = model.finding_types.get(other)
+                if other == kind or target is None or target.validation != spec.validation:
+                    name = f"“{target.description}”" if target else f"'{other}'"
+                    msg = f"“{spec.description}” só pode absorver outro tipo existente da mesma validação ({name} não serve)."
+                    raise AdminError(msg, 422)
         if model.confidence.medium_with_n_reducers > model.confidence.low_with_n_reducers:
             raise AdminError("A confiança média precisa de menos redutores do que a baixa.", 422)
         return model.model_dump(mode="json")
@@ -124,7 +131,7 @@ def validate_section(section: Section, data: dict[str, Any], base: Settings) -> 
         raise AdminError("As categorias de anexo são definidas no código: dá para ajustar a descrição, mas não criar ou apagar.", 422)
     seen: set[tuple[str, str, str]] = set()
     for n, rule in enumerate(model.rules, 1):
-        where = f"regra {n} ({rule.category}/{rule.maintenance}/{rule.moment})"
+        where = f"regra {n} ({rule_label(rule.category, rule.maintenance, rule.moment)})"
         if rule.category not in categories:
             raise AdminError(f"{where}: categoria desconhecida.", 422)
         if rule.maintenance not in VALID_MAINTENANCE or rule.moment not in VALID_MOMENT:
@@ -147,7 +154,27 @@ def validate_section(section: Section, data: dict[str, Any], base: Settings) -> 
 
 
 # ============================================================================ resumo das mudanças (histórico)
-SEVERITY_PT = {"critical": "crítica", "high": "alta", "medium": "média", "low": "baixa"}
+# Parâmetros numéricos da régua → nome em português (histórico do portal).
+FIELD_PT = {
+    "price_tolerance_pct": "Tolerância de preço (%)",
+    "photo_date_tolerance_days": "Tolerância da data da foto (dias)",
+    "spreadsheet_value_tolerance": "Tolerância de valor da planilha (R$)",
+    "hash_max_distance": "Distância máxima de semelhança das fotos",
+    "hash_max_distance_low_detail": "Distância máxima de semelhança (foto com pouco detalhe)",
+    "hash_min_detail": "Detalhe mínimo da foto",
+    "relevant_amount_at_issue_pct": "Valor divergente relevante (% do orçamento)",
+}
+
+
+def rule_label(category: str, maintenance: str, moment: str) -> str:
+    """Regra do checklist em português: "Pintura / qualquer manutenção / atestação do serviço"."""
+    try:
+        cat = Category(category).label
+    except ValueError:
+        cat = "qualquer categoria" if category == "*" else category
+    man = "qualquer manutenção" if maintenance == "*" else MAINTENANCE_PT.get(maintenance, maintenance)
+    mom = "qualquer etapa" if moment == "*" else MOMENT_PT.get(moment, moment)
+    return f"{cat} / {man} / {mom}"
 
 
 def describe_changes(section: Section, before: dict[str, Any], after: dict[str, Any]) -> list[str]:
@@ -166,15 +193,19 @@ def describe_changes(section: Section, before: dict[str, Any], after: dict[str, 
             for flag, label in (("lock", "trava"), ("reduces_confidence", "reduz confiança")):
                 if bool(b.get(flag)) != bool(a.get(flag)):
                     out.append(f"“{name}”: {label} {'ligada' if a.get(flag) else 'desligada'}")
+            if sorted(b.get("absorbs", [])) != sorted(a.get("absorbs", [])):
+                types = after.get("finding_types", {})
+                absorbed = [f"“{types.get(k, {}).get('description', k)}”" for k in a.get("absorbs", [])]
+                out.append(f"“{name}”: absorve {', '.join(absorbed) or 'nenhum'}")
         for key, label in (("weights", "Pesos"), ("discount_by_severity", "Descontos por severidade"), ("bands", "Faixas"), ("confidence", "Confiança")):
             if before.get(key) != after.get(key):
                 out.append(f"{label} alterados")
-        for key in ("price_tolerance_pct", "photo_date_tolerance_days", "spreadsheet_value_tolerance", "hash_max_distance", "hash_max_distance_low_detail", "hash_min_detail"):
+        for key, label in FIELD_PT.items():
             if before.get(key) != after.get(key):
-                out.append(f"{key}: {before.get(key)} → {after.get(key)}")
+                out.append(f"{label}: {before.get(key)} → {after.get(key)}")
     else:
         def key(r: dict) -> str:
-            return f"{r['category']}/{r['maintenance']}/{r['moment']}"
+            return rule_label(r["category"], r["maintenance"], r["moment"])
 
         rb = {key(r): r for r in before.get("rules", [])}
         ra = {key(r): r for r in after.get("rules", [])}
@@ -329,7 +360,24 @@ class AdminStore:
 
     def section_data(self, section: Section, base: Settings) -> dict[str, Any]:
         latest = self.latest(section)
-        return latest["data"] if latest and latest["data"] is not None else self.base_data(section, base)
+        if not latest or latest["data"] is None:
+            return self.base_data(section, base)
+        data = dict(latest["data"])
+        if section == "rubric":
+            data["finding_types"] = self.merge_finding_types(base, data.get("finding_types", {}))
+        return data
+
+    @staticmethod
+    def merge_finding_types(base: Settings, saved: dict[str, Any]) -> dict[str, Any]:
+        """Tipos de apontamento da versão salva, completados pelo código.
+
+        Os tipos são definidos no código: um tipo novo (ou um campo novo, como `absorbs`) que não existia quando a
+        versão foi salva vem do TOML; um tipo que saiu do código é descartado.
+        """
+        out = {}
+        for kind, spec in base.rubric.finding_types.items():
+            out[kind] = {**spec.model_dump(mode="json"), **saved.get(kind, {})}
+        return out
 
     def apply(self, base: Settings) -> Settings:
         """Configuração efetiva: os TOML com a última versão salva de cada seção por cima."""
@@ -340,6 +388,7 @@ class AdminStore:
                 data = dict(latest["data"])
                 if section == "rubric":  # a versão da régua mostra que veio do portal
                     data["version"] = f"{base.rubric.version}+portal.{latest['id']}"
+                    data["finding_types"] = self.merge_finding_types(base, data.get("finding_types", {}))
                 changes[section] = data
         return base.with_overrides(**changes) if changes else base
 

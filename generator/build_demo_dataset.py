@@ -17,8 +17,11 @@ import csv
 import json
 import mimetypes
 import random
+import os
 import shutil
+import stat
 import sys
+import time
 from pathlib import Path
 
 import piexif
@@ -337,13 +340,33 @@ def contact_sheet(dest: Path):
     sheet.save(dest, quality=82)
 
 
+def rmtree_retry(p: Path, tries: int = 10) -> None:
+    """Apaga a pasta. No OneDrive (ou com o painel aberto) arquivos podem ficar somente leitura ou presos por um
+    instante: tira o atributo e tenta de novo. Se não conseguir, falha, em vez de deixar chamados pela metade."""
+
+    def writable(func, path, _exc):
+        os.chmod(path, stat.S_IWRITE)
+        func(path)
+
+    for i in range(tries):
+        if not p.exists():
+            return
+        try:
+            shutil.rmtree(p, onexc=writable)
+            return
+        except PermissionError:
+            if i == tries - 1:
+                raise
+            time.sleep(0.5 * (i + 1))
+
+
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--clean", action="store_true")
     a = ap.parse_args()
     if a.clean:
         for sub in ("tickets", "history", "ground_truth", "references"):
-            shutil.rmtree(ROOT / sub, ignore_errors=True)
+            rmtree_retry(ROOT / sub)
     build_references()
     hist = build_history()
     build_cases(hist)

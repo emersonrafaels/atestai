@@ -1,0 +1,47 @@
+{
+  "ticket_id": "02000026",
+  "workstream": "SISR",
+  "maintenance_type": "corrective",
+  "moment": "quote",
+  "category": "cctv",
+  "symptom": "degraded_image",
+  "branch": {
+    "code": "3120",
+    "name": "Itaú Ag. Av. Paulista",
+    "environment": "autoatendimento"
+  },
+  "supplier": {
+    "name": "Fornecedor Beta Sistemas de Segurança Ltda.",
+    "cnpj": "23.456.789/0001-01"
+  },
+  "requested_scope": "Câmera do autoatendimento com imagem desfocada: limpeza e ajuste de foco.",
+  "quoted_value": 460.0,
+  "dates": {
+    "opening": "2026-11-02",
+    "supplier_submission": "2026-11-07",
+    "manager_review": "2026-11-08"
+  },
+  "status": "forwarded_to_backoffice",
+  "origin": "dataset",
+  "dataset": "itau",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "attachments": [
+    {
+      "file_name": "Orcamento_BET-V0026.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 7588,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-07"
+    },
+    {
+      "file_name": "IMG_20261103_084038.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 185628,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-07"
+    }
+  ]
+}

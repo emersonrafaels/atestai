@@ -85,8 +85,8 @@ export function ScopeTab({ p, ticket, rubric, goTo }: { p: Assessment; ticket: T
             “{highlight(ticket?.scope ?? "", quantities)}”
           </blockquote>
           <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-            <Fact label="Categoria">{ticket?.category_label ?? p.category}</Fact>
-            <Fact label="Sintoma">{ticket?.symptom_label ?? p.symptom}</Fact>
+            <Fact label="Categoria">{ticket?.category_label ?? p.category.replace(/_/g, " ")}</Fact>
+            <Fact label="Sintoma">{ticket?.symptom_label ?? p.symptom.replace(/_/g, " ")}</Fact>
             <Fact label="Tipo de manutenção">{MAINTENANCE_LABEL[p.maintenance_type] ?? p.maintenance_type}</Fact>
             <Fact label="Etapa da esteira">{STAGE_LABEL[p.moment] ?? p.moment}</Fact>
             {ticket && <Fact label="Agência">{ticket.branch}{ticket.environment ? `, ${envLabel(ticket.environment)}` : ""}</Fact>}

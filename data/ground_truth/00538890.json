@@ -101,8 +101,8 @@
   "checklist_ok": true,
   "missing": [],
   "findings": [
-    "unreadable_photo",
-    "missing_after_photo"
+    "missing_after_photo",
+    "unreadable_photo"
   ],
   "optional": [
     "unjustified_replacement"

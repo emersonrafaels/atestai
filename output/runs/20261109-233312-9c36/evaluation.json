@@ -1,0 +1,30 @@
+{
+  "n": 1,
+  "exact_recommendation": 1,
+  "direction": 1,
+  "checklist": 1,
+  "avg_score_error": 14.0,
+  "by_kind": {
+    "missing_after_photo": {
+      "tp": 0,
+      "fp": 1,
+      "fn": 0
+    }
+  },
+  "by_ticket": [
+    {
+      "ticket_id": "02000001",
+      "expected": "approve",
+      "obtained": "approve",
+      "expected_score": 100,
+      "obtained_score": 86,
+      "recommendation_ok": true,
+      "direction_ok": true,
+      "checklist_ok": true,
+      "missed": [],
+      "extra": [
+        "missing_after_photo"
+      ]
+    }
+  ]
+}

@@ -18,6 +18,7 @@ from .costs import CostCalculator
 from .database import Database
 from .domain import Assessment, Recommendation, Stage
 from .evaluation import Evaluation, GroundTruthEvaluator
+from .formatting import error_message
 from .llm import BatchClient, LlmClient, ProviderClient
 from .observability import context, event
 from .photos import PhotoIndex
@@ -219,7 +220,7 @@ class BatchRunner:
                     assessment = future.result()
                 except Exception as e:  # um chamado com erro não derruba o lote
                     log.exception("erro no chamado %s", ticket_id, extra={"ticket_error": ticket_id})
-                    result.errors[ticket_id] = f"{type(e).__name__}: {e}"
+                    result.errors[ticket_id] = error_message(e)
                     if on_complete:
                         on_complete(ticket_id, None, result.errors[ticket_id])
                     continue

@@ -1,6 +1,6 @@
-import { BarChart3, BookOpen, ClipboardCheck, Compass, FileSearch, Cpu, Download, FlaskConical, HelpCircle, Images, Inbox, Loader2, Play, Plus, Receipt, RotateCcw, ScanSearch, Settings, Trash2, Wifi, WifiOff, X, type LucideIcon } from "lucide-react";
+import { BarChart3, BookOpen, ClipboardCheck, Compass, FileSearch, Cpu, Download, FlaskConical, HelpCircle, Images, Inbox, ListChecks, Loader2, Play, Plus, Receipt, RotateCcw, ScanSearch, Settings, Trash2, Wifi, WifiOff, X, type LucideIcon } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { api, type TicketDetail, type TicketSummary, type AppSettings, type Dataset, type Run, type Assessment, type Recommendation } from "./api";
+import { api, type TicketDetail, type TicketSummary, type AppSettings, type Dataset, type Run, type Assessment, type Recommendation, type ScenarioTag } from "./api";
 import { serverOutdated } from "./api";
 import { LlmCallsTab } from "./components/LlmCallsTab";
 import { ScopeTab } from "./components/ScopeTab";
@@ -15,6 +15,7 @@ import { OperationsView } from "./components/OperationsView";
 import { NewTicket } from "./components/NewTicket";
 import { RerunDialog } from "./components/RerunDialog";
 import { ValidationView } from "./components/ValidationView";
+import { ScenariosView } from "./components/ScenariosView";
 import { brl4, REC, DEFAULT_RUBRIC, ENV_NAME, MAINTENANCE_LABEL } from "./format";
 import { Tour, tourDone, type TourStep } from "./components/ui/Tour";
 import { Tooltip, InfoTip } from "./components/ui/Tooltip";
@@ -36,7 +37,7 @@ const TABS: { id: Tab; label: string; needsAssessment: boolean; icon: LucideIcon
   { id: "input", label: "Entrada do chamado", needsAssessment: false, icon: Inbox, hint: "O que chegou do Salesforce: escopo, orçamento e anexos" },
 ];
 
-type View = "analysis" | "metrics" | "validation" | "admin";
+type View = "analysis" | "scenarios" | "metrics" | "validation" | "admin";
 
 export default function App() {
   const [config, setConfig] = useState<AppSettings | null>(null);
@@ -51,6 +52,7 @@ export default function App() {
   const [adminVisited, setAdminVisited] = useState(false);
   useEffect(() => { if (view === "admin") setAdminVisited(true); }, [view]);
   const [datasets, setDatasets] = useState<Dataset[]>([]);
+  const [scenarioTags, setScenarioTags] = useState<ScenarioTag[]>([]);
   const [dataset, setDataset] = useState("demo");
   const [showNewTicket, setShowNewTicket] = useState(false);
   const [savedAssessment, setSavedAssessment] = useState<Assessment | null>(null);
@@ -99,6 +101,7 @@ export default function App() {
       setFastModel(choice?.fast ?? c.fast_model);
     }).catch((e) => setError(String(e.message ?? e)));
     api.datasets().then(setDatasets).catch(() => undefined);
+    api.scenarios().then(setScenarioTags).catch(() => undefined);
     api.tickets().then((cs) => {
       setTickets(cs);
       const demo = cs.filter((c) => c.dataset === "demo");
@@ -164,6 +167,24 @@ export default function App() {
     } catch (e) {
       setError((e as Error).message);
     }
+  };
+
+  // aba Cenários: abre um chamado ou marca vários na lista da Análise, ajustando o filtro de conjunto para mostrá-los
+  const showInList = (ids: string[]) => {
+    const sets = new Set(ids.map((id) => tickets.find((c) => c.ticket_id === id)?.dataset));
+    const only = sets.size === 1 ? [...sets][0] : undefined;
+    if (dataset !== "all" && (!only || only !== dataset)) setDataset(only ?? "all");
+  };
+  const openFromScenarios = (id: string) => {
+    showInList([id]);
+    setFocus(id);
+    setView("analysis");
+  };
+  const selectFromScenarios = (ids: string[]) => {
+    showInList(ids);
+    setSelected(new Set(ids));
+    if (ids.length) setFocus(ids[0]);
+    setView("analysis");
   };
 
   const remove = async (id: string) => {
@@ -273,7 +294,7 @@ export default function App() {
           </div>
 
           <nav data-tour="nav" aria-label="Seções" className="order-3 flex w-full rounded-xl bg-paper p-1 text-[14px] sm:order-none sm:w-auto">
-            {([["analysis", "Análise", ScanSearch], ["validation", "Validação", FlaskConical], ["metrics", "Operação", BarChart3], ["admin", "Configuração", Settings]] as const).map(([v, label, Icon]) => (
+            {([["analysis", "Análise", ScanSearch], ["scenarios", "Cenários", ListChecks], ["validation", "Validação", FlaskConical], ["metrics", "Operação", BarChart3], ["admin", "Configuração", Settings]] as const).map(([v, label, Icon]) => (
               <Tooltip key={v} side="bottom" className="flex flex-1 sm:flex-none" content={SECTION_HINT[v]}>
                 <button onClick={() => setView(v)} aria-current={view === v ? "page" : undefined}
                   className={`relative flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 transition-colors sm:flex-none ${view === v ? "bg-sheet font-semibold text-blueprint shadow-sm" : "text-muted hover:text-ink"}`}>
@@ -392,7 +413,11 @@ export default function App() {
           <AdminView goToValidation={() => setView("validation")} outdated={serverOutdated(config)} />
         </main>
       )}
-      {view === "admin" ? null : view === "validation" && config ? (
+      {view === "admin" ? null : view === "scenarios" ? (
+        <main className="grade row-span-2 min-h-0 overflow-y-auto">
+          <ScenariosView tickets={tickets} tags={scenarioTags} datasets={datasets} openTicket={openFromScenarios} selectTickets={selectFromScenarios} />
+        </main>
+      ) : view === "validation" && config ? (
         <main className="grade row-span-2 min-h-0 overflow-y-auto">
           <ValidationView config={config} openCase={(ex, ch) => openRun(ex, ch)} />
         </main>
@@ -568,6 +593,7 @@ const ENV_BADGE: Record<string, { label: string; cls: string }> = {
 
 const SECTION_HINT = {
   analysis: "Analise chamados um a um e leia o parecer",
+  scenarios: "Ache chamados por tipo de problema (escopo vago, orçamento com vários erros...) e analise com um clique",
   validation: "Meça a qualidade do Atest.AI em um conjunto de chamados de teste",
   metrics: "Volume, custo, latência e decisões das pessoas analistas",
   admin: "Checklists, regras e cadastros (acesso com usuário e senha)",
@@ -608,6 +634,12 @@ function buildTour(view: View, a: { toAnalysis: () => void; toAssessment: () => 
   if (view === "admin") {
     return [
       { title: "Configuração", body: <p>Portal para manter as regras do Atest.AI: checklist mínimo por categoria e etapa, regras de apontamento, régua do score e cadastros. O acesso pede usuário e senha.</p> },
+      help,
+    ];
+  }
+  if (view === "scenarios") {
+    return [
+      { title: "Cenários de teste", body: <p>Um chamado por tipo de problema, e os chamados de todos os conjuntos agrupados pelo problema que o gabarito descreve. Clique num chamado para abri-lo na Análise, ou em <b>Selecionar</b> para marcar vários e analisar de uma vez.</p> },
       help,
     ];
   }

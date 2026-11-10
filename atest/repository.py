@@ -22,6 +22,7 @@ from .domain import (
     Rubric,
     Ticket,
 )
+from .formatting import pt_validation_error
 
 log = logging.getLogger(__name__)
 
@@ -106,7 +107,7 @@ def read_quote(path: Path) -> Quote:
     try:
         wb = load_workbook(path, data_only=True)
     except Exception as e:  # arquivo corrompido ou não-Excel
-        raise QuoteError(f"não foi possível abrir {path.name}: {e}") from e
+        raise QuoteError(f"não foi possível abrir {path.name}: o arquivo não é uma planilha Excel válida ou está corrompido") from e
     if "Chamado" not in wb.sheetnames or "Itens" not in wb.sheetnames:
         raise QuoteError("a planilha precisa das abas 'Chamado' e 'Itens'")
 
@@ -121,7 +122,8 @@ def read_quote(path: Path) -> Quote:
     rows = _table_rows(wb["Itens"], "tbItens")
     columns = [ITEM_COLUMNS.get(str(c or "").strip().lower()) for c in rows[0]]
     if None in columns or len(set(columns)) != len(columns):
-        raise QuoteError(f"colunas da tabela tbItens fora do padrão: {rows[0]}")
+        found = ", ".join(str(c) for c in rows[0] if c is not None) or "nenhuma"
+        raise QuoteError(f"colunas da tabela tbItens fora do padrão (encontradas: {found})")
     items = [dict(zip(columns, row, strict=True)) for row in rows[1:] if any(v is not None for v in row)]
     try:
         return Quote(
@@ -130,7 +132,7 @@ def read_quote(path: Path) -> Quote:
             **{k: (str(v) if k in ("ticket_id", "number") else v) for k, v in ticket_fields.items()},
         )
     except ValidationError as e:
-        raise QuoteError(f"planilha com valores inválidos: {e.errors()[0]['loc']} — {e.errors()[0]['msg']}") from e
+        raise QuoteError(f"planilha com valores inválidos: {pt_validation_error(e.errors())}") from e
 
 
 # ============================================================================ referências
@@ -186,6 +188,7 @@ class GroundTruth(BaseModel):
     optional: list[str] = []
     grades: dict[str, int] | None = None
     maintenance_type: str
+    moment: str = "execution"
     before_applicable: bool = True
     dataset: str = "demo"
     service_template: str | None = None
@@ -193,6 +196,7 @@ class GroundTruth(BaseModel):
     amount_at_issue: float | None = None
     items: list[dict[str, Any]]
     attachments: dict[str, dict[str, Any]]
+    scenario: dict[str, str] | None = None  # catálogo de cenários (0300…): id, título e o que o chamado testa
 
 
 def load_ground_truth(ground_truth_dir: Path, ticket_id: str) -> GroundTruth | None:

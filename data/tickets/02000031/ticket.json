@@ -1,0 +1,40 @@
+{
+  "ticket_id": "02000031",
+  "workstream": "SETA",
+  "maintenance_type": "preventive",
+  "moment": "quote",
+  "category": "air_conditioning",
+  "symptom": "preventive_maintenance",
+  "branch": {
+    "code": "6084",
+    "name": "Itaú Ag. Tatuapé",
+    "environment": "backoffice"
+  },
+  "supplier": {
+    "name": "Fornecedor Épsilon Climatização Ltda.",
+    "cnpj": "56.789.012/0001-34"
+  },
+  "requested_scope": "Manutenção preventiva (PMOC) dos 5 aparelhos split do backoffice: limpeza, higienização e verificação.",
+  "quoted_value": 1425.0,
+  "dates": {
+    "opening": "2026-11-04",
+    "supplier_submission": "2026-11-06",
+    "manager_review": "2026-11-07"
+  },
+  "status": "forwarded_to_backoffice",
+  "origin": "dataset",
+  "dataset": "itau",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "attachments": [
+    {
+      "file_name": "Orcamento_EPS-V0031.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 7685,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-06"
+    }
+  ]
+}

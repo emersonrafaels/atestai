@@ -1,0 +1,101 @@
+{
+  "ticket_id": "02000034",
+  "dataset": "itau",
+  "service_template": "sensor_quote",
+  "defects": [
+    "price",
+    "does_not_match"
+  ],
+  "workstream": "SISR",
+  "moment": "quote",
+  "maintenance_type": "corrective",
+  "category": "alarm",
+  "symptom": "false_alarm",
+  "before_applicable": true,
+  "quoted_value": 566.33,
+  "amount_at_issue": 36.33,
+  "items": [
+    {
+      "n": 1,
+      "description": "Visita técnica",
+      "unit": "vb",
+      "quantity": 1,
+      "unit_value": 280.0,
+      "total_value": 280.0,
+      "classification": "compliant",
+      "lpu_code": "SIS-001",
+      "reference_price": 280.0,
+      "findings": [],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    },
+    {
+      "n": 2,
+      "description": "Sensor IVP com fio",
+      "unit": "un",
+      "quantity": 1,
+      "unit_value": 176.33,
+      "total_value": 176.33,
+      "classification": "compliant",
+      "lpu_code": "ALA-002",
+      "reference_price": 140.0,
+      "findings": [
+        "price_above_reference"
+      ],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    },
+    {
+      "n": 3,
+      "description": "Mão de obra substituição de sensor",
+      "unit": "un",
+      "quantity": 1,
+      "unit_value": 110.0,
+      "total_value": 110.0,
+      "classification": "compliant",
+      "lpu_code": "ALA-003",
+      "reference_price": 110.0,
+      "findings": [],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    }
+  ],
+  "attachments": {
+    "Orcamento_KAP-V0034.xlsx": {
+      "category": "quote_doc",
+      "moment": "undetermined",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Orçamento"
+    },
+    "IMG_20261106_082431.jpg": {
+      "category": "equipment_photo",
+      "moment": "before",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Sensor antigo amarelado"
+    },
+    "IMG_20261110_173300.jpg": {
+      "category": "other",
+      "moment": "undetermined",
+      "matches_scope": false,
+      "readable": true,
+      "description": "Depósito com prateleiras: outro ambiente"
+    }
+  },
+  "checklist_ok": true,
+  "missing": [],
+  "findings": [
+    "photo_mismatch",
+    "price_above_reference"
+  ],
+  "optional": [],
+  "grades": {
+    "scope": 100,
+    "quote": 85,
+    "photos": 65
+  },
+  "score": 80,
+  "recommendation": "approve_with_caveats",
+  "confidence": "high"
+}

@@ -1,0 +1,213 @@
+{
+  "n": 1,
+  "no_ground_truth": 0,
+  "classes": [
+    "approve",
+    "approve_with_caveats",
+    "detailed_review",
+    "return_to_supplier",
+    "return_locked",
+    "checklist_returned"
+  ],
+  "matrix": [
+    [
+      0,
+      0,
+      1,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  ],
+  "accuracy": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+  },
+  "balanced_accuracy": 0.0,
+  "kappa": 0.0,
+  "problem_catch": {
+    "tp": 0,
+    "fp": 1,
+    "fn": 0,
+    "tn": 0,
+    "precision": 0.0,
+    "recall": null,
+    "f1": null,
+    "specificity": 0.0
+  },
+  "problem_catch_f1_ci": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+  },
+  "checklist_accuracy": 1.0,
+  "findings": [
+    {
+      "kind": "vague_scope",
+      "support": 1,
+      "tp": 1,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    {
+      "kind": "quantity_above_expected",
+      "support": 0,
+      "tp": 0,
+      "fp": 1,
+      "fn": 0,
+      "precision": 0.0,
+      "recall": null,
+      "f1": null
+    },
+    {
+      "kind": "after_photo_unconfirmed_location",
+      "support": 0,
+      "tp": 0,
+      "fp": 1,
+      "fn": 0,
+      "precision": 0.0,
+      "recall": null,
+      "f1": null
+    }
+  ],
+  "findings_micro": {
+    "tp": 1,
+    "fp": 2,
+    "fn": 0,
+    "tn": 0,
+    "precision": 0.3333333333333333,
+    "recall": 1.0,
+    "f1": 0.5,
+    "specificity": 0.0
+  },
+  "finding_macro_f1": 1.0,
+  "score_pairs": [
+    {
+      "ticket_id": "03000004",
+      "expected": 97,
+      "obtained": 85
+    }
+  ],
+  "score_mae": 12.0,
+  "score_rmse": 12.0,
+  "score_bias": -12.0,
+  "score_pearson": null,
+  "expected_amount_at_issue": 0.0,
+  "obtained_amount_at_issue": 1710.0,
+  "amount_at_issue_mae": 1710.0,
+  "by_category": [
+    {
+      "name": "air_conditioning",
+      "n": 1,
+      "hits": 0,
+      "accuracy": 0.0
+    }
+  ],
+  "by_service_template": [
+    {
+      "name": "hvac",
+      "n": 1,
+      "hits": 0,
+      "accuracy": 0.0
+    }
+  ],
+  "operations": {
+    "latency_p50_s": 38.35,
+    "latency_p95_s": 38.35,
+    "avg_cost_brl": 0.4169,
+    "p95_cost_brl": 0.4169,
+    "total_cost_brl": 0.4169,
+    "avg_input_tokens": 13000.0,
+    "avg_output_tokens": 2932.0
+  },
+  "mismatches": [
+    {
+      "ticket_id": "03000004",
+      "category": "Ar-condicionado",
+      "expected": "approve",
+      "obtained": "detailed_review",
+      "expected_score": 97,
+      "obtained_score": 85,
+      "missed": [],
+      "extra": [
+        "after_photo_unconfirmed_location",
+        "quantity_above_expected"
+      ]
+    }
+  ],
+  "gate": [
+    {
+      "metric": "Acurácia da recomendação",
+      "value": 0.0,
+      "limit": 0.85,
+      "direction": ">=",
+      "passed": false
+    },
+    {
+      "metric": "Kappa de Cohen",
+      "value": 0.0,
+      "limit": 0.75,
+      "direction": ">=",
+      "passed": false
+    },
+    {
+      "metric": "F1 dos apontamentos (micro)",
+      "value": 0.5,
+      "limit": 0.8,
+      "direction": ">=",
+      "passed": false
+    },
+    {
+      "metric": "Erro médio do score",
+      "value": 12.0,
+      "limit": 8.0,
+      "direction": "<=",
+      "passed": false
+    }
+  ],
+  "gate_passed": false
+}

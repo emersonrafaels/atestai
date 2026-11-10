@@ -119,21 +119,22 @@
   "checklist_ok": true,
   "missing": [],
   "findings": [
-    "unjustified_replacement",
-    "out_of_scope_item",
-    "reused_photo",
     "missing_after_photo",
-    "photo_dated_before"
+    "out_of_scope_item",
+    "photo_dated_before",
+    "relevant_amount_at_issue",
+    "reused_photo",
+    "unjustified_replacement"
   ],
   "optional": [
     "photo_mismatch"
   ],
   "grades": {
     "scope": 100,
-    "quote": 30,
+    "quote": 15,
     "photos": 0
   },
-  "score": 32,
+  "score": 26,
   "recommendation": "return_locked",
   "confidence": "high"
 }

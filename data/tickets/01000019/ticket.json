@@ -8,13 +8,13 @@
   "branch": {
     "code": "0774",
     "name": "Ag. Vila Mariana",
-    "environment": "treasury"
+    "environment": "tesouraria"
   },
   "supplier": {
     "name": "Fornecedor Kappa Alarmes Ltda.",
     "cnpj": "01.234.567/0001-89"
   },
-  "requested_scope": "Verificar treasury. Urgente.",
+  "requested_scope": "Verificar a tesouraria. Urgente.",
   "quoted_value": 530.0,
   "dates": {
     "opening": "2026-10-21",
@@ -32,35 +32,35 @@
     {
       "file_name": "Orcamento_KAP-V0019.xlsx",
       "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      "size_bytes": 7584,
+      "size_bytes": 7571,
       "sent_by": "supplier",
       "data_upload": "2026-10-24"
     },
     {
       "file_name": "IMG_20261023_084958.jpg",
       "content_type": "image/jpeg",
-      "size_bytes": 156173,
+      "size_bytes": 156115,
       "sent_by": "supplier",
       "data_upload": "2026-10-24"
     },
     {
       "file_name": "IMG_20261023_092142.jpg",
       "content_type": "image/jpeg",
-      "size_bytes": 177359,
+      "size_bytes": 176641,
       "sent_by": "supplier",
       "data_upload": "2026-10-24"
     },
     {
       "file_name": "WhatsApp Image 2026-10-24 at 15.40.35.jpeg",
       "content_type": "image/jpeg",
-      "size_bytes": 93874,
+      "size_bytes": 93815,
       "sent_by": "supplier",
       "data_upload": "2026-10-24"
     },
     {
       "file_name": "IMG_20261024_190400.jpg",
       "content_type": "image/jpeg",
-      "size_bytes": 195275,
+      "size_bytes": 191947,
       "sent_by": "supplier",
       "data_upload": "2026-10-24"
     }

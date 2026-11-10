@@ -1,0 +1,111 @@
+{
+  "ticket_id": "02000037",
+  "dataset": "itau",
+  "service_template": "lamps_quote",
+  "defects": [
+    "price",
+    "reused",
+    "out_of_scope",
+    "quantity"
+  ],
+  "workstream": "SETA",
+  "moment": "quote",
+  "maintenance_type": "corrective",
+  "category": "lighting",
+  "symptom": "poor_lighting",
+  "before_applicable": true,
+  "quoted_value": 2026.77,
+  "amount_at_issue": 1697.77,
+  "items": [
+    {
+      "n": 1,
+      "description": "Lâmpada LED tubular T8 18W",
+      "unit": "un",
+      "quantity": 10,
+      "unit_value": 22.0,
+      "total_value": 220.0,
+      "classification": "compliant",
+      "lpu_code": "ELE-008",
+      "reference_price": 22.0,
+      "findings": [
+        "quantity_above_expected"
+      ],
+      "optional_findings": [],
+      "expected_quantity_max": 7
+    },
+    {
+      "n": 2,
+      "description": "Mão de obra troca de lâmpada",
+      "unit": "un",
+      "quantity": 7,
+      "unit_value": 38.11,
+      "total_value": 266.77,
+      "classification": "compliant",
+      "lpu_code": "ELE-009",
+      "reference_price": 25.0,
+      "findings": [
+        "price_above_reference"
+      ],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    },
+    {
+      "n": 3,
+      "description": "Luminária LED de embutir 60x60",
+      "unit": "un",
+      "quantity": 4,
+      "unit_value": 385.0,
+      "total_value": 1540.0,
+      "classification": "out_of_scope",
+      "lpu_code": "ELE-001",
+      "reference_price": 385.0,
+      "findings": [
+        "out_of_scope_item"
+      ],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    }
+  ],
+  "attachments": {
+    "Orcamento_GAM-V0037.xlsx": {
+      "category": "quote_doc",
+      "moment": "undetermined",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Orçamento"
+    },
+    "IMG_20261107_085410.jpg": {
+      "category": "room_before_photo",
+      "moment": "before",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Ambiente com lâmpadas apagadas"
+    },
+    "WhatsApp Image 2026-11-10 at 15.16.34.jpeg": {
+      "category": "room_before_photo",
+      "moment": "before",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Ambiente com lâmpadas apagadas",
+      "reused_from": "02000023/IMG_20261102_084525.jpg"
+    }
+  },
+  "checklist_ok": true,
+  "missing": [],
+  "findings": [
+    "out_of_scope_item",
+    "price_above_reference",
+    "quantity_above_expected",
+    "relevant_amount_at_issue",
+    "reused_photo"
+  ],
+  "optional": [],
+  "grades": {
+    "scope": 100,
+    "quote": 20,
+    "photos": 40
+  },
+  "score": 44,
+  "recommendation": "return_locked",
+  "confidence": "high"
+}

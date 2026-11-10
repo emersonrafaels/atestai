@@ -8,13 +8,13 @@
   "branch": {
     "code": "5531",
     "name": "Itaú Ag. Moema",
-    "environment": "back_office"
+    "environment": "backoffice"
   },
   "supplier": {
     "name": "Fornecedor Kappa Alarmes Ltda.",
     "cnpj": "01.234.567/0001-89"
   },
-  "requested_scope": "Sensor IVP da back_office com disparos falsos: substituir o sensor e testar a zona.",
+  "requested_scope": "Sensor IVP do backoffice com disparos falsos: substituir o sensor e testar a zona.",
   "quoted_value": 530.0,
   "dates": {
     "opening": "2026-10-27",
@@ -32,7 +32,7 @@
     {
       "file_name": "Orcamento_KAP-V0009.xlsx",
       "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      "size_bytes": 7607,
+      "size_bytes": 7605,
       "sent_by": "supplier",
       "data_upload": "2026-10-31"
     },
@@ -60,7 +60,7 @@
     {
       "file_name": "IMG_20261031_190400.jpg",
       "content_type": "image/jpeg",
-      "size_bytes": 199921,
+      "size_bytes": 199927,
       "sent_by": "supplier",
       "data_upload": "2026-10-31"
     }

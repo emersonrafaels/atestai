@@ -95,14 +95,16 @@
     "vague_scope"
   ],
   "optional": [
-    "unjustified_replacement"
+    "item_without_photo",
+    "unjustified_replacement",
+    "unverifiable_quantity"
   ],
   "grades": {
-    "scope": 85,
+    "scope": 65,
     "quote": 100,
     "photos": 85
   },
-  "score": 91,
+  "score": 87,
   "recommendation": "approve",
   "confidence": "medium"
 }

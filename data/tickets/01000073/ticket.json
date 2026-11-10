@@ -8,13 +8,13 @@
   "branch": {
     "code": "0215",
     "name": "Ag. Butantã",
-    "environment": "corridor"
+    "environment": "corredor"
   },
   "supplier": {
     "name": "Fornecedor Gama Instalações Elétricas Ltda.",
     "cnpj": "34.567.890/0001-12"
   },
-  "requested_scope": "Trocar as 8 lâmpadas tubulares queimadas do corridor.",
+  "requested_scope": "Trocar as 8 lâmpadas tubulares queimadas do corredor.",
   "quoted_value": 418.8,
   "dates": {
     "opening": "2026-11-08",
@@ -32,7 +32,7 @@
     {
       "file_name": "Orcamento_GAM-V0073.xlsx",
       "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      "size_bytes": 7591,
+      "size_bytes": 7569,
       "sent_by": "supplier",
       "data_upload": "2026-11-10"
     },
@@ -53,7 +53,7 @@
     {
       "file_name": "IMG_20261109_105443.jpg",
       "content_type": "image/jpeg",
-      "size_bytes": 196019,
+      "size_bytes": 193519,
       "sent_by": "supplier",
       "data_upload": "2026-11-10"
     },
@@ -67,7 +67,7 @@
     {
       "file_name": "IMG_20261110_190500.jpg",
       "content_type": "image/jpeg",
-      "size_bytes": 203145,
+      "size_bytes": 199949,
       "sent_by": "supplier",
       "data_upload": "2026-11-10"
     }

@@ -8,7 +8,7 @@
   "branch": {
     "code": "0266",
     "name": "Ag. Tatuapé",
-    "environment": "treasury"
+    "environment": "tesouraria"
   },
   "supplier": {
     "name": "Fornecedor Kappa Alarmes Ltda.",
@@ -31,35 +31,35 @@
     {
       "file_name": "Orcamento_KP-5521.xlsx",
       "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      "size_bytes": 7667,
+      "size_bytes": 7650,
       "sent_by": "supplier",
       "data_upload": "2026-10-08"
     },
     {
       "file_name": "IMG_20261007_090110.jpg",
       "content_type": "image/jpeg",
-      "size_bytes": 181480,
+      "size_bytes": 181625,
       "sent_by": "supplier",
       "data_upload": "2026-10-08"
     },
     {
       "file_name": "IMG_20261007_093022.jpg",
       "content_type": "image/jpeg",
-      "size_bytes": 169840,
+      "size_bytes": 169739,
       "sent_by": "supplier",
       "data_upload": "2026-10-08"
     },
     {
       "file_name": "IMG_20261007_093540.jpg",
       "content_type": "image/jpeg",
-      "size_bytes": 184269,
+      "size_bytes": 183207,
       "sent_by": "supplier",
       "data_upload": "2026-10-08"
     },
     {
       "file_name": "IMG_20261007_094512.jpg",
       "content_type": "image/jpeg",
-      "size_bytes": 196914,
+      "size_bytes": 193249,
       "sent_by": "supplier",
       "data_upload": "2026-10-08"
     }

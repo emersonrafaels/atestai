@@ -23,8 +23,10 @@ class ScoringStage(AnalysisStage):
             if len(kept) != len(item.findings):
                 item.findings = kept
                 item.amount_at_issue = amount_at_issue(item, kept, self.cfg.rubric)
-        ctx.findings = self.scorer.filter_phase(ctx.findings, self.cfg.pipeline.phase)
-        ctx.score = self.scorer.compute(ctx.findings, ctx.confidence_reducers)
         total = sum(i.total_value for i in ctx.items) or (ctx.ticket.data.quoted_value or 0)
         ctx.amount_at_issue = round(sum(i.amount_at_issue for i in ctx.items), 2)
         ctx.amount_at_issue_pct = round(100 * ctx.amount_at_issue / total, 1) if total else 0.0
+        # materialidade: muito do orçamento em questão pesa além do desconto único de cada tipo
+        ctx.findings += [f for f in self.scorer.materiality_findings(ctx.amount_at_issue_pct, total, ctx.amount_at_issue) if active(f.kind)]
+        ctx.findings = self.scorer.mark_absorbed(self.scorer.filter_phase(ctx.findings, self.cfg.pipeline.phase))
+        ctx.score = self.scorer.compute(ctx.findings, ctx.confidence_reducers)

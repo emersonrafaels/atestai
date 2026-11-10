@@ -1,7 +1,7 @@
 import { AlertTriangle, BookMarked, ClipboardList, History, Home, KeyRound, ListChecks, Loader2, Lock, LogOut, RotateCcw, Save, Search, SlidersHorizontal, Tags, Undo2, UserPlus, Users } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ADMIN_LOGOUT_EVENT, adminApi, adminSession, type AdminHistoryItem, type AdminOverview, type AdminUser, type ChecklistsConfig, type RubricConfig } from "../../api";
-import { brl, MAINTENANCE_LABEL, STAGE_LABEL } from "../../format";
+import { brl, ENV_NAME, MAINTENANCE_LABEL, STAGE_LABEL } from "../../format";
 import { ChecklistEditor } from "./ChecklistEditor";
 import { FindingRulesEditor, ScoreRubricEditor } from "./RulesEditor";
 import { InfoBox } from "../ui/InfoBox";
@@ -280,7 +280,7 @@ function HomeTab({ ov, rubric, checklists, go }: { ov: AdminOverview; rubric: Ru
           <div>
             <h3 className="font-semibold">{custom ? "Configuração personalizada pelo portal" : "Configuração padrão dos arquivos"}</h3>
             <p className="text-sm text-muted">
-              Régua <b className="text-ink">{ov.system.rubric_version}</b> · prompts {ov.system.prompts_version} · fase padrão {ov.system.phase} · ambiente {ov.system.environment}
+              Régua <b className="text-ink">{ov.system.rubric_version}</b> · prompts {ov.system.prompts_version} · fase padrão {ov.system.phase} · ambiente {ENV_NAME[ov.system.environment] ?? ov.system.environment}
             </p>
             <p className="mt-1 text-[13px] text-muted">A assinatura <span className="font-mono">{ov.system.signature}</span> fica gravada em cada parecer: dá para saber com quais regras ele saiu.</p>
           </div>

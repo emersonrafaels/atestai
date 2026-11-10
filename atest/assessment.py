@@ -6,7 +6,7 @@ import logging
 from typing import Any
 
 from .analysis import AnalysisContext, AnalysisStage
-from .domain import Recommendation, Stage
+from .domain import Confidence, Recommendation, Severity, Stage, ValidationResult
 from .formatting import brl
 from .llm_schemas import AssessmentText
 from .providers import TextPart
@@ -28,6 +28,11 @@ SUPPLIER_ACTIONS = {
     "photo_dated_before": "enviar fotos tiradas durante a execução deste chamado",
     "spreadsheet_mismatch": "corrigir a planilha para refletir o chamado ({ref})",
     "inconsistent_scope": "confirmar com a agência a categoria e o sintoma do chamado",
+    "vague_scope": "confirmar com a agência o equipamento, o local e o serviço pedidos",
+    "after_photo_unconfirmed_location": "enviar foto do serviço concluído que mostre o ambiente do escopo",
+    "unverifiable_quantity": "informar quantos equipamentos foram atendidos e enviar evidência de cada um ({ref})",
+    "item_without_photo": "enviar fotos que evidenciem o que foi cobrado ({ref})",
+    "relevant_amount_at_issue": "revisar o orçamento: a maior parte do valor está em questão",
 }
 
 
@@ -38,12 +43,17 @@ class AssessmentWriter:
     def prompt(result: dict[str, Any]) -> str:
         """Resultado da régua em texto, para o modelo redigir o parecer (em português)."""
         findings = (
-            "\n".join(f"- [{f['validation']}/{f['severity']}] {f['description']}: {f['evidence']} ({f['reference']})" for f in result["findings"])
+            "\n".join(
+                f"- [{ValidationResult(f['validation']).label} / severidade {Severity(f['severity']).label}] {f['description']}: {f['evidence']}"
+                + (f" ({f['reference']})" if f["reference"] else "")
+                for f in result["findings"]
+            )
             or "- nenhum"
         )
+        grades = ", ".join(f"{ValidationResult(k).label} {v}" for k, v in (result["grades"] or {}).items())
         return (
             f"RECOMENDAÇÃO: {Recommendation(result['recommendation']).label}. {result['recommendation_reason']}\n"
-            f"Score: {result['score']} | Notas: {result['grades']} | Confiança: {result['confidence']}\n"
+            f"Score: {result['score']} | Notas: {grades} | Confiança: {Confidence(result['confidence']).label}\n"
             f"Valor potencial divergente: {brl(result['amount_at_issue'])} ({result['amount_at_issue_pct']:.0f}% do orçamento)\n"
             f"APONTAMENTOS:\n{findings}"
         )

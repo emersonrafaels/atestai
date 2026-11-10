@@ -1,0 +1,47 @@
+{
+  "ticket_id": "02000025",
+  "workstream": "SETA",
+  "maintenance_type": "corrective",
+  "moment": "quote",
+  "category": "electrical",
+  "symptom": "electrical_failure",
+  "branch": {
+    "code": "2809",
+    "name": "Itaú Ag. Vila Madalena",
+    "environment": "backoffice"
+  },
+  "supplier": {
+    "name": "Fornecedor Eta Elétrica e Manutenção Ltda.",
+    "cnpj": "78.901.234/0001-56"
+  },
+  "requested_scope": "Substituir 2 tomadas danificadas no backoffice, uma com sinais de queima.",
+  "quoted_value": 126.0,
+  "dates": {
+    "opening": "2026-11-02",
+    "supplier_submission": "2026-11-04",
+    "manager_review": "2026-11-05"
+  },
+  "status": "forwarded_to_backoffice",
+  "origin": "dataset",
+  "dataset": "itau",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "attachments": [
+    {
+      "file_name": "Orcamento_ETA-V0025.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 7593,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-04"
+    },
+    {
+      "file_name": "IMG_20261103_081049.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 96987,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-04"
+    }
+  ]
+}

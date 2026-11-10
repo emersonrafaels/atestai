@@ -258,8 +258,8 @@ def test_iara_repairs_double_encoded_json_from_claude_via_bedrock():
     photos = {
         "photos": [],
         "has_before_photo": True,
-        "has_done_service_photo": False,
         "done_justification": "",
+        "done_service": "no",
         "items_without_photo": [3],
         "notes": "",
     }
@@ -468,7 +468,7 @@ def test_iara_fills_omitted_list_and_text_fields_but_not_booleans():
 
     photo = {"index": 2, "environment": "backoffice", "what_it_shows": "parede", "moment": "after", "readable": True,
              "matches_scope": "yes", "reason": "ok", "covered_items": [1]}
-    base = {"photos": [photo], "has_before_photo": True, "has_done_service_photo": True, "done_justification": "ok", "notes": ""}
+    base = {"photos": [photo], "has_before_photo": True, "done_justification": "ok", "done_service": "yes", "notes": ""}
 
     obj, repairs = parse_output(copy.deepcopy(base), PhotoAnalysis)
     assert obj.items_without_photo == [] and any("items_without_photo" in r for r in repairs)

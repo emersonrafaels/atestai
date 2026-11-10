@@ -15,15 +15,19 @@ const MATCH = {
 export function PhotosTab({ p, base, openPhoto, highlight = [] }: { p: Assessment; base: string; openPhoto: (items: LightboxItem[], index: number) => void; highlight?: string[] }) {
   useScrollToHighlight(highlight.map((f) => `photo-${f}`));
   if (!p.photos.length) return <p className="text-muted">Nenhuma foto analisada neste chamado.</p>;
-  const summary = p.photo_summary as { has_before_photo: boolean; has_done_service_photo: boolean; done_justification: string } | null;
+  // pareceres antigos gravaram has_done_service_photo (sim/não); os novos, done_service (yes/partial/no/undetermined)
+  const summary = p.photo_summary as { has_before_photo: boolean; done_service?: keyof typeof MATCH; has_done_service_photo?: boolean; done_justification: string } | null;
+  const done: keyof typeof MATCH = summary?.done_service ?? (summary?.has_done_service_photo ? "yes" : "no");
   const gallery = p.photos.map((f) => ({ url: `${base}/${encodeURIComponent(f.file)}`, caption: f.what_it_shows }));
   return (
     <div className="space-y-4">
       {summary && (
         <div className="flex flex-wrap gap-2 text-sm">
           <Seal ok={summary.has_before_photo} text="Foto do antes" />
-          {p.moment === "execution" && <Seal ok={summary.has_done_service_photo} text="Prova do serviço concluído" />}
-          {!summary.has_done_service_photo && p.moment === "execution" && <span className="text-muted">{summary.done_justification}</span>}
+          {p.moment === "execution" && (done === "yes" || done === "no"
+            ? <Seal ok={done === "yes"} text="Prova do serviço concluído" />
+            : <span className="rounded-full bg-[#fdf1dc] px-3 py-1 font-medium text-warn">Serviço aparece, local não confirmado</span>)}
+          {done !== "yes" && p.moment === "execution" && <span className="text-muted">{summary.done_justification}</span>}
         </div>
       )}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">

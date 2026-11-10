@@ -95,7 +95,7 @@ class PhotoStage(AnalysisStage):
         assert ctx.scope is not None
         ctx.photos = photos = self.ticket_photos(ctx.ticket, ctx.attachments)
         ctx.photo_analysis = analysis = self.analyze(ctx.session, ctx.ticket, ctx.scope, ctx.items, photos) if photos else self.empty_analysis()
-        ctx.findings += self.flag(ctx.ticket, ctx.scope, analysis, photos)
+        ctx.findings += self.flag(ctx.ticket, ctx.scope, analysis, photos, ctx.items)
         ctx.integrity, integrity_findings = self.integrity(ctx.ticket, photos)
         ctx.findings += integrity_findings
 
@@ -109,7 +109,7 @@ class PhotoStage(AnalysisStage):
     def empty_analysis() -> PhotoAnalysis:
         """Análise vazia, usada quando o chamado não tem fotos."""
         return PhotoAnalysis(
-            photos=[], has_before_photo=False, has_done_service_photo=False, done_justification="Sem fotos", items_without_photo=[], notes=""
+            photos=[], has_before_photo=False, done_justification="Sem fotos", done_service=Match.NO, items_without_photo=[], notes=""
         )
 
     def analyze(
@@ -128,8 +128,15 @@ class PhotoStage(AnalysisStage):
         meta = {"attachments": [a.name for a in photos], "indices": [a.index for a in photos]}
         return session.ask("photos", content, PhotoAnalysis, max_tokens=5000, meta=meta)
 
-    def flag(self, ticket: LoadedTicket, scope: ScopeReading, analysis: PhotoAnalysis, photos: list[Attachment]) -> list[Finding]:
-        """Apontamentos a partir da análise do modelo: foto que não corresponde, ilegível, sem "depois", sem "antes"."""
+    def flag(
+        self, ticket: LoadedTicket, scope: ScopeReading, analysis: PhotoAnalysis, photos: list[Attachment], items: list[EvaluatedItem] | None = None
+    ) -> list[Finding]:
+        """Apontamentos a partir da análise do modelo: foto que não corresponde, ilegível, sem "depois", sem "antes",
+        itens cobrados sem evidência.
+
+        Foto do depois que mostra o resultado, mas sem como confirmar o local (comum em agência: um forro é igual ao
+        outro), não é "sem foto do serviço": vira um apontamento médio que reduz a confiança, para a pessoa conferir.
+        """
         names = {a.index: a.name for a in photos}
         findings = []
         for f in analysis.photos:
@@ -138,11 +145,29 @@ class PhotoStage(AnalysisStage):
                 findings.append(self.scorer.finding("photo_mismatch", f"{f.what_it_shows}. {f.reason}", name))
             if not f.readable:
                 findings.append(self.scorer.finding("unreadable_photo", f.reason or "Foto escura, tremida ou sem foco", name))
-        if ticket.data.moment == Moment.EXECUTION and not analysis.has_done_service_photo:
-            findings.append(self.scorer.finding("missing_after_photo", analysis.done_justification or "Nenhuma foto comprova o serviço concluído"))
+        if ticket.data.moment == Moment.EXECUTION:
+            why = analysis.done_justification
+            if analysis.done_service == Match.NO:
+                findings.append(self.scorer.finding("missing_after_photo", why or "Nenhuma foto comprova o serviço concluído"))
+            elif analysis.done_service in (Match.PARTIAL, Match.UNDETERMINED):
+                why = why or "A foto mostra o resultado, mas não permite confirmar o local"
+                findings.append(self.scorer.finding("after_photo_unconfirmed_location", why))
+            if analysis.items_without_photo and analysis.done_service != Match.NO:  # sem prova nenhuma, o "sem foto do depois" já cobre
+                findings += self._items_without_photo(analysis.items_without_photo, items or [])
         if scope.before_evidence_applicable and not analysis.has_before_photo:
             findings.append(self.scorer.finding("missing_before_photo", "Nenhuma foto registra o estado anterior ao serviço"))
         return findings
+
+    def _items_without_photo(self, numbers: list[int], items: list[EvaluatedItem]) -> list[Finding]:
+        """Um apontamento (desconta uma vez) listando os itens físicos cobrados sem foto que os evidencie."""
+        by_n = {i.n: i for i in items}
+        known = [n for n in sorted(set(numbers)) if not by_n or n in by_n]
+        if not known:
+            return []
+        names = [f"{n}. {by_n[n].description} ({by_n[n].quantity:g} {by_n[n].unit})" if n in by_n else f"item {n}" for n in known]
+        evidence = f"Nenhuma foto evidencia: {'; '.join(names)}"
+        reference = "itens " + ", ".join(str(n) for n in known) if len(known) > 1 else f"item {known[0]}"
+        return [self.scorer.finding("item_without_photo", evidence, reference)]
 
     def integrity(self, ticket: LoadedTicket, photos: list[Attachment]) -> tuple[dict[str, dict], list[Finding]]:
         """Data EXIF anterior à abertura e semelhança com fotos de chamados anteriores."""

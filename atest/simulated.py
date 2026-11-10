@@ -14,7 +14,7 @@ from typing import Any, TypeVar
 from pydantic import BaseModel
 
 from .config import Settings
-from .domain import LlmCall
+from .domain import LlmCall, Match
 from .llm_schemas import (
     AttachmentIdentification,
     PhotoAnalysis,
@@ -98,9 +98,10 @@ class SimulatedClient:
                     f["matches_scope"] = "yes" if f["matches_scope"] == "no" else ("no" if rnd.random() < 0.5 else f["matches_scope"])
                 if rnd.random() < r / 3:
                     f["readable"] = not f["readable"]
-            for k in ("has_before_photo", "has_done_service_photo"):
-                if rnd.random() < r:
-                    d[k] = not d[k]
+            if rnd.random() < r:
+                d["has_before_photo"] = not d["has_before_photo"]
+            if rnd.random() < r:
+                d["done_service"] = "no" if d["done_service"] == "yes" else "yes"
         elif task == "identify_attachments":
             for a in d["attachments"]:
                 if rnd.random() < r / 3:
@@ -147,8 +148,8 @@ class SimulatedClient:
                     "n": i["n"],
                     "classification": i["classification"],
                     "reason": f"(simulado) {CLASSIFICATION_LABELS.get(i['classification'], i['classification'])}",
-                    "expected_quantity_max": i.get("expected_quantity_max") or -1,
-                    "plausible_quantity": "quantity_above_expected" not in i["findings"],
+                    "expected_quantity_max": -1 if "unverifiable_quantity" in i["findings"] else i.get("expected_quantity_max") or -1,
+                    "plausible_quantity": not ({"quantity_above_expected", "unverifiable_quantity"} & set(i["findings"])),
                     "duplicate_of": dup,
                     "lpu_code": i["lpu_code"],
                 }
@@ -171,13 +172,15 @@ class SimulatedClient:
                     "covered_items": [],
                 }
             )
+        done = Match.NO if "missing_after_photo" in g.findings else Match.PARTIAL if "after_photo_unconfirmed_location" in g.findings else Match.YES
         before = any(g.attachments[n]["moment"] == "before" and g.attachments[n]["readable"] for n in meta["attachments"])
         return PhotoAnalysis(
             photos=photos,
             has_before_photo=before,
-            has_done_service_photo="missing_after_photo" not in g.findings,
             done_justification="(simulado)",
-            items_without_photo=[],
+            done_service=done,
+            items_without_photo=[i["n"] for i in g.items if "item_without_photo" in i.get("findings", [])]
+            or ([g.items[-1]["n"]] if "item_without_photo" in g.findings and g.items else []),
             notes="",
         ).model_dump()
 

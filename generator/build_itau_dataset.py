@@ -1,7 +1,7 @@
 """Gera o conjunto ITAU: chamados de agências Itaú com fotos fotorrealistas (geradas por IA), no lugar dos desenhos.
 
 Mesma mecânica do conjunto de validação (modelos de serviço, defeitos sorteados, gabarito pela régua), com:
-- ids 0200xxxx e `dataset = "itau"`;
+- ids 0200xxxx e `dataset = "itau"`: 20 de execução e, depois, 21 de Aprovação de Orçamento (`--quote-n`);
 - agências no padrão Itaú (códigos e nomes fictícios; fornecedores, CNPJs e valores também fictícios);
 - fotos da biblioteca `data/real_photos_itau/<chave>/` (perfil "itau" de generator/real_photos.py), em modo strict:
   se faltar foto, para com erro em vez de cair no desenho.
@@ -31,11 +31,12 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 import real_photos  # noqa: E402
-from build_validation_dataset import ROOT, ValidationGenerator  # noqa: E402
+from build_validation_dataset import QUOTE_STAGE_MODELS, ROOT, ValidationGenerator  # noqa: E402
 
 PREFIX = "0200"
 DATASET = "itau"
 PER_TEMPLATE = 2  # 10 modelos de serviço × 2 = 20 chamados
+QUOTE_PER_TEMPLATE = 3  # + 7 modelos na etapa de Aprovação de Orçamento × 3 = 21 chamados (02000021 em diante)
 ITAU_BRANCHES = [
     ("3120", "Itaú Ag. Av. Paulista"),
     ("4418", "Itaú Ag. Pinheiros"),
@@ -78,24 +79,26 @@ def clean() -> None:
         p.unlink()
 
 
-def build(n: int) -> list[dict]:
+def build(n: int, quote_n: int = QUOTE_PER_TEMPLATE) -> list[dict]:
     clean()
     # semente escolhida para que a 2ª rodada (a 1ª de cada modelo sai limpa) cubra defeitos variados: checklist,
     # reaproveitamento, foto de outro ambiente, falta do depois, troca sem justificativa, preço, quantidade...
     g = ValidationGenerator(n, seed=2083, prefix=PREFIX, dataset=DATASET, branches=ITAU_BRANCHES, day0=date(2026, 10, 25), realistic=True)
     g.index_existing()
-    return g.generate()
+    # os chamados de orçamento vêm depois: os 20 de execução saem iguais com ou sem eles
+    return g.generate() + g.generate(models=QUOTE_STAGE_MODELS, n=quote_n)
 
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--n", type=int, default=PER_TEMPLATE, help="chamados por modelo de serviço (10 modelos)")
+    ap.add_argument("--quote-n", type=int, default=QUOTE_PER_TEMPLATE, help="chamados por modelo na Aprovação de Orçamento (7 modelos)")
     ap.add_argument("--needs", action="store_true", help="só calcula quantas fotos cada cena precisa e grava _needs.json")
     a = ap.parse_args()
 
     if a.needs:
         real_photos.use_profile("itau", mode="record")
-        build(a.n)
+        build(a.n, a.quote_n)
         clean()  # os chamados desta passada saíram com desenhos; não ficam
         needs = real_photos.needs()
         NEEDS_FILE.parent.mkdir(parents=True, exist_ok=True)
@@ -107,10 +110,11 @@ if __name__ == "__main__":
 
     real_photos.use_profile("itau", mode="strict")
     try:
-        summary = build(a.n)
+        summary = build(a.n, a.quote_n)
     except real_photos.PhotoShortage as e:
         clean()
         sys.exit(f"faltam fotos: {e}\nRode antes: python generator/build_itau_dataset.py --needs e python generator/ai_photos.py --profile itau --from-needs")
     print(f"{len(summary)} chamados Itaú ({PREFIX}xxxx) em {ROOT / 'tickets'}")
     print("recomendações esperadas:", dict(Counter(r["recommendation"] for r in summary)))
+    print("por etapa:", dict(Counter("orçamento" if r["model"].endswith("_quote") or r["model"] == "sink" else "execução" for r in summary)))
     print("defeitos injetados:", dict(Counter(d for r in summary for d in r["defects"])))

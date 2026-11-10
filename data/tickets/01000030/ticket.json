@@ -14,7 +14,7 @@
     "name": "Fornecedor Iota Segurança Eletrônica Ltda.",
     "cnpj": "90.123.456/0001-78"
   },
-  "requested_scope": "Verificar agência inteira. Urgente.",
+  "requested_scope": "Verificar a agência inteira. Urgente.",
   "quoted_value": 3461.16,
   "dates": {
     "opening": "2026-10-24",
@@ -32,28 +32,28 @@
     {
       "file_name": "Orcamento_IOT-V0030.xlsx",
       "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      "size_bytes": 7718,
+      "size_bytes": 7699,
       "sent_by": "supplier",
       "data_upload": "2026-10-29"
     },
     {
       "file_name": "IMG_20261028_084329.jpg",
       "content_type": "image/jpeg",
-      "size_bytes": 190853,
+      "size_bytes": 190233,
       "sent_by": "supplier",
       "data_upload": "2026-10-29"
     },
     {
       "file_name": "IMG_20261028_093446.jpg",
       "content_type": "image/jpeg",
-      "size_bytes": 165465,
+      "size_bytes": 178332,
       "sent_by": "supplier",
       "data_upload": "2026-10-29"
     },
     {
       "file_name": "IMG_20261029_190300.jpg",
       "content_type": "image/jpeg",
-      "size_bytes": 190865,
+      "size_bytes": 188271,
       "sent_by": "supplier",
       "data_upload": "2026-10-29"
     }

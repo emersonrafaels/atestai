@@ -28,7 +28,8 @@ export function FindingRulesEditor({ data, base, onChange }: Props) {
       <InfoBox id="admin-findings" title="O que cada regra faz">
         Cada tipo de apontamento é uma verificação. <b>Desativado</b>, ele não é gerado, não desconta e não entra no valor potencial divergente.
         A <b>severidade</b> define quanto tira da nota da validação; a <b>fase</b> define se vale já no MVP (1) ou só na Fase 2;
-        a <b>trava</b> devolve o chamado qualquer que seja o score.
+        a <b>trava</b> devolve o chamado qualquer que seja o score. <b>Absorve</b>: quando este tipo aparece, os tipos marcados (da mesma
+        validação) seguem como evidência, mas não descontam; serve para não punir duas vezes o mesmo problema.
       </InfoBox>
       <p className="text-sm text-muted">{entries.length - off} de {entries.length} regras ativas{off ? ` · ${off} desativada${off === 1 ? "" : "s"}` : ""}.</p>
 
@@ -38,7 +39,7 @@ export function FindingRulesEditor({ data, base, onChange }: Props) {
             {VALIDATION_LABEL[v]} <span className="text-[13px] font-normal text-muted">peso {data.weights[v]}% no score</span>
           </h3>
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[860px] text-sm">
+            <table className="w-full min-w-[980px] text-sm">
               <thead className="bg-paper/60 text-left text-[12px] text-muted">
                 <tr>
                   <th className="w-14 px-4 py-2 font-medium">Ativa</th>
@@ -48,6 +49,7 @@ export function FindingRulesEditor({ data, base, onChange }: Props) {
                   <th className="px-2 py-2 font-medium">Fase</th>
                   <th className="px-2 py-2 text-center font-medium"><Tooltip content="Trava: devolve o chamado qualquer que seja o score"><span className="cursor-help">Trava</span></Tooltip></th>
                   <th className="px-2 py-2 text-center font-medium"><Tooltip content="Reduz a confiança da análise; dois redutores mandam para análise detalhada"><span className="cursor-help">Reduz confiança</span></Tooltip></th>
+                  <th className="px-2 py-2 font-medium"><Tooltip content="Tipos da mesma validação que deixam de descontar quando este aparece (o mesmo problema visto por outro ângulo)"><span className="cursor-help">Absorve</span></Tooltip></th>
                   <th className="px-4 py-2 font-medium"><Tooltip content="Como entra no valor potencial divergente (definido no código)"><span className="cursor-help">Valor divergente</span></Tooltip></th>
                 </tr>
               </thead>
@@ -82,6 +84,11 @@ export function FindingRulesEditor({ data, base, onChange }: Props) {
                       </td>
                       <td className="px-2 py-2 text-center"><span className="inline-flex items-center gap-1"><Switch size="sm" on={f.lock} disabled={!f.enabled} onChange={(on) => set(kind, { lock: on })} label="Trava" />{f.lock && <Lock size={12} className="text-lock" />}</span></td>
                       <td className="px-2 py-2 text-center"><span className="inline-flex items-center gap-1"><Switch size="sm" on={f.reduces_confidence} disabled={!f.enabled} onChange={(on) => set(kind, { reduces_confidence: on })} label="Reduz confiança" />{f.reduces_confidence && <ShieldAlert size={12} className="text-muted" />}</span></td>
+                      <td className="px-2 py-2">
+                        <Absorbs kind={kind} value={f.absorbs ?? []} disabled={!f.enabled}
+                          options={entries.filter(([k, o]) => k !== kind && o.validation === v).map(([k, o]) => ({ kind: k, label: o.description }))}
+                          onChange={(absorbs) => set(kind, { absorbs })} />
+                      </td>
                       <td className="px-4 py-2 text-[12px] text-muted">{AMOUNT[f.amount_at_issue] ?? f.amount_at_issue}</td>
                     </tr>
                   );
@@ -92,6 +99,27 @@ export function FindingRulesEditor({ data, base, onChange }: Props) {
         </section>
       ))}
     </div>
+  );
+}
+
+/** Tipos que este absorve: resumo clicável que abre a lista de marcação. */
+function Absorbs({ kind, value, options, disabled, onChange }: { kind: string; value: string[]; options: { kind: string; label: string }[]; disabled: boolean; onChange: (v: string[]) => void }) {
+  const label = (k: string) => options.find((o) => o.kind === k)?.label ?? k;
+  return (
+    <details className={`group relative text-[12px] ${disabled ? "pointer-events-none opacity-60" : ""}`}>
+      <summary className="cursor-pointer list-none rounded-md border border-line bg-sheet px-1.5 py-1 text-muted hover:text-ink">
+        {value.length ? value.map(label).join(", ") : "—"}
+      </summary>
+      <div className="absolute z-10 mt-1 w-64 space-y-1 rounded-md border border-line bg-sheet p-2 shadow-lg">
+        {options.map((o) => (
+          <label key={o.kind} className="flex items-center gap-2">
+            <input type="checkbox" checked={value.includes(o.kind)} aria-label={`${kind} absorve ${o.kind}`}
+              onChange={(e) => onChange(e.target.checked ? [...value, o.kind] : value.filter((x) => x !== o.kind))} />
+            {o.label}
+          </label>
+        ))}
+      </div>
+    </details>
   );
 }
 
@@ -184,6 +212,7 @@ export function ScoreRubricEditor({ data, base, onChange }: Props) {
             ["hash_max_distance", "Semelhança para foto reaproveitada", "dist.", "Distância máxima (0 = idêntica) para considerar a foto uma cópia. Menor = mais rigoroso para acusar."],
             ["hash_max_distance_low_detail", "Semelhança em foto escura/tremida", "dist.", "Limite mais estrito para fotos com pouco detalhe."],
             ["hash_min_detail", "Detalhe mínimo da foto", "", "Abaixo disso a foto é considerada de pouco detalhe."],
+            ["relevant_amount_at_issue_pct", "Valor divergente relevante", "%", "A partir desta fração do orçamento em questão, entra o apontamento “Valor divergente relevante” (cada tipo desconta uma vez; este pesa a materialidade)."],
           ] as const).map(([k, label, unit, help]) => (
             <label key={k} className="flex items-center justify-between gap-3">
               <span className="flex items-center gap-1">{label} <InfoTip text={help} size={12} /></span>

@@ -103,8 +103,16 @@ class PhotoAnalysis(LlmOutput):
 
     photos: list[AnalyzedPhoto]
     has_before_photo: bool
-    has_done_service_photo: bool = Field(description="Alguma foto legível comprova o RESULTADO pedido, no local do escopo")
-    done_justification: str
+    done_justification: str = Field(
+        description="Antes de decidir done_service: que foto mostra o resultado pedido e o que confirma (ou contradiz) o local"
+    )
+    done_service: Match = Field(
+        description=(
+            "yes = foto legível mostra o RESULTADO pedido no local do escopo; partial = mostra o resultado, mas nada na imagem "
+            "permite confirmar o local (e nada o contradiz); no = nenhuma foto mostra o resultado, ou a foto contradiz o local; "
+            "undetermined = fotos ilegíveis"
+        )
+    )
     items_without_photo: list[int]
     notes: str
 

@@ -1,0 +1,94 @@
+{
+  "ticket_id": "03000006",
+  "dataset": "scenarios",
+  "service_template": "painting",
+  "defects": [
+    "vague",
+    "inconsistent"
+  ],
+  "workstream": "SETA",
+  "moment": "execution",
+  "maintenance_type": "corrective",
+  "category": "painting",
+  "symptom": "device_inoperative",
+  "before_applicable": true,
+  "quoted_value": 5638.8,
+  "amount_at_issue": 0.0,
+  "items": [
+    {
+      "n": 1,
+      "description": "Pintura látex acrílico em paredes, 2 demãos",
+      "unit": "m²",
+      "quantity": 148,
+      "unit_value": 35.0,
+      "total_value": 5180.0,
+      "classification": "compliant",
+      "lpu_code": "PIN-001",
+      "reference_price": 35.0,
+      "findings": [],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    },
+    {
+      "n": 2,
+      "description": "Massa corrida para correção de paredes",
+      "unit": "m²",
+      "quantity": 148,
+      "unit_value": 3.1,
+      "total_value": 458.8,
+      "classification": "compliant",
+      "lpu_code": "PIN-004",
+      "reference_price": 3.1,
+      "findings": [],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    }
+  ],
+  "attachments": {
+    "Orcamento_ALF-V0006.xlsx": {
+      "category": "quote_doc",
+      "moment": "undetermined",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Orçamento"
+    },
+    "IMG_20261027_083134.jpg": {
+      "category": "room_before_photo",
+      "moment": "before",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Paredes manchadas e descascando"
+    },
+    "IMG_20261031_093012.jpg": {
+      "category": "room_after_photo",
+      "moment": "after",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Ambiente com paredes pintadas"
+    }
+  },
+  "checklist_ok": true,
+  "missing": [],
+  "findings": [
+    "inconsistent_scope",
+    "vague_scope"
+  ],
+  "optional": [
+    "item_without_photo",
+    "unjustified_replacement",
+    "unverifiable_quantity"
+  ],
+  "grades": {
+    "scope": 50,
+    "quote": 100,
+    "photos": 100
+  },
+  "score": 90,
+  "recommendation": "detailed_review",
+  "confidence": "low",
+  "scenario": {
+    "id": "scope_bad",
+    "title": "Escopo mal preenchido",
+    "description": "Vago e incoerente ao mesmo tempo: dois redutores de confiança levam à análise detalhada."
+  }
+}

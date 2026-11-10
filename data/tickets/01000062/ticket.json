@@ -8,13 +8,13 @@
   "branch": {
     "code": "0661",
     "name": "Ag. Saúde",
-    "environment": "kitchen"
+    "environment": "copa"
   },
   "supplier": {
     "name": "Fornecedor Delta Impermeabilizações Ltda.",
     "cnpj": "45.678.901/0001-23"
   },
-  "requested_scope": "Infiltração no forro do kitchen: tratar a origem e recompor o forro de gesso (aprox. 2 m²).",
+  "requested_scope": "Infiltração no forro da copa: tratar a origem e recompor o forro de gesso (aprox. 2 m²).",
   "quoted_value": 1796.0,
   "dates": {
     "opening": "2026-11-04",
@@ -32,7 +32,7 @@
     {
       "file_name": "Orcamento_DEL-V0062.xlsx",
       "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      "size_bytes": 7726,
+      "size_bytes": 7700,
       "sent_by": "supplier",
       "data_upload": "2026-11-07"
     },
@@ -53,7 +53,7 @@
     {
       "file_name": "IMG_20261107_175200.jpg",
       "content_type": "image/jpeg",
-      "size_bytes": 184053,
+      "size_bytes": 183515,
       "sent_by": "supplier",
       "data_upload": "2026-11-07"
     }

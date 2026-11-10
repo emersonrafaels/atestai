@@ -99,15 +99,16 @@
   "checklist_ok": true,
   "missing": [],
   "findings": [
-    "out_of_scope_item"
+    "out_of_scope_item",
+    "relevant_amount_at_issue"
   ],
   "optional": [],
   "grades": {
     "scope": 100,
-    "quote": 65,
+    "quote": 50,
     "photos": 100
   },
-  "score": 86,
-  "recommendation": "approve",
+  "score": 80,
+  "recommendation": "approve_with_caveats",
   "confidence": "high"
 }

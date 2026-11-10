@@ -1,0 +1,61 @@
+{
+  "ticket_id": "03000008",
+  "workstream": "SISR",
+  "maintenance_type": "corrective",
+  "moment": "execution",
+  "category": "cctv",
+  "symptom": "degraded_image",
+  "branch": {
+    "code": "0215",
+    "name": "Ag. Butantã",
+    "environment": "autoatendimento"
+  },
+  "supplier": {
+    "name": "Fornecedor Beta Sistemas de Segurança Ltda.",
+    "cnpj": "23.456.789/0001-01"
+  },
+  "requested_scope": "Câmera do autoatendimento com imagem desfocada: limpeza e ajuste de foco.",
+  "quoted_value": 2760.0,
+  "dates": {
+    "opening": "2026-10-28",
+    "supplier_submission": "2026-11-01",
+    "manager_review": "2026-11-02"
+  },
+  "status": "forwarded_to_backoffice",
+  "origin": "dataset",
+  "dataset": "scenarios",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "attachments": [
+    {
+      "file_name": "Orcamento_BET-V0008.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 7633,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-01"
+    },
+    {
+      "file_name": "IMG_20261029_084915.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 180837,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-01"
+    },
+    {
+      "file_name": "IMG_20261031_091736.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 189247,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-01"
+    },
+    {
+      "file_name": "IMG_20261031_103948.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 163077,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-01"
+    }
+  ]
+}

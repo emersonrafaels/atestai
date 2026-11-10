@@ -8,13 +8,13 @@
   "branch": {
     "code": "0102",
     "name": "Ag. Barra Funda",
-    "environment": "kitchen"
+    "environment": "copa"
   },
   "supplier": {
     "name": "Fornecedor Delta Impermeabilizações Ltda.",
     "cnpj": "45.678.901/0001-23"
   },
-  "requested_scope": "Infiltração no forro do kitchen: tratar a origem e recompor o forro de gesso (aprox. 8 m²).",
+  "requested_scope": "Infiltração no forro da copa: tratar a origem e recompor o forro de gesso (aprox. 8 m²).",
   "quoted_value": 1584.0,
   "dates": {
     "opening": "2026-10-25",
@@ -32,7 +32,7 @@
     {
       "file_name": "Orcamento_DEL-V0032.xlsx",
       "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      "size_bytes": 7685,
+      "size_bytes": 7662,
       "sent_by": "supplier",
       "data_upload": "2026-10-31"
     },

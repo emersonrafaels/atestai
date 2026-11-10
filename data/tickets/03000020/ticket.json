@@ -1,0 +1,61 @@
+{
+  "ticket_id": "03000020",
+  "workstream": "SETA",
+  "maintenance_type": "corrective",
+  "moment": "execution",
+  "category": "painting",
+  "symptom": "finish_wear",
+  "branch": {
+    "code": "0661",
+    "name": "Ag. Saúde",
+    "environment": "salão de atendimento"
+  },
+  "supplier": {
+    "name": "Fornecedor Alfa Manutenção Predial Ltda.",
+    "cnpj": "12.345.678/0001-90"
+  },
+  "requested_scope": "Repintura das paredes do salão de atendimento (aprox. 94 m²), cor padrão da agência.",
+  "quoted_value": 3581.4,
+  "dates": {
+    "opening": "2026-11-09",
+    "supplier_submission": "2026-11-15",
+    "manager_review": "2026-11-16"
+  },
+  "status": "forwarded_to_backoffice",
+  "origin": "dataset",
+  "dataset": "scenarios",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "attachments": [
+    {
+      "file_name": "Orcamento_ALF-V0020.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 7616,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-15"
+    },
+    {
+      "file_name": "IMG_20261110_085329.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 180591,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-15"
+    },
+    {
+      "file_name": "IMG_20261114_094358.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 187516,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-15"
+    },
+    {
+      "file_name": "WhatsApp Image 2026-11-15 at 15.12.59.jpeg",
+      "content_type": "image/jpeg",
+      "size_bytes": 110686,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-15"
+    }
+  ]
+}

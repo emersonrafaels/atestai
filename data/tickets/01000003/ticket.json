@@ -32,7 +32,7 @@
     {
       "file_name": "Orcamento_GAM-V0003.xlsx",
       "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      "size_bytes": 7586,
+      "size_bytes": 7567,
       "sent_by": "supplier",
       "data_upload": "2026-10-21"
     },
@@ -53,7 +53,7 @@
     {
       "file_name": "IMG_20261020_101357.jpg",
       "content_type": "image/jpeg",
-      "size_bytes": 219077,
+      "size_bytes": 181438,
       "sent_by": "supplier",
       "data_upload": "2026-10-21"
     },
@@ -67,7 +67,7 @@
     {
       "file_name": "IMG_20261021_190500.jpg",
       "content_type": "image/jpeg",
-      "size_bytes": 193808,
+      "size_bytes": 190339,
       "sent_by": "supplier",
       "data_upload": "2026-10-21"
     }

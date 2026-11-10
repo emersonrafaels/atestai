@@ -126,9 +126,13 @@ class QuoteStage(AnalysisStage):
         if qmax and item.quantity > qmax:
             excess = round((item.quantity - qmax) * item.unit_value, 2)
             evidence = f"Cobrado {item.quantity:g} {item.unit}; esperado até {qmax:g} {item.unit} para o escopo (excedente {brl(excess)})"
-        else:
-            excess, evidence = item.total_value, f"Cobrado {item.quantity:g} {item.unit}, acima do plausível para o escopo"
-        return [self.scorer.finding("quantity_above_expected", evidence, label, excess)]
+            return [self.scorer.finding("quantity_above_expected", evidence, label, excess)]
+        if not qmax:
+            # o modelo não consegue estimar a quantidade pelo escopo: não é "acima", é "não dá para conferir"
+            evidence = f"Cobrado {item.quantity:g} {item.unit}; o escopo não informa a quantidade, então não dá para conferir"
+            return [self.scorer.finding("unverifiable_quantity", evidence, label, item.total_value)]
+        evidence = f"Cobrado {item.quantity:g} {item.unit}, acima do plausível para o escopo"
+        return [self.scorer.finding("quantity_above_expected", evidence, label, item.total_value)]
 
     def _price_check(self, item: QuoteItem, ref: LpuItem | None, label: str) -> tuple[list[Finding], list[str]]:
         if ref is None:

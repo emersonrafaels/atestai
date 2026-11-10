@@ -39,13 +39,25 @@ export const FINDING_LABELS: Record<string, string> = {
   price_above_reference: "Preço acima da referência",
   photo_mismatch: "Foto não corresponde",
   missing_after_photo: "Sem foto do concluído",
+  after_photo_unconfirmed_location: "Local do depois não confirmado",
   missing_before_photo: "Sem foto do antes",
   unreadable_photo: "Foto ilegível",
   reused_photo: "Foto reaproveitada",
   photo_dated_before: "Data da foto anterior",
   spreadsheet_mismatch: "Planilha divergente",
   inconsistent_scope: "Escopo incoerente",
+  unverifiable_quantity: "Quantidade não verificável",
+  item_without_photo: "Item sem foto",
+  relevant_amount_at_issue: "Valor divergente relevante",
+  // redutor de confiança que não é apontamento da régua (vem da leitura da planilha)
+  unreadable_quote: "Orçamento não lido",
 };
+
+/** Rótulo de um tipo de apontamento ou redutor; valor desconhecido aparece legível, sem "_". */
+export const findingLabel = (k: string) => FINDING_LABELS[k] ?? k.replace(/_/g, " ");
+
+/** Autor de decisões antigas gravadas com o padrão em inglês. */
+export const authorLabel = (a: string | null | undefined) => (!a || a === "analyst" ? "analista" : a);
 
 export const TASK_LABELS: Record<string, string> = {
   identify_attachments: "Identificação dos anexos",
@@ -60,15 +72,6 @@ export const SEVERITY: Record<string, { label: string; color: string }> = {
   high: { label: "Alto", color: "var(--color-bad)" },
   medium: { label: "Médio", color: "var(--color-warn)" },
   low: { label: "Baixo", color: "var(--color-muted)" },
-};
-
-export const MISSING: Record<string, string> = {
-  after_photo: "Foto do depois",
-  removed_items_photo: "Foto dos itens retirados",
-  certificate: "Termo de conclusão",
-  panel_photo: "Foto da central",
-  before_photo: "Foto do antes",
-  quote: "Orçamento",
 };
 
 /** Rótulos de exibição dos valores de enum que chegam da API (os valores são em inglês; a tela é em português). */
@@ -102,6 +105,22 @@ export interface FindingImpact {
   repeated: boolean;
   /** a nota já tinha chegado a zero: o desconto foi limitado */
   capped: boolean;
+  /** outro tipo presente na mesma validação absorve este (régua: `absorbs`): não desconta */
+  absorbedBy: string | null;
+}
+
+/** (validação:tipo absorvido) → tipo que absorve, para os tipos presentes; espelha ScoreCalculator.absorbers. */
+export function absorbers(findings: Finding[], rubric: RubricInfo): Map<string, string> {
+  const present = new Set(findings.map((f) => `${f.validation}:${f.kind}`));
+  const out = new Map<string, string>();
+  for (const key of [...present].sort()) {
+    const [validation, kind] = key.split(":");
+    for (const absorbed of rubric.absorbs?.[kind] ?? []) {
+      const target = `${validation}:${absorbed}`;
+      if (absorbed !== kind && present.has(target) && !out.has(target)) out.set(target, kind);
+    }
+  }
+  return out;
 }
 
 /** Reproduz a régua (atest/score.py): cada tipo desconta uma vez por validação, nota mínima 0, score = média ponderada. */
@@ -109,12 +128,15 @@ export function explainFindings(findings: Finding[], rubric: RubricInfo): Findin
   const totalWeight = VALIDATIONS.reduce((s, v) => s + rubric.weights[v], 0) || 100;
   const seen: Record<ValidationKind, Set<string>> = { scope: new Set(), quote: new Set(), photos: new Set() };
   const used: Record<ValidationKind, number> = { scope: 0, quote: 0, photos: 0 };
+  const absorbed = absorbers(findings, rubric);
   return findings.map((f) => {
-    if (seen[f.validation].has(f.kind)) return { gradePts: 0, scorePts: 0, repeated: true, capped: false };
+    const by = absorbed.get(`${f.validation}:${f.kind}`) ?? null;
+    if (by) return { gradePts: 0, scorePts: 0, repeated: false, capped: false, absorbedBy: by };
+    if (seen[f.validation].has(f.kind)) return { gradePts: 0, scorePts: 0, repeated: true, capped: false, absorbedBy: null };
     seen[f.validation].add(f.kind);
     const pts = Math.max(0, Math.min(f.discount, 100 - used[f.validation]));
     used[f.validation] += pts;
-    return { gradePts: pts, scorePts: (pts * rubric.weights[f.validation]) / totalWeight, repeated: false, capped: pts < f.discount };
+    return { gradePts: pts, scorePts: (pts * rubric.weights[f.validation]) / totalWeight, repeated: false, capped: pts < f.discount, absorbedBy: null };
   });
 }
 
@@ -127,10 +149,11 @@ export const GLOSSARY: Record<string, { term: string; text: string }> = {
   grade: { term: "Nota da validação", text: "Cada validação começa com 100 e perde pontos a cada apontamento, conforme a severidade. Nunca fica abaixo de 0." },
   weight: { term: "Peso", text: "Quanto cada validação vale no score final. Ex.: um desconto de 35 na nota de Orçamento (peso 40%) tira 14 pontos do score." },
   severity: { term: "Severidade", text: "Gravidade do apontamento. Define quantos pontos ele tira da nota da validação: Crítico −60, Alto −35, Médio −15, Baixo −5." },
-  once: { term: "Desconto único por tipo", text: "Se o mesmo tipo de apontamento aparece várias vezes na mesma validação, ele desconta uma vez só. As demais ocorrências ficam listadas como evidência." },
+  absorbed: { term: "Apontamento absorvido", text: "Quando dois apontamentos descrevem o mesmo problema (ex.: a foto do depois é de outro ambiente e, por isso, falta a prova do serviço), a régua desconta só o mais amplo. O outro segue listado como evidência. Se o mais amplo for marcado como não procede, o absorvido volta a descontar." },
+  once: { term: "Desconto único por tipo", text: "Se o mesmo tipo de apontamento aparece várias vezes na mesma validação, ele desconta uma vez só. As demais ocorrências ficam listadas como evidência. Quando o problema se repete a ponto de deixar boa parte do orçamento em questão, entra o apontamento “Valor divergente relevante”." },
   lock: { term: "Trava de integridade", text: "Apontamento grave (ex.: foto reaproveitada de outro chamado). Devolve o chamado qualquer que seja o score." },
   confidence: { term: "Confiança", text: "Quanto dá para confiar na análise com a entrada recebida. Escopo vago ou foto ilegível reduzem a confiança. Confiança baixa manda o chamado para análise detalhada." },
-  amount: { term: "Valor potencial divergente", text: "Quanto do orçamento pode estar divergente do escopo ou da referência. Item fora do escopo, sem justificativa ou duplicado conta inteiro; preço ou quantidade acima contam só o excedente." },
+  amount: { term: "Valor potencial divergente", text: "Quanto do orçamento pode estar divergente do escopo ou da referência. Item fora do escopo, sem justificativa, duplicado ou com quantidade não verificável conta inteiro; preço ou quantidade acima contam só o excedente. Acima do limite da régua (padrão: 50% do orçamento), vira o apontamento “Valor divergente relevante”." },
   bands: { term: "Faixas de recomendação", text: "85 ou mais: aprovar. De 70 a 84: aprovar com ressalvas. Abaixo de 70: devolver ao fornecedor. Travas e confiança baixa vencem a faixa." },
   checklist: { term: "Checklist mínimo", text: "Documentos obrigatórios para a categoria (ex.: foto do depois, termo de conclusão). Se faltar algo, o chamado volta antes de qualquer análise e não recebe score." },
   phase: { term: "Fase da régua", text: "Fase 1 é o MVP: não cobra foto do antes nem checa ilegibilidade e reaproveitamento. Fase 2 inclui essas checagens." },

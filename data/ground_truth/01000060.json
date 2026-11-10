@@ -121,17 +121,20 @@
     "out_of_scope_item",
     "photo_mismatch",
     "price_above_reference",
+    "relevant_amount_at_issue",
     "vague_scope"
   ],
   "optional": [
-    "unjustified_replacement"
+    "item_without_photo",
+    "unjustified_replacement",
+    "unverifiable_quantity"
   ],
   "grades": {
-    "scope": 85,
-    "quote": 50,
+    "scope": 65,
+    "quote": 35,
     "photos": 65
   },
-  "score": 63,
+  "score": 53,
   "recommendation": "return_to_supplier",
   "confidence": "medium"
 }

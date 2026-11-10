@@ -112,15 +112,16 @@
   "findings": [
     "duplicate_item",
     "inconsistent_scope",
-    "out_of_scope_item"
+    "out_of_scope_item",
+    "relevant_amount_at_issue"
   ],
   "optional": [],
   "grades": {
     "scope": 85,
-    "quote": 30,
+    "quote": 15,
     "photos": 100
   },
-  "score": 69,
+  "score": 63,
   "recommendation": "return_to_supplier",
   "confidence": "medium"
 }

@@ -1,0 +1,89 @@
+{
+  "ticket_id": "03000023",
+  "workstream": "SETA",
+  "maintenance_type": "corrective",
+  "moment": "execution",
+  "category": "lighting",
+  "symptom": "poor_lighting",
+  "branch": {
+    "code": "0447",
+    "name": "Ag. Mooca",
+    "environment": "backoffice"
+  },
+  "supplier": {
+    "name": "Fornecedor Gama Instalações Elétricas Ltda.",
+    "cnpj": "34.567.890/0001-12"
+  },
+  "requested_scope": "Verificar o backoffice. Urgente.",
+  "quoted_value": 1780.92,
+  "dates": {
+    "opening": "2026-11-12",
+    "supplier_submission": "2026-11-18",
+    "manager_review": "2026-11-19"
+  },
+  "status": "forwarded_to_backoffice",
+  "origin": "dataset",
+  "dataset": "scenarios",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "attachments": [
+    {
+      "file_name": "Orcamento_GAM-V0023.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 7612,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-18"
+    },
+    {
+      "file_name": "IMG_20261113_085236.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 181879,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-18"
+    },
+    {
+      "file_name": "IMG_20261117_092522.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 128677,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-18"
+    },
+    {
+      "file_name": "IMG_20261117_105340.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 186129,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-18"
+    },
+    {
+      "file_name": "IMG_20261117_114051.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 189045,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-18"
+    },
+    {
+      "file_name": "IMG_20261118_172400.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 198117,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-18"
+    },
+    {
+      "file_name": "IMG_20261118_183300.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 237070,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-18"
+    },
+    {
+      "file_name": "IMG_20261118_190700.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 211892,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-18"
+    }
+  ]
+}

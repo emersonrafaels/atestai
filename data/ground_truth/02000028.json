@@ -1,0 +1,92 @@
+{
+  "ticket_id": "02000028",
+  "dataset": "itau",
+  "service_template": "painting_quote",
+  "defects": [
+    "inconsistent",
+    "price",
+    "does_not_match",
+    "quantity"
+  ],
+  "workstream": "SETA",
+  "moment": "quote",
+  "maintenance_type": "corrective",
+  "category": "painting",
+  "symptom": "no_image",
+  "before_applicable": true,
+  "quoted_value": 1886.33,
+  "amount_at_issue": 155.18,
+  "items": [
+    {
+      "n": 1,
+      "description": "Pintura látex acrílico em paredes, 2 demãos",
+      "unit": "m²",
+      "quantity": 46,
+      "unit_value": 35.0,
+      "total_value": 1610.0,
+      "classification": "compliant",
+      "lpu_code": "PIN-001",
+      "reference_price": 35.0,
+      "findings": [],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    },
+    {
+      "n": 2,
+      "description": "Massa corrida para correção de paredes",
+      "unit": "m²",
+      "quantity": 61,
+      "unit_value": 4.53,
+      "total_value": 276.33,
+      "classification": "compliant",
+      "lpu_code": "PIN-004",
+      "reference_price": 3.1,
+      "findings": [
+        "quantity_above_expected",
+        "price_above_reference"
+      ],
+      "optional_findings": [],
+      "expected_quantity_max": 46
+    }
+  ],
+  "attachments": {
+    "Orcamento_ALF-V0028.xlsx": {
+      "category": "quote_doc",
+      "moment": "undetermined",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Orçamento"
+    },
+    "IMG_20261104_081739.jpg": {
+      "category": "room_before_photo",
+      "moment": "before",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Paredes manchadas e descascando"
+    },
+    "IMG_20261108_175100.jpg": {
+      "category": "other",
+      "moment": "undetermined",
+      "matches_scope": false,
+      "readable": true,
+      "description": "Depósito com prateleiras: outro ambiente"
+    }
+  },
+  "checklist_ok": true,
+  "missing": [],
+  "findings": [
+    "inconsistent_scope",
+    "photo_mismatch",
+    "price_above_reference",
+    "quantity_above_expected"
+  ],
+  "optional": [],
+  "grades": {
+    "scope": 85,
+    "quote": 70,
+    "photos": 65
+  },
+  "score": 71,
+  "recommendation": "approve_with_caveats",
+  "confidence": "medium"
+}

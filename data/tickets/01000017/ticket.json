@@ -8,13 +8,13 @@
   "branch": {
     "code": "0447",
     "name": "Ag. Mooca",
-    "environment": "treasury"
+    "environment": "tesouraria"
   },
   "supplier": {
     "name": "Fornecedor Zeta Serralheria e Portas ME",
     "cnpj": "67.890.123/0001-45"
   },
-  "requested_scope": "Porta do treasury não fecha sozinha: trocar a mola aérea e regular.",
+  "requested_scope": "Porta da tesouraria não fecha sozinha: trocar a mola aérea e regular.",
   "quoted_value": 660.0,
   "dates": {
     "opening": "2026-10-20",
@@ -32,7 +32,7 @@
     {
       "file_name": "Orcamento_ZET-V0017.xlsx",
       "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      "size_bytes": 7620,
+      "size_bytes": 7605,
       "sent_by": "supplier",
       "data_upload": "2026-10-24"
     },
@@ -46,7 +46,7 @@
     {
       "file_name": "IMG_20261023_093422.jpg",
       "content_type": "image/jpeg",
-      "size_bytes": 179307,
+      "size_bytes": 179181,
       "sent_by": "supplier",
       "data_upload": "2026-10-24"
     },

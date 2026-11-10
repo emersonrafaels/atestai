@@ -8,13 +8,13 @@
   "branch": {
     "code": "1343",
     "name": "Ag. Tucuruvi",
-    "environment": "corridor"
+    "environment": "corredor"
   },
   "supplier": {
     "name": "Fornecedor Gama Instalações Elétricas Ltda.",
     "cnpj": "34.567.890/0001-12"
   },
-  "requested_scope": "Trocar as 7 lâmpadas tubulares queimadas do corridor.",
+  "requested_scope": "Trocar as 7 lâmpadas tubulares queimadas do corredor.",
   "quoted_value": 329.0,
   "dates": {
     "opening": "2026-10-19",
@@ -32,7 +32,7 @@
     {
       "file_name": "Orcamento_GAM-V0013.xlsx",
       "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      "size_bytes": 7587,
+      "size_bytes": 7566,
       "sent_by": "supplier",
       "data_upload": "2026-10-23"
     },
@@ -53,7 +53,7 @@
     {
       "file_name": "IMG_20261022_103725.jpg",
       "content_type": "image/jpeg",
-      "size_bytes": 213263,
+      "size_bytes": 210435,
       "sent_by": "supplier",
       "data_upload": "2026-10-23"
     },
@@ -67,7 +67,7 @@
     {
       "file_name": "IMG_20261023_190500.jpg",
       "content_type": "image/jpeg",
-      "size_bytes": 191372,
+      "size_bytes": 187981,
       "sent_by": "supplier",
       "data_upload": "2026-10-23"
     }

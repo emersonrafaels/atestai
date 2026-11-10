@@ -21,7 +21,7 @@ python main.py                                         # painel em http://localh
 | `"validate"` | roda o conjunto de validação e aplica o **portão de qualidade**; sai com código 1 se reprovar (use no CI) |
 
 Outros comandos:
-- `python -m pytest -q`: 32 testes (regras, planilhas, integridade das fotos, pipeline, SDK com servidor falso, Message Batches, provedores, roteamento e contingência, métricas, API do painel, gerador de fotos).
+- `python -m pytest -q`: testes (regras, planilhas, integridade das fotos, pipeline, SDK com servidor falso, Message Batches, provedores, roteamento e contingência, métricas, API do painel, gerador de fotos).
 - `python examples/api_smoke_test.py`: duas chamadas rápidas (texto e foto) para validar a chave e o modelo.
 - `python examples/copilot_flow_langgraph.py`: o fluxo de revisão humana em LangGraph (veja abaixo).
 
@@ -133,17 +133,24 @@ O `Orchestrator` inteiro vira um único nó do grafo. Também passa a valer a pe
 - **Saída estruturada sempre** (JSON Schema a partir do Pydantic), com as descrições dos campos servindo de instrução.
 - **O modelo aponta, a régua decide**: preço × LPU, duplicidade, hash e data das fotos, notas, score e recomendação são regra, auditáveis e reprodutíveis.
 - **Cache** de prompt (provedor) e cache em disco das respostas (chave = provedor + modelo + prompt + conteúdo + schema).
+- **Apontamentos que se absorvem**: `absorbs` num tipo da régua faz o tipo absorvido seguir como evidência sem descontar (ex.: `missing_after_photo` absorve `photo_mismatch`, o mesmo problema visto por outro ângulo). O painel refaz a conta se o analista marcar o mais amplo como improcedente.
+- **"Não deu para confirmar" não é "não tem"**: a foto do depois volta como `done_service` (`yes`/`partial`/`no`/`undetermined`). Resultado visível com local não confirmável vira `after_photo_unconfirmed_location` (média, reduz confiança), e não `missing_after_photo` (alta).
+- **Quantidade "não dá para conferir" não é "acima"**: quando o escopo não permite estimar a quantidade (o modelo devolve `expected_quantity_max = -1`), o item vira `unverifiable_quantity` (médio, reduz confiança, item inteiro em questão), e não `quantity_above_expected`.
+- **Itens sem foto**: os itens físicos cobrados que nenhuma foto evidencia (`items_without_photo` da análise de fotos, inclusive quando as fotos mostram menos unidades do que as cobradas) viram um apontamento `item_without_photo` (médio, desconta uma vez).
+- **Materialidade**: cada tipo desconta uma vez por validação. Por isso, quando o valor potencial divergente chega a `relevant_amount_at_issue_pct` do orçamento (padrão: 50%), entra `relevant_amount_at_issue` (médio, na nota do orçamento). Seis itens com o mesmo problema deixam de pesar como um só.
+- **Escopo vago pesa alto**: `vague_scope` é de severidade alta, porque escopo vago impede conferir orçamento e fotos.
 - **Contingência** só em erro transitório; erro definitivo não troca de modelo e aparece.
 - **Custo por chamado** em USD e BRL, com desconto de batch; **observabilidade** em JSON lines com ids de execução e chamado; persistência em SQLite.
 - **Feedback do copiloto** (aceitar, ajustar, discordar) gravado por parecer: vira dado rotulado para a próxima validação.
 
 ## O painel
 
+- **Cenários**: acha chamados por tipo de problema (escopo mal preenchido, orçamento com vários erros, foto de outro ambiente, checklist incompleto...). Mostra o catálogo com um chamado por cenário e, para cada tipo, os chamados de todos os conjuntos cujo gabarito traz aquele problema. Um clique abre o chamado na Análise; **Selecionar** marca todos para analisar de uma vez. A mesma lista fica em [`docs/cenarios.md`](docs/cenarios.md).
 - **Análise**: lista de chamados (filtro por conjunto e esteira), modo simulado ou API, régua Fase 1/2, síncrono ou batch. Abas: parecer (carimbo, notas, apontamentos, mensagem ao fornecedor, feedback), orçamento × escopo, fotos, chamadas ao modelo e entrada. **Novo chamado** envia planilha e fotos pela tela.
 - **Validação**: roda um conjunto inteiro (ou uma amostra) e mostra a leitura de ciência de dados: portão de qualidade, acurácia com IC 95% por bootstrap, kappa de Cohen, F1 de "pegar problema", matriz de confusão, dispersão do score, precisão/cobertura/F1 por tipo de apontamento, acurácia por categoria, valor em questão, latência e custo p50/p95, e os casos divergentes.
 - **Operação**: histórico de execuções, custos e feedbacks.
 
-Front-end em React + TypeScript + Tailwind (Vite), em `panel/`. Para alterar: `cd panel && npm install && npm run dev` (proxy de `/api` para `:8000`); `npm run build` gera `panel/dist`, servido pelo FastAPI. Rotas da API: `/api/tickets`, `/api/runs`, `/api/assessments`, `/api/datasets`, `/api/validations`, `/api/metrics`, `/api/spreadsheet-template` e, com login, `/api/admin/*`.
+Front-end em React + TypeScript + Tailwind (Vite), em `panel/`. Para alterar: `cd panel && npm install && npm run dev` (proxy de `/api` para `:8000`); `npm run build` gera `panel/dist`, servido pelo FastAPI. Rotas da API: `/api/tickets`, `/api/scenarios`, `/api/runs`, `/api/assessments`, `/api/datasets`, `/api/validations`, `/api/metrics`, `/api/spreadsheet-template` e, com login, `/api/admin/*`.
 
 ### Configuração (portal com login)
 
@@ -163,15 +170,33 @@ O **orçamento é sempre Excel**, com duas abas em formato Tabela: `Chamado`/`tb
 
 - **Demonstração** (13 chamados, `00…`): os casos do deck e variações, com gabarito escrito à mão.
 - **Validação** (80 chamados, `0100…`): 10 modelos de serviço × 8, com defeitos injetados por sorteio. O gabarito é calculado pela própria régua a partir dos defeitos.
-- **Itaú** (20 chamados, `0200…`): a mesma mecânica da validação (10 modelos × 2, defeitos sorteados, gabarito pela régua), em agências no padrão Itaú e com **fotos fotorrealistas geradas por IA** com a identidade visual do banco. Agências, fornecedores, CNPJs e valores continuam fictícios; a marca aparece só para demonstração interna.
+- **Cenários** (`0300…`): **um chamado por tipo de problema**, com os defeitos fixos em vez de sorteados (`generator/build_scenarios_dataset.py`). Se um defeito não puder ser aplicado, a geração falha, em vez de pular o defeito em silêncio. Um teste (`test_every_scenario_type_has_a_ticket_in_the_catalog`) garante que todo tipo de cenário de `atest/scenarios.py` tem pelo menos um chamado no catálogo.
+- **Itaú** (41 chamados, `0200…`): a mesma mecânica da validação (defeitos sorteados, gabarito pela régua), em agências no padrão Itaú e com **fotos fotorrealistas geradas por IA** com a identidade visual do banco. Agências, fornecedores, CNPJs e valores continuam fictícios; a marca aparece só para demonstração interna. São 20 chamados de execução (10 modelos × 2, `02000001`–`02000020`) e 21 de **Aprovação de Orçamento** (`02000021`–`02000041`): os 7 modelos que têm foto do problema (pintura, infiltração, lâmpadas, ar-condicionado, tomadas, câmera e sensor) × 3, só com a planilha e as fotos do antes, como o fornecedor envia antes de executar (`quote_stage()` em `generator/build_validation_dataset.py`).
 
-Regerar: `python generator/build_demo_dataset.py --clean` e depois `python generator/build_validation_dataset.py`.
+Regerar, nesta ordem (o `--clean` apaga todos os chamados; os seguintes indexam as fotos dos anteriores para não gerar reaproveitamento por acaso):
+
+```bash
+python generator/build_demo_dataset.py --clean
+python generator/build_validation_dataset.py
+python generator/build_itau_dataset.py         # usa as fotos já geradas em data/real_photos_itau/ (sem custo)
+python generator/build_scenarios_dataset.py    # catálogo de cenários e docs/cenarios.md
+```
+
+Mudou só a régua (`config/rubric.toml`)? Não precisa regerar chamados nem fotos. Recalcule as notas, o score e a recomendação dos gabaritos, depois a documentação dos cenários:
+
+```bash
+python generator/rescore_ground_truth.py --dry-run   # mostra o que mudaria
+python generator/rescore_ground_truth.py
+python generator/build_scenarios_dataset.py --doc
+```
+
+Com a pasta dentro do OneDrive, pause a sincronização durante a geração: arquivos reescritos durante o upload viram cópias de conflito (`*-<computador>.json`).
 
 Conjunto Itaú (precisa de `openai_api_key` em `config/.secrets.toml`):
 
 ```bash
-python generator/build_itau_dataset.py --needs                        # quantas fotos cada cena precisa (hoje 47, em 24 cenas)
-python generator/ai_photos.py --profile itau --from-needs --dry-run   # confere quantidade e custo (≈ US$ 3)
+python generator/build_itau_dataset.py --needs                        # quantas fotos cada cena precisa (hoje 72, em 25 cenas)
+python generator/ai_photos.py --profile itau --from-needs --dry-run   # confere quantidade e custo (só o que falta)
 python generator/ai_photos.py --profile itau --from-needs             # gera as fotos em data/real_photos_itau/ (cobrado)
 python generator/build_itau_dataset.py                                # gera os chamados 0200xxxx
 ```
@@ -198,7 +223,8 @@ atest/
   simulated.py           SimulatedClient: responde pelo gabarito, com ruído opcional
   analysis.py            AnalysisContext e AnalysisStage (contrato das etapas)
   checklist.py scope.py quote.py photos.py scoring.py assessment.py   as etapas
-  score.py               ScoreCalculator (régua: apontamentos → notas, score, recomendação)
+  score.py               ScoreCalculator (régua: apontamentos → notas, score, recomendação, absorção)
+  scenarios.py           etiquetas de cenário de teste a partir do gabarito (aba Cenários, docs/cenarios.md)
   pipeline.py            Orchestrator de um chamado
   batch.py               ComponentFactory, BatchRunner, RunOutputWriter
   evaluation.py          GroundTruthEvaluator

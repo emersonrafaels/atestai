@@ -1,6 +1,6 @@
 import { Lock, ShieldAlert } from "lucide-react";
 import type { Assessment, RubricInfo } from "../api";
-import { REC, VALIDATIONS, VALIDATION_LABEL, explainFindings, pts } from "../format";
+import { findingLabel, GLOSSARY, REC, VALIDATIONS, VALIDATION_LABEL, explainFindings, pts } from "../format";
 import { InfoTip, Tooltip } from "./ui/Tooltip";
 
 const gradeColor = (g: number) => (g >= 85 ? "var(--color-ok)" : g >= 70 ? "var(--color-warn)" : "var(--color-bad)");
@@ -20,7 +20,8 @@ export function ScoreBreakdown({ p, rubric }: { p: Assessment; rubric: RubricInf
     const grade = p.grades![v];
     const weight = rubric.weights[v];
     const discounts = p.findings.map((f, k) => ({ f, imp: impacts[k] })).filter((x) => x.f.validation === v && x.imp.gradePts > 0);
-    return { v, grade, weight, discounts, contribution: (grade * weight) / totalWeight, max: (100 * weight) / totalWeight };
+    const absorbed = p.findings.map((f, k) => ({ f, imp: impacts[k] })).filter((x) => x.f.validation === v && x.imp.absorbedBy);
+    return { v, grade, weight, discounts, absorbed, contribution: (grade * weight) / totalWeight, max: (100 * weight) / totalWeight };
   });
 
   return (
@@ -54,6 +55,13 @@ export function ScoreBreakdown({ p, rubric }: { p: Assessment; rubric: RubricInf
               Contribui <b className="tabular-nums text-ink">{pts(r.contribution)}</b> de {pts(r.max)} pontos do score
               {r.discounts.length === 0 && <span className="text-ok"> · sem descontos</span>}
             </div>
+            {r.absorbed.length > 0 && (
+              <Tooltip content={GLOSSARY.absorbed.text}>
+                <div className="mt-1 cursor-help text-[12px] text-muted">
+                  {r.absorbed.map(({ f, imp }) => `${findingLabel(f.kind)} absorvido por ${findingLabel(imp.absorbedBy!)}`).filter((x, i, a) => a.indexOf(x) === i).join(" · ")}
+                </div>
+              </Tooltip>
+            )}
           </div>
         ))}
       </div>

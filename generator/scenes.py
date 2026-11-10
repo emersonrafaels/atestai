@@ -664,7 +664,27 @@ def monitor_grid(seed=0, tiles=None, cols=3, rows=3, stamp="03/10/2026 10:41:07"
 
 
 # ============================================================================ predial (2D)
-def luminaire_label(seed=0):
+LABELS = {
+    "panel": (
+        "LUMINÁRIA LED DE EMBUTIR 60x60",
+        ["Modelo: PL-6060-40W", "Potência: 40 W   |   4000 K", "Fluxo luminoso: 4.000 lm", "Tensão: 100-240 V~  50/60 Hz", "FP > 0,92   IRC > 80"],
+    ),
+    "tube": (
+        "LÂMPADA LED TUBULAR T8 18W",
+        [
+            "Modelo: T8-120-18W   |   120 cm",
+            "Potência: 18 W   |   6500 K",
+            "Fluxo luminoso: 1.850 lm",
+            "Tensão: 100-240 V~  50/60 Hz",
+            "Base G13   IRC > 80",
+        ],
+    ),
+}
+
+
+def luminaire_label(seed=0, product="panel"):
+    """Etiqueta do produto instalado: "panel" (luminária 60x60) ou "tube" (lâmpada tubular T8)."""
+    title, specs = LABELS[product]
     cv = Canvas(seed=seed)
     cv.rect(0, 0, W, H, (232, 232, 230), tex=3, grad=(1, 1, 0.25))
     for y in range(60, H, 90):
@@ -672,15 +692,8 @@ def luminaire_label(seed=0):
     lab = Image.new("RGB", (760, 470), (250, 250, 248))
     d = ImageDraw.Draw(lab)
     d.rectangle([6, 6, 753, 463], outline=(30, 30, 30), width=4)
-    d.text((30, 26), "LUMINÁRIA LED DE EMBUTIR 60x60", font=font(34, "b"), fill=(20, 20, 20))
-    lines = [
-        "Modelo: PL-6060-40W",
-        "Potência: 40 W   |   4000 K",
-        "Fluxo luminoso: 4.000 lm",
-        "Tensão: 100-240 V~  50/60 Hz",
-        "FP > 0,92   IRC > 80",
-        "Lote: 2609-118   Fab.: 09/2026",
-    ]
+    d.text((30, 26), title, font=font(34, "b"), fill=(20, 20, 20))
+    lines = [*specs, "Lote: 2609-118   Fab.: 09/2026"]
     for i, s in enumerate(lines):
         d.text((30, 90 + i * 44), s, font=font(28), fill=(30, 30, 30))
     rnd = random.Random(seed)

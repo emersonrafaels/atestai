@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import type { Assessment } from "../api";
-import { brl, num, FINDING_LABELS } from "../format";
+import { brl, num, findingLabel } from "../format";
 
 const CLASS = {
   compliant: { label: "Aderente", cls: "bg-[#e3f2ea] text-ok" },
@@ -33,9 +33,9 @@ export function QuoteTab({ p, highlight = [] }: { p: Assessment; highlight?: num
                   <td className="px-3 py-2.5 tabular-nums">{i.n}</td>
                   <td className="px-3 py-2.5">
                     <div className="font-medium">{i.description}</div>
-                    <div className="text-[13px] text-muted">{i.reason}{i.lpu_code !== "SEM_REFERENCIA" && ` · ${i.lpu_code}`}</div>
+                    <div className="text-[13px] text-muted">{i.reason}{i.lpu_code && i.lpu_code !== "NO_REFERENCE" && i.lpu_code !== "SEM_REFERENCIA" ? ` · ${i.lpu_code}` : " · sem referência na LPU"}</div>
                     {i.findings.filter((a) => a.kind !== "out_of_scope_item" && a.kind !== "unjustified_replacement").map((a, k) => (
-                      <div key={k} className="mt-1 text-[13px] text-warn">{FINDING_LABELS[a.kind] ?? a.kind}: {a.evidence}</div>
+                      <div key={k} className="mt-1 text-[13px] text-warn">{findingLabel(a.kind)}: {a.evidence}</div>
                     ))}
                   </td>
                   <td className="whitespace-nowrap px-3 py-2.5 text-right tabular-nums">{num(i.quantity)} {i.unit}</td>

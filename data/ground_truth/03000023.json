@@ -1,0 +1,154 @@
+{
+  "ticket_id": "03000023",
+  "dataset": "scenarios",
+  "service_template": "lamps",
+  "defects": [
+    "vague",
+    "out_of_scope",
+    "price",
+    "does_not_match",
+    "unreadable"
+  ],
+  "workstream": "SETA",
+  "moment": "execution",
+  "maintenance_type": "corrective",
+  "category": "lighting",
+  "symptom": "poor_lighting",
+  "before_applicable": true,
+  "quoted_value": 1780.92,
+  "amount_at_issue": 1592.92,
+  "items": [
+    {
+      "n": 1,
+      "description": "Lâmpada LED tubular T8 18W",
+      "unit": "un",
+      "quantity": 4,
+      "unit_value": 22.0,
+      "total_value": 88.0,
+      "classification": "compliant",
+      "lpu_code": "ELE-008",
+      "reference_price": 22.0,
+      "findings": [],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    },
+    {
+      "n": 2,
+      "description": "Mão de obra troca de lâmpada",
+      "unit": "un",
+      "quantity": 4,
+      "unit_value": 38.23,
+      "total_value": 152.92,
+      "classification": "compliant",
+      "lpu_code": "ELE-009",
+      "reference_price": 25.0,
+      "findings": [
+        "price_above_reference"
+      ],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    },
+    {
+      "n": 3,
+      "description": "Luminária LED de embutir 60x60",
+      "unit": "un",
+      "quantity": 4,
+      "unit_value": 385.0,
+      "total_value": 1540.0,
+      "classification": "out_of_scope",
+      "lpu_code": "ELE-001",
+      "reference_price": 385.0,
+      "findings": [
+        "out_of_scope_item"
+      ],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    }
+  ],
+  "attachments": {
+    "Orcamento_GAM-V0023.xlsx": {
+      "category": "quote_doc",
+      "moment": "undetermined",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Orçamento"
+    },
+    "IMG_20261113_085236.jpg": {
+      "category": "room_before_photo",
+      "moment": "before",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Ambiente com lâmpadas apagadas"
+    },
+    "IMG_20261117_092522.jpg": {
+      "category": "room_after_photo",
+      "moment": "after",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Teto com lâmpadas acesas"
+    },
+    "IMG_20261117_105340.jpg": {
+      "category": "label_photo",
+      "moment": "after",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Etiqueta da lâmpada tubular instalada"
+    },
+    "IMG_20261117_114051.jpg": {
+      "category": "removed_items_photo",
+      "moment": "after",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Lâmpadas antigas retiradas"
+    },
+    "IMG_20261118_172400.jpg": {
+      "category": "room_after_photo",
+      "moment": "after",
+      "matches_scope": false,
+      "readable": true,
+      "description": "Fachada externa da agência"
+    },
+    "IMG_20261118_183300.jpg": {
+      "category": "other",
+      "moment": "undetermined",
+      "matches_scope": null,
+      "readable": false,
+      "description": "Foto escura e tremida"
+    },
+    "IMG_20261118_190700.jpg": {
+      "category": "completion_certificate_doc",
+      "moment": "after",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Termo de conclusão assinado"
+    }
+  },
+  "checklist_ok": true,
+  "missing": [],
+  "findings": [
+    "out_of_scope_item",
+    "photo_mismatch",
+    "price_above_reference",
+    "relevant_amount_at_issue",
+    "unreadable_photo",
+    "vague_scope"
+  ],
+  "optional": [
+    "item_without_photo",
+    "unjustified_replacement",
+    "unverifiable_quantity"
+  ],
+  "grades": {
+    "scope": 65,
+    "quote": 35,
+    "photos": 60
+  },
+  "score": 51,
+  "recommendation": "detailed_review",
+  "confidence": "low",
+  "scenario": {
+    "id": "everything",
+    "title": "Problemas em todas as validações",
+    "description": "Escopo vago, item fora do escopo, preço acima, foto de outro ambiente e foto ilegível."
+  }
+}

@@ -20,6 +20,14 @@ class DomainModel(BaseModel):
     model_config = ConfigDict(extra="forbid", use_enum_values=False, populate_by_name=True)
 
 
+# ============================================================================ rótulos em português (valores internos → tela)
+VALIDATION_PT = {"scope": "Escopo", "quote": "Orçamento × escopo", "photos": "Evidências fotográficas"}
+SEVERITY_PT = {"critical": "crítica", "high": "alta", "medium": "média", "low": "baixa"}
+CONFIDENCE_PT = {"high": "alta", "medium": "média", "low": "baixa"}
+MAINTENANCE_PT = {"corrective": "corretiva", "preventive": "preventiva"}
+MOMENT_PT = {"quote": "aprovação de orçamento", "execution": "atestação do serviço"}
+
+
 # ============================================================================ enums
 class Workstream(StrEnum):
     """Esteira do chamado: SETA (manutenção predial) ou SISR (segurança)."""
@@ -159,6 +167,10 @@ class ValidationResult(StrEnum):
     QUOTE = "quote"
     PHOTOS = "photos"
 
+    @property
+    def label(self) -> str:
+        return VALIDATION_PT[self.value]
+
 
 class Severity(StrEnum):
     """Severidade de um apontamento (define o desconto na nota)."""
@@ -167,6 +179,10 @@ class Severity(StrEnum):
     HIGH = "high"
     MEDIUM = "medium"
     LOW = "low"
+
+    @property
+    def label(self) -> str:
+        return SEVERITY_PT[self.value]
 
 
 class Recommendation(StrEnum):
@@ -202,6 +218,10 @@ class Confidence(StrEnum):
     HIGH = "high"
     MEDIUM = "medium"
     LOW = "low"
+
+    @property
+    def label(self) -> str:
+        return CONFIDENCE_PT[self.value]
 
 
 class Stage(StrEnum):
@@ -385,6 +405,10 @@ class FindingType(DomainModel):
     lock: bool = False
     amount_at_issue: AmountAtIssue = AmountAtIssue.NONE
     enabled: bool = Field(True, description="desativado: o apontamento não é gerado nem desconta (portal de configuração)")
+    absorbs: list[str] = Field(
+        default_factory=list,
+        description="tipos da mesma validação que deixam de descontar quando este aparece (o mesmo problema visto por outro ângulo)",
+    )
 
 
 class Band(DomainModel):
@@ -418,6 +442,7 @@ class Rubric(DomainModel):
     hash_method: str = ""
     spreadsheet_value_tolerance: float = 1.0
     photo_date_tolerance_days: int = 1
+    relevant_amount_at_issue_pct: float = Field(50, ge=0, le=100, description="valor potencial divergente (% do orçamento) que vira apontamento")
     finding_types: dict[str, FindingType]
 
 
@@ -436,6 +461,7 @@ class Finding(DomainModel):
     reduces_confidence: bool = False
     phase: int = 1
     amount_at_issue: float = 0.0
+    absorbed_by: str = Field("", description="tipo que absorveu este apontamento: segue como evidência, mas não desconta")
 
 
 class EvaluatedRequirement(DomainModel):

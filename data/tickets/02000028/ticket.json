@@ -1,0 +1,54 @@
+{
+  "ticket_id": "02000028",
+  "workstream": "SETA",
+  "maintenance_type": "corrective",
+  "moment": "quote",
+  "category": "painting",
+  "symptom": "no_image",
+  "branch": {
+    "code": "3120",
+    "name": "Itaú Ag. Av. Paulista",
+    "environment": "backoffice"
+  },
+  "supplier": {
+    "name": "Fornecedor Alfa Manutenção Predial Ltda.",
+    "cnpj": "12.345.678/0001-90"
+  },
+  "requested_scope": "Repintura das paredes do backoffice (aprox. 46 m²), cor padrão da agência.",
+  "quoted_value": 1886.33,
+  "dates": {
+    "opening": "2026-11-03",
+    "supplier_submission": "2026-11-08",
+    "manager_review": "2026-11-09"
+  },
+  "status": "forwarded_to_backoffice",
+  "origin": "dataset",
+  "dataset": "itau",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "attachments": [
+    {
+      "file_name": "Orcamento_ALF-V0028.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 7623,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-08"
+    },
+    {
+      "file_name": "IMG_20261104_081739.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 123735,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-08"
+    },
+    {
+      "file_name": "IMG_20261108_175100.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 137132,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-08"
+    }
+  ]
+}

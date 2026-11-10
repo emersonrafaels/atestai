@@ -131,15 +131,16 @@
     "duplicate_item",
     "out_of_scope_item",
     "price_above_reference",
+    "relevant_amount_at_issue",
     "reused_photo"
   ],
   "optional": [],
   "grades": {
     "scope": 100,
-    "quote": 15,
+    "quote": 0,
     "photos": 40
   },
-  "score": 42,
+  "score": 36,
   "recommendation": "return_locked",
   "confidence": "high"
 }

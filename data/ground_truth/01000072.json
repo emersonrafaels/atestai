@@ -111,19 +111,22 @@
   "missing": [],
   "findings": [
     "out_of_scope_item",
+    "relevant_amount_at_issue",
     "reused_photo",
     "spreadsheet_mismatch",
     "vague_scope"
   ],
   "optional": [
-    "unjustified_replacement"
+    "item_without_photo",
+    "unjustified_replacement",
+    "unverifiable_quantity"
   ],
   "grades": {
-    "scope": 85,
-    "quote": 50,
+    "scope": 65,
+    "quote": 35,
     "photos": 40
   },
-  "score": 53,
+  "score": 43,
   "recommendation": "return_locked",
   "confidence": "medium"
 }

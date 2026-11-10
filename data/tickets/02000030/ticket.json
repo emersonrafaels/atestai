@@ -1,0 +1,54 @@
+{
+  "ticket_id": "02000030",
+  "workstream": "SETA",
+  "maintenance_type": "corrective",
+  "moment": "quote",
+  "category": "lighting",
+  "symptom": "poor_lighting",
+  "branch": {
+    "code": "3967",
+    "name": "Itaú Ag. Santo Amaro",
+    "environment": "backoffice"
+  },
+  "supplier": {
+    "name": "Fornecedor Gama Instalações Elétricas Ltda.",
+    "cnpj": "34.567.890/0001-12"
+  },
+  "requested_scope": "Trocar as 12 lâmpadas tubulares queimadas do backoffice.",
+  "quoted_value": 849.0,
+  "dates": {
+    "opening": "2026-11-03",
+    "supplier_submission": "2026-11-09",
+    "manager_review": "2026-11-10"
+  },
+  "status": "forwarded_to_backoffice",
+  "origin": "dataset",
+  "dataset": "itau",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "attachments": [
+    {
+      "file_name": "Orcamento_GAM-V0030.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 7589,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-09"
+    },
+    {
+      "file_name": "IMG_20261104_084339.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 105386,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-09"
+    },
+    {
+      "file_name": "IMG_20261109_174200.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 151200,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-09"
+    }
+  ]
+}

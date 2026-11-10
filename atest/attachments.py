@@ -31,6 +31,9 @@ def attachment_parts(attachment: Attachment, max_side: int = 1568) -> list[Part]
     """Rótulo de texto + conteúdo, em formato neutro de provedor. O rótulo permite ao modelo citar 'Anexo N'."""
     label = TextPart(f"--- Anexo {attachment.index}: {attachment.name} ({attachment.content_type}) ---")
     if attachment.is_image:
+        taken = exif_date(attachment.path)  # ajuda o modelo a separar antes e depois (a abertura vai no resumo do chamado)
+        if taken:
+            label = TextPart(f"--- Anexo {attachment.index}: {attachment.name} ({attachment.content_type}; tirada em {taken:%d/%m/%Y %H:%M}) ---")
         return [label, image(attachment.path, max_side)]
     if attachment.content_type == "application/pdf":
         return [label, DocumentPart(data=attachment.path.read_bytes(), mime="application/pdf", title=attachment.name)]

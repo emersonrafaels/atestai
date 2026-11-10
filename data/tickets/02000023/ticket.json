@@ -1,0 +1,47 @@
+{
+  "ticket_id": "02000023",
+  "workstream": "SETA",
+  "maintenance_type": "corrective",
+  "moment": "quote",
+  "category": "lighting",
+  "symptom": "poor_lighting",
+  "branch": {
+    "code": "4418",
+    "name": "Itaú Ag. Pinheiros",
+    "environment": "corredor"
+  },
+  "supplier": {
+    "name": "Fornecedor Gama Instalações Elétricas Ltda.",
+    "cnpj": "34.567.890/0001-12"
+  },
+  "requested_scope": "Trocar as 5 lâmpadas tubulares queimadas do corredor.",
+  "quoted_value": 235.0,
+  "dates": {
+    "opening": "2026-11-01",
+    "supplier_submission": "2026-11-04",
+    "manager_review": "2026-11-05"
+  },
+  "status": "forwarded_to_backoffice",
+  "origin": "dataset",
+  "dataset": "itau",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "attachments": [
+    {
+      "file_name": "Orcamento_GAM-V0023.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 7572,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-04"
+    },
+    {
+      "file_name": "IMG_20261102_084525.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 130880,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-04"
+    }
+  ]
+}

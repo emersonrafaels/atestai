@@ -47,6 +47,19 @@ export interface TicketSummary {
   maintenance_type: string;
   n_photos: number;
   expected: Expected | null;
+  /** tipos de cenário de teste que o gabarito descreve (atest/scenarios.py) */
+  tags?: string[];
+  /** catálogo de cenários (0300…): o que este chamado testa */
+  scenario?: { id: string; title: string; description: string } | null;
+}
+
+/** Tipo de cenário de teste (GET /api/scenarios). */
+export interface ScenarioTag {
+  id: string;
+  group: string;
+  group_label: string;
+  label: string;
+  description: string;
 }
 
 export interface QuoteItem {
@@ -97,6 +110,8 @@ export interface Finding {
   reduces_confidence: boolean;
   phase: number;
   amount_at_issue: number;
+  /** tipo que absorveu este apontamento (régua: `absorbs`): segue como evidência, mas não desconta */
+  absorbed_by?: string;
 }
 
 export interface EvaluatedItem extends QuoteItem {
@@ -315,6 +330,8 @@ export interface RubricInfo {
   discount_by_severity: Record<Finding["severity"], number>;
   bands: { score_min: number; recommendation: Recommendation }[];
   confidence: { medium_with_n_reducers: number; low_with_n_reducers: number };
+  /** tipo de apontamento → tipos da mesma validação que ele absorve (deixam de descontar quando ele aparece) */
+  absorbs?: Record<string, string[]>;
 }
 
 export interface Dataset {
@@ -492,6 +509,36 @@ export interface RunRequest {
   refresh?: boolean;
 }
 
+// Tipos de erro de validação do FastAPI/Pydantic → português (a mensagem original vem em inglês).
+const VALIDATION_PT: Record<string, string> = {
+  missing: "campo obrigatório",
+  extra_forbidden: "campo não reconhecido",
+  float_parsing: "número inválido",
+  int_parsing: "número inteiro inválido",
+  bool_parsing: "valor sim/não inválido",
+  string_type: "texto esperado",
+  string_too_short: "texto curto demais",
+  string_too_long: "texto longo demais",
+  date_parsing: "data inválida",
+  date_from_datetime_parsing: "data inválida",
+  enum: "valor não permitido",
+  literal_error: "valor não permitido",
+  greater_than_equal: "valor abaixo do mínimo",
+  less_than_equal: "valor acima do máximo",
+  json_invalid: "JSON inválido",
+};
+
+/** Lista de erros 422 do FastAPI em uma frase: "campo › subcampo: motivo; ...". */
+function validationMessage(detail: unknown): string {
+  if (!Array.isArray(detail)) return "Dados inválidos";
+  const parts = detail.slice(0, 3).map((d: { loc?: (string | number)[]; type?: string }) => {
+    const loc = (d.loc ?? []).filter((x) => x !== "body" && x !== "query" && x !== "path").join(" › ");
+    const reason = VALIDATION_PT[d.type ?? ""] ?? "valor inválido";
+    return loc ? `${loc}: ${reason}` : reason;
+  });
+  return `Dados inválidos: ${parts.join("; ")}${detail.length > 3 ? `; e mais ${detail.length - 3}` : ""}`;
+}
+
 async function ask<T>(url: string, init?: RequestInit): Promise<T> {
   const json = !(init?.body instanceof FormData);
   const r = await fetch(url, { ...(json ? { headers: { "Content-Type": "application/json" } } : {}), ...init });
@@ -499,7 +546,7 @@ async function ask<T>(url: string, init?: RequestInit): Promise<T> {
     let msg = `${r.status} ${r.statusText}`;
     try {
       const body = await r.json();
-      if (body.detail) msg = typeof body.detail === "string" ? body.detail : JSON.stringify(body.detail);
+      if (body.detail) msg = typeof body.detail === "string" ? body.detail : validationMessage(body.detail);
     } catch {
       /* resposta sem JSON */
     }
@@ -516,6 +563,7 @@ export const api = {
   run: (p: RunRequest) => ask<Run>("/api/runs", { method: "POST", body: JSON.stringify(p) }),
   execution: (id: string, light = false) => ask<Run>(`/api/runs/${id}${light ? "?light=true" : ""}`),
   datasets: () => ask<Dataset[]>("/api/datasets"),
+  scenarios: () => ask<ScenarioTag[]>("/api/scenarios"),
   validation: (id: string) => ask<ValidationReport>(`/api/runs/${id}/validation`),
   validations: () => ask<RunSummary[]>("/api/validations"),
   runs: () => ask<RunSummary[]>("/api/runs"),
@@ -540,6 +588,8 @@ export interface FindingTypeConfig {
   lock: boolean;
   amount_at_issue: "item" | "excess" | "none";
   enabled: boolean;
+  /** tipos da mesma validação que deixam de descontar quando este aparece */
+  absorbs?: string[];
 }
 
 export interface RubricConfig {
@@ -557,6 +607,7 @@ export interface RubricConfig {
   hash_method: string;
   spreadsheet_value_tolerance: number;
   photo_date_tolerance_days: number;
+  relevant_amount_at_issue_pct: number;
   finding_types: Record<string, FindingTypeConfig>;
 }
 
@@ -620,7 +671,7 @@ export interface AdminUser {
 }
 
 /** Revisão da API que este front-end espera (atest/api.py: PANEL_API). */
-export const PANEL_API = 4;
+export const PANEL_API = 5;
 export const serverOutdated = (c: AppSettings | null) => !!c && (c.panel_api ?? 0) < PANEL_API;
 
 const TOKEN_KEY = "atest.admin.token";

@@ -124,10 +124,10 @@
   "checklist_ok": true,
   "missing": [],
   "findings": [
+    "missing_before_photo",
     "out_of_scope_item",
-    "quantity_above_expected",
     "photo_mismatch",
-    "missing_before_photo"
+    "quantity_above_expected"
   ],
   "optional": [],
   "grades": {

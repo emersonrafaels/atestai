@@ -8,13 +8,13 @@
   "branch": {
     "code": "7142",
     "name": "Itaú Ag. Liberdade",
-    "environment": "corridor"
+    "environment": "corredor"
   },
   "supplier": {
     "name": "Fornecedor Gama Instalações Elétricas Ltda.",
     "cnpj": "34.567.890/0001-12"
   },
-  "requested_scope": "Trocar as 5 lâmpadas tubulares queimadas do corridor.",
+  "requested_scope": "Trocar as 5 lâmpadas tubulares queimadas do corredor.",
   "quoted_value": 235.0,
   "dates": {
     "opening": "2026-10-25",
@@ -53,7 +53,7 @@
     {
       "file_name": "IMG_20261030_105651.jpg",
       "content_type": "image/jpeg",
-      "size_bytes": 229050,
+      "size_bytes": 229871,
       "sent_by": "supplier",
       "data_upload": "2026-10-31"
     },

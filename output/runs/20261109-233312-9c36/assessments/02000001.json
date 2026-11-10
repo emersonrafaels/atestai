@@ -1,0 +1,422 @@
+{
+  "ticket_id": "02000001",
+  "workstream": "SETA",
+  "category": "painting",
+  "symptom": "finish_wear",
+  "maintenance_type": "corrective",
+  "moment": "execution",
+  "branch": {
+    "code": "4675",
+    "name": "Itaú Ag. Aclimação",
+    "environment": "backoffice"
+  },
+  "supplier": "Fornecedor Alfa Manutenção Predial Ltda.",
+  "quoted_value": 4991.1,
+  "requested_scope": "Repintura das paredes do backoffice (aprox. 131 m²), cor padrão da agência.",
+  "generated_at": "2026-11-09T23:34:24.344100",
+  "rubric_version": "2026-11-v3",
+  "prompts_version": "2026-11-v4",
+  "config_signature": "223e8169da9f",
+  "phase": 2,
+  "mode": "api",
+  "batch_mode": "sync",
+  "models": {
+    "main": "anthropic:claude-sonnet-5-5",
+    "fast": "anthropic:claude-sonnet-5-5"
+  },
+  "run_id": "20261109-233312-9c36",
+  "record_id": 72,
+  "checklist": {
+    "category": "painting",
+    "maintenance": "corrective",
+    "moment": "execution",
+    "complete": true,
+    "uploaded": 2,
+    "total": 2,
+    "requirements": [
+      {
+        "id": "quote",
+        "description": "Orçamento na planilha Excel padrão",
+        "met": true,
+        "attachments": [
+          "Orcamento_ALF-V0001.xlsx"
+        ]
+      },
+      {
+        "id": "after_photo",
+        "description": "Foto do ambiente depois do serviço",
+        "met": true,
+        "attachments": [
+          "IMG_20261028_092431.jpg"
+        ]
+      }
+    ],
+    "missing": []
+  },
+  "attachments": [
+    {
+      "index": 1,
+      "name": "Orcamento_ALF-V0001.xlsx",
+      "category": "quote_doc",
+      "moment": "undetermined",
+      "readable": true,
+      "short_description": "Orçamento ALF-V0001: 2 itens, R$ 4,991.10"
+    },
+    {
+      "index": 2,
+      "name": "IMG_20261026_083338.jpg",
+      "category": "room_before_photo",
+      "moment": "before",
+      "readable": true,
+      "short_description": "Parede com mofo, manchas e tinta descascando perto do teto"
+    },
+    {
+      "index": 3,
+      "name": "IMG_20261028_092431.jpg",
+      "category": "room_after_photo",
+      "moment": "after",
+      "readable": true,
+      "short_description": "Escritório com parede azul pintada e logo Itaú, mesas e cadeiras"
+    }
+  ],
+  "recommendation": "approve",
+  "recommendation_reason": "Score de 85 ou mais, sem travas",
+  "score": 86,
+  "grades": {
+    "scope": 100,
+    "quote": 100,
+    "photos": 65
+  },
+  "confidence": "high",
+  "confidence_reducers": [],
+  "findings": [
+    {
+      "kind": "missing_after_photo",
+      "validation": "photos",
+      "severity": "high",
+      "discount": 35,
+      "description": "Sem foto do serviço concluído",
+      "evidence": "A foto 3 mostra paredes bem acabadas em um escritório Itaú, mas não comprova o resultado no local do escopo: a parede mofada e descascada da foto 2 não aparece repintada, não dá para vincular os dois ambientes, e a foto não mostra a abrangência de cerca de 131 m² nem a cor padrão da agência. Falta uma foto da mesma parede da foto 2 após o serviço, ou uma panorâmica do backoffice que permita comparar.",
+      "reference": "",
+      "lock": false,
+      "reduces_confidence": false,
+      "phase": 1,
+      "amount_at_issue": 0.0
+    }
+  ],
+  "amount_at_issue": 0.0,
+  "amount_at_issue_pct": 0.0,
+  "scope": {
+    "local": "Itaú Ag. Aclimação (cód. 4675)",
+    "environment": "backoffice",
+    "equipment": "",
+    "requested_services": [
+      "Repintura das paredes do backoffice na cor padrão da agência"
+    ],
+    "mentioned_quantities": [
+      {
+        "description": "Área aproximada de paredes do backoffice a repintar",
+        "quantity": 131.0,
+        "unit": "m²"
+      }
+    ],
+    "acceptance_criteria": [
+      "O orçamento prevê a repintura das paredes do backoffice da Ag. Aclimação",
+      "A área orçada é compatível com aproximadamente 131 m² de paredes",
+      "O orçamento indica uso da cor padrão da agência",
+      "As fotos mostram as paredes do backoffice pintadas, com acabamento uniforme e sem sinais de desgaste",
+      "As fotos permitem identificar o ambiente como o backoffice da agência"
+    ],
+    "expected_evidence": [
+      "Foto(s) das paredes do backoffice repintadas, com acabamento uniforme, sem manchas, descascamento ou falhas",
+      "Foto(s) panorâmica(s) do backoffice que permitam avaliar a abrangência da pintura nas paredes",
+      "Foto(s) que permitam verificar a cor aplicada conforme o padrão da agência"
+    ],
+    "before_evidence_applicable": true,
+    "consistent_with_category_symptom": true,
+    "coherence_note": "",
+    "vague_scope": false,
+    "vague_reason": ""
+  },
+  "items": [
+    {
+      "n": 1,
+      "description": "Pintura látex acrílico em paredes, 2 demãos",
+      "unit": "m²",
+      "quantity": 131.0,
+      "unit_value": 35.0,
+      "total_value": 4585.0,
+      "classification": "compliant",
+      "reason": "Pintura em látex acrílico nas paredes, 2 demãos, é exatamente o serviço pedido de repintura das paredes do backoffice, com 131 m² igual à área informada.",
+      "lpu_code": "PIN-001",
+      "reference_price": 35.0,
+      "expected_quantity_max": 131.0,
+      "amount_at_issue": 0.0,
+      "findings": []
+    },
+    {
+      "n": 2,
+      "description": "Massa corrida para correção de paredes",
+      "unit": "m²",
+      "quantity": 131.0,
+      "unit_value": 3.1,
+      "total_value": 406.1,
+      "classification": "compliant",
+      "reason": "Massa corrida para correção das paredes é preparação de superfície coerente com a repintura de paredes com desgaste, e a quantidade de 131 m² não excede a área a ser pintada.",
+      "lpu_code": "PIN-004",
+      "reference_price": 3.1,
+      "expected_quantity_max": 131.0,
+      "amount_at_issue": 0.0,
+      "findings": []
+    }
+  ],
+  "quote_notes": [
+    "Os dois itens correspondem ao escopo de repintura das paredes do backoffice, com quantidades iguais à área informada (131 m²). Nenhum item duplicado ou fora de escopo. A cor padrão da agência não aparece na descrição dos itens e deve ser confirmada pelas fotos ou por outro documento do chamado. Preços não foram avaliados."
+  ],
+  "photos": [
+    {
+      "file": "IMG_20261026_083338.jpg",
+      "environment": "Ambiente interno, parede de escritório/backoffice com divisória de vidro e painel laranja à direita, impressora ou equipamento na parte inferior",
+      "what_it_shows": "Parede branca com mofo escuro intenso no canto superior esquerdo, tinta descascando em vários pontos, manchas amareladas e escorrimentos de umidade",
+      "moment": "before",
+      "readable": true,
+      "matches_scope": "yes",
+      "reason": "Mostra o problema que motivou o chamado (desgaste, descascamento e mofo na pintura da parede) em ambiente interno compatível com o backoffice. Serve como foto do antes. Não é possível confirmar que é o backoffice da Ag. Aclimação, mas o ambiente é compatível. O arquivo é de 26/10/2026, antes do envio do fornecedor.",
+      "covered_items": [
+        1,
+        2
+      ],
+      "exif_date": "2026-10-26T08:15:00",
+      "reused_from": null,
+      "integrity_signals": []
+    },
+    {
+      "file": "IMG_20261028_092431.jpg",
+      "environment": "Ambiente interno de escritório com mesas, monitores, cadeiras, armário e logotipo Itaú na parede azul; compatível com área administrativa/backoffice",
+      "what_it_shows": "Vista ampla da sala com parede de fundo azul-marinho lisa e uniforme com o logotipo Itaú, e parede lateral branca lisa e sem manchas aparentes. Sem mofo, descascamento ou falhas visíveis",
+      "moment": "after",
+      "readable": true,
+      "matches_scope": "partial",
+      "reason": "Mostra paredes com acabamento uniforme, sem desgaste visível, em ambiente de escritório da marca. Porém, não dá para confirmar que é o mesmo local da foto 2 (a parede mofada não aparece), nem a abrangência da pintura em toda a área de 131 m². Não permite verificar a cor padrão da agência nem a massa corrida. A parede azul com logotipo parece parte do projeto de identidade visual original, não necessariamente repintura. É uma evidência parcial do resultado.",
+      "covered_items": [
+        1
+      ],
+      "exif_date": "2026-10-28T09:15:00",
+      "reused_from": null,
+      "integrity_signals": []
+    }
+  ],
+  "photo_summary": {
+    "has_before_photo": true,
+    "has_done_service_photo": false,
+    "done_justification": "A foto 3 mostra paredes bem acabadas em um escritório Itaú, mas não comprova o resultado no local do escopo: a parede mofada e descascada da foto 2 não aparece repintada, não dá para vincular os dois ambientes, e a foto não mostra a abrangência de cerca de 131 m² nem a cor padrão da agência. Falta uma foto da mesma parede da foto 2 após o serviço, ou uma panorâmica do backoffice que permita comparar.",
+    "items_without_photo": [
+      2
+    ],
+    "notes": "Foram enviadas só 2 fotos, e o anexo 1 não consta. Não há foto da massa corrida (item 2); como etapa intermediária, ela só poderia ser evidenciada por foto durante o serviço, e a foto 2 mostra apenas o estado anterior, sem a correção. Mofo extenso indica possível causa de umidade, e a repintura sem tratar a causa pode não durar. Recomenda-se pedir foto do mesmo ângulo da foto 2 após a repintura e uma panorâmica do backoffice."
+  },
+  "summary": "Aprovar. Score de 85 ou mais, sem travas. 1 apontamento(s): sem foto do serviço concluído (A foto 3 mostra paredes bem acabadas em um escritório Itaú, mas não comprova o resultado no local do escopo: a parede mofada e descascada da foto 2 não aparece repintada, não dá para vincular os dois ambientes, e a foto não mostra a abrangência de cerca de 131 m² nem a cor padrão da agência. Falta uma foto da mesma parede da foto 2 após o serviço, ou uma panorâmica do backoffice que permita comparar.).",
+  "supplier_message": "",
+  "llm_calls": [
+    {
+      "task": "identify_attachments",
+      "provider": "anthropic",
+      "model": "anthropic:claude-sonnet-5-5",
+      "resolved_model": "claude-sonnet-5-5",
+      "prompt_version": "2026-11-v4",
+      "prompt_hash": "0fc9398acff7",
+      "schema_hash": "8adbed0ff236",
+      "start": "2026-11-09T23:33:25.493339",
+      "duration_s": 0.0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 0,
+      "cost_usd": 0.0,
+      "from_cache": true,
+      "simulated": false,
+      "via_batch": false,
+      "batch_id": null,
+      "response": {
+        "attachments": [
+          {
+            "index": 2,
+            "category": "room_before_photo",
+            "moment": "before",
+            "readable": true,
+            "short_description": "Parede com mofo, manchas e tinta descascando perto do teto"
+          },
+          {
+            "index": 3,
+            "category": "room_after_photo",
+            "moment": "after",
+            "readable": true,
+            "short_description": "Escritório com parede azul pintada e logo Itaú, mesas e cadeiras"
+          }
+        ]
+      }
+    },
+    {
+      "task": "scope",
+      "provider": "anthropic",
+      "model": "anthropic:claude-sonnet-5-5",
+      "resolved_model": "claude-sonnet-5-5",
+      "prompt_version": "2026-11-v4",
+      "prompt_hash": "5de9d7f21ed2",
+      "schema_hash": "def08ad3c954",
+      "start": "2026-11-09T23:33:25.587637",
+      "duration_s": 0.0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 0,
+      "cost_usd": 0.0,
+      "from_cache": true,
+      "simulated": false,
+      "via_batch": false,
+      "batch_id": null,
+      "response": {
+        "local": "Itaú Ag. Aclimação (cód. 4675)",
+        "environment": "backoffice",
+        "equipment": "",
+        "requested_services": [
+          "Repintura das paredes do backoffice na cor padrão da agência"
+        ],
+        "mentioned_quantities": [
+          {
+            "description": "Área aproximada de paredes do backoffice a repintar",
+            "quantity": 131.0,
+            "unit": "m²"
+          }
+        ],
+        "acceptance_criteria": [
+          "O orçamento prevê a repintura das paredes do backoffice da Ag. Aclimação",
+          "A área orçada é compatível com aproximadamente 131 m² de paredes",
+          "O orçamento indica uso da cor padrão da agência",
+          "As fotos mostram as paredes do backoffice pintadas, com acabamento uniforme e sem sinais de desgaste",
+          "As fotos permitem identificar o ambiente como o backoffice da agência"
+        ],
+        "expected_evidence": [
+          "Foto(s) das paredes do backoffice repintadas, com acabamento uniforme, sem manchas, descascamento ou falhas",
+          "Foto(s) panorâmica(s) do backoffice que permitam avaliar a abrangência da pintura nas paredes",
+          "Foto(s) que permitam verificar a cor aplicada conforme o padrão da agência"
+        ],
+        "before_evidence_applicable": true,
+        "consistent_with_category_symptom": true,
+        "coherence_note": "",
+        "vague_scope": false,
+        "vague_reason": ""
+      }
+    },
+    {
+      "task": "quote_review",
+      "provider": "anthropic",
+      "model": "anthropic:claude-sonnet-5-5",
+      "resolved_model": "claude-sonnet-5-5",
+      "prompt_version": "2026-11-v4",
+      "prompt_hash": "6e7abbc0f6b5",
+      "schema_hash": "2512ea23c87d",
+      "start": "2026-11-09T23:33:25.809172",
+      "duration_s": 0.0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 0,
+      "cost_usd": 0.0,
+      "from_cache": true,
+      "simulated": false,
+      "via_batch": false,
+      "batch_id": null,
+      "response": {
+        "items": [
+          {
+            "n": 1,
+            "classification": "compliant",
+            "reason": "Pintura em látex acrílico nas paredes, 2 demãos, é exatamente o serviço pedido de repintura das paredes do backoffice, com 131 m² igual à área informada.",
+            "expected_quantity_max": 131.0,
+            "plausible_quantity": true,
+            "duplicate_of": 0,
+            "lpu_code": "PIN-001"
+          },
+          {
+            "n": 2,
+            "classification": "compliant",
+            "reason": "Massa corrida para correção das paredes é preparação de superfície coerente com a repintura de paredes com desgaste, e a quantidade de 131 m² não excede a área a ser pintada.",
+            "expected_quantity_max": 131.0,
+            "plausible_quantity": true,
+            "duplicate_of": 0,
+            "lpu_code": "PIN-004"
+          }
+        ],
+        "notes": "Os dois itens correspondem ao escopo de repintura das paredes do backoffice, com quantidades iguais à área informada (131 m²). Nenhum item duplicado ou fora de escopo. A cor padrão da agência não aparece na descrição dos itens e deve ser confirmada pelas fotos ou por outro documento do chamado. Preços não foram avaliados."
+      }
+    },
+    {
+      "task": "photos",
+      "provider": "anthropic",
+      "model": "anthropic:claude-sonnet-5-5",
+      "resolved_model": "claude-sonnet-5-5",
+      "prompt_version": "2026-11-v4",
+      "prompt_hash": "7b25d2cff792",
+      "schema_hash": "e5e769f9df84",
+      "start": "2026-11-09T23:33:26.127011",
+      "duration_s": 0.0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 0,
+      "cost_usd": 0.0,
+      "from_cache": true,
+      "simulated": false,
+      "via_batch": false,
+      "batch_id": null,
+      "response": {
+        "photos": [
+          {
+            "index": 2,
+            "environment": "Ambiente interno, parede de escritório/backoffice com divisória de vidro e painel laranja à direita, impressora ou equipamento na parte inferior",
+            "what_it_shows": "Parede branca com mofo escuro intenso no canto superior esquerdo, tinta descascando em vários pontos, manchas amareladas e escorrimentos de umidade",
+            "moment": "before",
+            "readable": true,
+            "matches_scope": "yes",
+            "reason": "Mostra o problema que motivou o chamado (desgaste, descascamento e mofo na pintura da parede) em ambiente interno compatível com o backoffice. Serve como foto do antes. Não é possível confirmar que é o backoffice da Ag. Aclimação, mas o ambiente é compatível. O arquivo é de 26/10/2026, antes do envio do fornecedor.",
+            "covered_items": [
+              1,
+              2
+            ]
+          },
+          {
+            "index": 3,
+            "environment": "Ambiente interno de escritório com mesas, monitores, cadeiras, armário e logotipo Itaú na parede azul; compatível com área administrativa/backoffice",
+            "what_it_shows": "Vista ampla da sala com parede de fundo azul-marinho lisa e uniforme com o logotipo Itaú, e parede lateral branca lisa e sem manchas aparentes. Sem mofo, descascamento ou falhas visíveis",
+            "moment": "after",
+            "readable": true,
+            "matches_scope": "partial",
+            "reason": "Mostra paredes com acabamento uniforme, sem desgaste visível, em ambiente de escritório da marca. Porém, não dá para confirmar que é o mesmo local da foto 2 (a parede mofada não aparece), nem a abrangência da pintura em toda a área de 131 m². Não permite verificar a cor padrão da agência nem a massa corrida. A parede azul com logotipo parece parte do projeto de identidade visual original, não necessariamente repintura. É uma evidência parcial do resultado.",
+            "covered_items": [
+              1
+            ]
+          }
+        ],
+        "has_before_photo": true,
+        "has_done_service_photo": false,
+        "done_justification": "A foto 3 mostra paredes bem acabadas em um escritório Itaú, mas não comprova o resultado no local do escopo: a parede mofada e descascada da foto 2 não aparece repintada, não dá para vincular os dois ambientes, e a foto não mostra a abrangência de cerca de 131 m² nem a cor padrão da agência. Falta uma foto da mesma parede da foto 2 após o serviço, ou uma panorâmica do backoffice que permita comparar.",
+        "items_without_photo": [
+          2
+        ],
+        "notes": "Foram enviadas só 2 fotos, e o anexo 1 não consta. Não há foto da massa corrida (item 2); como etapa intermediária, ela só poderia ser evidenciada por foto durante o serviço, e a foto 2 mostra apenas o estado anterior, sem a correção. Mofo extenso indica possível causa de umidade, e a repintura sem tratar a causa pode não durar. Recomenda-se pedir foto do mesmo ângulo da foto 2 após a repintura e uma panorâmica do backoffice."
+      }
+    }
+  ],
+  "duration_s": 68.2,
+  "stage_durations_s": {
+    "checklist": 9.359,
+    "scope": 0.049,
+    "quote": 0.244,
+    "photos": 7.829,
+    "score": 0.013,
+    "assessment": 50.648
+  },
+  "cost_usd": 0.0,
+  "cost_brl": 0.0
+}

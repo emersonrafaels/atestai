@@ -8,13 +8,13 @@
   "branch": {
     "code": "0102",
     "name": "Ag. Barra Funda",
-    "environment": "treasury"
+    "environment": "tesouraria"
   },
   "supplier": {
     "name": "Fornecedor Zeta Serralheria e Portas ME",
     "cnpj": "67.890.123/0001-45"
   },
-  "requested_scope": "Porta do treasury não fecha sozinha: trocar a mola aérea e regular.",
+  "requested_scope": "Porta da tesouraria não fecha sozinha: trocar a mola aérea e regular.",
   "quoted_value": 700.1,
   "dates": {
     "opening": "2026-11-09",
@@ -32,28 +32,28 @@
     {
       "file_name": "Orcamento_ZET-V0077.xlsx",
       "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      "size_bytes": 7632,
+      "size_bytes": 7614,
       "sent_by": "supplier",
       "data_upload": "2026-11-11"
     },
     {
       "file_name": "IMG_20261110_084038.jpg",
       "content_type": "image/jpeg",
-      "size_bytes": 188289,
+      "size_bytes": 188272,
       "sent_by": "supplier",
       "data_upload": "2026-11-11"
     },
     {
       "file_name": "IMG_20261110_092618.jpg",
       "content_type": "image/jpeg",
-      "size_bytes": 162046,
+      "size_bytes": 161937,
       "sent_by": "supplier",
       "data_upload": "2026-11-11"
     },
     {
       "file_name": "IMG_20261111_185100.jpg",
       "content_type": "image/jpeg",
-      "size_bytes": 205016,
+      "size_bytes": 204976,
       "sent_by": "supplier",
       "data_upload": "2026-11-11"
     }

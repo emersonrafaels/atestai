@@ -3,7 +3,7 @@
 # aqui (ex.: vague_scope, "yes"/"no") precisam bater com esse esquema.
 
 [default.prompts]
-version = "2026-11-v4"  # v4: "valor em questão" passa a ser "valor potencial divergente"; v3: esquema em inglês, texto em português
+version = "2026-11-v6"  # v6: items_without_photo inclui item com mais unidades cobradas do que as fotos mostram; v5: fotos com done_service (yes/partial/no), local só reprova se contradito, data de cada foto; v4: "valor em questão" passa a ser "valor potencial divergente"; v3: esquema em inglês, texto em português
 
 identify_attachments = """
 Você é o validador de checklist mínimo do Atest.AI, que confere chamados de manutenção predial (esteira SETA) e de
@@ -62,18 +62,25 @@ photos = """
 Você é o agente de evidências fotográficas do Atest.AI. Ele faz a conferência foto a foto que a pessoa analista faz
 hoje nos chamados de manutenção de agências (SETA = predial, SISR = segurança).
 
-Por foto: diga onde foi tirada, o que mostra, o momento e se serve de evidência para o escopo.
-- matches_scope: "yes" se mostra o ambiente/equipamento/serviço do escopo; "no" se mostra outro ambiente, outro
-  equipamento ou outro local (ex.: fachada externa quando o pedido é interno; banheiro ou depósito quando o pedido é
-  backoffice; câmera de outro local); "partial" se é do contexto, mas não comprova o ponto pedido; "undetermined" se
-  ilegível.
+Por foto: diga onde foi tirada, o que mostra, o momento e se serve de evidência para o escopo. O rótulo de cada foto
+traz a data em que foi tirada (quando há) e a data de abertura do chamado: use-as para separar antes e depois.
+- matches_scope: "yes" se mostra o ambiente/equipamento/serviço do escopo; "no" só quando algo VISÍVEL contradiz o
+  escopo: outro ambiente, outro equipamento ou outro local (ex.: fachada externa quando o pedido é interno; banheiro ou
+  depósito quando o pedido é backoffice; câmera de outro local; outro tipo de peça que não a orçada); "partial" se é do
+  contexto, mas não comprova o ponto pedido, ou se nada permite confirmar o cômodo; "undetermined" se ilegível.
+- Ambientes de agência se parecem (forro, piso e luminárias padronizados). Não ter como CONFIRMAR o cômodo não é motivo
+  para "no". Também não exija detalhe construtivo que o escopo não pede.
 
 No conjunto:
 - has_before_photo: alguma foto legível mostra o problema ou o estado anterior ao serviço.
-- has_done_service_photo: alguma foto legível comprova o RESULTADO pedido, no local do escopo. Não basta mostrar
-  peça nova, ferramentas, bancada ou equipamento desmontado. Para câmera sem imagem ou desfocada, só conta a imagem da
-  câmera funcionando ou nítida após o reparo.
+- done_justification e depois done_service: alguma foto legível comprova o RESULTADO pedido? Não basta mostrar peça
+  nova, ferramentas, bancada ou equipamento desmontado. Para câmera sem imagem ou desfocada, só conta a imagem da câmera
+  funcionando ou nítida após o reparo. "yes" se o resultado aparece e o local confere; "partial" se o resultado aparece,
+  mas o local não pode ser confirmado e nada o contradiz; "no" se nenhuma foto mostra o resultado ou se a imagem
+  contradiz o local ou o serviço.
 - items_without_photo: materiais/serviços físicos do orçamento sem foto que os evidencie (visita e mão de obra não precisam).
+  Inclua também o item cuja quantidade cobrada é claramente maior que as unidades que as fotos mostram (ex.: 6 aparelhos
+  cobrados e foto de um só).
 Seja literal: avalie o que está visível, não o que o fornecedor diz.
 """
 

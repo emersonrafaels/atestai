@@ -1,0 +1,54 @@
+{
+  "ticket_id": "02000040",
+  "workstream": "SISR",
+  "maintenance_type": "corrective",
+  "moment": "quote",
+  "category": "cctv",
+  "symptom": "degraded_image",
+  "branch": {
+    "code": "4675",
+    "name": "Itaú Ag. Aclimação",
+    "environment": "autoatendimento"
+  },
+  "supplier": {
+    "name": "Fornecedor Beta Sistemas de Segurança Ltda.",
+    "cnpj": "23.456.789/0001-01"
+  },
+  "requested_scope": "Câmera do autoatendimento com imagem desfocada: limpeza e ajuste de foco.",
+  "quoted_value": 2857.94,
+  "dates": {
+    "opening": "2026-11-07",
+    "supplier_submission": "2026-11-11",
+    "manager_review": "2026-11-12"
+  },
+  "status": "forwarded_to_backoffice",
+  "origin": "dataset",
+  "dataset": "itau",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "attachments": [
+    {
+      "file_name": "Orcamento_BET-V0040.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 7649,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-11"
+    },
+    {
+      "file_name": "IMG_20261108_081823.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 170190,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-11"
+    },
+    {
+      "file_name": "IMG_20261111_175100.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 142072,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-11"
+    }
+  ]
+}

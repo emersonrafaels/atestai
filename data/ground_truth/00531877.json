@@ -89,9 +89,9 @@
   "checklist_ok": true,
   "missing": [],
   "findings": [
-    "quantity_above_expected",
+    "missing_before_photo",
     "price_above_reference",
-    "missing_before_photo"
+    "quantity_above_expected"
   ],
   "optional": [],
   "grades": {

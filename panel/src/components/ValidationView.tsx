@@ -1,7 +1,7 @@
 import { CircleCheck, CircleX, FlaskConical, Loader2, Play, Search, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api, type AppSettings, type Dataset, type Recommendation, type Run, type RunSummary, type ValidationReport } from "../api";
-import { brl, brl4, pct, REC, FINDING_LABELS } from "../format";
+import { brl, brl4, pct, REC, findingLabel } from "../format";
 import { InfoTip, Tooltip } from "./ui/Tooltip";
 import { InfoBox } from "./ui/InfoBox";
 import { ProviderPicker, findChoice, initialProvider } from "./ui/ProviderPicker";
@@ -381,7 +381,7 @@ function Report({ r, execution, config, openCase, prev }: { r: ValidationReport;
           <div className="mb-2 flex flex-wrap items-center gap-2 text-sm">
             <span className="text-muted">Filtro:</span>
             <span className="flex items-center gap-1.5 rounded-full bg-blueprint-soft py-0.5 pl-3 pr-1 text-blueprint">
-              {pair ? <>Gabarito {REC[pair[0]].short} → Atest.AI {REC[pair[1]].short}</> : <>{FINDING_LABELS[kind!] ?? kind} faltou ou sobrou</>}
+              {pair ? <>Gabarito {REC[pair[0]].short} → Atest.AI {REC[pair[1]].short}</> : <>{findingLabel(kind!)} faltou ou sobrou</>}
               <button onClick={() => { setPair(null); setKind(null); }} aria-label="Limpar filtro" className="rounded-full p-0.5 hover:bg-blueprint/10"><X size={13} /></button>
             </span>
           </div>
@@ -396,8 +396,8 @@ function Report({ r, execution, config, openCase, prev }: { r: ValidationReport;
                   <span className="flex items-center gap-1.5"><Point r={d.expected} />{REC[d.expected].short} → <Point r={d.obtained} />{REC[d.obtained].short}
                     <span className="text-muted tabular-nums">({d.expected_score ?? "—"} → {d.obtained_score ?? "—"})</span></span>
                   <span className="col-span-2 flex flex-wrap gap-1 text-[12px] md:col-span-1">
-                    {d.missed.map((t) => <span key={`m${t}`} className="rounded bg-[#f8e4e2] px-1.5 text-bad">faltou: {FINDING_LABELS[t] ?? t}</span>)}
-                    {d.extra.map((t) => <span key={`e${t}`} className="rounded bg-[#fdf1dc] px-1.5 text-warn">a mais: {FINDING_LABELS[t] ?? t}</span>)}
+                    {d.missed.map((t) => <span key={`m${t}`} className="rounded bg-[#f8e4e2] px-1.5 text-bad">faltou: {findingLabel(t)}</span>)}
+                    {d.extra.map((t) => <span key={`e${t}`} className="rounded bg-[#fdf1dc] px-1.5 text-warn">a mais: {findingLabel(t)}</span>)}
                   </span>
                 </button>
               </li>
@@ -589,7 +589,7 @@ function FindingsTable({ r, selected, onPick }: { r: ValidationReport; selected:
               <tr key={a.kind} onClick={clickable ? () => onPick(a.kind) : undefined}
                 className={`border-t border-line/60 ${clickable ? "cursor-pointer hover:bg-paper/60" : ""} ${selected === a.kind ? "bg-blueprint-soft" : ""}`}>
                 <td className="py-1.5 pr-2">
-                  {FINDING_LABELS[a.kind] ?? a.kind}
+                  {findingLabel(a.kind)}
                   {worst === a && <span className="ml-1.5 rounded bg-[#f8e4e2] px-1 text-[10px] font-semibold uppercase text-bad">pior</span>}
                 </td>
                 <td className="py-1.5 text-right tabular-nums">{a.support}</td>

@@ -88,16 +88,17 @@
   "missing": [],
   "findings": [
     "missing_after_photo",
+    "relevant_amount_at_issue",
     "spreadsheet_mismatch",
     "unjustified_replacement"
   ],
   "optional": [],
   "grades": {
     "scope": 100,
-    "quote": 50,
+    "quote": 35,
     "photos": 65
   },
-  "score": 66,
+  "score": 60,
   "recommendation": "return_to_supplier",
   "confidence": "high"
 }

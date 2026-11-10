@@ -116,15 +116,16 @@
   "missing": [],
   "findings": [
     "out_of_scope_item",
+    "relevant_amount_at_issue",
     "reused_photo"
   ],
   "optional": [],
   "grades": {
     "scope": 100,
-    "quote": 65,
+    "quote": 50,
     "photos": 40
   },
-  "score": 62,
+  "score": 56,
   "recommendation": "return_locked",
   "confidence": "high"
 }

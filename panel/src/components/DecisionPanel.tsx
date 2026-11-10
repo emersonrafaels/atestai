@@ -1,7 +1,7 @@
 import { ArrowRight, Check, CheckCircle2, ChevronRight, History, Lightbulb, Loader2, MessageSquareWarning, PencilLine, ShieldAlert, Sparkles, ThumbsUp, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { api, type Assessment, type Feedback, type FeedbackAction, type Recommendation, type RubricInfo } from "../api";
-import { REC, FINDING_LABELS, CONFIDENCE_LABEL, brl, pts } from "../format";
+import { REC, findingLabel, authorLabel, CONFIDENCE_LABEL, brl, pts } from "../format";
 import { REASONS_BY_DECISION, REASONS_BY_KIND, simulate } from "../evidence";
 import { BandScale } from "./ScoreBreakdown";
 import { StepTitle } from "./ui/StepTitle";
@@ -114,8 +114,8 @@ export function DecisionPanel({ p, n, rubric, unfounded, toggleUnfounded, focusF
                 <div className="font-semibold">
                   {justSaved ? "Decisão registrada. " : ""}{ACTION[last.action].label}: <span style={{ color: REC[last.final_decision ?? last.atest_recommendation].color }}>{REC[last.final_decision ?? last.atest_recommendation].label}</span>
                 </div>
-                <div className="text-muted">por {last.author} em {new Date(last.created_at).toLocaleString("pt-BR")}</div>
-                {last.unfounded_findings.length > 0 && <div className="mt-1">Não procedem: {last.unfounded_findings.map((t) => FINDING_LABELS[t] ?? t).join(", ")}</div>}
+                <div className="text-muted">por {authorLabel(last.author)} em {new Date(last.created_at).toLocaleString("pt-BR")}</div>
+                {last.unfounded_findings.length > 0 && <div className="mt-1">Não procedem: {last.unfounded_findings.map((t) => findingLabel(t)).join(", ")}</div>}
                 {last.comment && <div className="mt-1 italic text-ink/80">“{last.comment}”</div>}
               </div>
             </div>
@@ -152,8 +152,8 @@ export function DecisionPanel({ p, n, rubric, unfounded, toggleUnfounded, focusF
                 <div className="flex flex-wrap gap-1.5">
                   {[...unfounded].map((k) => (
                     <span key={k} className="flex items-center gap-1 rounded-full border border-bad/40 bg-[#fbefed] py-0.5 pl-2.5 pr-1 text-[13px] text-bad">
-                      <span className="line-through decoration-bad/50">{FINDING_LABELS[k] ?? k}</span>
-                      <button onClick={() => toggleUnfounded(k)} aria-label={`Desfazer: ${FINDING_LABELS[k] ?? k}`} className="rounded-full p-0.5 hover:bg-bad/10"><X size={13} /></button>
+                      <span className="line-through decoration-bad/50">{findingLabel(k)}</span>
+                      <button onClick={() => toggleUnfounded(k)} aria-label={`Desfazer: ${findingLabel(k)}`} className="rounded-full p-0.5 hover:bg-bad/10"><X size={13} /></button>
                     </span>
                   ))}
                 </div>
@@ -273,8 +273,8 @@ export function DecisionPanel({ p, n, rubric, unfounded, toggleUnfounded, focusF
           <ol className="mt-2 space-y-2 border-l-2 border-line pl-4">
             {[...history].reverse().map((h) => (
               <li key={h.id}>
-                <div><b>{ACTION[h.action].label}</b> · {REC[h.final_decision ?? h.atest_recommendation].label} <span className="text-muted">· {h.author}, {new Date(h.created_at).toLocaleString("pt-BR")}</span></div>
-                {h.unfounded_findings.length > 0 && <div className="text-muted">Não procedem: {h.unfounded_findings.map((t) => FINDING_LABELS[t] ?? t).join(", ")}</div>}
+                <div><b>{ACTION[h.action].label}</b> · {REC[h.final_decision ?? h.atest_recommendation].label} <span className="text-muted">· {authorLabel(h.author)}, {new Date(h.created_at).toLocaleString("pt-BR")}</span></div>
+                {h.unfounded_findings.length > 0 && <div className="text-muted">Não procedem: {h.unfounded_findings.map((t) => findingLabel(t)).join(", ")}</div>}
                 {h.comment && <div className="italic text-muted">“{h.comment}”</div>}
               </li>
             ))}
@@ -294,7 +294,7 @@ function buildAttention(p: Assessment, rubric: RubricInfo): { text: React.ReactN
   if (lock !== undefined) out.push({ text: <><b>Trava de integridade</b> ({p.findings[lock].description.toLowerCase()}): compare as fotos antes de confirmar.</>, finding: lock });
 
   if (p.confidence && p.confidence !== "high") {
-    out.push({ text: <>Confiança <b>{CONFIDENCE_LABEL[p.confidence]}</b>: {p.confidence_reducers.map((r) => FINDING_LABELS[r] ?? r).join(", ").toLowerCase()}.</>, finding: idx((f) => f.reduces_confidence) });
+    out.push({ text: <>Confiança <b>{CONFIDENCE_LABEL[p.confidence]}</b>: {p.confidence_reducers.map((r) => findingLabel(r)).join(", ").toLowerCase()}.</>, finding: idx((f) => f.reduces_confidence) });
   }
 
   // apontamentos decisivos: tirar só este tipo muda a recomendação
@@ -305,7 +305,7 @@ function buildAttention(p: Assessment, rubric: RubricInfo): { text: React.ReactN
     .slice(0, 3);
   for (const d of decisive) {
     out.push({
-      text: <>Apontamento decisivo: se <b>{FINDING_LABELS[d.k] ?? d.k}</b> não proceder, a régua vai a <b>{d.s!.score}</b> e a recomendação muda para <b style={{ color: REC[d.s!.recommendation].color }}>{REC[d.s!.recommendation].label}</b>.</>,
+      text: <>Apontamento decisivo: se <b>{findingLabel(d.k)}</b> não proceder, a régua vai a <b>{d.s!.score}</b> e a recomendação muda para <b style={{ color: REC[d.s!.recommendation].color }}>{REC[d.s!.recommendation].label}</b>.</>,
       finding: idx((f) => f.kind === d.k),
     });
   }

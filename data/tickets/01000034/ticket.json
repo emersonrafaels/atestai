@@ -14,7 +14,7 @@
     "name": "Fornecedor Épsilon Climatização Ltda.",
     "cnpj": "56.789.012/0001-34"
   },
-  "requested_scope": "Verificar backoffice. Urgente.",
+  "requested_scope": "Verificar o backoffice. Urgente.",
   "quoted_value": 855.0,
   "dates": {
     "opening": "2026-10-26",
@@ -32,21 +32,21 @@
     {
       "file_name": "Orcamento_EPS-V0034.xlsx",
       "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      "size_bytes": 7643,
+      "size_bytes": 7626,
       "sent_by": "supplier",
       "data_upload": "2026-11-01"
     },
     {
       "file_name": "IMG_20261027_085511.jpg",
       "content_type": "image/jpeg",
-      "size_bytes": 191463,
+      "size_bytes": 190872,
       "sent_by": "supplier",
       "data_upload": "2026-11-01"
     },
     {
       "file_name": "IMG_20261031_095913.jpg",
       "content_type": "image/jpeg",
-      "size_bytes": 208362,
+      "size_bytes": 208276,
       "sent_by": "supplier",
       "data_upload": "2026-11-01"
     },

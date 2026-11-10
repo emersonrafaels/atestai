@@ -108,15 +108,16 @@
   "missing": [],
   "findings": [
     "out_of_scope_item",
-    "photo_mismatch"
+    "photo_mismatch",
+    "relevant_amount_at_issue"
   ],
   "optional": [],
   "grades": {
     "scope": 100,
-    "quote": 65,
+    "quote": 50,
     "photos": 65
   },
-  "score": 72,
-  "recommendation": "approve_with_caveats",
+  "score": 66,
+  "recommendation": "return_to_supplier",
   "confidence": "high"
 }

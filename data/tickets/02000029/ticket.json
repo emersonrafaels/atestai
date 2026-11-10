@@ -1,0 +1,47 @@
+{
+  "ticket_id": "02000029",
+  "workstream": "SETA",
+  "maintenance_type": "corrective",
+  "moment": "quote",
+  "category": "waterproofing",
+  "symptom": "moisture_infiltration",
+  "branch": {
+    "code": "7142",
+    "name": "Itaú Ag. Liberdade",
+    "environment": "backoffice"
+  },
+  "supplier": {
+    "name": "Fornecedor Delta Impermeabilizações Ltda.",
+    "cnpj": "45.678.901/0001-23"
+  },
+  "requested_scope": "Infiltração no forro do backoffice: tratar a origem e recompor o forro de gesso (aprox. 5 m²).",
+  "quoted_value": 1465.0,
+  "dates": {
+    "opening": "2026-11-03",
+    "supplier_submission": "2026-11-07",
+    "manager_review": "2026-11-08"
+  },
+  "status": "forwarded_to_backoffice",
+  "origin": "dataset",
+  "dataset": "itau",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "attachments": [
+    {
+      "file_name": "Orcamento_DEL-V0029.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 7694,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-07"
+    },
+    {
+      "file_name": "IMG_20261104_082512.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 139720,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-07"
+    }
+  ]
+}

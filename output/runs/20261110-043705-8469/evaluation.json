@@ -1,0 +1,41 @@
+{
+  "n": 1,
+  "exact_recommendation": 0,
+  "direction": 0,
+  "checklist": 1,
+  "avg_score_error": 12.0,
+  "by_kind": {
+    "after_photo_unconfirmed_location": {
+      "tp": 0,
+      "fp": 1,
+      "fn": 0
+    },
+    "quantity_above_expected": {
+      "tp": 0,
+      "fp": 1,
+      "fn": 0
+    },
+    "vague_scope": {
+      "tp": 1,
+      "fp": 0,
+      "fn": 0
+    }
+  },
+  "by_ticket": [
+    {
+      "ticket_id": "03000004",
+      "expected": "approve",
+      "obtained": "detailed_review",
+      "expected_score": 97,
+      "obtained_score": 85,
+      "recommendation_ok": false,
+      "direction_ok": false,
+      "checklist_ok": true,
+      "missed": [],
+      "extra": [
+        "after_photo_unconfirmed_location",
+        "quantity_above_expected"
+      ]
+    }
+  ]
+}

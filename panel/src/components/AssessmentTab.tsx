@@ -1,7 +1,7 @@
 import { ArrowDown, Check, ChevronDown, Copy, Lock, MapPin, ShieldAlert, ThumbsDown, Undo2, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Assessment, RubricInfo, TicketDetail } from "../api";
-import { brl, brl4, REC, SEVERITY, FINDING_LABELS, CONFIDENCE_LABEL, VALIDATIONS, VALIDATION_LABEL, VALIDATION_SHORT, explainFindings, pts, STAGE_LABEL, MAINTENANCE_LABEL } from "../format";
+import { brl, brl4, REC, SEVERITY, findingLabel, CONFIDENCE_LABEL, VALIDATIONS, VALIDATION_LABEL, VALIDATION_SHORT, explainFindings, GLOSSARY, pts, STAGE_LABEL, MAINTENANCE_LABEL } from "../format";
 import { locate } from "../evidence";
 import { ScoreGauge } from "./ScoreBadge";
 import { DecisionPanel } from "./DecisionPanel";
@@ -121,7 +121,7 @@ export function AssessmentTab({ p, rubric, ticket, openPhoto, goTo, openTicket }
                 <Fact label="Score" help={<InfoTip term="score" />}><b className="tabular-nums">{p.score}</b><span className="text-muted">/100</span></Fact>
               )}
               {p.confidence && (
-                <Fact label="Confiança" help={<InfoTip term="confidence" text={p.confidence_reducers.length ? `Redutores neste chamado: ${p.confidence_reducers.map((r) => FINDING_LABELS[r] ?? r).join(", ")}.` : "Nenhum redutor neste chamado."} />}>
+                <Fact label="Confiança" help={<InfoTip term="confidence" text={p.confidence_reducers.length ? `Redutores neste chamado: ${p.confidence_reducers.map((r) => findingLabel(r)).join(", ")}.` : "Nenhum redutor neste chamado."} />}>
                   <b className={p.confidence === "high" ? "text-ok" : p.confidence === "medium" ? "text-warn" : "text-bad"}>{CONFIDENCE_LABEL[p.confidence] ?? p.confidence}</b>
                 </Fact>
               )}
@@ -275,6 +275,16 @@ function Fact({ label, help, children }: { label: string; help?: React.ReactNode
 
 /** Quanto o apontamento pesou: pontos no score (destaque) e na nota da validação. */
 function Impact({ f, imp, weight, off }: { f: Assessment["findings"][number]; imp: ReturnType<typeof explainFindings>[number]; weight: number; off: boolean }) {
+  if (imp.absorbedBy) {
+    return (
+      <Tooltip className="flex" content={<>{GLOSSARY.absorbed.text}<br />Aqui: absorvido por <b>{findingLabel(imp.absorbedBy)}</b>.</>}>
+        <div className="flex w-full cursor-help flex-col justify-center rounded-md bg-paper px-3 py-2 text-[12px] text-muted sm:text-right">
+          <span className="font-semibold text-ink">0 pontos</span>
+          <span>absorvido por {findingLabel(imp.absorbedBy)}</span>
+        </div>
+      </Tooltip>
+    );
+  }
   if (imp.repeated) {
     return (
       <Tooltip className="flex" content="Este tipo de apontamento já descontou nesta validação. Ele continua listado como evidência, mas não desconta de novo.">

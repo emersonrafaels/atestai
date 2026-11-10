@@ -1,0 +1,151 @@
+{
+  "ticket_id": "03000013",
+  "dataset": "scenarios",
+  "service_template": "hvac",
+  "defects": [
+    "out_of_scope",
+    "price",
+    "quantity",
+    "duplicate"
+  ],
+  "workstream": "SETA",
+  "moment": "execution",
+  "maintenance_type": "preventive",
+  "category": "air_conditioning",
+  "symptom": "preventive_maintenance",
+  "before_applicable": true,
+  "quoted_value": 3479.48,
+  "amount_at_issue": 2708.79,
+  "items": [
+    {
+      "n": 1,
+      "description": "Limpeza preventiva de split (evap. + cond.)",
+      "unit": "un",
+      "quantity": 4,
+      "unit_value": 264.31,
+      "total_value": 1057.24,
+      "classification": "compliant",
+      "lpu_code": "HVAC-001",
+      "reference_price": 180.0,
+      "findings": [
+        "quantity_above_expected",
+        "price_above_reference"
+      ],
+      "optional_findings": [],
+      "expected_quantity_max": 3
+    },
+    {
+      "n": 2,
+      "description": "Higienização com bactericida",
+      "unit": "un",
+      "quantity": 3,
+      "unit_value": 45.0,
+      "total_value": 135.0,
+      "classification": "compliant",
+      "lpu_code": "HVAC-002",
+      "reference_price": 45.0,
+      "findings": [],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    },
+    {
+      "n": 3,
+      "description": "Verificação de pressões",
+      "unit": "un",
+      "quantity": 3,
+      "unit_value": 60.0,
+      "total_value": 180.0,
+      "classification": "compliant",
+      "lpu_code": "HVAC-003",
+      "reference_price": 60.0,
+      "findings": [],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    },
+    {
+      "n": 4,
+      "description": "Pintura de paredes da sala",
+      "unit": "m²",
+      "quantity": 30,
+      "unit_value": 35.0,
+      "total_value": 1050.0,
+      "classification": "out_of_scope",
+      "lpu_code": "PIN-001",
+      "reference_price": 35.0,
+      "findings": [
+        "out_of_scope_item"
+      ],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    },
+    {
+      "n": 5,
+      "description": "Limpeza preventiva de split (evap. + cond.)",
+      "unit": "un",
+      "quantity": 4,
+      "unit_value": 264.31,
+      "total_value": 1057.24,
+      "classification": "compliant",
+      "lpu_code": "HVAC-001",
+      "reference_price": 180.0,
+      "findings": [
+        "duplicate_item"
+      ],
+      "optional_findings": [],
+      "expected_quantity_max": null
+    }
+  ],
+  "attachments": {
+    "Orcamento_EPS-V0013.xlsx": {
+      "category": "quote_doc",
+      "moment": "undetermined",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Orçamento"
+    },
+    "IMG_20261103_081718.jpg": {
+      "category": "equipment_photo",
+      "moment": "before",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Filtro de ar sujo antes da limpeza"
+    },
+    "IMG_20261105_095513.jpg": {
+      "category": "equipment_photo",
+      "moment": "after",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Evaporadora limpa"
+    },
+    "IMG_20261105_103251.jpg": {
+      "category": "equipment_photo",
+      "moment": "after",
+      "matches_scope": true,
+      "readable": true,
+      "description": "Filtro limpo"
+    }
+  },
+  "checklist_ok": true,
+  "missing": [],
+  "findings": [
+    "duplicate_item",
+    "out_of_scope_item",
+    "price_above_reference",
+    "quantity_above_expected",
+    "relevant_amount_at_issue"
+  ],
+  "optional": [],
+  "grades": {
+    "scope": 100,
+    "quote": 0,
+    "photos": 100
+  },
+  "score": 60,
+  "recommendation": "return_to_supplier",
+  "confidence": "high",
+  "scenario": {
+    "id": "quote_multiple",
+    "title": "Orçamento com vários erros",
+    "description": "Fora do escopo, preço acima, quantidade acima e duplicidade no mesmo orçamento."
+  }
+}

@@ -46,8 +46,11 @@ from .domain import (
     Workstream,
 )
 from .evaluation import Evaluation, GroundTruthEvaluator, TicketComparison
+from .formatting import error_message, pt_validation_error
 from .observability import configure_logging, event
 from .repository import QuoteError, References, list_tickets, load_ground_truth, load_ticket, read_quote
+from .scenarios import catalog as scenario_catalog
+from .scenarios import tags_for
 from .spreadsheet import spreadsheet_template
 from .validation import DatasetCatalog
 
@@ -100,6 +103,8 @@ class TicketSummary(BaseModel):
     n_photos: int
     expected: Expected | None
     last: LastAssessment | None
+    tags: list[str] = []  # cenários de teste que o gabarito descreve (atest/scenarios.py)
+    scenario: dict[str, str] | None = None  # catálogo de cenários (0300…): id, título e o que testa
 
 
 class AttachmentInfo(BaseModel):
@@ -260,7 +265,7 @@ class PasswordInput(BaseModel):
 
 
 # Suba quando o painel passar a depender de rotas ou campos novos da API (panel/src/api.ts: PANEL_API).
-PANEL_API = 4
+PANEL_API = 5
 
 
 class ProviderChoice(BaseModel):
@@ -456,7 +461,7 @@ class RunManager:
             with self.lock:
                 for st in ex.tickets.values():
                     if st.status in ("queue", "running"):
-                        st.status, st.error = "error", f"{type(e).__name__}: {e}"
+                        st.status, st.error = "error", error_message(e)
         finally:
             with self.lock:
                 ex.status, ex.completed_at = "completed", datetime.now()
@@ -560,6 +565,8 @@ def create_app(cfg: Settings) -> FastAPI:
             expected=Expected(recommendation=g.recommendation.value, score=g.score, findings=g.findings, optional=g.optional, missing=g.missing)
             if g
             else None,
+            tags=tags_for(g, manager.cfg_base.rubric),
+            scenario=g.scenario if g else None,
         )
 
     def attachment_info(tid: str, a: Attachment) -> AttachmentInfo:
@@ -753,7 +760,10 @@ def create_app(cfg: Settings) -> FastAPI:
             missing_keys=missing_keys(cfg),
             signature=manager.cfg_base.signature(),
             validation=cfg.validation.model_dump(),
-            rubric=manager.cfg_base.rubric.model_dump(mode="json", include={"weights", "discount_by_severity", "bands", "confidence"}),
+            rubric={
+                **manager.cfg_base.rubric.model_dump(mode="json", include={"weights", "discount_by_severity", "bands", "confidence"}),
+                "absorbs": {k: t.absorbs for k, t in manager.cfg_base.rubric.finding_types.items() if t.absorbs},
+            },
             models=model_options(),
             keyed_providers=sorted(p for p in KEY_ENV_VAR if has_credentials(p)),
             provider_choices=provider_choices(cfg),
@@ -761,10 +771,21 @@ def create_app(cfg: Settings) -> FastAPI:
 
     @app.get("/api/datasets")
     def datasets() -> list[Dataset]:
-        labels = {"demo": "Demonstração (casos do deck)", "validation": "Validação (defeitos injetados)", "itau": "Itaú", "uploaded": "Enviados pelo painel"}
+        labels = {
+            "demo": "Demonstração (casos do deck)",
+            "validation": "Validação (defeitos injetados)",
+            "itau": "Itaú",
+            "scenarios": "Cenários de teste (um por tipo de problema)",
+            "uploaded": "Enviados pelo painel",
+        }
         counts = DatasetCatalog(cfg).counts()
         found = [Dataset(name=k, label=labels.get(k, k), n=v) for k, v in sorted(counts.items())]
         return [*found, Dataset(name="all", label="Todos", n=sum(counts.values()))]
+
+    @app.get("/api/scenarios")
+    def scenarios() -> list[dict[str, str]]:
+        """Tipos de cenário de teste, na ordem de exibição; cada chamado traz os seus em `tags`."""
+        return scenario_catalog()
 
     @app.get("/api/metrics")
     def metrics() -> dict:
@@ -949,7 +970,7 @@ def create_app(cfg: Settings) -> FastAPI:
                     attachments=goals,
                 )
             except ValidationError as e:
-                raise HTTPException(422, str(e.errors()[0]["msg"])) from e
+                raise HTTPException(422, f"Dados do chamado inválidos: {pt_validation_error(e.errors())}") from e
             final_target = cfg.tickets_dir / tid
             shutil.copytree(tmp_dir, final_target / "attachments")
             (final_target / "ticket.json").write_text(data.model_dump_json(indent=2), encoding="utf-8")

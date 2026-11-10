@@ -8,7 +8,7 @@
   "branch": {
     "code": "0148",
     "name": "Ag. Pinheiros",
-    "environment": "boxes"
+    "environment": "caixas"
   },
   "supplier": {
     "name": "Fornecedor Lambda Monitoramento Ltda.",
@@ -31,14 +31,14 @@
     {
       "file_name": "Orcamento_LMB-2026-118.xlsx",
       "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      "size_bytes": 7663,
+      "size_bytes": 7657,
       "sent_by": "supplier",
       "data_upload": "2026-10-10"
     },
     {
       "file_name": "IMG_20261010_111502.jpg",
       "content_type": "image/jpeg",
-      "size_bytes": 171186,
+      "size_bytes": 171160,
       "sent_by": "supplier",
       "data_upload": "2026-10-10"
     }

@@ -92,15 +92,16 @@
   "findings": [
     "duplicate_item",
     "price_above_reference",
-    "quantity_above_expected"
+    "quantity_above_expected",
+    "relevant_amount_at_issue"
   ],
   "optional": [],
   "grades": {
     "scope": 100,
-    "quote": 35,
+    "quote": 20,
     "photos": 100
   },
-  "score": 74,
-  "recommendation": "approve_with_caveats",
+  "score": 68,
+  "recommendation": "return_to_supplier",
   "confidence": "high"
 }

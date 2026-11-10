@@ -17,7 +17,7 @@ import random
 import shutil
 import sys
 import tempfile
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import date, timedelta
 from pathlib import Path
 
@@ -34,6 +34,7 @@ from camera import photograph  # noqa: E402
 from cases import LPU, SUPPLIER  # noqa: E402
 from quotes import make_xlsx  # noqa: E402
 from render import finish, illegible  # noqa: E402
+from rescore_ground_truth import VAGUE_SCOPE_OPTIONAL  # noqa: E402
 
 from atest.attachments import distance, hashes_with_crops  # noqa: E402
 from atest.config import load_settings  # noqa: E402
@@ -76,7 +77,7 @@ class ServiceTemplate:
     symptom: str
     maintenance: str
     supplier: str
-    scope: str  # com {env} e {q}
+    scope: str  # com {q} e o ambiente: {env} (nome), {de_env} ("do backoffice"), {em_env} ("na copa"), {o_env} ("a copa")
     environments: list[str]
     q: tuple[int, int]
     items: list[tuple]  # (descrição, unidade, qtd: "q" | número, lpu)
@@ -88,7 +89,17 @@ class ServiceTemplate:
     moment: str = "execution"
     before_applicable: bool = True
     material: int = 0  # índice do item cuja quantidade pode ser inflada
-    vague: str = "Verificar {env}. Urgente."
+    vague: str = "Verificar {o_env}. Urgente."
+
+
+FEMININE_ENVIRONMENTS = {"copa", "cozinha dos funcionários", "tesouraria", "agência inteira"}
+
+
+def env_words(env: str) -> dict[str, str]:
+    """Formas do ambiente para os textos de escopo, com artigo e preposição concordando em gênero."""
+    fem = env in FEMININE_ENVIRONMENTS
+    de, em, o = ("da", "na", "a") if fem else ("do", "no", "o")
+    return {"env": env, "de_env": f"{de} {env}", "em_env": f"{em} {env}", "o_env": f"{o} {env}"}
 
 
 def _cctv(rnd):
@@ -103,7 +114,7 @@ MODELS: list[ServiceTemplate] = [
         "finish_wear",
         "corrective",
         "Alfa",
-        "Repintura das paredes do {env} (aprox. {q} m²), cor padrão da agência.",
+        "Repintura das paredes {de_env} (aprox. {q} m²), cor padrão da agência.",
         ["backoffice", "salão de atendimento"],
         (40, 160),
         [("Pintura látex acrílico em paredes, 2 demãos", "m²", "q", "PIN-001"), ("Massa corrida para correção de paredes", "m²", "q", "PIN-004")],
@@ -119,8 +130,8 @@ MODELS: list[ServiceTemplate] = [
         "moisture_infiltration",
         "corrective",
         "Delta",
-        "Infiltração no forro do {env}: tratar a origem e recompor o forro de gesso (aprox. {q} m²).",
-        ["backoffice", "kitchen"],
+        "Infiltração no forro {de_env}: tratar a origem e recompor o forro de gesso (aprox. {q} m²).",
+        ["backoffice", "copa"],
         (2, 8),
         [
             ("Impermeabilização com manta líquida", "m²", "q", "IMP-001"),
@@ -139,8 +150,8 @@ MODELS: list[ServiceTemplate] = [
         "poor_lighting",
         "corrective",
         "Gama",
-        "Trocar as {q} lâmpadas tubulares queimadas do {env}.",
-        ["corridor", "backoffice"],
+        "Trocar as {q} lâmpadas tubulares queimadas {de_env}.",
+        ["corredor", "backoffice"],
         (4, 12),
         [("Lâmpada LED tubular T8 18W", "un", "q", "ELE-008"), ("Mão de obra troca de lâmpada", "un", "q", "ELE-009")],
         before=[
@@ -154,7 +165,7 @@ MODELS: list[ServiceTemplate] = [
         ],
         after=[
             F("ceiling_view", {"lights": "led"}, "room_after_photo", "after", "Teto com lâmpadas acesas"),
-            F("luminaire_label", {}, "label_photo", "after", "Etiqueta do produto instalado"),
+            F("luminaire_label", {"product": "tube"}, "label_photo", "after", "Etiqueta da lâmpada tubular instalada"),
             F("removed_items", {}, "removed_items_photo", "after", "Lâmpadas antigas retiradas"),
         ],
         docs=["certificate"],
@@ -168,7 +179,7 @@ MODELS: list[ServiceTemplate] = [
         "preventive_maintenance",
         "preventive",
         "Epsilon",
-        "Manutenção preventiva (PMOC) dos {q} aparelhos split do {env}: limpeza, higienização e verificação.",
+        "Manutenção preventiva (PMOC) dos {q} aparelhos split {de_env}: limpeza, higienização e verificação.",
         ["backoffice", "salão de atendimento"],
         (2, 6),
         [
@@ -191,7 +202,7 @@ MODELS: list[ServiceTemplate] = [
         "electrical_failure",
         "corrective",
         "Eta",
-        "Substituir {q} tomadas danificadas no {env}, uma com sinais de queima.",
+        "Substituir {q} tomadas danificadas {em_env}, uma com sinais de queima.",
         ["salão de atendimento", "backoffice"],
         (2, 8),
         [("Tomada 2P+T 10A com placa", "un", "q", "ELE-004"), ("Mão de obra substituição de tomada", "un", "q", "ELE-005")],
@@ -207,8 +218,8 @@ MODELS: list[ServiceTemplate] = [
         "leak",
         "corrective",
         "Theta",
-        "Vazamento no sifão da pia da {env}. Trocar o sifão.",
-        ["kitchen", "cozinha dos funcionários"],
+        "Vazamento no sifão da pia {de_env}. Trocar o sifão.",
+        ["copa", "cozinha dos funcionários"],
         (1, 3),
         [("Visita técnica", "vb", 1, "GER-001"), ("Sifão PVC para pia", "un", 1, "HID-001"), ("Mão de obra hidráulica", "h", "q", "HID-003")],
         before=[F("under_sink_leak", {}, "room_before_photo", "before", "Sifão vazando sob a pia")],
@@ -224,8 +235,8 @@ MODELS: list[ServiceTemplate] = [
         "mechanical_failure",
         "corrective",
         "Zeta",
-        "Porta do {env} não fecha sozinha: trocar a mola aérea e regular.",
-        ["backoffice", "treasury"],
+        "Porta {de_env} não fecha sozinha: trocar a mola aérea e regular.",
+        ["backoffice", "tesouraria"],
         (1, 1),
         [("Mola aérea nova", "un", 1, "SER-001"), ("Instalação de mola aérea", "un", 1, "SER-002"), ("Regulagem de porta", "un", 1, "SER-003")],
         before=[],
@@ -243,8 +254,8 @@ MODELS: list[ServiceTemplate] = [
         "degraded_image",
         "corrective",
         "Beta",
-        "Câmera do {env} com imagem desfocada: limpeza e ajuste de foco.",
-        ["self_service", "parking", "corridor"],
+        "Câmera {de_env} com imagem desfocada: limpeza e ajuste de foco.",
+        ["autoatendimento", "estacionamento", "corredor"],
         (1, 1),
         [("Visita técnica e deslocamento", "vb", 1, "SIS-001"), ("Limpeza e ajuste de foco da câmera", "un", 1, "CFTV-001")],
         before=[F("cctv_frame", {"blur": 9, "cctv": True}, "cctv_screen_photo", "before", "Imagem da câmera desfocada")],
@@ -262,8 +273,8 @@ MODELS: list[ServiceTemplate] = [
         "false_alarm",
         "corrective",
         "Kappa",
-        "Sensor IVP da {env} com disparos falsos: substituir o sensor e testar a zona.",
-        ["treasury", "back_office"],
+        "Sensor IVP {de_env} com disparos falsos: substituir o sensor e testar a zona.",
+        ["tesouraria", "backoffice"],
         (1, 1),
         [
             ("Visita técnica", "vb", 1, "SIS-001"),
@@ -341,6 +352,16 @@ WEIGHTS = {
     "checklist": 6,
 }
 UNEXPECTED_SYMPTOM = {"SETA": ["false_alarm", "no_image", "device_inoperative"], "SISR": ["leak", "finish_wear", "moisture_infiltration"]}
+
+
+def quote_stage(m: ServiceTemplate) -> ServiceTemplate:
+    """O mesmo pedido na etapa de Aprovação de Orçamento: o fornecedor manda a planilha e a foto do problema, antes de
+    executar. Sem fotos do depois e sem termo ou relatório de conclusão."""
+    return replace(m, name=f"{m.name}_quote", moment="quote", after=[], docs=[])
+
+
+# modelos de execução que têm foto do problema (o checklist do orçamento exige uma); porta e preventiva não têm
+QUOTE_STAGE_MODELS: list[ServiceTemplate] = [quote_stage(m) for m in MODELS if m.moment == "execution" and m.before]
 
 
 def requirements(m: ServiceTemplate) -> list:
@@ -481,13 +502,14 @@ class ValidationGenerator:
         self.hashes.append((tid, hs))
         return img
 
-    def generate(self) -> list[dict]:
+    def generate(self, models: list[ServiceTemplate] | None = None, n: int | None = None) -> list[dict]:
+        """`n` chamados por modelo de serviço. Pode ser chamado mais de uma vez: a numeração e as datas continuam."""
         summary = []
-        order = [(m, k) for k in range(self.n) for m in MODELS]
-        for i, (m, k) in enumerate(order):
+        order = [(m, k) for k in range(self.n if n is None else n) for m in (models or MODELS)]
+        for m, k in order:
             self.seq += 1
             tid = f"{self.prefix}{self.seq:04d}"
-            opening = self.day0 + timedelta(days=i // 3)
+            opening = self.day0 + timedelta(days=(self.seq - 1) // 3)
             summary.append(self.one_ticket(tid, m, k, opening))
         return summary
 
@@ -520,14 +542,25 @@ class ValidationGenerator:
         return True
 
     # ------------------------------------------------------------------ um chamado
-    def one_ticket(self, tid: str, m: ServiceTemplate, k: int, opening: date) -> dict:
+    def one_ticket(
+        self, tid: str, m: ServiceTemplate, k: int, opening: date, defects: list[str] | None = None, scenario: dict | None = None
+    ) -> dict:
+        """Gera um chamado. `defects` força os defeitos (catálogo de cenários) em vez de sorteá-los: um defeito que não
+        se aplica ao modelo de serviço, ou que não pôde ser aplicado (ex.: reaproveitamento sem foto de origem), é erro."""
         rnd = random.Random(int(tid))
-        defects = self.draw_defects(m, k)
+        forced = defects is not None
+        if forced:
+            invalid = [d for d in defects if d not in DEFECTS or not self._applicable(m, d)]
+            if invalid or ("checklist" in defects and len(defects) > 1):
+                raise ValueError(f"{tid}: defeitos {invalid or defects} não se aplicam ao modelo {m.name}")
+            defects = list(defects)
+        else:
+            defects = self.draw_defects(m, k)
         env = rnd.choice(m.environments)
         q = rnd.randint(*m.q)
         code, branch = rnd.choice(self.branches)
         submission = opening + timedelta(days=rnd.randint(2, 6))
-        scope = m.scope.format(env=env, q=q)
+        scope = m.scope.format(q=q, **env_words(env))
         symptom = m.symptom
         optional: list[str] = []
         rubric = CFG.rubric
@@ -582,7 +615,7 @@ class ValidationGenerator:
                 ]
             )
         if "vague" in defects:
-            scope = m.vague.format(env=env)
+            scope = m.vague.format(**env_words(env))
         if "inconsistent" in defects:
             symptom = rnd.choice(UNEXPECTED_SYMPTOM[m.workstream])
 
@@ -703,6 +736,8 @@ class ValidationGenerator:
                 attachments_meta.append(attachment_meta(folder / name, case["dates"]["supplier_submission"]))
                 r0 = origin_label(origin_id, origin.name)
                 rot[name] = {**r0, "reused_from": f"{origin_id}/{origin.name}"}
+            elif forced:
+                raise ValueError(f"{tid}: sem foto anterior do modelo {m.name} para reaproveitar (gere antes um chamado limpo dele)")
             else:
                 defects.remove("reused")
         if "date_before" in defects:
@@ -711,6 +746,11 @@ class ValidationGenerator:
                 img = Image.open(folder / target).convert("RGB")
                 old = opening - timedelta(days=rnd.randint(20, 120))
                 save_jpg(img, folder / target, f"{old:%Y:%m:%d} 10:00:00", 1)
+                for meta in attachments_meta:  # a foto foi regravada: o tamanho registrado precisa acompanhar
+                    if meta["file_name"] == target:
+                        meta["size_bytes"] = (folder / target).stat().st_size
+            elif forced:
+                raise ValueError(f"{tid}: nenhuma foto legível e aderente para receber data anterior à abertura")
             else:
                 defects.remove("date_before")
         for d in docs:
@@ -790,13 +830,8 @@ class ValidationGenerator:
             }
             kinds = sorted({mapping[d] for d in defects if d in mapping} | {a for x in items for a in x[4]["findings"]})
             if "vague" in defects:
-                optional += ["unjustified_replacement"]
-            if "does_not_match" in defects and m.moment == "execution":
-                pass
-            scorer = ScoreCalculator(rubric)
-            res = scorer.compute([scorer.finding(t, "") for t in kinds])
-            recommendation, score, confidence = res.recommendation.value, res.score, res.confidence.value
-            grades = res.grades.model_dump()
+                # com escopo vago, o modelo não tem como conferir quantidades nem a cobertura das fotos
+                optional += ["unjustified_replacement", *VAGUE_SCOPE_OPTIONAL]
         at_issue = 0.0
         for _desc, _unit_label, qty, unit, r in items:
             tps = r["findings"]
@@ -809,6 +844,13 @@ class ValidationGenerator:
                 if "quantity_above_expected" in tps:
                     exc += (qty - r["qmax"]) * unit
                 at_issue += min(exc, qty * unit)
+        if "checklist" not in defects:
+            # a régua decide o gabarito; o valor em questão entra pelo apontamento de valor relevante
+            scorer = ScoreCalculator(rubric)
+            quote_total = sum(qty * unit for _d, _u, qty, unit, _r in items)
+            kinds, res = scorer.expected(kinds, 100 * at_issue / quote_total if quote_total else 0.0)
+            recommendation, score, confidence = res.recommendation.value, res.score, res.confidence.value
+            grades = res.grades.model_dump()
         gt = {
             "ticket_id": tid,
             "dataset": self.dataset,
@@ -849,6 +891,8 @@ class ValidationGenerator:
             "recommendation": recommendation,
             "confidence": confidence,
         }
+        if scenario:
+            gt["scenario"] = scenario
         (ROOT / "ground_truth" / f"{tid}.json").write_text(json.dumps(gt, ensure_ascii=False, indent=2), encoding="utf-8")
         return {"id": tid, "model": m.name, "defects": defects, "recommendation": recommendation, "score": score}
 

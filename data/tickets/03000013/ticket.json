@@ -1,0 +1,61 @@
+{
+  "ticket_id": "03000013",
+  "workstream": "SETA",
+  "maintenance_type": "preventive",
+  "moment": "execution",
+  "category": "air_conditioning",
+  "symptom": "preventive_maintenance",
+  "branch": {
+    "code": "0333",
+    "name": "Ag. Ipiranga",
+    "environment": "backoffice"
+  },
+  "supplier": {
+    "name": "Fornecedor Épsilon Climatização Ltda.",
+    "cnpj": "56.789.012/0001-34"
+  },
+  "requested_scope": "Manutenção preventiva (PMOC) dos 3 aparelhos split do backoffice: limpeza, higienização e verificação.",
+  "quoted_value": 3479.48,
+  "dates": {
+    "opening": "2026-11-02",
+    "supplier_submission": "2026-11-06",
+    "manager_review": "2026-11-07"
+  },
+  "status": "forwarded_to_backoffice",
+  "origin": "dataset",
+  "dataset": "scenarios",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "attachments": [
+    {
+      "file_name": "Orcamento_EPS-V0013.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 7776,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-06"
+    },
+    {
+      "file_name": "IMG_20261103_081718.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 207507,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-06"
+    },
+    {
+      "file_name": "IMG_20261105_095513.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 162399,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-06"
+    },
+    {
+      "file_name": "IMG_20261105_103251.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 248235,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-06"
+    }
+  ]
+}

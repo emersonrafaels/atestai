@@ -133,7 +133,7 @@ class Orchestrator:
             "quote_notes": ctx.quote_notes,
             "photos": PhotoStage.evaluated_photos(ctx.photo_analysis, ctx.photos, ctx.integrity),
             "photo_summary": ctx.photo_analysis.model_dump(
-                mode="json", include={"has_before_photo", "has_done_service_photo", "done_justification", "items_without_photo", "notes"}
+                mode="json", include={"has_before_photo", "done_service", "done_justification", "items_without_photo", "notes"}
             ),
             "summary": ctx.text.summary,
             "supplier_message": ctx.text.supplier_message,
