@@ -410,7 +410,11 @@ export default function App() {
       {/* o portal fica montado depois da 1ª visita: rascunhos não se perdem ao consultar outras telas */}
       {adminVisited && (
         <main hidden={view !== "admin"} className="grade row-span-2 min-h-0 overflow-y-auto">
-          <AdminView goToValidation={() => setView("validation")} outdated={serverOutdated(config)} />
+          <AdminView goToValidation={() => setView("validation")} outdated={serverOutdated(config)} onAnalysesCleared={(r) => {
+            // a execução aberta pode ter perdido pareceres: sai da tela e a lista recarrega o "último parecer" de cada chamado
+            if (execution && r.runs_touched.includes(execution.id)) setRun(null);
+            reloadTickets();
+          }} />
         </main>
       )}
       {view === "admin" ? null : view === "scenarios" ? (

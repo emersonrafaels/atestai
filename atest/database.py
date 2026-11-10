@@ -285,6 +285,47 @@ class Database:
             (ticket_id,),
         )
 
+    def list_assessments(self) -> list[dict[str, Any]]:
+        """Todos os pareceres gravados (portal: limpeza do histórico), do mais novo ao mais antigo."""
+        return self._rows(
+            """SELECT p.id, p.run_id, p.ticket_id, p.generated_at, p.recommendation, p.score, p.mode, p.cost_brl,
+                      r.label AS run_label, r.status AS run_status,
+                      (SELECT COUNT(*) FROM feedbacks f WHERE f.assessment_id = p.id) AS feedbacks
+               FROM assessments p LEFT JOIN runs r ON r.id = p.run_id ORDER BY p.id DESC"""
+        )
+
+    def delete_assessments(self, ids: list[int] | None) -> dict[str, Any]:
+        """Apaga pareceres com o feedback e as chamadas ao modelo de cada um (`ids=None` apaga todos).
+
+        Execuções que ficam sem nenhum parecer saem junto (com o relatório de validação), menos as que ainda estão rodando.
+        Devolve as contagens e as execuções afetadas (`runs_touched`) e removidas (`runs_removed`).
+        """
+        with self._transaction() as c:
+            if ids is None:
+                touched = [r[0] for r in c.execute("SELECT id FROM runs WHERE status <> 'running'")]
+                n_fb = c.execute("DELETE FROM feedbacks").rowcount
+                c.execute("DELETE FROM llm_calls")
+                n = c.execute("DELETE FROM assessments").rowcount
+                c.execute("DELETE FROM runs WHERE status <> 'running'")
+                return {"assessments": n, "feedbacks": n_fb, "runs_touched": touched, "runs_removed": touched}
+            n = n_fb = 0
+            touched_set: set[str] = set()
+            unique = sorted(set(ids))
+            for i in range(0, len(unique), 500):  # limite de parâmetros do SQLite
+                chunk = unique[i : i + 500]
+                marks = ",".join("?" * len(chunk))
+                touched_set |= {r[0] for r in c.execute(f"SELECT DISTINCT run_id FROM assessments WHERE id IN ({marks})", chunk) if r[0]}
+                n_fb += c.execute(f"DELETE FROM feedbacks WHERE assessment_id IN ({marks})", chunk).rowcount
+                c.execute(f"DELETE FROM llm_calls WHERE assessment_id IN ({marks})", chunk)
+                n += c.execute(f"DELETE FROM assessments WHERE id IN ({marks})", chunk).rowcount
+            removed = []
+            for rid in sorted(touched_set):
+                left = c.execute("SELECT COUNT(*) FROM assessments WHERE run_id=?", (rid,)).fetchone()[0]
+                if not left and c.execute("DELETE FROM runs WHERE id=? AND status <> 'running'", (rid,)).rowcount:
+                    c.execute("DELETE FROM llm_calls WHERE run_id=?", (rid,))
+                    removed.append(rid)
+            return {"assessments": n, "feedbacks": n_fb, "runs_touched": sorted(touched_set), "runs_removed": removed}
+
     # ------------------------------------------------------------------ feedback
     def save_feedback(self, assessment_id: int, fb: FeedbackInput) -> Feedback:
         """Grava a decisão da pessoa analista. Levanta KeyError se o parecer não existir."""

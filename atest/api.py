@@ -6,7 +6,7 @@ Chamados      GET /api/tickets · GET /api/tickets/{id} · GET /api/tickets/{id}
 Execuções     POST /api/runs · GET /api/runs · GET /api/runs/{id}
 Pareceres     GET /api/assessments/{id} · GET|POST /api/assessments/{id}/feedback
 Operação      GET /api/config · GET /api/metrics
-Portal        POST /api/admin/login · GET /api/admin/overview · PUT /api/admin/config/{seção} · usuários e histórico (com token)
+Portal        POST /api/admin/login · GET /api/admin/overview · PUT /api/admin/config/{seção} · usuários, histórico e limpeza de análises (com token)
 """
 
 from __future__ import annotations
@@ -264,8 +264,15 @@ class PasswordInput(BaseModel):
     new: str = Field(max_length=200)
 
 
+class DeleteAssessmentsInput(BaseModel):
+    """Limpeza do histórico de análises: os pareceres escolhidos ou todos."""
+
+    ids: list[int] = Field(default_factory=list, max_length=100_000)
+    all: bool = Field(False, description="apaga todos os pareceres (ignora ids)")
+
+
 # Suba quando o painel passar a depender de rotas ou campos novos da API (panel/src/api.ts: PANEL_API).
-PANEL_API = 5
+PANEL_API = 6
 
 
 class ProviderChoice(BaseModel):
@@ -720,6 +727,25 @@ def create_app(cfg: Settings) -> FastAPI:
     def admin_history(authorization: Annotated[str | None, Header()] = None) -> list[dict]:
         admin_user(authorization)
         return admin.history()
+
+    @app.get("/api/admin/assessments")
+    def admin_assessments(authorization: Annotated[str | None, Header()] = None) -> list[dict]:
+        admin_user(authorization)
+        return database.list_assessments()
+
+    @app.post("/api/admin/assessments/delete")
+    def admin_delete_assessments(body: DeleteAssessmentsInput, authorization: Annotated[str | None, Header()] = None) -> dict:
+        """Limpa o histórico de análises: pareceres, feedbacks e chamadas ao modelo; execuções vazias saem junto."""
+        user = admin_user(authorization)
+        if not body.all and not body.ids:
+            raise HTTPException(422, "Escolha ao menos uma análise para apagar.")
+        result = database.delete_assessments(None if body.all else body.ids)
+        with manager.lock:  # execuções concluídas guardadas em memória passam a ser lidas do banco (já sem os pareceres)
+            for rid in result["runs_touched"]:
+                if (ex := manager.runs.get(rid)) and ex.status == "completed":
+                    del manager.runs[rid]
+        event("admin_assessments_deleted", user=user, all=body.all, assessments=result["assessments"], runs=len(result["runs_removed"]))
+        return result
 
     @app.get("/api/admin/users")
     def admin_users(authorization: Annotated[str | None, Header()] = None) -> list[dict]:

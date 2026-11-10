@@ -105,3 +105,29 @@ def test_absorbs_is_validated_and_old_saved_versions_get_new_types(admin_cfg):
     assert "after_photo_unconfirmed_location" in merged
     assert merged["missing_after_photo"]["absorbs"] == ["photo_mismatch"]
     assert merged["photo_mismatch"]["severity"] == "medium"  # o que foi salvo continua valendo
+
+
+def test_clear_analysis_history_selected_and_all(admin_cfg):
+    c = TestClient(create_app(admin_cfg))
+    assert c.get("/api/admin/assessments").status_code == 401
+    h = _login(c)
+    first = _run(c, "00517706")
+    second = _run(c, "00523310")
+    c.post(f"/api/assessments/{first['record_id']}/feedback", json={"action": "accept"})
+    listed = c.get("/api/admin/assessments", headers=h).json()
+    assert {a["id"] for a in listed} == {first["record_id"], second["record_id"]}
+    assert next(a for a in listed if a["id"] == first["record_id"])["feedbacks"] == 1
+
+    assert c.post("/api/admin/assessments/delete", json={}, headers=h).status_code == 422
+    r = c.post("/api/admin/assessments/delete", json={"ids": [first["record_id"]]}, headers=h).json()
+    assert r["assessments"] == 1 and r["feedbacks"] == 1 and r["runs_removed"] == [first["run_id"]]
+    assert [a["id"] for a in c.get("/api/admin/assessments", headers=h).json()] == [second["record_id"]]
+    assert c.get(f"/api/assessments/{first['record_id']}").status_code == 404
+    assert c.get(f"/api/runs/{first['run_id']}").status_code == 404  # execução vazia saiu (também da memória)
+    assert c.get("/api/tickets/00517706/history").json() == []
+
+    r = c.post("/api/admin/assessments/delete", json={"all": True}, headers=h).json()
+    assert r["assessments"] == 1
+    assert c.get("/api/admin/assessments", headers=h).json() == []
+    m = c.get("/api/metrics").json()
+    assert m["assessments"] == 0 and m["runs"] == 0

@@ -1,14 +1,15 @@
-import { AlertTriangle, BookMarked, ClipboardList, History, Home, KeyRound, ListChecks, Loader2, Lock, LogOut, RotateCcw, Save, Search, SlidersHorizontal, Tags, Undo2, UserPlus, Users } from "lucide-react";
+import { AlertTriangle, BookMarked, ClipboardList, Eraser, History, Home, KeyRound, ListChecks, Loader2, Lock, LogOut, RotateCcw, Save, Search, SlidersHorizontal, Tags, Undo2, UserPlus, Users } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ADMIN_LOGOUT_EVENT, adminApi, adminSession, type AdminHistoryItem, type AdminOverview, type AdminUser, type ChecklistsConfig, type RubricConfig } from "../../api";
+import { ADMIN_LOGOUT_EVENT, adminApi, adminSession, type AdminHistoryItem, type AdminOverview, type AdminUser, type ChecklistsConfig, type DeleteAssessmentsResult, type RubricConfig } from "../../api";
 import { brl, ENV_NAME, MAINTENANCE_LABEL, STAGE_LABEL } from "../../format";
+import { AnalysesCleanup } from "./AnalysesCleanup";
 import { ChecklistEditor } from "./ChecklistEditor";
 import { FindingRulesEditor, ScoreRubricEditor } from "./RulesEditor";
 import { InfoBox } from "../ui/InfoBox";
 import { PasswordInput } from "../ui/PasswordInput";
 import { Tooltip } from "../ui/Tooltip";
 
-type Tab = "home" | "checklists" | "findings" | "score" | "catalog" | "lpu" | "history" | "users";
+type Tab = "home" | "checklists" | "findings" | "score" | "catalog" | "lpu" | "history" | "analyses" | "users";
 const TABS: { id: Tab; label: string; icon: typeof Home; group: string }[] = [
   { id: "home", label: "Visão geral", icon: Home, group: "" },
   { id: "checklists", label: "Checklist mínimo", icon: ListChecks, group: "Regras" },
@@ -17,11 +18,14 @@ const TABS: { id: Tab; label: string; icon: typeof Home; group: string }[] = [
   { id: "catalog", label: "Categorias e sintomas", icon: Tags, group: "Cadastros" },
   { id: "lpu", label: "Tabela de preços (LPU)", icon: BookMarked, group: "Cadastros" },
   { id: "history", label: "Histórico de alterações", icon: History, group: "Administração" },
+  { id: "analyses", label: "Limpar análises", icon: Eraser, group: "Administração" },
   { id: "users", label: "Usuários e senha", icon: Users, group: "Administração" },
 ];
 
 /** Portal de configuração: só com login. Rascunhos ficam aqui até "Salvar"; cada gravação pede um motivo e vira versão no histórico. */
-export function AdminView({ goToValidation, outdated = false }: { goToValidation: () => void; outdated?: boolean }) {
+export function AdminView({ goToValidation, outdated = false, onAnalysesCleared }: {
+  goToValidation: () => void; outdated?: boolean; onAnalysesCleared?: (r: DeleteAssessmentsResult) => void;
+}) {
   const [user, setUser] = useState<string | null>(null);
   const [checking, setChecking] = useState(!!adminSession.get());
 
@@ -37,7 +41,7 @@ export function AdminView({ goToValidation, outdated = false }: { goToValidation
 
   if (checking) return <div className="flex h-full items-center justify-center text-muted"><Loader2 className="animate-spin" /></div>;
   if (!user) return <Login onLogin={setUser} outdated={outdated} />;
-  return <Portal user={user} onLogout={() => { adminApi.logout().catch(() => undefined); adminSession.clear(); setUser(null); }} goToValidation={goToValidation} />;
+  return <Portal user={user} onLogout={() => { adminApi.logout().catch(() => undefined); adminSession.clear(); setUser(null); }} goToValidation={goToValidation} onAnalysesCleared={onAnalysesCleared} />;
 }
 
 // ============================================================================ login
@@ -100,7 +104,9 @@ function Login({ onLogin, outdated }: { onLogin: (u: string) => void; outdated: 
 }
 
 // ============================================================================ portal
-function Portal({ user, onLogout, goToValidation }: { user: string; onLogout: () => void; goToValidation: () => void }) {
+function Portal({ user, onLogout, goToValidation, onAnalysesCleared }: {
+  user: string; onLogout: () => void; goToValidation: () => void; onAnalysesCleared?: (r: DeleteAssessmentsResult) => void;
+}) {
   const [tab, setTab] = useState<Tab>("home");
   const [ov, setOv] = useState<AdminOverview | null>(null);
   const [rubric, setRubric] = useState<RubricConfig | null>(null);
@@ -196,6 +202,7 @@ function Portal({ user, onLogout, goToValidation }: { user: string; onLogout: ()
         {tab === "catalog" && <CatalogTab ov={ov} checklists={checklists} />}
         {tab === "lpu" && <LpuTab ov={ov} />}
         {tab === "history" && <HistoryTab onRestored={adopt} dirty={dirty} />}
+        {tab === "analyses" && <AnalysesCleanup onCleared={onAnalysesCleared} />}
         {tab === "users" && <UsersTab me={user} />}
       </main>
 
@@ -231,6 +238,7 @@ function PageTitle({ tab, ov }: { tab: Tab; ov: AdminOverview }) {
     catalog: "Categorias e sintomas reconhecidos pelo Atest.AI e onde cada um é usado.",
     lpu: "Preços de referência usados na conferência do orçamento.",
     history: "Todas as gravações feitas pelo portal, com autor e motivo. Dá para voltar a qualquer versão.",
+    analyses: "Apague pareceres já emitidos: todos de uma vez ou só os escolhidos.",
     users: "Quem pode entrar no portal.",
   };
   return (

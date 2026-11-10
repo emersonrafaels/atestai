@@ -663,6 +663,28 @@ export interface AdminHistoryItem {
   is_default: boolean;
 }
 
+/** Parecer gravado, na lista de limpeza do histórico (portal). */
+export interface AdminAssessmentItem {
+  id: number;
+  run_id: string | null;
+  ticket_id: string;
+  generated_at: string;
+  recommendation: Recommendation;
+  score: number | null;
+  mode: string;
+  cost_brl: number | null;
+  run_label: string | null;
+  run_status: string | null;
+  feedbacks: number;
+}
+
+export interface DeleteAssessmentsResult {
+  assessments: number;
+  feedbacks: number;
+  runs_touched: string[];
+  runs_removed: string[];
+}
+
 export interface AdminUser {
   username: string;
   created_at: string;
@@ -671,7 +693,7 @@ export interface AdminUser {
 }
 
 /** Revisão da API que este front-end espera (atest/api.py: PANEL_API). */
-export const PANEL_API = 5;
+export const PANEL_API = 6;
 export const serverOutdated = (c: AppSettings | null) => !!c && (c.panel_api ?? 0) < PANEL_API;
 
 const TOKEN_KEY = "atest.admin.token";
@@ -710,6 +732,9 @@ export const adminApi = {
   restore: (id: number, comment: string) =>
     askAdmin<AdminOverview>(`/api/admin/history/${id}/restore`, { method: "POST", body: JSON.stringify({ comment }) }),
   history: () => askAdmin<AdminHistoryItem[]>("/api/admin/history"),
+  assessments: () => askAdmin<AdminAssessmentItem[]>("/api/admin/assessments"),
+  deleteAssessments: (sel: { ids: number[] } | { all: true }) =>
+    askAdmin<DeleteAssessmentsResult>("/api/admin/assessments/delete", { method: "POST", body: JSON.stringify(sel) }),
   users: () => askAdmin<AdminUser[]>("/api/admin/users"),
   addUser: (username: string, password: string) =>
     askAdmin<AdminUser[]>("/api/admin/users", { method: "POST", body: JSON.stringify({ username, password }) }),
