@@ -1,0 +1,386 @@
+{
+  "ticket_id": "02000021",
+  "workstream": "SETA",
+  "category": "painting",
+  "symptom": "finish_wear",
+  "maintenance_type": "corrective",
+  "moment": "quote",
+  "branch": {
+    "code": "3120",
+    "name": "Itaú Ag. Av. Paulista",
+    "environment": "salão de atendimento"
+  },
+  "supplier": "Fornecedor Alfa Manutenção Predial Ltda.",
+  "quoted_value": 2933.7,
+  "requested_scope": "Repintura das paredes do salão de atendimento (aprox. 77 m²), cor padrão da agência.",
+  "generated_at": "2026-11-10T22:25:13.505323",
+  "rubric_version": "2026-11-v5",
+  "prompts_version": "2026-11-v6",
+  "config_signature": "637ba4ec64ed",
+  "phase": 2,
+  "mode": "api",
+  "batch_mode": "sync",
+  "models": {
+    "main": "anthropic:claude-sonnet-5-5",
+    "fast": "anthropic:claude-haiku-5-5"
+  },
+  "run_id": "20261110-222440-022a",
+  "record_id": 74,
+  "checklist": {
+    "category": "painting",
+    "maintenance": "corrective",
+    "moment": "quote",
+    "complete": true,
+    "uploaded": 2,
+    "total": 2,
+    "requirements": [
+      {
+        "id": "quote",
+        "description": "Orçamento na planilha Excel padrão",
+        "met": true,
+        "attachments": [
+          "Orcamento_ALF-V0021.xlsx"
+        ]
+      },
+      {
+        "id": "problem_photo",
+        "description": "Foto do problema a ser corrigido",
+        "met": true,
+        "attachments": [
+          "IMG_20261101_081114.jpg"
+        ]
+      }
+    ],
+    "missing": []
+  },
+  "attachments": [
+    {
+      "index": 1,
+      "name": "Orcamento_ALF-V0021.xlsx",
+      "category": "quote_doc",
+      "moment": "undetermined",
+      "readable": true,
+      "short_description": "Orçamento ALF-V0021: 2 itens, R$ 2,933.70"
+    },
+    {
+      "index": 2,
+      "name": "IMG_20261101_081114.jpg",
+      "category": "room_before_photo",
+      "moment": "before",
+      "readable": true,
+      "short_description": "Parede do salão com manchas escuras de mofo e pintura descascada, ao lado de painel Itaú."
+    }
+  ],
+  "recommendation": "approve",
+  "recommendation_reason": "Score de 85 ou mais, sem travas",
+  "score": 100,
+  "grades": {
+    "scope": 100,
+    "quote": 100,
+    "photos": 100
+  },
+  "confidence": "high",
+  "confidence_reducers": [],
+  "findings": [],
+  "amount_at_issue": 0.0,
+  "amount_at_issue_pct": 0.0,
+  "scope": {
+    "local": "Itaú Ag. Av. Paulista (cód. 3120)",
+    "environment": "salão de atendimento",
+    "equipment": "",
+    "requested_services": [
+      "Repintura das paredes do salão de atendimento na cor padrão da agência"
+    ],
+    "mentioned_quantities": [
+      {
+        "description": "Área aproximada das paredes do salão de atendimento a repintar",
+        "quantity": 77.0,
+        "unit": "m²"
+      }
+    ],
+    "acceptance_criteria": [
+      "O orçamento contempla a repintura das paredes do salão de atendimento da agência Av. Paulista (cód. 3120)",
+      "A área orçada é compatível com cerca de 77 m²",
+      "O orçamento especifica a cor padrão da agência",
+      "As paredes apresentam pintura uniforme e sem sinais de desgaste após o serviço",
+      "O serviço está restrito ao salão de atendimento, sem itens de outros ambientes"
+    ],
+    "expected_evidence": [
+      "Foto das paredes do salão de atendimento totalmente pintadas, com acabamento uniforme e na cor padrão da agência",
+      "Foto geral do salão de atendimento mostrando as paredes repintadas",
+      "Foto em detalhe do acabamento sem falhas, manchas ou descascamento"
+    ],
+    "before_evidence_applicable": true,
+    "consistent_with_category_symptom": true,
+    "coherence_note": "",
+    "vague_scope": false,
+    "vague_reason": ""
+  },
+  "items": [
+    {
+      "n": 1,
+      "description": "Pintura látex acrílico em paredes, 2 demãos",
+      "unit": "m²",
+      "quantity": 77.0,
+      "unit_value": 35.0,
+      "total_value": 2695.0,
+      "classification": "compliant",
+      "reason": "Pintura em látex acrílico das paredes com 2 demãos é exatamente o serviço pedido, e a quantidade de 77 m² coincide com a área do salão informada no escopo.",
+      "lpu_code": "PIN-001",
+      "reference_price": 35.0,
+      "expected_quantity_max": 77.0,
+      "amount_at_issue": 0.0,
+      "findings": []
+    },
+    {
+      "n": 2,
+      "description": "Massa corrida para correção de paredes",
+      "unit": "m²",
+      "quantity": 77.0,
+      "unit_value": 3.1,
+      "total_value": 238.7,
+      "classification": "compliant",
+      "reason": "Massa corrida é preparação de superfície coerente com a repintura de paredes com desgaste, e a quantidade de 77 m² não excede a área a ser pintada.",
+      "lpu_code": "PIN-004",
+      "reference_price": 3.1,
+      "expected_quantity_max": 77.0,
+      "amount_at_issue": 0.0,
+      "findings": []
+    }
+  ],
+  "quote_notes": [
+    "Os dois itens estão restritos às paredes do salão de atendimento e a quantidade orçada (77 m²) bate com o escopo. O orçamento não menciona a cor padrão da agência, que é critério de aceite; vale confirmar com o fornecedor. A massa corrida em toda a área é aceitável por se tratar de reparo de desgaste, mas pode ser conferida na foto do antes."
+  ],
+  "photos": [
+    {
+      "file": "IMG_20261101_081114.jpg",
+      "environment": "Área interna de agência Itaú, canto de parede junto ao forro, com painel/sinalização laranja da marca Itaú à direita; provável salão de atendimento",
+      "what_it_shows": "Canto de parede interna com pintura descascada, manchas de umidade e mofo escuro junto ao forro e descascamento na parte inferior da área visível; estado de desgaste anterior ao serviço",
+      "moment": "before",
+      "readable": true,
+      "matches_scope": "yes",
+      "reason": "Foto nítida de parede interna em agência Itaú com desgaste de pintura (descascamento, mofo e manchas), coerente com o sintoma e com o escopo de repintura. Foi tirada em 01/11/2026, após a abertura (31/10/2026) e antes do envio do fornecedor, e mostra o problema, não o resultado. O cômodo exato não pode ser confirmado, mas nada o contradiz.",
+      "covered_items": [
+        1,
+        2
+      ],
+      "exif_date": "2026-11-01T08:15:00",
+      "reused_from": null,
+      "integrity_signals": []
+    }
+  ],
+  "photo_summary": {
+    "has_before_photo": true,
+    "done_justification": "A única foto enviada (anexo 2) mostra a parede ainda com pintura descascada, mofo e manchas, ou seja, o estado anterior ao serviço. Nenhuma foto mostra as paredes repintadas com acabamento uniforme, então o resultado pedido não é comprovado. O momento da validação é a aprovação do orçamento, em que o resultado ainda não é exigido, mas nenhuma evidência de conclusão foi apresentada.",
+    "done_service": "no",
+    "items_without_photo": [],
+    "notes": "Há apenas uma foto de 'antes', que evidencia a necessidade de pintura e de correção da parede (massa corrida) em um ponto localizado. Ela não permite confirmar a área de 77 m² nem a cor padrão. Faltam fotos gerais do salão e fotos do resultado após a repintura. O mofo visível sugere infiltração ou umidade na origem; vale conferir se o escopo trata a causa, senão o problema pode voltar."
+  },
+  "summary": "Recomendação: aprovar o chamado 02000021 (Esteira SETA, corretiva, Pintura), com score 100, sem travas e confiança alta. Escopo, orçamento e evidências fotográficas foram avaliados com nota 100 e não há valor potencial divergente (R$ 0,00, 0% do orçamento). Não há apontamentos.",
+  "supplier_message": "",
+  "llm_calls": [
+    {
+      "task": "identify_attachments",
+      "provider": "anthropic",
+      "model": "anthropic:claude-haiku-5-5",
+      "resolved_model": "claude-haiku-5-5",
+      "prompt_version": "2026-11-v6",
+      "prompt_hash": "0fc9398acff7",
+      "schema_hash": "8adbed0ff236",
+      "start": "2026-11-10T22:24:42.308802",
+      "duration_s": 12.98,
+      "input_tokens": 2286,
+      "output_tokens": 83,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 1465,
+      "cost_usd": 0.000453,
+      "from_cache": false,
+      "simulated": false,
+      "via_batch": false,
+      "batch_id": null,
+      "response": {
+        "attachments": [
+          {
+            "index": 2,
+            "category": "room_before_photo",
+            "moment": "before",
+            "readable": true,
+            "short_description": "Parede do salão com manchas escuras de mofo e pintura descascada, ao lado de painel Itaú."
+          }
+        ]
+      }
+    },
+    {
+      "task": "scope",
+      "provider": "anthropic",
+      "model": "anthropic:claude-sonnet-5-5",
+      "resolved_model": "claude-sonnet-5-5",
+      "prompt_version": "2026-11-v6",
+      "prompt_hash": "5de9d7f21ed2",
+      "schema_hash": "def08ad3c954",
+      "start": "2026-11-10T22:24:55.298972",
+      "duration_s": 4.59,
+      "input_tokens": 233,
+      "output_tokens": 455,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 2090,
+      "cost_usd": 0.010241,
+      "from_cache": false,
+      "simulated": false,
+      "via_batch": false,
+      "batch_id": null,
+      "response": {
+        "local": "Itaú Ag. Av. Paulista (cód. 3120)",
+        "environment": "salão de atendimento",
+        "equipment": "",
+        "requested_services": [
+          "Repintura das paredes do salão de atendimento na cor padrão da agência"
+        ],
+        "mentioned_quantities": [
+          {
+            "description": "Área aproximada das paredes do salão de atendimento a repintar",
+            "quantity": 77.0,
+            "unit": "m²"
+          }
+        ],
+        "acceptance_criteria": [
+          "O orçamento contempla a repintura das paredes do salão de atendimento da agência Av. Paulista (cód. 3120)",
+          "A área orçada é compatível com cerca de 77 m²",
+          "O orçamento especifica a cor padrão da agência",
+          "As paredes apresentam pintura uniforme e sem sinais de desgaste após o serviço",
+          "O serviço está restrito ao salão de atendimento, sem itens de outros ambientes"
+        ],
+        "expected_evidence": [
+          "Foto das paredes do salão de atendimento totalmente pintadas, com acabamento uniforme e na cor padrão da agência",
+          "Foto geral do salão de atendimento mostrando as paredes repintadas",
+          "Foto em detalhe do acabamento sem falhas, manchas ou descascamento"
+        ],
+        "before_evidence_applicable": true,
+        "consistent_with_category_symptom": true,
+        "coherence_note": "",
+        "vague_scope": false,
+        "vague_reason": ""
+      }
+    },
+    {
+      "task": "quote_review",
+      "provider": "anthropic",
+      "model": "anthropic:claude-sonnet-5-5",
+      "resolved_model": "claude-sonnet-5-5",
+      "prompt_version": "2026-11-v6",
+      "prompt_hash": "6e7abbc0f6b5",
+      "schema_hash": "2512ea23c87d",
+      "start": "2026-11-10T22:24:59.921391",
+      "duration_s": 4.16,
+      "input_tokens": 781,
+      "output_tokens": 402,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 2397,
+      "cost_usd": 0.011574,
+      "from_cache": false,
+      "simulated": false,
+      "via_batch": false,
+      "batch_id": null,
+      "response": {
+        "items": [
+          {
+            "n": 1,
+            "classification": "compliant",
+            "reason": "Pintura em látex acrílico das paredes com 2 demãos é exatamente o serviço pedido, e a quantidade de 77 m² coincide com a área do salão informada no escopo.",
+            "expected_quantity_max": 77.0,
+            "plausible_quantity": true,
+            "duplicate_of": 0,
+            "lpu_code": "PIN-001"
+          },
+          {
+            "n": 2,
+            "classification": "compliant",
+            "reason": "Massa corrida é preparação de superfície coerente com a repintura de paredes com desgaste, e a quantidade de 77 m² não excede a área a ser pintada.",
+            "expected_quantity_max": 77.0,
+            "plausible_quantity": true,
+            "duplicate_of": 0,
+            "lpu_code": "PIN-004"
+          }
+        ],
+        "notes": "Os dois itens estão restritos às paredes do salão de atendimento e a quantidade orçada (77 m²) bate com o escopo. O orçamento não menciona a cor padrão da agência, que é critério de aceite; vale confirmar com o fornecedor. A massa corrida em toda a área é aceitável por se tratar de reparo de desgaste, mas pode ser conferida na foto do antes."
+      }
+    },
+    {
+      "task": "photos",
+      "provider": "anthropic",
+      "model": "anthropic:claude-sonnet-5-5",
+      "resolved_model": "claude-sonnet-5-5",
+      "prompt_version": "2026-11-v6",
+      "prompt_hash": "c12ae2695ee6",
+      "schema_hash": "252ae0df9ba2",
+      "start": "2026-11-10T22:25:04.147107",
+      "duration_s": 6.21,
+      "input_tokens": 2413,
+      "output_tokens": 683,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 2172,
+      "cost_usd": 0.017086,
+      "from_cache": false,
+      "simulated": false,
+      "via_batch": false,
+      "batch_id": null,
+      "response": {
+        "photos": [
+          {
+            "index": 2,
+            "environment": "Área interna de agência Itaú, canto de parede junto ao forro, com painel/sinalização laranja da marca Itaú à direita; provável salão de atendimento",
+            "what_it_shows": "Canto de parede interna com pintura descascada, manchas de umidade e mofo escuro junto ao forro e descascamento na parte inferior da área visível; estado de desgaste anterior ao serviço",
+            "moment": "before",
+            "readable": true,
+            "matches_scope": "yes",
+            "reason": "Foto nítida de parede interna em agência Itaú com desgaste de pintura (descascamento, mofo e manchas), coerente com o sintoma e com o escopo de repintura. Foi tirada em 01/11/2026, após a abertura (31/10/2026) e antes do envio do fornecedor, e mostra o problema, não o resultado. O cômodo exato não pode ser confirmado, mas nada o contradiz.",
+            "covered_items": [
+              1,
+              2
+            ]
+          }
+        ],
+        "has_before_photo": true,
+        "done_justification": "A única foto enviada (anexo 2) mostra a parede ainda com pintura descascada, mofo e manchas, ou seja, o estado anterior ao serviço. Nenhuma foto mostra as paredes repintadas com acabamento uniforme, então o resultado pedido não é comprovado. O momento da validação é a aprovação do orçamento, em que o resultado ainda não é exigido, mas nenhuma evidência de conclusão foi apresentada.",
+        "done_service": "no",
+        "items_without_photo": [],
+        "notes": "Há apenas uma foto de 'antes', que evidencia a necessidade de pintura e de correção da parede (massa corrida) em um ponto localizado. Ela não permite confirmar a área de 77 m² nem a cor padrão. Faltam fotos gerais do salão e fotos do resultado após a repintura. O mofo visível sugere infiltração ou umidade na origem; vale conferir se o escopo trata a causa, senão o problema pode voltar."
+      }
+    },
+    {
+      "task": "assessment",
+      "provider": "anthropic",
+      "model": "anthropic:claude-haiku-5-5",
+      "resolved_model": "claude-haiku-5-5",
+      "prompt_version": "2026-11-v6",
+      "prompt_hash": "a10679bac76b",
+      "schema_hash": "54e4cbe91987",
+      "start": "2026-11-10T22:25:12.177082",
+      "duration_s": 1.33,
+      "input_tokens": 364,
+      "output_tokens": 141,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 692,
+      "cost_usd": 0.000193,
+      "from_cache": false,
+      "simulated": false,
+      "via_batch": false,
+      "batch_id": null,
+      "response": {
+        "summary": "Recomendação: aprovar o chamado 02000021 (Esteira SETA, corretiva, Pintura), com score 100, sem travas e confiança alta. Escopo, orçamento e evidências fotográficas foram avaliados com nota 100 e não há valor potencial divergente (R$ 0,00, 0% do orçamento). Não há apontamentos.",
+        "supplier_message": ""
+      }
+    }
+  ],
+  "duration_s": 31.53,
+  "stage_durations_s": {
+    "checklist": 13.305,
+    "scope": 4.601,
+    "quote": 4.2,
+    "photos": 8.078,
+    "score": 0.001,
+    "assessment": 1.33
+  },
+  "cost_usd": 0.039547,
+  "cost_brl": 0.2136
+}

@@ -3,7 +3,7 @@
 # aqui (ex.: vague_scope, "yes"/"no") precisam bater com esse esquema.
 
 [default.prompts]
-version = "2026-11-v6"  # v6: items_without_photo inclui item com mais unidades cobradas do que as fotos mostram; v5: fotos com done_service (yes/partial/no), local só reprova se contradito, data de cada foto; v4: "valor em questão" passa a ser "valor potencial divergente"; v3: esquema em inglês, texto em português
+version = "2026-11-v7"  # v7: resumo do chamado chama o ambiente de "Local do chamado"; v6: items_without_photo inclui item com mais unidades cobradas do que as fotos mostram; v5: fotos com done_service (yes/partial/no), local só reprova se contradito, data de cada foto; v4: "valor em questão" passa a ser "valor potencial divergente"; v3: esquema em inglês, texto em português
 
 identify_attachments = """
 Você é o validador de checklist mínimo do Atest.AI, que confere chamados de manutenção predial (esteira SETA) e de

@@ -9,13 +9,22 @@ from openpyxl.styles import Alignment
 from openpyxl.worksheet.datavalidation import DataValidation
 from openpyxl.worksheet.table import Table, TableStyleInfo
 
-from .domain import Category, Symptom
+from .domain import current_catalog
 
 FIELDS = ["Chamado", "Esteira", "Agência", "Fornecedor", "CNPJ", "Nº orçamento", "Data", "Categoria", "Sintoma", "Escopo", "Valor total"]
 
 
-def spreadsheet_template(ticket_id: str = "", category: str = "", symptom: str = "", scope: str = "") -> bytes:
-    """Planilha modelo (Excel) já preenchida com categoria, sintoma e escopo, para o fornecedor completar."""
+def spreadsheet_template(
+    ticket_id: str = "", category: str = "", symptom: str = "", scope: str = "",
+    categories: list[str] | None = None, symptoms: list[str] | None = None,
+) -> bytes:
+    """Planilha modelo (Excel) já preenchida com categoria, sintoma e escopo, para o fornecedor completar.
+
+    `categories` e `symptoms`: códigos oferecidos na lista de escolha das células (padrão: os ativos do cadastro).
+    """
+    catalog = current_catalog()
+    categories = categories if categories is not None else catalog.codes("categories", enabled_only=True)
+    symptoms = symptoms if symptoms is not None else catalog.codes("symptoms", enabled_only=True)
     wb = Workbook()
     ws = wb.active
     ws.title = "Chamado"
@@ -29,7 +38,9 @@ def spreadsheet_template(ticket_id: str = "", category: str = "", symptom: str =
     tab = Table(displayName="tbChamado", ref=f"A1:B{len(FIELDS) + 1}")
     tab.tableStyleInfo = TableStyleInfo(name="TableStyleLight9", showRowStripes=True)
     ws.add_table(tab)
-    for cell, values in (("B9", [c.value for c in Category]), ("B10", [s.value for s in Symptom])):
+    for cell, values in (("B9", categories), ("B10", symptoms)):
+        if len(",".join(values)) > 250:  # o Excel limita a lista direta a 255 caracteres: sem lista, a célula fica livre
+            continue
         dv = DataValidation(type="list", formula1='"' + ",".join(values) + '"', allow_blank=True)
         ws.add_data_validation(dv)
         dv.add(cell)

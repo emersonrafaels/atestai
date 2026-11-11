@@ -11,8 +11,15 @@ interface Props {
 
 /** Envio de um chamado novo pela tela: dados do chamado, planilha Excel padrão e fotos/documentos. */
 export function NewTicket({ config, close, created }: Props) {
-  const [category, setCategory] = useState(config.categories[0]?.value ?? "");
-  const [symptom, setSymptom] = useState(config.symptoms[0]?.value ?? "");
+  // cadastro: só itens ativos; a categoria depende da esteira e o sintoma, da categoria
+  const [workstream, setWorkstream] = useState<"SETA" | "SISR">("SETA");
+  const categories = config.categories.filter((c) => c.enabled !== false && (!c.workstreams?.length || c.workstreams.includes(workstream)));
+  const [category, setCategory] = useState(categories[0]?.value ?? "");
+  const symptoms = config.symptoms.filter((s) => s.enabled !== false && (!s.categories?.length || s.categories.includes(category)));
+  const [symptom, setSymptom] = useState(symptoms[0]?.value ?? "");
+  const locations = (config.locations ?? []).filter((l) => l.enabled !== false);
+  useEffect(() => { if (!categories.some((c) => c.value === category)) setCategory(categories[0]?.value ?? ""); }, [categories, category]);
+  useEffect(() => { if (!symptoms.some((s) => s.value === symptom)) setSymptom(symptoms[0]?.value ?? ""); }, [symptoms, symptom]);
   const [scope, setScope] = useState("");
   const [spreadsheet, setSpreadsheet] = useState<File | null>(null);
   const [attachments, setAttachments] = useState<File[]>([]);
@@ -66,29 +73,29 @@ export function NewTicket({ config, close, created }: Props) {
               placeholder="Ex.: Ar-condicionado da sala de reunião pingando água no piso. Verificar dreno e corrigir." />
           </label>
           <label>
+            <span className="mb-1 block font-medium">Tipo de manutenção</span>
+            <select name="maintenance_type" className={field}><option value="corrective">Corretiva</option><option value="preventive">Preventiva</option></select>
+          </label>
+          <label>
             <span className="mb-1 block font-medium">Categoria</span>
             <select name="category" value={category} onChange={(e) => setCategory(e.target.value)} className={field}>
-              {config.categories.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
+              {categories.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
             </select>
           </label>
           <label>
             <span className="mb-1 block font-medium">Sintoma</span>
             <select name="symptom" value={symptom} onChange={(e) => setSymptom(e.target.value)} className={field}>
-              {config.symptoms.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+              {symptoms.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
             </select>
-          </label>
-          <label>
-            <span className="mb-1 block font-medium">Esteira</span>
-            <select name="workstream" className={field}><option>SETA</option><option>SISR</option></select>
           </label>
           <div className="grid grid-cols-2 gap-3">
             <label>
-              <span className="mb-1 block font-medium">Manutenção</span>
-              <select name="maintenance_type" className={field}><option value="corrective">Corretiva</option><option value="preventive">Preventiva</option></select>
-            </label>
-            <label>
               <span className="mb-1 block font-medium">Etapa da esteira</span>
               <select name="moment" className={field}><option value="quote">Aprovação de Orçamento</option><option value="execution">Atestação do Serviço</option></select>
+            </label>
+            <label>
+              <span className="mb-1 block font-medium">Esteira</span>
+              <select name="workstream" value={workstream} onChange={(e) => setWorkstream(e.target.value as "SETA" | "SISR")} className={field}><option>SETA</option><option>SISR</option></select>
             </label>
           </div>
           <label>
@@ -97,7 +104,13 @@ export function NewTicket({ config, close, created }: Props) {
           </label>
           <div className="grid grid-cols-2 gap-3">
             <label><span className="mb-1 block font-medium">Código</span><input name="branch_code" placeholder="0418" className={field} /></label>
-            <label><span className="mb-1 block font-medium">Ambiente</span><input name="environment" placeholder="backoffice" className={field} /></label>
+            <label>
+              <span className="mb-1 block font-medium">Local do chamado</span>
+              <select name="environment" defaultValue="" className={field}>
+                <option value="">Não informado</option>
+                {locations.map((l) => <option key={l.value} value={l.value}>{l.label}</option>)}
+              </select>
+            </label>
           </div>
           <label><span className="mb-1 block font-medium">Fornecedor</span><input name="supplier_name" placeholder="Razão social" className={field} /></label>
           <div className="grid grid-cols-2 gap-3">

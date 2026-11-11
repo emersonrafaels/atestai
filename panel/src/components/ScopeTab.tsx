@@ -1,7 +1,7 @@
 import { ArrowRight, Box, Camera, CheckCircle2, ClipboardCheck, FileSearch, ListChecks, MapPin, Ruler, Wrench, XCircle } from "lucide-react";
 import type { ReactNode } from "react";
 import type { Assessment, RubricInfo, TicketDetail } from "../api";
-import { MAINTENANCE_LABEL, SEVERITY, STAGE_LABEL, envLabel, explainFindings, num, pts } from "../format";
+import { LOCAL_LABEL, MAINTENANCE_LABEL, SEVERITY, STAGE_LABEL, envLabel, explainFindings, num, pts } from "../format";
 import { InfoBox } from "./ui/InfoBox";
 import { InfoTip, Tooltip } from "./ui/Tooltip";
 
@@ -85,11 +85,12 @@ export function ScopeTab({ p, ticket, rubric, goTo }: { p: Assessment; ticket: T
             “{highlight(ticket?.scope ?? "", quantities)}”
           </blockquote>
           <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+            <Fact label="Tipo de manutenção">{MAINTENANCE_LABEL[p.maintenance_type] ?? p.maintenance_type}</Fact>
             <Fact label="Categoria">{ticket?.category_label ?? p.category.replace(/_/g, " ")}</Fact>
             <Fact label="Sintoma">{ticket?.symptom_label ?? p.symptom.replace(/_/g, " ")}</Fact>
-            <Fact label="Tipo de manutenção">{MAINTENANCE_LABEL[p.maintenance_type] ?? p.maintenance_type}</Fact>
+            {ticket && <Fact label={LOCAL_LABEL}>{envLabel(ticket.environment) || "não informado"}</Fact>}
             <Fact label="Etapa da esteira">{STAGE_LABEL[p.moment] ?? p.moment}</Fact>
-            {ticket && <Fact label="Agência">{ticket.branch}{ticket.environment ? `, ${envLabel(ticket.environment)}` : ""}</Fact>}
+            {ticket && <Fact label="Agência">{ticket.branch}</Fact>}
           </dl>
         </section>
 
@@ -147,7 +148,7 @@ export function ScopeTab({ p, ticket, rubric, goTo }: { p: Assessment; ticket: T
         <h3 className="mb-2 flex items-center gap-1.5 font-semibold">Como esta leitura é usada <InfoTip text="A leitura do escopo é enviada às etapas seguintes: é a régua contra a qual orçamento e fotos são conferidos." /></h3>
         <div className="grid gap-4 md:grid-cols-3">
           <UseCard icon={<ListChecks size={17} />} title="Critérios de aceite" sub="Conferem cada item do orçamento" items={criteria} empty={simulated ? "Gerados no modo API." : "Nenhum critério extraído."}
-            action={<Link onClick={() => goTo("quote")}>Ver orçamento × escopo</Link>} />
+            action={<Link onClick={() => goTo("quote")}>Ver orçamento</Link>} />
           <UseCard icon={<Camera size={17} />} title="Evidências esperadas" sub="O que as fotos precisam mostrar" items={evidence} empty={simulated ? "Geradas no modo API." : "Nenhuma evidência listada."}
             action={<Link onClick={() => goTo("photos")}>Ver fotos</Link>} />
           <div className="rounded-xl border border-line bg-sheet p-4">

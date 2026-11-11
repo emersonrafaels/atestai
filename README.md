@@ -57,7 +57,8 @@ Trocar, remover ou acrescentar uma etapa é passar outra lista em `Orchestrator(
 |---|---|
 | `config/settings.toml` | execução, modelos e provedores, lote/batch, caminhos, painel, validação, observabilidade, custos |
 | `config/rubric.toml` | pesos 20/40/40, faixas 85/70, descontos por severidade, tipos de apontamento, tolerâncias |
-| `config/checklists.toml` | itens obrigatórios por categoria × tipo de manutenção × momento |
+| `config/checklists.toml` | itens obrigatórios por esteira × categoria × tipo de manutenção × momento |
+| `config/catalog.toml` | cadastro de categorias (com a esteira), sintomas (com as categorias em que valem) e locais do chamado |
 | `config/prompts.toml` | os prompts de sistema de cada tarefa (em português), com versão |
 | `config/.secrets.toml` | chaves de API e credenciais da IARA (fora do git) |
 | `config/settings.local.toml` | ajustes só desta máquina, ex.: usar a IARA dentro do Itaú (fora do git; modelo em `config/settings.itau.toml.example`) |
@@ -146,7 +147,7 @@ O `Orchestrator` inteiro vira um único nó do grafo. Também passa a valer a pe
 ## O painel
 
 - **Cenários**: acha chamados por tipo de problema (escopo mal preenchido, orçamento com vários erros, foto de outro ambiente, checklist incompleto...). Mostra o catálogo com um chamado por cenário e, para cada tipo, os chamados de todos os conjuntos cujo gabarito traz aquele problema. Um clique abre o chamado na Análise; **Selecionar** marca todos para analisar de uma vez. A mesma lista fica em [`docs/cenarios.md`](docs/cenarios.md).
-- **Análise**: lista de chamados (filtro por conjunto e esteira), modo simulado ou API, régua Fase 1/2, síncrono ou batch. Abas: parecer (carimbo, notas, apontamentos, mensagem ao fornecedor, feedback), orçamento × escopo, fotos, chamadas ao modelo e entrada. **Novo chamado** envia planilha e fotos pela tela.
+- **Análise**: lista de chamados (filtro por conjunto e esteira), modo simulado ou API, régua Fase 1/2, síncrono ou batch. Abas: entrada do chamado, parecer (carimbo, notas, apontamentos, mensagem ao fornecedor, feedback), escopo, orçamento, fotos e chamadas ao modelo; o botão Parecer em JSON fica ao lado. **Novo chamado** envia planilha e fotos pela tela.
 - **Validação**: roda um conjunto inteiro (ou uma amostra) e mostra a leitura de ciência de dados: portão de qualidade, acurácia com IC 95% por bootstrap, kappa de Cohen, F1 de "pegar problema", matriz de confusão, dispersão do score, precisão/cobertura/F1 por tipo de apontamento, acurácia por categoria, valor em questão, latência e custo p50/p95, e os casos divergentes.
 - **Operação**: histórico de execuções, custos e feedbacks.
 
@@ -154,11 +155,11 @@ Front-end em React + TypeScript + Tailwind (Vite), em `panel/`. Para alterar: `c
 
 ### Configuração (portal com login)
 
-A aba **Configuração** do painel é o portal para manter as regras sem editar arquivo: checklist mínimo por categoria × tipo de manutenção × etapa da esteira (ativar/desativar regras e exigências, criar regras, ajustar os tipos de anexo aceitos), regras de apontamento (ativar/desativar, severidade, fase, trava, redução de confiança), régua do score (pesos, descontos, faixas, confiança, tolerâncias), além de consulta a categorias, sintomas e LPU.
+A aba **Configuração** do painel é o portal para manter as regras sem editar arquivo: checklist mínimo por esteira × categoria × tipo de manutenção × etapa (ativar/desativar regras e exigências, criar regras, ajustar os tipos de anexo aceitos), regras de apontamento (ativar/desativar, severidade, fase, trava, redução de confiança; ativação e severidade também por esteira SETA/SISR), régua do score (pesos, descontos, faixas, confiança, tolerâncias), cadastro de categorias, sintomas e locais (incluir, renomear, ligar, desativar; apagar só o que não tem uso), além de consulta à LPU.
 
 - **Acesso:** usuário e senha (PBKDF2; sessão em token que expira em `admin.session_hours`; bloqueio temporário após `admin.max_failed_logins` erros). O primeiro usuário vem de `[default.admin].seed_users` em `config/settings.toml`, que guarda só o hash. Troque a senha inicial pelo próprio portal (Usuários e senha).
 - **Como as mudanças valem:** cada "Salvar" exige um motivo e grava uma versão completa da seção no banco (`config_versions`). A configuração efetiva é a dos TOML com a última versão por cima; os arquivos em `config/` continuam sendo o padrão de fábrica ("Restaurar padrão"). O histórico mostra autor, motivo e o resumo do que mudou, e permite voltar a qualquer versão.
-- **Rastreabilidade:** a assinatura da configuração (gravada em cada parecer e em cada rodada de validação) inclui régua e checklist; a versão da régua ganha o sufixo `+portal.N`. `python main.py` (lote e validação) também aplica as versões salvas.
+- **Rastreabilidade:** a assinatura da configuração (gravada em cada parecer e em cada rodada de validação) inclui régua, checklist e cadastro; a versão da régua ganha o sufixo `+portal.N`. `python main.py` (lote e validação) também aplica as versões salvas.
 
 ## Contrato de entrada
 

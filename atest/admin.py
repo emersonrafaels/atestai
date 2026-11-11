@@ -1,4 +1,4 @@
-"""Portal de configuração: usuários, sessões e versões da régua e dos checklists editadas pelo painel.
+"""Portal de configuração: usuários, sessões e versões da régua, dos checklists e do cadastro editadas pelo painel.
 
 As edições não reescrevem os TOML de config/. Cada "Salvar" grava uma versão completa da seção no banco
 (tabela config_versions); a configuração efetiva é a dos TOML com a última versão salva por cima. Assim:
@@ -25,11 +25,14 @@ from pydantic import ValidationError
 
 from .config import AdminSettings, Checklists, Settings
 from .database import Database
-from .domain import MAINTENANCE_PT, MOMENT_PT, SEVERITY_PT, Category, Rubric
+from .domain import MAINTENANCE_PT, MOMENT_PT, SEVERITY_PT, Catalog, Category, Rubric, Workstream, use_catalog
 from .formatting import pt_validation_error
 
-Section = Literal["rubric", "checklists"]
-SECTIONS: tuple[Section, ...] = ("rubric", "checklists")
+Section = Literal["rubric", "checklists", "catalog"]
+SECTIONS: tuple[Section, ...] = ("rubric", "checklists", "catalog")
+SECTION_MODEL: dict[str, Any] = {"rubric": Rubric, "checklists": Checklists, "catalog": Catalog}
+CATALOG_PT = {"categories": ("categoria", "categorias"), "symptoms": ("sintoma", "sintomas"), "locations": ("local", "locais")}
+CODE = re.compile(r"^[a-z0-9_]{2,40}$")
 PBKDF2_ITERATIONS = 390_000
 USERNAME = re.compile(r"^[a-z0-9._-]{3,40}$")
 
@@ -96,14 +99,21 @@ def check_password_policy(password: str) -> None:
 # ============================================================================ validação das seções
 VALID_MAINTENANCE = {"*", "corrective", "preventive"}
 VALID_MOMENT = {"*", "quote", "execution"}
+VALID_WORKSTREAM = {"*", *(w.value for w in Workstream)}
 
 
-def validate_section(section: Section, data: dict[str, Any], base: Settings) -> dict[str, Any]:
-    """Valida a seção inteira (tipos pelo Pydantic + regras de negócio) e devolve a versão normalizada."""
+def validate_section(section: Section, data: dict[str, Any], base: Settings, catalog: Catalog | None = None) -> dict[str, Any]:
+    """Valida a seção inteira (tipos pelo Pydantic + regras de negócio) e devolve a versão normalizada.
+
+    `catalog` é o cadastro em uso (para conferir as categorias das regras de checklist); sem ele, o dos TOML.
+    """
     try:
-        model = Rubric.model_validate(data) if section == "rubric" else Checklists.model_validate(data)
+        model = SECTION_MODEL[section].model_validate(data)
     except ValidationError as e:
         raise AdminError(f"Valor inválido: {pt_validation_error(e.errors())}", 422) from e
+
+    if isinstance(model, Catalog):
+        return validate_catalog(model)
 
     if isinstance(model, Rubric):
         if sum(model.weights.values()) != 100:
@@ -126,17 +136,18 @@ def validate_section(section: Section, data: dict[str, Any], base: Settings) -> 
             raise AdminError("A confiança média precisa de menos redutores do que a baixa.", 422)
         return model.model_dump(mode="json")
 
-    categories = {c.value for c in Category} | {"*"}
+    assert isinstance(model, Checklists)
+    categories = set((catalog or base.catalog).codes("categories")) | {"*"}
     if set(model.attachment_categories) != set(base.checklists.attachment_categories):
         raise AdminError("As categorias de anexo são definidas no código: dá para ajustar a descrição, mas não criar ou apagar.", 422)
-    seen: set[tuple[str, str, str]] = set()
+    seen: set[tuple[str, str, str, str]] = set()
     for n, rule in enumerate(model.rules, 1):
-        where = f"regra {n} ({rule_label(rule.category, rule.maintenance, rule.moment)})"
+        where = f"regra {n} ({rule_label(rule.category, rule.maintenance, rule.moment, rule.workstream)})"
         if rule.category not in categories:
             raise AdminError(f"{where}: categoria desconhecida.", 422)
-        if rule.maintenance not in VALID_MAINTENANCE or rule.moment not in VALID_MOMENT:
-            raise AdminError(f"{where}: tipo de manutenção ou etapa inválidos.", 422)
-        key = (rule.category, rule.maintenance, rule.moment)
+        if rule.maintenance not in VALID_MAINTENANCE or rule.moment not in VALID_MOMENT or rule.workstream not in VALID_WORKSTREAM:
+            raise AdminError(f"{where}: esteira, tipo de manutenção ou etapa inválidos.", 422)
+        key = (rule.workstream, rule.category, rule.maintenance, rule.moment)
         if key in seen:
             raise AdminError(f"{where}: já existe outra regra para a mesma combinação.", 422)
         seen.add(key)
@@ -153,6 +164,40 @@ def validate_section(section: Section, data: dict[str, Any], base: Settings) -> 
     return model.model_dump(mode="json")
 
 
+def validate_catalog(model: Catalog) -> dict[str, Any]:
+    """Cadastro: códigos únicos e válidos, nomes preenchidos e vínculos (sintoma → categoria) existentes."""
+    for kind, (one, many) in CATALOG_PT.items():
+        entries = model.entries(kind)
+        codes = [e.value.strip() for e in entries]
+        if len(set(codes)) != len(codes):
+            dup = next(c for c in codes if codes.count(c) > 1)
+            raise AdminError(f"Há {many} com o mesmo código ('{dup}').", 422)
+        labels = [e.label.strip().lower() for e in entries if e.enabled]
+        if len(set(labels)) != len(labels):
+            dup = next(e.label for e in entries if e.enabled and labels.count(e.label.strip().lower()) > 1)
+            raise AdminError(f"Há {many} ativos com o mesmo nome (“{dup}”).", 422)
+        for e in entries:
+            if not e.label.strip():
+                raise AdminError(f"Todo {one} precisa de um nome ('{e.value}' está sem).", 422)
+            if kind != "locations" and not CODE.fullmatch(e.value):
+                raise AdminError(f"Código '{e.value}' inválido para {one}: use de 2 a 40 letras minúsculas, números e _.", 422)
+            if kind != "categories" and e.workstreams:
+                raise AdminError(f"Só categorias têm esteira (veja “{e.label}”).", 422)
+            if kind != "symptoms" and e.categories:
+                raise AdminError(f"Só sintomas se ligam a categorias (veja “{e.label}”).", 422)
+    if not [c for c in model.categories if c.enabled] or not [y for y in model.symptoms if y.enabled]:
+        raise AdminError("Deixe ao menos uma categoria e um sintoma ativos.", 422)
+    known = set(model.codes("categories"))
+    for sy in model.symptoms:
+        if unknown := [c for c in sy.categories if c not in known]:
+            raise AdminError(f"O sintoma “{sy.label}” está ligado a categoria inexistente: {', '.join(unknown)}.", 422)
+    data = model.model_dump(mode="json")
+    for kind in CATALOG_PT:
+        for e in data[kind]:
+            e["value"], e["label"] = e["value"].strip(), e["label"].strip()
+    return data
+
+
 # ============================================================================ resumo das mudanças (histórico)
 # Parâmetros numéricos da régua → nome em português (histórico do portal).
 FIELD_PT = {
@@ -166,15 +211,12 @@ FIELD_PT = {
 }
 
 
-def rule_label(category: str, maintenance: str, moment: str) -> str:
-    """Regra do checklist em português: "Pintura / qualquer manutenção / atestação do serviço"."""
-    try:
-        cat = Category(category).label
-    except ValueError:
-        cat = "qualquer categoria" if category == "*" else category
+def rule_label(category: str, maintenance: str, moment: str, workstream: str = "*") -> str:
+    """Regra do checklist em português: "Pintura / qualquer manutenção / atestação do serviço" (+ " / SETA")."""
+    cat = "qualquer categoria" if category == "*" else Category(category).label
     man = "qualquer manutenção" if maintenance == "*" else MAINTENANCE_PT.get(maintenance, maintenance)
     mom = "qualquer etapa" if moment == "*" else MOMENT_PT.get(moment, moment)
-    return f"{cat} / {man} / {mom}"
+    return f"{cat} / {man} / {mom}" + ("" if workstream == "*" else f" / {workstream}")
 
 
 def describe_changes(section: Section, before: dict[str, Any], after: dict[str, Any]) -> list[str]:
@@ -197,15 +239,45 @@ def describe_changes(section: Section, before: dict[str, Any], after: dict[str, 
                 types = after.get("finding_types", {})
                 absorbed = [f"“{types.get(k, {}).get('description', k)}”" for k in a.get("absorbs", [])]
                 out.append(f"“{name}”: absorve {', '.join(absorbed) or 'nenhum'}")
+            ob, oa = b.get("by_workstream") or {}, a.get("by_workstream") or {}
+            for ws in sorted(set(ob) | set(oa)):
+                wb, wa = ob.get(ws) or {}, oa.get(ws) or {}
+                if wb == wa:
+                    continue
+                if not any(v is not None for v in wa.values()):
+                    out.append(f"“{name}” em {ws}: volta ao padrão")
+                    continue
+                if wa.get("enabled") is not None and wa.get("enabled") != wb.get("enabled"):
+                    out.append(f"“{name}” em {ws}: {'ativa' if wa['enabled'] else 'desativada'}")
+                if wa.get("severity") and wa.get("severity") != wb.get("severity"):
+                    out.append(f"“{name}” em {ws}: severidade {SEVERITY_PT.get(wa['severity'], wa['severity'])}")
         for key, label in (("weights", "Pesos"), ("discount_by_severity", "Descontos por severidade"), ("bands", "Faixas"), ("confidence", "Confiança")):
             if before.get(key) != after.get(key):
                 out.append(f"{label} alterados")
         for key, label in FIELD_PT.items():
             if before.get(key) != after.get(key):
                 out.append(f"{label}: {before.get(key)} → {after.get(key)}")
+    elif section == "catalog":
+        for kind, (one, _) in CATALOG_PT.items():
+            eb = {e["value"]: e for e in before.get(kind, [])}
+            ea = {e["value"]: e for e in after.get(kind, [])}
+            for v in ea.keys() - eb.keys():
+                out.append(f"Novo {one}: “{ea[v]['label']}”")
+            for v in eb.keys() - ea.keys():
+                out.append(f"Apagou o {one} “{eb[v]['label']}”")
+            for v in ea.keys() & eb.keys():
+                a, b = ea[v], eb[v]
+                if a["label"] != b["label"]:
+                    out.append(f"Renomeou o {one} “{b['label']}” para “{a['label']}”")
+                if a.get("enabled", True) != b.get("enabled", True):
+                    out.append(f"{'Ativou' if a.get('enabled', True) else 'Desativou'} o {one} “{a['label']}”")
+                if sorted(a.get("workstreams", [])) != sorted(b.get("workstreams", [])):
+                    out.append(f"“{a['label']}”: esteira {' e '.join(a.get('workstreams') or ['SETA', 'SISR'])}")
+                if sorted(a.get("categories", [])) != sorted(b.get("categories", [])):
+                    out.append(f"“{a['label']}”: categorias em que vale alteradas")
     else:
         def key(r: dict) -> str:
-            return rule_label(r["category"], r["maintenance"], r["moment"])
+            return rule_label(r["category"], r["maintenance"], r["moment"], r.get("workstream", "*"))
 
         rb = {key(r): r for r in before.get("rules", [])}
         ra = {key(r): r for r in after.get("rules", [])}
@@ -343,8 +415,11 @@ class AdminStore:
         if not comment.strip():
             raise AdminError("Descreva o motivo da alteração: ele fica no histórico.", 422)
         before = self.section_data(section, base)
-        normalized = validate_section(section, data, base) if data is not None else None
+        catalog = Catalog.model_validate(self.section_data("catalog", base))
+        normalized = validate_section(section, data, base, catalog) if data is not None else None
         after = normalized if normalized is not None else self.base_data(section, base)
+        if section == "catalog":
+            self.check_removed_codes(before, after, base)
         summary = describe_changes(section, before, after) if normalized is not None else ["Voltou ao padrão dos arquivos de configuração"]
         with self.db._transaction() as con:
             cur = con.execute(
@@ -354,9 +429,21 @@ class AdminStore:
             )
             return int(cur.lastrowid)
 
+    def check_removed_codes(self, before: dict[str, Any], after: dict[str, Any], base: Settings) -> None:
+        """Só deixa apagar do cadastro o que nenhum chamado, gabarito ou regra de checklist usa (o resto, desative)."""
+        usage = catalog_usage(base, self.section_data("checklists", base))
+        for kind, (one, _) in CATALOG_PT.items():
+            removed = {e["value"] for e in before.get(kind, [])} - {e["value"] for e in after.get(kind, [])}
+            for code in sorted(removed):
+                n = usage[kind].get(code, {})
+                if any(n.values()):
+                    where = ", ".join(f"{v} {USAGE_PT[k]}" for k, v in n.items() if v)
+                    label = next(e["label"] for e in before[kind] if e["value"] == code)
+                    raise AdminError(f"O {one} “{label}” não pode ser apagado: está em uso ({where}). Desative-o em vez de apagar.", 409)
+
     @staticmethod
     def base_data(section: Section, base: Settings) -> dict[str, Any]:
-        return (base.rubric if section == "rubric" else base.checklists).model_dump(mode="json")
+        return getattr(base, section).model_dump(mode="json")
 
     def section_data(self, section: Section, base: Settings) -> dict[str, Any]:
         latest = self.latest(section)
@@ -380,7 +467,7 @@ class AdminStore:
         return out
 
     def apply(self, base: Settings) -> Settings:
-        """Configuração efetiva: os TOML com a última versão salva de cada seção por cima."""
+        """Configuração efetiva: os TOML com a última versão salva de cada seção por cima (o cadastro passa a valer)."""
         changes: dict[str, Any] = {}
         for section in SECTIONS:
             latest = self.latest(section)
@@ -390,7 +477,42 @@ class AdminStore:
                     data["version"] = f"{base.rubric.version}+portal.{latest['id']}"
                     data["finding_types"] = self.merge_finding_types(base, data.get("finding_types", {}))
                 changes[section] = data
-        return base.with_overrides(**changes) if changes else base
+        cfg = base.with_overrides(**changes) if changes else base
+        use_catalog(cfg.catalog)
+        return cfg
+
+
+USAGE_PT = {"tickets": "chamado(s)", "ground_truth": "gabarito(s)", "rules": "regra(s) de checklist"}
+
+
+def catalog_usage(cfg: Settings, checklists: dict[str, Any]) -> dict[str, dict[str, dict[str, int]]]:
+    """Onde cada código do cadastro aparece: chamados (atuais e histórico), gabaritos e regras de checklist."""
+    out: dict[str, dict[str, dict[str, int]]] = {k: {} for k in CATALOG_PT}
+
+    def bump(kind: str, code: str, where: str) -> None:
+        if code:
+            out[kind].setdefault(code, dict.fromkeys(USAGE_PT, 0))[where] += 1
+
+    for folder in (cfg.tickets_dir, cfg.history_dir):
+        for f in sorted(folder.glob("*/ticket.json")) if folder.exists() else []:
+            try:
+                t = json.loads(f.read_text(encoding="utf-8"))
+            except (OSError, ValueError):
+                continue
+            bump("categories", t.get("category", ""), "tickets")
+            bump("symptoms", t.get("symptom", ""), "tickets")
+            bump("locations", (t.get("branch") or {}).get("environment", ""), "tickets")
+    for f in sorted(cfg.ground_truth_dir.glob("*.json")) if cfg.ground_truth_dir.exists() else []:
+        try:
+            g = json.loads(f.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        bump("categories", g.get("category", ""), "ground_truth")
+        bump("symptoms", g.get("symptom", ""), "ground_truth")
+    for r in checklists.get("rules", []):
+        if r.get("category", "*") != "*":
+            bump("categories", r["category"], "rules")
+    return out
 
 
 def apply_saved_config(cfg: Settings) -> Settings:

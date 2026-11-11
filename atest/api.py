@@ -26,22 +26,19 @@ from PIL import Image
 from pydantic import BaseModel, Field, ValidationError
 
 from . import providers
-from .admin import SECTIONS, AdminError, AdminStore
+from .admin import SECTIONS, AdminError, AdminStore, catalog_usage
 from .attachments import compute_hashes, detail_level, distance, exif_date, hashes_with_crops
 from .batch import BatchRunner, ComponentFactory, new_run_id
 from .config import KEY_ENV_VAR, ROOT, BatchMode, Mode, Settings, has_credentials, missing_keys, used_providers
 from .database import Database, Feedback, FeedbackInput
 from .domain import (
-    CATEGORY_LABEL,
-    SYMPTOM_LABEL,
     Assessment,
     Attachment,
-    Category,
+    Catalog,
     MaintenanceType,
     Moment,
     Quote,
     Stage,
-    Symptom,
     Ticket,
     Workstream,
 )
@@ -238,10 +235,17 @@ class Run(BaseModel):
 
 
 class Option(BaseModel):
-    """Valor e rótulo de um campo de escolha (categoria, sintoma)."""
+    """Item do cadastro para os campos de escolha (categoria, sintoma, local)."""
 
     value: str
     label: str
+    enabled: bool = True
+    workstreams: list[str] = Field(default_factory=list, description="categoria: esteiras em que vale (vazio = todas)")
+    categories: list[str] = Field(default_factory=list, description="sintoma: categorias em que vale (vazio = todas)")
+
+
+def catalog_options(catalog: Catalog, kind: str) -> list[Option]:
+    return [Option(**e.model_dump(mode="json")) for e in catalog.entries(kind)]
 
 
 class LoginInput(BaseModel):
@@ -272,7 +276,8 @@ class DeleteAssessmentsInput(BaseModel):
 
 
 # Suba quando o painel passar a depender de rotas ou campos novos da API (panel/src/api.ts: PANEL_API).
-PANEL_API = 6
+PANEL_API = 7
+SectionName = Literal["rubric", "checklists", "catalog"]
 
 
 class ProviderChoice(BaseModel):
@@ -336,6 +341,7 @@ class AppSettings(BaseModel):
     usd_brl_rate: float
     categories: list[Option]
     symptoms: list[Option]
+    locations: list[Option] = []
     providers: list[str]
     missing_keys: list[str]
     signature: str
@@ -638,16 +644,16 @@ def create_app(cfg: Settings) -> FastAPI:
 
     def overview() -> dict:
         eff = manager.cfg_base
-        counts_cat: dict[str, int] = {}
-        counts_sym: dict[str, int] = {}
         pairs: dict[str, set[str]] = {}
         total = 0
         for folder in list_tickets(cfg.tickets_dir):
             d = load_ticket(folder).data
             total += 1
-            counts_cat[d.category.value] = counts_cat.get(d.category.value, 0) + 1
-            counts_sym[d.symptom.value] = counts_sym.get(d.symptom.value, 0) + 1
             pairs.setdefault(d.category.value, set()).add(d.symptom.value)
+        usage = catalog_usage(base_cfg, eff.checklists.model_dump(mode="json"))
+
+        def used(kind: str, code: str) -> dict[str, int]:
+            return usage[kind].get(code, {"tickets": 0, "ground_truth": 0, "rules": 0})
         sections = {}
         for sec in SECTIONS:
             latest = admin.latest(sec)
@@ -660,10 +666,14 @@ def create_app(cfg: Settings) -> FastAPI:
         lpu = References(base_cfg).lpu
         return {
             "sections": sections,
-            "catalog": {
-                "categories": [{"value": c.value, "label": CATEGORY_LABEL[c], "tickets": counts_cat.get(c.value, 0),
-                                "symptoms_seen": sorted(pairs.get(c.value, set()))} for c in Category],
-                "symptoms": [{"value": sy.value, "label": SYMPTOM_LABEL[sy], "tickets": counts_sym.get(sy.value, 0)} for sy in Symptom],
+            "catalog": {  # cadastro em uso, com onde cada código aparece (o editável fica em sections.catalog)
+                "categories": [{**e.model_dump(mode="json"), "tickets": used("categories", e.value)["tickets"], "usage": used("categories", e.value),
+                                "symptoms_seen": sorted(pairs.get(e.value, set()))} for e in eff.catalog.categories],
+                "symptoms": [{**e.model_dump(mode="json"), "tickets": used("symptoms", e.value)["tickets"], "usage": used("symptoms", e.value)}
+                             for e in eff.catalog.symptoms],
+                "locations": [{**e.model_dump(mode="json"), "tickets": used("locations", e.value)["tickets"], "usage": used("locations", e.value)}
+                              for e in eff.catalog.locations],
+                "usage": usage,
                 "tickets": total,
             },
             "lpu": {ws: [i.model_dump() for i in items.values()] for ws, items in lpu.items()},
@@ -702,7 +712,7 @@ def create_app(cfg: Settings) -> FastAPI:
         return overview()
 
     @app.put("/api/admin/config/{section}")
-    def admin_save(section: Literal["rubric", "checklists"], body: SaveSectionInput, authorization: Annotated[str | None, Header()] = None) -> dict:
+    def admin_save(section: SectionName, body: SaveSectionInput, authorization: Annotated[str | None, Header()] = None) -> dict:
         user = admin_user(authorization)
         if body.data is None:
             raise HTTPException(422, "Envie a seção completa em 'data'.")
@@ -710,7 +720,7 @@ def create_app(cfg: Settings) -> FastAPI:
         return apply_and_overview(vid, user, section)
 
     @app.post("/api/admin/config/{section}/reset")
-    def admin_reset(section: Literal["rubric", "checklists"], body: SaveSectionInput, authorization: Annotated[str | None, Header()] = None) -> dict:
+    def admin_reset(section: SectionName, body: SaveSectionInput, authorization: Annotated[str | None, Header()] = None) -> dict:
         user = admin_user(authorization)
         vid = admin.save(section, None, base_cfg, user, body.comment)
         return apply_and_overview(vid, user, section)
@@ -780,8 +790,9 @@ def create_app(cfg: Settings) -> FastAPI:
             rubric_version=manager.cfg_base.rubric.version,
             prompts_version=cfg.prompts.version,
             usd_brl_rate=cfg.costs.usd_brl_rate,
-            categories=[Option(value=c.value, label=CATEGORY_LABEL[c]) for c in Category],
-            symptoms=[Option(value=s.value, label=SYMPTOM_LABEL[s]) for s in Symptom],
+            categories=catalog_options(manager.cfg_base.catalog, "categories"),
+            symptoms=catalog_options(manager.cfg_base.catalog, "symptoms"),
+            locations=catalog_options(manager.cfg_base.catalog, "locations"),
             providers=sorted(used_providers(cfg)),
             missing_keys=missing_keys(cfg),
             signature=manager.cfg_base.signature(),
@@ -924,8 +935,12 @@ def create_app(cfg: Settings) -> FastAPI:
 
     @app.get("/api/spreadsheet-template")
     def download_template(category: str = "", symptom: str = "", scope: str = "") -> Response:
+        catalog = manager.cfg_base.catalog
         return Response(
-            spreadsheet_template(category=category, symptom=symptom, scope=scope),
+            spreadsheet_template(
+                category=category, symptom=symptom, scope=scope,
+                categories=catalog.codes("categories", enabled_only=True), symptoms=catalog.codes("symptoms", enabled_only=True),
+            ),
             media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             headers={"Content-Disposition": 'attachment; filename="modelo_orcamento_atest.xlsx"'},
         )
@@ -933,20 +948,33 @@ def create_app(cfg: Settings) -> FastAPI:
     @app.post("/api/tickets", status_code=201)
     def send_ticket(
         workstream: Annotated[Workstream, Form()],
-        category: Annotated[Category, Form()],
-        symptom: Annotated[Symptom, Form()],
+        category: Annotated[str, Form(min_length=1)],
+        symptom: Annotated[str, Form(min_length=1)],
         maintenance_type: Annotated[MaintenanceType, Form()],
         moment: Annotated[Moment, Form()],
         scope: Annotated[str, Form(min_length=3)],
         branch_name: Annotated[str, Form(min_length=1)],
         branch_code: Annotated[str, Form()] = "0000",
-        environment: Annotated[str, Form()] = "",
+        environment: Annotated[str, Form()] = "",  # local do chamado
         supplier_name: Annotated[str, Form()] = "Fornecedor não informado",
         supplier_cnpj: Annotated[str, Form()] = "",
         opened_on: Annotated[date | None, Form()] = None,
         spreadsheet: Annotated[UploadFile, File()] = ...,  # type: ignore[assignment]
         attachments: Annotated[list[UploadFile], File()] = [],  # noqa: B006
     ) -> TicketSummary:
+        catalog = manager.cfg_base.catalog
+        cat = next((e for e in catalog.categories if e.value == category and e.enabled), None)
+        sym = next((e for e in catalog.symptoms if e.value == symptom and e.enabled), None)
+        if cat is None:
+            raise HTTPException(422, f"Categoria '{category}' não está cadastrada (ou está desativada).")
+        if cat.workstreams and workstream not in cat.workstreams:
+            raise HTTPException(422, f"A categoria {cat.label} não é da esteira {workstream.value}.")
+        if sym is None:
+            raise HTTPException(422, f"Sintoma '{symptom}' não está cadastrado (ou está desativado).")
+        if sym.categories and category not in sym.categories:
+            raise HTTPException(422, f"O sintoma {sym.label} não vale para a categoria {cat.label}.")
+        if environment and environment not in catalog.codes("locations", enabled_only=True):
+            raise HTTPException(422, f"Local '{environment}' não está cadastrado (ou está desativado).")
         prefix = cfg.paths.upload_id_prefix
         existing = [int(p.name) for p in cfg.tickets_dir.iterdir() if p.name.startswith(prefix) and p.name.isdigit()]
         tid = str(max(existing, default=int(prefix + "0000000")) + 1).zfill(8)
@@ -1000,7 +1028,7 @@ def create_app(cfg: Settings) -> FastAPI:
             final_target = cfg.tickets_dir / tid
             shutil.copytree(tmp_dir, final_target / "attachments")
             (final_target / "ticket.json").write_text(data.model_dump_json(indent=2), encoding="utf-8")
-        event("ticket_uploaded", ticket=tid, category=category.value, attachments=len(goals))
+        event("ticket_uploaded", ticket=tid, category=category, attachments=len(goals))
         return summary(final_target)
 
     @app.delete("/api/tickets/{tid}", status_code=204)

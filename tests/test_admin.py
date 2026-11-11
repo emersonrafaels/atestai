@@ -131,3 +131,52 @@ def test_clear_analysis_history_selected_and_all(admin_cfg):
     assert c.get("/api/admin/assessments", headers=h).json() == []
     m = c.get("/api/metrics").json()
     assert m["assessments"] == 0 and m["runs"] == 0
+
+
+def test_catalog_crud_and_rules(admin_cfg):
+    """Cadastro: incluir categoria (com esteira) e sintoma ligado; não apagar o que está em uso; checklist com esteira."""
+    c = TestClient(create_app(admin_cfg))
+    h = _login(c)
+    ov = c.get("/api/admin/overview", headers=h).json()
+    cat = copy.deepcopy(ov["sections"]["catalog"]["data"])
+    cat["categories"].append({"value": "glazing", "label": "Vidraçaria", "enabled": True, "workstreams": ["SETA"], "categories": []})
+    cat["symptoms"].append({"value": "cracked_glass", "label": "Vidro trincado", "enabled": True, "workstreams": [], "categories": ["glazing"]})
+    cat["locations"].append({"value": "sala_de_reuniao", "label": "Sala de reunião", "enabled": True, "workstreams": [], "categories": []})
+    r = c.put("/api/admin/config/catalog", json={"data": cat, "comment": "nova categoria"}, headers=h)
+    assert r.status_code == 200, r.text
+    conf = c.get("/api/config").json()
+    assert {"value": "glazing", "label": "Vidraçaria"}.items() <= next(x for x in conf["categories"] if x["value"] == "glazing").items()
+    assert any(x["value"] == "sala_de_reuniao" for x in conf["locations"])
+    assert "Novo categoria: “Vidraçaria”" in c.get("/api/admin/history", headers=h).json()[0]["summary"]
+
+    # checklist próprio da categoria nova, só na SETA
+    chk = copy.deepcopy(r.json()["sections"]["checklists"]["data"])
+    chk["rules"].append({"workstream": "SETA", "category": "glazing", "maintenance": "*", "moment": "execution", "enabled": True,
+                         "requirements": [{"id": "quote", "description": "Orçamento", "accepted": ["quote_doc"], "enabled": True}]})
+    assert c.put("/api/admin/config/checklists", json={"data": chk, "comment": "vidros"}, headers=h).status_code == 200
+    dup = copy.deepcopy(chk)
+    dup["rules"].append(copy.deepcopy(chk["rules"][-1]))
+    assert c.put("/api/admin/config/checklists", json={"data": dup, "comment": "x"}, headers=h).status_code == 422
+
+    # apagar em uso (chamados, regra de checklist) é recusado; sintoma ligado a categoria inexistente também
+    used = copy.deepcopy(cat)
+    used["categories"] = [x for x in used["categories"] if x["value"] not in ("plumbing", "glazing")]
+    used["symptoms"] = [{**s, "categories": [k for k in s["categories"] if k not in ("plumbing", "glazing")]} for s in used["symptoms"]]
+    r = c.put("/api/admin/config/catalog", json={"data": used, "comment": "x"}, headers=h)
+    assert r.status_code == 409 and "Desative" in r.json()["detail"]
+    bad = copy.deepcopy(cat)
+    bad["symptoms"][-1]["categories"] = ["nao_existe"]
+    assert c.put("/api/admin/config/catalog", json={"data": bad, "comment": "x"}, headers=h).status_code == 422
+    # sem uso pode apagar
+    free = copy.deepcopy(cat)
+    free["locations"] = [x for x in free["locations"] if x["value"] != "sala_de_reuniao"]
+    assert c.put("/api/admin/config/catalog", json={"data": free, "comment": "x"}, headers=h).status_code == 200
+
+    # envio de chamado confere o cadastro: categoria fora da esteira e sintoma de outra categoria são recusados
+    form = {"workstream": "SISR", "category": "glazing", "symptom": "cracked_glass", "maintenance_type": "corrective",
+            "moment": "execution", "scope": "Trocar vidro", "branch_name": "Ag. Teste"}
+    sheet = next((admin_cfg.tickets_dir / "00534519" / "attachments").glob("*.xlsx")).read_bytes()
+    r = c.post("/api/tickets", data=form, files=[("spreadsheet", ("q.xlsx", sheet))])
+    assert r.status_code == 422 and "esteira" in r.json()["detail"]
+    r = c.post("/api/tickets", data={**form, "workstream": "SETA", "symptom": "leak"}, files=[("spreadsheet", ("q.xlsx", sheet))])
+    assert r.status_code == 422 and "não vale" in r.json()["detail"]

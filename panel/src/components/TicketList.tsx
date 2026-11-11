@@ -1,7 +1,7 @@
 import { Check, Image as ImageIcon, Info, Loader2, PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
 import { useState } from "react";
 import type { TicketSummary, Dataset, Run } from "../api";
-import { REC, MAINTENANCE_LABEL, STAGE_LABEL, STAGE_SHORT } from "../format";
+import { REC, MAINTENANCE_LABEL, STAGE_LABEL, STAGE_SHORT, envLabel } from "../format";
 import { StageProgress } from "./StageProgress";
 import { ScorePill } from "./ScoreBadge";
 import { InfoTip, Tooltip } from "./ui/Tooltip";
@@ -206,9 +206,8 @@ function Rail(p: Props & { visible: TicketSummary[] }) {
               <Tooltip className="flex" content={
                 <>
                   <b>{c.ticket_id}</b> · {c.workstream}<br />
-                  {c.category_label} · {c.symptom_label}<br />
-                  {MAINTENANCE_LABEL[c.maintenance_type] ?? c.maintenance_type} · {STAGE_LABEL[c.moment] ?? c.moment}<br />
-                  <span className="opacity-80">{c.branch}</span><br />
+                  {MAINTENANCE_LABEL[c.maintenance_type] ?? c.maintenance_type} · {c.category_label} · {c.symptom_label} · {STAGE_LABEL[c.moment] ?? c.moment}<br />
+                  <span className="opacity-80">{c.branch}{c.environment ? ` · local: ${envLabel(c.environment)}` : ""}</span><br />
                   {running ? "Analisando…" : failed ? "Erro na análise" : rec ? <>{REC[rec].label}{score !== null ? ` · score ${score}` : ""}</> : "Ainda não analisado"}
                   {isMarked ? " · marcado" : ""}
                   <span className="mt-1 block opacity-70">Clique para abrir · Shift+clique para {isMarked ? "desmarcar" : "marcar"}</span>

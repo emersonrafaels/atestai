@@ -9,9 +9,10 @@ from __future__ import annotations
 from datetime import date, datetime
 from enum import StrEnum
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
-from pydantic import BaseModel, ConfigDict, Field, computed_field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, GetCoreSchemaHandler, computed_field, field_validator, model_validator
+from pydantic_core import core_schema
 
 
 class DomainModel(BaseModel):
@@ -21,7 +22,7 @@ class DomainModel(BaseModel):
 
 
 # ============================================================================ rótulos em português (valores internos → tela)
-VALIDATION_PT = {"scope": "Escopo", "quote": "Orçamento × escopo", "photos": "Evidências fotográficas"}
+VALIDATION_PT = {"scope": "Escopo", "quote": "Orçamento", "photos": "Evidências fotográficas"}
 SEVERITY_PT = {"critical": "crítica", "high": "alta", "medium": "média", "low": "baixa"}
 CONFIDENCE_PT = {"high": "alta", "medium": "média", "low": "baixa"}
 MAINTENANCE_PT = {"corrective": "corretiva", "preventive": "preventiva"}
@@ -50,72 +51,99 @@ class Moment(StrEnum):
     EXECUTION = "execution"  # retorno após a execução do serviço
 
 
-class Category(StrEnum):
-    """Especialidade do chamado (define o checklist e a LPU usada)."""
+# ============================================================================ cadastro (categorias, sintomas e locais)
+class CatalogEntry(DomainModel):
+    """Item do cadastro: código gravado no chamado, nome na tela e onde vale."""
 
-    PAINTING = "painting"
-    WATERPROOFING = "waterproofing"
-    ELECTRICAL = "electrical"
-    LIGHTING = "lighting"
-    AIR_CONDITIONING = "air_conditioning"
-    PLUMBING = "plumbing"
-    METALWORK = "metalwork"
-    CCTV = "cctv"
-    ALARM = "alarm"
-    CCTV_AND_ALARM = "cctv_and_alarm"
+    value: str = Field(min_length=1, max_length=60)
+    label: str = Field(min_length=1, max_length=80)
+    enabled: bool = Field(True, description="desativado: some das listas de escolha, mas chamados antigos seguem com o nome")
+    workstreams: list[Workstream] = Field(default_factory=list, description="categoria: esteiras em que vale (vazio = SETA e SISR)")
+    categories: list[str] = Field(default_factory=list, description="sintoma: categorias em que vale (vazio = todas)")
+
+
+CatalogKind = str  # "categories" | "symptoms" | "locations"
+
+
+class Catalog(DomainModel):
+    """Cadastro editável de categorias, sintomas e locais (config/catalog.toml + portal de configuração)."""
+
+    categories: list[CatalogEntry]
+    symptoms: list[CatalogEntry]
+    locations: list[CatalogEntry] = Field(default_factory=list)
+
+    def entries(self, kind: CatalogKind) -> list[CatalogEntry]:
+        return getattr(self, kind)
+
+    def codes(self, kind: CatalogKind, enabled_only: bool = False) -> list[str]:
+        return [e.value for e in self.entries(kind) if e.enabled or not enabled_only]
+
+    def label(self, kind: CatalogKind, value: str) -> str:
+        """Nome do código; código desconhecido (ex.: apagado do cadastro) aparece como veio."""
+        for e in self.entries(kind):
+            if e.value == value:
+                return e.label
+        return value.replace("_", " ") if kind != "locations" else value
+
+
+_CATALOG: Catalog | None = None
+
+
+def use_catalog(catalog: Catalog) -> None:
+    """Define o cadastro em uso (o dos TOML com as alterações do portal por cima)."""
+    global _CATALOG
+    _CATALOG = catalog
+
+
+def current_catalog() -> Catalog:
+    """Cadastro em uso; sem um definido, o dos arquivos de configuração."""
+    global _CATALOG
+    if _CATALOG is None:
+        from .config import load_settings  # import tardio: config depende deste módulo
+
+        _CATALOG = load_settings().catalog
+    return _CATALOG
+
+
+class CatalogCode(str):
+    """Código de um item do cadastro (str), com `.value` e `.label` como os enums de antes.
+
+    A validação só confere o formato: chamados e pareceres antigos continuam legíveis mesmo que o código saia do
+    cadastro; a pertença ao cadastro é conferida na entrada (envio pelo painel, portal).
+    """
+
+    kind: ClassVar[str] = ""
+
+    @property
+    def value(self) -> str:
+        return str(self)
 
     @property
     def label(self) -> str:
-        return CATEGORY_LABEL[self]
+        return current_catalog().label(self.kind, str(self))
+
+    @classmethod
+    def __get_pydantic_core_schema__(cls, source: Any, handler: GetCoreSchemaHandler) -> core_schema.CoreSchema:
+        return core_schema.no_info_after_validator_function(
+            cls, core_schema.str_schema(min_length=1), serialization=core_schema.plain_serializer_function_ser_schema(str)
+        )
 
 
-CATEGORY_LABEL = {
-    Category.PAINTING: "Pintura",
-    Category.WATERPROOFING: "Impermeabilização",
-    Category.ELECTRICAL: "Elétrica",
-    Category.LIGHTING: "Iluminação",
-    Category.AIR_CONDITIONING: "Ar-condicionado",
-    Category.PLUMBING: "Hidráulica",
-    Category.METALWORK: "Serralheria e portas",
-    Category.CCTV: "CFTV",
-    Category.ALARM: "Alarme",
-    Category.CCTV_AND_ALARM: "CFTV e alarme",
-}
+class Category(CatalogCode):
+    """Especialidade do chamado (define o checklist); cadastrada em config/catalog.toml ou no portal."""
+
+    kind = "categories"
 
 
-class Symptom(StrEnum):
+class Symptom(CatalogCode):
     """Sintoma macro: a queixa em uma expressão, antes de qualquer diagnóstico."""
 
-    FINISH_WEAR = "finish_wear"
-    MOISTURE_INFILTRATION = "moisture_infiltration"
-    LEAK = "leak"
-    ELECTRICAL_FAILURE = "electrical_failure"
-    POOR_LIGHTING = "poor_lighting"
-    MECHANICAL_FAILURE = "mechanical_failure"
-    DEGRADED_IMAGE = "degraded_image"
-    NO_IMAGE = "no_image"
-    FALSE_ALARM = "false_alarm"
-    DEVICE_INOPERATIVE = "device_inoperative"
-    PREVENTIVE_MAINTENANCE = "preventive_maintenance"
-
-    @property
-    def label(self) -> str:
-        return SYMPTOM_LABEL[self]
+    kind = "symptoms"
 
 
-SYMPTOM_LABEL = {
-    Symptom.FINISH_WEAR: "Desgaste de pintura ou acabamento",
-    Symptom.MOISTURE_INFILTRATION: "Infiltração ou umidade",
-    Symptom.LEAK: "Vazamento",
-    Symptom.ELECTRICAL_FAILURE: "Falha elétrica",
-    Symptom.POOR_LIGHTING: "Iluminação deficiente",
-    Symptom.MECHANICAL_FAILURE: "Falha mecânica",
-    Symptom.DEGRADED_IMAGE: "Imagem com defeito",
-    Symptom.NO_IMAGE: "Sem imagem",
-    Symptom.FALSE_ALARM: "Disparo falso",
-    Symptom.DEVICE_INOPERATIVE: "Dispositivo não aciona",
-    Symptom.PREVENTIVE_MAINTENANCE: "Manutenção preventiva",
-}
+def location_label(value: str) -> str:
+    """Nome do local do chamado (branch.environment) no cadastro."""
+    return current_catalog().label("locations", value) if value else ""
 
 
 class AttachmentCategory(StrEnum):
@@ -242,7 +270,7 @@ class Branch(DomainModel):
 
     code: str
     name: str
-    environment: str = ""
+    environment: str = Field("", description="Local do chamado: ambiente da agência (backoffice, fachada, autoatendimento…)")
 
 
 class Supplier(DomainModel):
@@ -311,7 +339,8 @@ class Ticket(DomainModel):
             f"Chamado {self.ticket_id} | Esteira {self.workstream.value} ({self.maintenance_type.value})\n"
             f"Categoria: {self.category.label} | Sintoma: {self.symptom.label}\n"
             f"Momento da validação: {moment}\n"
-            f"Agência: {self.branch.name} (cód. {self.branch.code}) | Ambiente: {self.branch.environment}\n"
+            f"Agência: {self.branch.name} (cód. {self.branch.code})"
+            f" | Local do chamado: {location_label(self.branch.environment) or 'não informado'}\n"
             f"Fornecedor: {self.supplier.name}\n"
             f"Abertura: {self.dates.opening:%d/%m/%Y} | Envio do fornecedor: {self.dates.supplier_submission:%d/%m/%Y}\n"
             f"ESCOPO SOLICITADO: {self.requested_scope}"
@@ -394,6 +423,13 @@ class AmountAtIssue(StrEnum):
     NONE = "none"
 
 
+class FindingOverride(DomainModel):
+    """Ajuste de um tipo de apontamento numa esteira: o que não vier preenchido segue o padrão."""
+
+    enabled: bool | None = None
+    severity: Severity | None = None
+
+
 class FindingType(DomainModel):
     """Definição de um tipo de apontamento na régua (validação, severidade, fase, trava)."""
 
@@ -409,6 +445,17 @@ class FindingType(DomainModel):
         default_factory=list,
         description="tipos da mesma validação que deixam de descontar quando este aparece (o mesmo problema visto por outro ângulo)",
     )
+    by_workstream: dict[Workstream, FindingOverride] = Field(
+        default_factory=dict, description="ajustes por esteira (SETA, SISR): ativar/desativar e severidade diferentes do padrão"
+    )
+
+    def for_workstream(self, workstream: str) -> FindingType:
+        """O tipo com o ajuste da esteira aplicado (sem ajuste, o próprio tipo)."""
+        o = next((v for k, v in self.by_workstream.items() if k.value == workstream), None)
+        if o is None:
+            return self
+        patch = {k: v for k, v in o.model_dump().items() if v is not None}
+        return self.model_copy(update=patch) if patch else self
 
 
 class Band(DomainModel):
@@ -444,6 +491,10 @@ class Rubric(DomainModel):
     photo_date_tolerance_days: int = 1
     relevant_amount_at_issue_pct: float = Field(50, ge=0, le=100, description="valor potencial divergente (% do orçamento) que vira apontamento")
     finding_types: dict[str, FindingType]
+
+    def for_workstream(self, workstream: str) -> Rubric:
+        """Régua com os ajustes da esteira aplicados a cada tipo de apontamento."""
+        return self.model_copy(update={"finding_types": {k: t.for_workstream(workstream) for k, t in self.finding_types.items()}})
 
 
 # ============================================================================ resultado

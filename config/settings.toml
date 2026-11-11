@@ -33,8 +33,8 @@ fast = "anthropic:claude-sonnet-5-5"       # identificação dos anexos, redaç�
 
 [default.models.fallback]
 # usado só se o modelo do papel falhar por erro transitório (sobrecarga, limite de taxa, indisponibilidade)
-# main = "openai:<modelo-openai>"
-# fast = "google:<modelo-gemini>"
+main = "anthropic:claude-haiku-5-5"
+fast = "anthropic:claude-haiku-5-5"
 
 [default.llm]
 default_provider = "anthropic"

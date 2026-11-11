@@ -1,8 +1,9 @@
 import { AlertTriangle, BookMarked, ClipboardList, Eraser, History, Home, KeyRound, ListChecks, Loader2, Lock, LogOut, RotateCcw, Save, Search, SlidersHorizontal, Tags, Undo2, UserPlus, Users } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ADMIN_LOGOUT_EVENT, adminApi, adminSession, type AdminHistoryItem, type AdminOverview, type AdminUser, type ChecklistsConfig, type DeleteAssessmentsResult, type RubricConfig } from "../../api";
+import { ADMIN_LOGOUT_EVENT, adminApi, adminSession, type AdminHistoryItem, type AdminOverview, type AdminUser, type CatalogConfig, type ChecklistsConfig, type DeleteAssessmentsResult, type RubricConfig } from "../../api";
 import { brl, ENV_NAME, MAINTENANCE_LABEL, STAGE_LABEL } from "../../format";
 import { AnalysesCleanup } from "./AnalysesCleanup";
+import { CatalogEditor } from "./CatalogEditor";
 import { ChecklistEditor } from "./ChecklistEditor";
 import { FindingRulesEditor, ScoreRubricEditor } from "./RulesEditor";
 import { InfoBox } from "../ui/InfoBox";
@@ -15,7 +16,7 @@ const TABS: { id: Tab; label: string; icon: typeof Home; group: string }[] = [
   { id: "checklists", label: "Checklist mínimo", icon: ListChecks, group: "Regras" },
   { id: "findings", label: "Regras de apontamento", icon: ClipboardList, group: "Regras" },
   { id: "score", label: "Régua do score", icon: SlidersHorizontal, group: "Regras" },
-  { id: "catalog", label: "Categorias e sintomas", icon: Tags, group: "Cadastros" },
+  { id: "catalog", label: "Categorias, sintomas e locais", icon: Tags, group: "Cadastros" },
   { id: "lpu", label: "Tabela de preços (LPU)", icon: BookMarked, group: "Cadastros" },
   { id: "history", label: "Histórico de alterações", icon: History, group: "Administração" },
   { id: "analyses", label: "Limpar análises", icon: Eraser, group: "Administração" },
@@ -23,6 +24,9 @@ const TABS: { id: Tab; label: string; icon: typeof Home; group: string }[] = [
 ];
 
 /** Portal de configuração: só com login. Rascunhos ficam aqui até "Salvar"; cada gravação pede um motivo e vira versão no histórico. */
+/** Disparado quando o portal grava uma configuração: o resto do painel recarrega cadastro e listas. */
+export const CONFIG_CHANGED_EVENT = "atest:config-changed";
+
 export function AdminView({ goToValidation, outdated = false, onAnalysesCleared }: {
   goToValidation: () => void; outdated?: boolean; onAnalysesCleared?: (r: DeleteAssessmentsResult) => void;
 }) {
@@ -111,6 +115,7 @@ function Portal({ user, onLogout, goToValidation, onAnalysesCleared }: {
   const [ov, setOv] = useState<AdminOverview | null>(null);
   const [rubric, setRubric] = useState<RubricConfig | null>(null);
   const [checklists, setChecklists] = useState<ChecklistsConfig | null>(null);
+  const [catalog, setCatalog] = useState<CatalogConfig | null>(null);
   const [comment, setComment] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -120,12 +125,14 @@ function Portal({ user, onLogout, goToValidation, onAnalysesCleared }: {
     setOv(o);
     setRubric(structuredClone(o.sections.rubric.data));
     setChecklists(structuredClone(o.sections.checklists.data));
+    setCatalog(structuredClone(o.sections.catalog.data));
   }, []);
   useEffect(() => { adminApi.overview().then(adopt).catch((e) => setError((e as Error).message)); }, [adopt]);
 
   const dirtyRubric = !!ov && !!rubric && JSON.stringify(rubric) !== JSON.stringify(ov.sections.rubric.data);
   const dirtyChecklists = !!ov && !!checklists && JSON.stringify(checklists) !== JSON.stringify(ov.sections.checklists.data);
-  const dirty = dirtyRubric || dirtyChecklists;
+  const dirtyCatalog = !!ov && !!catalog && JSON.stringify(catalog) !== JSON.stringify(ov.sections.catalog.data);
+  const dirty = dirtyRubric || dirtyChecklists || dirtyCatalog;
 
   useEffect(() => {
     if (!dirty) return;
@@ -139,9 +146,12 @@ function Portal({ user, onLogout, goToValidation, onAnalysesCleared }: {
     setError(null);
     try {
       let o = ov!;
+      // o cadastro vai primeiro: o checklist pode usar uma categoria que acabou de ser incluída
+      if (dirtyCatalog) o = await adminApi.save("catalog", catalog, comment);
       if (dirtyRubric) o = await adminApi.save("rubric", rubric, comment);
       if (dirtyChecklists) o = await adminApi.save("checklists", checklists, comment);
       adopt(o);
+      window.dispatchEvent(new Event(CONFIG_CHANGED_EVENT));
       setComment("");
       setSaved(`Alterações salvas. Novas análises já usam a configuração ${o.system.signature}.`);
     } catch (e) {
@@ -150,12 +160,22 @@ function Portal({ user, onLogout, goToValidation, onAnalysesCleared }: {
       setSaving(false);
     }
   };
-  const discard = () => { if (ov) { setRubric(structuredClone(ov.sections.rubric.data)); setChecklists(structuredClone(ov.sections.checklists.data)); setError(null); } };
+  const discard = () => {
+    if (!ov) return;
+    setRubric(structuredClone(ov.sections.rubric.data));
+    setChecklists(structuredClone(ov.sections.checklists.data));
+    setCatalog(structuredClone(ov.sections.catalog.data));
+    setError(null);
+  };
+  const resetTo = async (section: "rubric" | "checklists" | "catalog", c: string) => {
+    adopt(await adminApi.reset(section, c));
+    window.dispatchEvent(new Event(CONFIG_CHANGED_EVENT));
+  };
 
-  if (!ov || !rubric || !checklists) {
+  if (!ov || !rubric || !checklists || !catalog) {
     return <div className="flex h-full items-center justify-center gap-2 text-muted">{error ? <span className="text-bad">{error}</span> : <Loader2 className="animate-spin" />}</div>;
   }
-  const badge = (t: Tab) => (t === "checklists" && dirtyChecklists) || ((t === "findings" || t === "score") && dirtyRubric);
+  const badge = (t: Tab) => (t === "checklists" && dirtyChecklists) || ((t === "findings" || t === "score") && dirtyRubric) || (t === "catalog" && dirtyCatalog);
 
   return (
     <div className="mx-auto grid max-w-[1320px] gap-6 px-6 py-6 lg:grid-cols-[230px_1fr]">
@@ -188,18 +208,21 @@ function Portal({ user, onLogout, goToValidation, onAnalysesCleared }: {
         )}
         {tab === "home" && <HomeTab ov={ov} rubric={rubric} checklists={checklists} go={setTab} />}
         {tab === "checklists" && <>
-          <SectionStatus ov={ov} section="checklists" onReset={async (c) => adopt(await adminApi.reset("checklists", c))} />
-          <ChecklistEditor data={checklists} base={ov.sections.checklists.base} onChange={setChecklists} categories={ov.catalog.categories} />
+          <SectionStatus ov={ov} section="checklists" onReset={(c) => resetTo("checklists", c)} />
+          <ChecklistEditor data={checklists} base={ov.sections.checklists.base} onChange={setChecklists} categories={catalog.categories} />
         </>}
         {tab === "findings" && <>
-          <SectionStatus ov={ov} section="rubric" onReset={async (c) => adopt(await adminApi.reset("rubric", c))} />
+          <SectionStatus ov={ov} section="rubric" onReset={(c) => resetTo("rubric", c)} />
           <FindingRulesEditor data={rubric} base={ov.sections.rubric.base} onChange={setRubric} />
         </>}
         {tab === "score" && <>
-          <SectionStatus ov={ov} section="rubric" onReset={async (c) => adopt(await adminApi.reset("rubric", c))} />
+          <SectionStatus ov={ov} section="rubric" onReset={(c) => resetTo("rubric", c)} />
           <ScoreRubricEditor data={rubric} base={ov.sections.rubric.base} onChange={setRubric} />
         </>}
-        {tab === "catalog" && <CatalogTab ov={ov} checklists={checklists} />}
+        {tab === "catalog" && <>
+          <SectionStatus ov={ov} section="catalog" onReset={(c) => resetTo("catalog", c)} />
+          <CatalogEditor data={catalog} base={ov.sections.catalog.base} onChange={setCatalog} usage={ov.catalog.usage} checklists={checklists} />
+        </>}
         {tab === "lpu" && <LpuTab ov={ov} />}
         {tab === "history" && <HistoryTab onRestored={adopt} dirty={dirty} />}
         {tab === "analyses" && <AnalysesCleanup onCleared={onAnalysesCleared} />}
@@ -211,7 +234,7 @@ function Portal({ user, onLogout, goToValidation, onAnalysesCleared }: {
         <div className="surgir fixed inset-x-0 bottom-9 z-30 flex justify-center px-4">
           <div className="flex w-full max-w-4xl flex-wrap items-center gap-3 rounded-2xl border border-line bg-sheet p-3 shadow-2xl">
             <span className="flex items-center gap-2 text-sm font-semibold"><span className="size-2 rounded-full bg-warn pulso" />Alterações não salvas
-              <span className="font-normal text-muted">({[dirtyChecklists && "checklist", dirtyRubric && "régua e regras"].filter(Boolean).join(" e ")})</span></span>
+              <span className="font-normal text-muted">({[dirtyCatalog && "cadastro", dirtyChecklists && "checklist", dirtyRubric && "régua e regras"].filter(Boolean).join(", ")})</span></span>
             <input value={comment} onChange={(e) => setComment(e.target.value)} maxLength={500} placeholder="Motivo da alteração (obrigatório, vai para o histórico)"
               className="min-w-56 flex-1 rounded-lg border border-line px-3 py-1.5 text-sm outline-none focus:border-blueprint" />
             <button onClick={discard} disabled={saving} className="flex items-center gap-1.5 rounded-lg border border-line px-3 py-1.5 text-sm hover:bg-paper"><Undo2 size={15} /> Descartar</button>
@@ -235,7 +258,7 @@ function PageTitle({ tab, ov }: { tab: Tab; ov: AdminOverview }) {
     checklists: "Documentos obrigatórios por categoria, tipo de manutenção e etapa da esteira.",
     findings: "Verificações que geram apontamentos: ativar, desativar e ajustar a severidade.",
     score: "Como os apontamentos viram score e recomendação.",
-    catalog: "Categorias e sintomas reconhecidos pelo Atest.AI e onde cada um é usado.",
+    catalog: "Cadastre e ajuste as categorias (por esteira), os sintomas (por categoria) e os locais do chamado.",
     lpu: "Preços de referência usados na conferência do orçamento.",
     history: "Todas as gravações feitas pelo portal, com autor e motivo. Dá para voltar a qualquer versão.",
     analyses: "Apague pareceres já emitidos: todos de uma vez ou só os escolhidos.",
@@ -254,12 +277,12 @@ function PageTitle({ tab, ov }: { tab: Tab; ov: AdminOverview }) {
   );
 }
 
-function SectionStatus({ ov, section, onReset }: { ov: AdminOverview; section: "rubric" | "checklists"; onReset: (comment: string) => Promise<void> }) {
+function SectionStatus({ ov, section, onReset }: { ov: AdminOverview; section: "rubric" | "checklists" | "catalog"; onReset: (comment: string) => Promise<void> }) {
   const s = ov.sections[section];
-  if (!s.overridden) return <p className="text-[13px] text-muted">Usando o padrão dos arquivos de configuração (config/{section === "rubric" ? "rubric.toml" : "checklists.toml"}).</p>;
+  if (!s.overridden) return <p className="text-[13px] text-muted">Usando o padrão dos arquivos de configuração (config/{section}.toml).</p>;
   return (
     <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-blueprint/20 bg-blueprint-soft/50 px-3 py-2 text-[13px]">
-      <span>Personalizado pelo portal (versão #{s.version_id}). O arquivo config/{section === "rubric" ? "rubric.toml" : "checklists.toml"} continua como padrão.</span>
+      <span>Personalizado pelo portal (versão #{s.version_id}). O arquivo config/{section}.toml continua como padrão.</span>
       <button onClick={async () => { const c = window.prompt("Motivo para voltar ao padrão dos arquivos:"); if (c?.trim()) await onReset(c); }}
         className="flex items-center gap-1 font-medium text-blueprint hover:underline"><RotateCcw size={13} /> Restaurar padrão</button>
     </div>
@@ -273,12 +296,12 @@ function HomeTab({ ov, rubric, checklists, go }: { ov: AdminOverview; rubric: Ru
   const offRules = checklists.rules.filter((r) => !r.enabled);
   const offReqs = checklists.rules.flatMap((r) => r.requirements.filter((q) => !q.enabled).map((q) => ({ r, q })));
   const covered = new Set(checklists.rules.filter((r) => r.enabled).map((r) => r.category));
-  const noSpecific = ov.catalog.categories.filter((c) => !covered.has(c.value));
+  const noSpecific = ov.catalog.categories.filter((c) => c.enabled && !covered.has(c.value));
   const custom = ov.system.signature !== ov.system.base_signature;
   const cards = [
     { t: "checklists" as Tab, label: "Regras de checklist", value: `${checklists.rules.length - offRules.length}/${checklists.rules.length}`, sub: "ativas" },
     { t: "findings" as Tab, label: "Regras de apontamento", value: `${types.length - offTypes.length}/${types.length}`, sub: "ativas" },
-    { t: "catalog" as Tab, label: "Categorias", value: String(ov.catalog.categories.length), sub: `${ov.catalog.symptoms.length} sintomas` },
+    { t: "catalog" as Tab, label: "Categorias", value: String(ov.catalog.categories.filter((c) => c.enabled).length), sub: `${ov.catalog.symptoms.filter((x) => x.enabled).length} sintomas · ${ov.catalog.locations.filter((x) => x.enabled).length} locais` },
     { t: "lpu" as Tab, label: "Itens na LPU", value: String(Object.values(ov.lpu).reduce((s, l) => s + l.length, 0)), sub: Object.keys(ov.lpu).join(" · ") },
   ];
   return (
@@ -337,61 +360,6 @@ function Attention({ children, onClick, tone = "warn" }: { children: React.React
   );
 }
 
-// ---------------------------------------------------------------------------- categorias e sintomas
-function CatalogTab({ ov, checklists }: { ov: AdminOverview; checklists: ChecklistsConfig }) {
-  const symLabel = (v: string) => ov.catalog.symptoms.find((s) => s.value === v)?.label ?? v;
-  return (
-    <div className="space-y-5">
-      <InfoBox id="admin-catalog">
-        Categorias e sintomas vêm do cadastro do chamado (Salesforce) e estão fixados no código do Atest.AI. Para incluir um novo, peça ao time DataCraft;
-        depois de incluído, ele aparece aqui e pode ganhar regras de checklist próprias.
-      </InfoBox>
-      <section className="overflow-hidden rounded-xl border border-line bg-sheet">
-        <h3 className="border-b border-line px-5 py-3 font-semibold">Categorias ({ov.catalog.categories.length})</h3>
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[760px] text-sm">
-            <thead className="bg-paper/60 text-left text-[12px] text-muted">
-              <tr><th className="px-5 py-2 font-medium">Categoria</th><th className="px-3 py-2 text-right font-medium">Chamados</th><th className="px-3 py-2 font-medium">Regras de checklist</th><th className="px-5 py-2 font-medium">Sintomas usados</th></tr>
-            </thead>
-            <tbody>
-              {ov.catalog.categories.map((c) => {
-                const rules = checklists.rules.filter((r) => r.category === c.value);
-                return (
-                  <tr key={c.value} className="border-t border-line/70 align-top">
-                    <td className="px-5 py-2.5"><div className="font-medium">{c.label}</div><div className="font-mono text-[11px] text-muted">{c.value}</div></td>
-                    <td className="px-3 py-2.5 text-right tabular-nums">{c.tickets}</td>
-                    <td className="px-3 py-2.5">
-                      <div className="flex flex-wrap gap-1">
-                        {rules.length ? rules.map((r) => (
-                          <span key={`${r.maintenance}${r.moment}`} className={`rounded px-1.5 text-[12px] ${r.enabled ? "bg-blueprint-soft text-blueprint" : "bg-paper text-muted line-through"}`}>
-                            {r.maintenance === "*" ? "" : `${MAINTENANCE_LABEL[r.maintenance]} · `}{r.moment === "*" ? "qualquer etapa" : STAGE_LABEL[r.moment]} ({r.requirements.filter((q) => q.enabled).length})
-                          </span>
-                        )) : <span className="text-[12px] text-muted">usa a regra geral</span>}
-                      </div>
-                    </td>
-                    <td className="px-5 py-2.5 text-[13px] text-muted">{c.symptoms_seen.length ? c.symptoms_seen.map(symLabel).join(", ") : "—"}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </section>
-      <section className="overflow-hidden rounded-xl border border-line bg-sheet">
-        <h3 className="border-b border-line px-5 py-3 font-semibold">Sintomas ({ov.catalog.symptoms.length})</h3>
-        <table className="w-full text-sm">
-          <thead className="bg-paper/60 text-left text-[12px] text-muted"><tr><th className="px-5 py-2 font-medium">Sintoma</th><th className="px-3 py-2 font-medium">Código</th><th className="px-5 py-2 text-right font-medium">Chamados</th></tr></thead>
-          <tbody>
-            {ov.catalog.symptoms.map((s) => (
-              <tr key={s.value} className="border-t border-line/70"><td className="px-5 py-2 font-medium">{s.label}</td><td className="px-3 py-2 font-mono text-[12px] text-muted">{s.value}</td><td className="px-5 py-2 text-right tabular-nums">{s.tickets}</td></tr>
-            ))}
-          </tbody>
-        </table>
-      </section>
-    </div>
-  );
-}
-
 // ---------------------------------------------------------------------------- LPU
 function LpuTab({ ov }: { ov: AdminOverview }) {
   const streams = Object.keys(ov.lpu);
@@ -447,7 +415,7 @@ function HistoryTab({ onRestored, dirty }: { onRestored: (o: AdminOverview) => v
             <div>
               <div className="flex flex-wrap items-center gap-2 text-sm">
                 <b>#{h.id}</b>
-                <span className="rounded bg-paper px-1.5 text-[12px] font-medium">{h.section === "rubric" ? "Régua e regras" : "Checklist"}</span>
+                <span className="rounded bg-paper px-1.5 text-[12px] font-medium">{h.section === "rubric" ? "Régua e regras" : h.section === "catalog" ? "Cadastro" : "Checklist"}</span>
                 {latest[h.section] === h.id && <span className="rounded bg-blueprint px-1.5 text-[11px] font-semibold uppercase text-white">em uso</span>}
                 {h.is_default && <span className="rounded bg-paper px-1.5 text-[11px] font-semibold uppercase text-muted">padrão dos arquivos</span>}
               </div>

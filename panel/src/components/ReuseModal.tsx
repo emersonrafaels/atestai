@@ -200,7 +200,7 @@ function Similarity({ d, identical }: { d: ReuseComparison; identical: boolean }
 function Compare({ o, c }: { o: TicketFacts; c: TicketFacts }) {
   const rows: { icon?: ReactNode; label: string; a: ReactNode; b: ReactNode; same?: boolean; hot?: boolean }[] = [
     { icon: <Building2 size={14} />, label: "Agência", a: <>{o.branch_name} <span className="text-muted">· cód. {o.branch_code}</span></>, b: <>{c.branch_name} <span className="text-muted">· cód. {c.branch_code}</span></>, same: o.branch_code === c.branch_code },
-    { label: "Ambiente", a: envLabel(o.environment), b: envLabel(c.environment), same: o.environment === c.environment },
+    { label: "Local do chamado", a: envLabel(o.environment), b: envLabel(c.environment), same: o.environment === c.environment },
     { icon: <Store size={14} />, label: "Fornecedor", a: <>{o.supplier_name}<div className="text-[12px] text-muted">CNPJ {o.supplier_cnpj}</div></>, b: <>{c.supplier_name}<div className="text-[12px] text-muted">CNPJ {c.supplier_cnpj}</div></>, same: o.supplier_cnpj === c.supplier_cnpj, hot: o.supplier_cnpj === c.supplier_cnpj },
     { label: "Esteira · categoria", a: <>{o.workstream} · {o.category_label}<div className="text-[12px] text-muted">{o.symptom_label}</div></>, b: <>{c.workstream} · {c.category_label}<div className="text-[12px] text-muted">{c.symptom_label}</div></> },
     { label: "Escopo", a: <span className="italic">“{o.scope}”</span>, b: <span className="italic">“{c.scope}”</span> },

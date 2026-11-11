@@ -1,4 +1,4 @@
-"""Validação 2 — Orçamento × Escopo: o que foi cobrado faz sentido para o que foi pedido?
+"""Validação 2 — Orçamento: o que foi cobrado faz sentido para o que foi pedido?
 
 1. A planilha Excel padrão é lida por regra (repository.read_quote), sem LLM.
 2. O modelo principal confere cada item contra o escopo: aderente / fora do escopo / a justificar, quantidade

@@ -267,10 +267,20 @@ export interface Run {
   has_validation: boolean;
 }
 
+/** Item do cadastro (categoria, sintoma ou local), como vem de /api/config e do portal. */
 export interface Option {
   value: string;
   label: string;
+  enabled?: boolean;
+  /** categoria: esteiras em que vale (vazio = SETA e SISR) */
+  workstreams?: string[];
+  /** sintoma: categorias em que vale (vazio = todas) */
+  categories?: string[];
 }
+
+export type CatalogKind = "categories" | "symptoms" | "locations";
+export type CatalogConfig = Record<CatalogKind, Required<Option>[]>;
+export interface CatalogUsage { tickets: number; ground_truth: number; rules: number }
 
 export interface AppSettings {
   environment: string;
@@ -285,6 +295,7 @@ export interface AppSettings {
   usd_brl_rate: number;
   categories: Option[];
   symptoms: Option[];
+  locations?: Option[];
   providers: string[];
   missing_keys: string[];
   signature: string;
@@ -590,6 +601,8 @@ export interface FindingTypeConfig {
   enabled: boolean;
   /** tipos da mesma validação que deixam de descontar quando este aparece */
   absorbs?: string[];
+  /** ajustes por esteira: o que vier null segue o padrão */
+  by_workstream?: Partial<Record<"SETA" | "SISR", { enabled?: boolean | null; severity?: Finding["severity"] | null }>>;
 }
 
 export interface RubricConfig {
@@ -619,6 +632,8 @@ export interface ChecklistRequirementConfig {
 }
 
 export interface ChecklistRuleConfig {
+  /** esteira: "SETA", "SISR" ou "*" (qualquer) */
+  workstream?: string;
   category: string;
   maintenance: string;
   moment: string;
@@ -639,10 +654,12 @@ export interface SectionState<T> {
 }
 
 export interface AdminOverview {
-  sections: { rubric: SectionState<RubricConfig>; checklists: SectionState<ChecklistsConfig> };
+  sections: { rubric: SectionState<RubricConfig>; checklists: SectionState<ChecklistsConfig>; catalog: SectionState<CatalogConfig> };
   catalog: {
-    categories: { value: string; label: string; tickets: number; symptoms_seen: string[] }[];
-    symptoms: { value: string; label: string; tickets: number }[];
+    categories: (Required<Option> & { tickets: number; usage: CatalogUsage; symptoms_seen: string[] })[];
+    symptoms: (Required<Option> & { tickets: number; usage: CatalogUsage })[];
+    locations: (Required<Option> & { tickets: number; usage: CatalogUsage })[];
+    usage: Record<CatalogKind, Record<string, CatalogUsage>>;
     tickets: number;
   };
   lpu: Record<string, { code: string; description: string; unit: string; reference_price: number }[]>;
@@ -655,7 +672,7 @@ export interface AdminOverview {
 
 export interface AdminHistoryItem {
   id: number;
-  section: "rubric" | "checklists";
+  section: "rubric" | "checklists" | "catalog";
   author: string;
   comment: string;
   summary: string[];
@@ -693,7 +710,7 @@ export interface AdminUser {
 }
 
 /** Revisão da API que este front-end espera (atest/api.py: PANEL_API). */
-export const PANEL_API = 6;
+export const PANEL_API = 7;
 export const serverOutdated = (c: AppSettings | null) => !!c && (c.panel_api ?? 0) < PANEL_API;
 
 const TOKEN_KEY = "atest.admin.token";
@@ -725,9 +742,9 @@ export const adminApi = {
   logout: () => askAdmin<void>("/api/admin/logout", { method: "POST" }),
   me: () => askAdmin<{ username: string }>("/api/admin/me"),
   overview: () => askAdmin<AdminOverview>("/api/admin/overview"),
-  save: (section: "rubric" | "checklists", data: unknown, comment: string) =>
+  save: (section: "rubric" | "checklists" | "catalog", data: unknown, comment: string) =>
     askAdmin<AdminOverview>(`/api/admin/config/${section}`, { method: "PUT", body: JSON.stringify({ data, comment }) }),
-  reset: (section: "rubric" | "checklists", comment: string) =>
+  reset: (section: "rubric" | "checklists" | "catalog", comment: string) =>
     askAdmin<AdminOverview>(`/api/admin/config/${section}/reset`, { method: "POST", body: JSON.stringify({ comment }) }),
   restore: (id: number, comment: string) =>
     askAdmin<AdminOverview>(`/api/admin/history/${id}/restore`, { method: "POST", body: JSON.stringify({ comment }) }),

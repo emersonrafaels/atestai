@@ -163,7 +163,7 @@ class References:
 
     def requirements(self, ticket: Ticket) -> list[ChecklistRequirement]:
         """Requisitos do checklist para o chamado."""
-        return self.cfg.checklists.requirements(ticket.category.value, ticket.maintenance_type.value, ticket.moment.value)
+        return self.cfg.checklists.requirements(ticket.category.value, ticket.maintenance_type.value, ticket.moment.value, ticket.workstream.value)
 
     def lpu_text(self, workstream: str) -> str:
         """Tabela de referência da esteira em texto, para o prompt de conferência do orçamento."""

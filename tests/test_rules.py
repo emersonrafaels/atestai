@@ -271,7 +271,7 @@ def test_pt_validation_error_and_error_message():
     except ValidationError as e:
         text = pt_validation_error(e.errors())
     assert text == "quantity: número inválido; name: campo obrigatório"
-    assert error_message(RuntimeError("[quote_review] resposta sem JSON válido")) == "Falha em Orçamento × escopo: resposta sem JSON válido"
+    assert error_message(RuntimeError("[quote_review] resposta sem JSON válido")) == "Falha em Orçamento: resposta sem JSON válido"
     assert error_message(RuntimeError("caiu")) == "Falha na análise: caiu"
 
 
@@ -292,3 +292,24 @@ def _scope_reading(vague: bool = False):
         vague_scope=vague,
         vague_reason="",
     )
+
+
+def test_checklist_rule_by_workstream(cfg):
+    """Regra só de uma esteira vale só para os chamados dela; a outra esteira segue a regra geral."""
+    rules = [r.model_dump() for r in cfg.checklists.rules]
+    rules.append({"workstream": "SISR", "category": "*", "maintenance": "*", "moment": "quote",
+                  "requirements": [{"id": "quote", "description": "Orçamento", "accepted": ["quote_doc"]}]})
+    c = cfg.with_overrides(**{"checklists.rules": rules}).checklists
+    req = lambda *a: [r.id for r in c.requirements(*a)]  # noqa: E731
+    assert req("plumbing", "corrective", "quote", "SISR") == ["quote"]
+    assert req("plumbing", "corrective", "quote", "SETA") == ["quote", "problem_photo"]
+
+
+def test_rubric_adjusted_by_workstream(cfg):
+    """Ajuste por esteira: desativar ou trocar a severidade só na esteira; a outra segue o padrão."""
+    rub = cfg.rubric.model_dump(mode="json")
+    rub["finding_types"]["vague_scope"]["by_workstream"] = {"SISR": {"enabled": False}, "SETA": {"severity": "low"}}
+    r = cfg.with_overrides(**{"rubric": rub}).rubric
+    assert r.for_workstream("SISR").finding_types["vague_scope"].enabled is False
+    assert r.for_workstream("SETA").finding_types["vague_scope"].severity == "low"
+    assert r.finding_types["vague_scope"].enabled and r.finding_types["vague_scope"].severity == cfg.rubric.finding_types["vague_scope"].severity

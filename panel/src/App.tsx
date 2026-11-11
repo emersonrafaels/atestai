@@ -16,25 +16,25 @@ import { NewTicket } from "./components/NewTicket";
 import { RerunDialog } from "./components/RerunDialog";
 import { ValidationView } from "./components/ValidationView";
 import { ScenariosView } from "./components/ScenariosView";
-import { brl4, REC, DEFAULT_RUBRIC, ENV_NAME, MAINTENANCE_LABEL } from "./format";
+import { brl4, REC, DEFAULT_RUBRIC, ENV_NAME, MAINTENANCE_LABEL, envLabel, registerLocations } from "./format";
 import { Tour, tourDone, type TourStep } from "./components/ui/Tour";
 import { Tooltip, InfoTip } from "./components/ui/Tooltip";
 import { InfoBox, resetInfoBoxes } from "./components/ui/InfoBox";
 import { Lightbox, type LightboxItem } from "./components/ui/Lightbox";
 import { GlossaryDialog } from "./components/ui/GlossaryDialog";
 import itauLogo from "./assets/itau.png";
-import { AdminView } from "./components/admin/AdminView";
+import { AdminView, CONFIG_CHANGED_EVENT } from "./components/admin/AdminView";
 import { ModelCombobox } from "./components/ui/ModelCombobox";
 import { ProviderPicker, findChoice, initialProvider, providerChoices, withProvider } from "./components/ui/ProviderPicker";
 
 type Tab = "assessment" | "scope" | "quote" | "photos" | "calls" | "input";
 const TABS: { id: Tab; label: string; needsAssessment: boolean; icon: LucideIcon; hint: string }[] = [
+  { id: "input", label: "Entrada do chamado", needsAssessment: false, icon: Inbox, hint: "O que chegou do Salesforce: escopo, orçamento e anexos" },
   { id: "assessment", label: "Parecer", needsAssessment: true, icon: ClipboardCheck, hint: "Checklist, recomendação, conta do score, apontamentos e a sua decisão" },
   { id: "scope", label: "Escopo", needsAssessment: true, icon: FileSearch, hint: "O texto do escopo, o que a IA extraiu dele e as verificações de clareza e coerência" },
-  { id: "quote", label: "Orçamento × escopo", needsAssessment: true, icon: Receipt, hint: "Cada item do orçamento classificado contra o escopo e a tabela de referência" },
+  { id: "quote", label: "Orçamento", needsAssessment: true, icon: Receipt, hint: "Cada item do orçamento classificado contra o escopo e a tabela de referência" },
   { id: "photos", label: "Fotos", needsAssessment: true, icon: Images, hint: "O que cada foto mostra, se corresponde ao escopo e sinais de reaproveitamento" },
   { id: "calls", label: "Chamadas ao modelo", needsAssessment: true, icon: Cpu, hint: "Cada chamada à IA: tarefa, modelo, tempo, tokens, custo e o JSON devolvido" },
-  { id: "input", label: "Entrada do chamado", needsAssessment: false, icon: Inbox, hint: "O que chegou do Salesforce: escopo, orçamento e anexos" },
 ];
 
 type View = "analysis" | "scenarios" | "metrics" | "validation" | "admin";
@@ -91,6 +91,7 @@ export default function App() {
 
   useEffect(() => {
     api.config().then((c) => {
+      registerLocations(c.locations);
       setConfig(c);
       setPhase(c.phase);
       setBatchMode(c.batch_mode);
@@ -112,6 +113,15 @@ export default function App() {
   }, []);
 
   const reloadTickets = useCallback(() => api.tickets().then(setTickets).catch(() => undefined), []);
+  // o portal gravou uma configuração (cadastro, régua, checklist): recarrega cadastro e nomes na lista
+  useEffect(() => {
+    const changed = () => {
+      api.config().then((c) => { registerLocations(c.locations); setConfig(c); }).catch(() => undefined);
+      reloadTickets();
+    };
+    window.addEventListener(CONFIG_CHANGED_EVENT, changed);
+    return () => window.removeEventListener(CONFIG_CHANGED_EVENT, changed);
+  }, [reloadTickets]);
 
   useEffect(() => {
     if (!focus) return;
@@ -374,7 +384,7 @@ export default function App() {
                 </span>
                 <ModelCombobox label="Principal" value={mainModel} onChange={setMainModel} options={providerModels}
                   defaultId={currentChoice?.main ?? config?.main_model} defaultProvider={provider || undefined} availableProviders={config?.keyed_providers}
-                  hint="Escopo, orçamento × escopo e parecer: prefira o modelo mais capaz." />
+                  hint="Escopo, orçamento e parecer: prefira o modelo mais capaz." />
                 <ModelCombobox label="Rápido" value={fastModel} onChange={setFastModel} options={providerModels}
                   defaultId={currentChoice?.fast ?? config?.fast_model} defaultProvider={provider || undefined} availableProviders={config?.keyed_providers}
                   hint="Identificação dos anexos e fotos: um modelo mais barato costuma bastar." />
@@ -467,7 +477,7 @@ export default function App() {
             <div className="mx-auto max-w-[1180px] px-6 py-6">
               <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
                 <div>
-                  <div className="text-sm text-muted">{detail_level.workstream} · {detail_level.branch} · {detail_level.supplier}</div>
+                  <div className="text-sm text-muted">{detail_level.workstream} · {detail_level.branch}{detail_level.environment ? ` · local: ${envLabel(detail_level.environment)}` : ""} · {detail_level.supplier}</div>
                   <h2 className="largo flex items-center gap-3 text-[28px] font-bold leading-tight">
                     Chamado {detail_level.ticket_id}
                     {detail_level.origin === "upload" && (
@@ -479,12 +489,12 @@ export default function App() {
                     )}
                   </h2>
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
-                    <span className="text-[15px]">{detail_level.category_label}, {detail_level.symptom_label.toLowerCase()}</span>
                     <Tooltip content={<><b>Tipo de manutenção</b><br />{detail_level.maintenance_type === "preventive" ? "Manutenção programada, para evitar problemas." : "Conserto de um problema que apareceu."}</>}>
                       <span className={`cursor-help rounded-full px-2.5 py-0.5 text-[12px] font-semibold ${detail_level.maintenance_type === "preventive" ? "bg-[#e3f2ea] text-ok" : "bg-[#fdf1dc] text-warn"}`}>
                         {MAINTENANCE_LABEL[detail_level.maintenance_type] ?? detail_level.maintenance_type}
                       </span>
                     </Tooltip>
+                    <span className="text-[15px]">{detail_level.category_label}, {detail_level.symptom_label.toLowerCase()}</span>
                   </div>
                 </div>
                 {focusState && focusState.status !== "done" && focusState.status !== "error" && <StageProgress state={focusState} />}

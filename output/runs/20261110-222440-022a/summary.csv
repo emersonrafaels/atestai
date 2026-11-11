@@ -1,0 +1,2 @@
+ticket_id;workstream;category;symptom;supplier;quoted_value;recommendation;score;scope_grade;quote_grade;photo_grade;confidence;finding_types;amount_at_issue;cost_brl;summary
+02000021;SETA;painting;finish_wear;Fornecedor Alfa Manutenção Predial Ltda.;2933.7;approve;100;100;100;100;high;;0.0;0.2136;Recomendação: aprovar o chamado 02000021 (Esteira SETA, corretiva, Pintura), com score 100, sem travas e confiança alta. Escopo, orçamento e evidências fotográficas foram avaliados com nota 100 e não há valor potencial divergente (R$ 0,00, 0% do orçamento). Não há apontamentos.

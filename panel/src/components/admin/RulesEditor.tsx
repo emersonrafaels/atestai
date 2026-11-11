@@ -1,10 +1,11 @@
-import { Lock, RotateCcw, ShieldAlert } from "lucide-react";
+import { ChevronDown, Lock, RotateCcw, ShieldAlert } from "lucide-react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { FindingTypeConfig, RubricConfig } from "../../api";
 import { pts, REC, SEVERITY, VALIDATIONS, VALIDATION_LABEL, VALIDATION_SHORT } from "../../format";
 import { BandScale } from "../ScoreBreakdown";
 import { InfoBox } from "../ui/InfoBox";
 import { Switch } from "../ui/Switch";
-import { InfoTip, Tooltip } from "../ui/Tooltip";
+import { InfoTip } from "../ui/Tooltip";
 
 interface Props {
   data: RubricConfig;
@@ -14,24 +15,68 @@ interface Props {
 
 const AMOUNT: Record<string, string> = { item: "Linha inteira", excess: "Só o excedente", none: "—" };
 const SEVERITIES = ["critical", "high", "medium", "low"] as const;
+type WsView = "all" | "SETA" | "SISR";
+type Override = NonNullable<FindingTypeConfig["by_workstream"]>["SETA"];
+
+/** O tipo como vale na esteira: o padrão com o ajuste da esteira por cima. */
+const effectiveFor = (f: FindingTypeConfig, ws: WsView): FindingTypeConfig => {
+  if (ws === "all") return f;
+  const o = f.by_workstream?.[ws];
+  return { ...f, enabled: o?.enabled ?? f.enabled, severity: o?.severity ?? f.severity };
+};
+const overrideText = (f: FindingTypeConfig) =>
+  (["SETA", "SISR"] as const).flatMap((w) => {
+    const o = f.by_workstream?.[w];
+    if (!o || (o.enabled == null && o.severity == null)) return [];
+    const parts = [o.enabled === false ? "desativada" : o.enabled === true ? "ativa" : "", o.severity ? SEVERITY[o.severity].label.toLowerCase() : ""].filter(Boolean);
+    return [`${w}: ${parts.join(", ")}`];
+  });
 
 /** Tipos de apontamento: ativar/desativar e ajustar severidade, fase, trava e redução de confiança. */
 export function FindingRulesEditor({ data, base, onChange }: Props) {
   const total = VALIDATIONS.reduce((s, v) => s + data.weights[v], 0) || 100;
+  const [ws, setWs] = useState<WsView>("all");
   const set = (kind: string, patch: Partial<FindingTypeConfig>) =>
     onChange({ ...data, finding_types: { ...data.finding_types, [kind]: { ...data.finding_types[kind], ...patch } } });
-  const entries = Object.entries(data.finding_types);
+  /** Ajuste na esteira escolhida: valor igual ao padrão vira "segue o padrão" (null); sem ajuste, a esteira sai. */
+  const setOverride = (kind: string, patch: Partial<NonNullable<Override>>) => {
+    if (ws === "all") return;
+    const f = data.finding_types[kind];
+    const cur = { enabled: null, severity: null, ...(f.by_workstream?.[ws] ?? {}), ...patch } as NonNullable<Override>;
+    if (cur.enabled === f.enabled) cur.enabled = null;
+    if (cur.severity === f.severity) cur.severity = null;
+    const by = { ...(f.by_workstream ?? {}) };
+    if (cur.enabled == null && cur.severity == null) delete by[ws];
+    else by[ws] = cur;
+    set(kind, { by_workstream: by });
+  };
+  const clearOverride = (kind: string) => {
+    if (ws === "all") return;
+    const by = { ...(data.finding_types[kind].by_workstream ?? {}) };
+    delete by[ws];
+    set(kind, { by_workstream: by });
+  };
+  const entries = Object.entries(data.finding_types).map(([k, f]) => [k, effectiveFor(f, ws)] as [string, FindingTypeConfig]);
   const off = entries.filter(([, f]) => !f.enabled).length;
+  const wsOnly = ws === "all" ? "" : "Este ajuste vale para todas as esteiras: troque para “Padrão” para mudar";
 
   return (
     <div className="space-y-5">
-      <InfoBox id="admin-findings" title="O que cada regra faz">
-        Cada tipo de apontamento é uma verificação. <b>Desativado</b>, ele não é gerado, não desconta e não entra no valor potencial divergente.
-        A <b>severidade</b> define quanto tira da nota da validação; a <b>fase</b> define se vale já no MVP (1) ou só na Fase 2;
-        a <b>trava</b> devolve o chamado qualquer que seja o score. <b>Absorve</b>: quando este tipo aparece, os tipos marcados (da mesma
-        validação) seguem como evidência, mas não descontam; serve para não punir duas vezes o mesmo problema.
-      </InfoBox>
-      <p className="text-sm text-muted">{entries.length - off} de {entries.length} regras ativas{off ? ` · ${off} desativada${off === 1 ? "" : "s"}` : ""}.</p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex rounded-lg bg-paper p-0.5 text-sm" role="radiogroup" aria-label="Esteira">
+          {([["all", "Padrão (todas as esteiras)"], ["SETA", "SETA"], ["SISR", "SISR"]] as [WsView, string][]).map(([v, l]) => (
+            <button key={v} role="radio" aria-checked={ws === v} onClick={() => setWs(v)}
+              className={`rounded-md px-3 py-1 ${ws === v ? "bg-sheet font-semibold shadow-sm" : "text-muted hover:text-ink"}`}>{l}</button>
+          ))}
+        </div>
+        <p className="text-sm text-muted">{ws === "all" ? "" : `Na esteira ${ws}: `}{entries.length - off} de {entries.length} regras ativas{off ? ` · ${off} desativada${off === 1 ? "" : "s"}` : ""}.</p>
+      </div>
+      {ws !== "all" && (
+        <p className="rounded-lg border border-blueprint/20 bg-blueprint-soft/50 px-3 py-2 text-[13px]">
+          Você está ajustando só a esteira <b>{ws}</b>: dá para ativar, desativar e mudar a severidade de cada regra para os chamados {ws}.
+          O que não for ajustado segue o padrão. Fase, trava, confiança e absorção valem para todas as esteiras.
+        </p>
+      )}
 
       {VALIDATIONS.map((v) => (
         <section key={v} className="overflow-hidden rounded-xl border border-line bg-sheet">
@@ -42,50 +87,60 @@ export function FindingRulesEditor({ data, base, onChange }: Props) {
             <table className="w-full min-w-[980px] text-sm">
               <thead className="bg-paper/60 text-left text-[12px] text-muted">
                 <tr>
-                  <th className="w-14 px-4 py-2 font-medium">Ativa</th>
-                  <th className="px-2 py-2 font-medium">Regra</th>
-                  <th className="px-2 py-2 font-medium">Severidade</th>
-                  <th className="px-2 py-2 text-right font-medium"><Tooltip content="Quanto tira do score final: desconto da severidade × peso da validação"><span className="cursor-help">Efeito no score</span></Tooltip></th>
-                  <th className="px-2 py-2 font-medium">Fase</th>
-                  <th className="px-2 py-2 text-center font-medium"><Tooltip content="Trava: devolve o chamado qualquer que seja o score"><span className="cursor-help">Trava</span></Tooltip></th>
-                  <th className="px-2 py-2 text-center font-medium"><Tooltip content="Reduz a confiança da análise; dois redutores mandam para análise detalhada"><span className="cursor-help">Reduz confiança</span></Tooltip></th>
-                  <th className="px-2 py-2 font-medium"><Tooltip content="Tipos da mesma validação que deixam de descontar quando este aparece (o mesmo problema visto por outro ângulo)"><span className="cursor-help">Absorve</span></Tooltip></th>
-                  <th className="px-4 py-2 font-medium"><Tooltip content="Como entra no valor potencial divergente (definido no código)"><span className="cursor-help">Valor divergente</span></Tooltip></th>
+                  <Th tip={COLUMN_HELP.enabled} className="w-14 px-4">Ativa</Th>
+                  <Th tip={COLUMN_HELP.rule}>Regra</Th>
+                  <Th tip={COLUMN_HELP.severity}>Severidade</Th>
+                  <Th tip={COLUMN_HELP.effect} className="text-right" justify="justify-end">Efeito no score</Th>
+                  <Th tip={COLUMN_HELP.phase}>Fase</Th>
+                  <Th tip={COLUMN_HELP.lock} className="text-center" justify="justify-center">Trava</Th>
+                  <Th tip={COLUMN_HELP.confidence} className="text-center" justify="justify-center">Reduz confiança</Th>
+                  <Th tip={COLUMN_HELP.absorbs}>Absorve</Th>
+                  <Th tip={COLUMN_HELP.amount} className="px-4">Valor divergente</Th>
                 </tr>
               </thead>
               <tbody>
                 {entries.filter(([, f]) => f.validation === v).map(([kind, f]) => {
+                  const raw = data.finding_types[kind];
                   const b = base.finding_types[kind];
-                  const changed = JSON.stringify(b) !== JSON.stringify(f);
+                  const changed = JSON.stringify(b) !== JSON.stringify(raw);
+                  const wsAdjusted = ws !== "all" && !!raw.by_workstream?.[ws];
+                  const notes = ws === "all" ? overrideText(raw) : [];
                   const effect = (data.discount_by_severity[f.severity] * data.weights[v]) / total;
                   return (
                     <tr key={kind} className={`border-t border-line/70 ${!f.enabled ? "bg-paper/50 text-muted" : changed ? "bg-[#fffaf0]" : ""}`}>
-                      <td className="px-4 py-2"><Switch on={f.enabled} onChange={(on) => set(kind, { enabled: on })} label={`${f.description}: ${f.enabled ? "ativa" : "desativada"}`} /></td>
+                      <td className="px-4 py-2"><Switch on={f.enabled} onChange={(on) => (ws === "all" ? set(kind, { enabled: on }) : setOverride(kind, { enabled: on }))} label={`${f.description}: ${f.enabled ? "ativa" : "desativada"}`} /></td>
                       <td className="px-2 py-2">
                         <div className={`font-medium ${f.enabled ? "" : "line-through"}`}>{f.description}</div>
-                        <div className="flex items-center gap-2 font-mono text-[11px] text-muted">
-                          {kind}
-                          {changed && (
-                            <button onClick={() => set(kind, b)} className="flex items-center gap-0.5 font-sans text-warn hover:underline"><RotateCcw size={11} /> desfazer</button>
-                          )}
-                        </div>
+                        {((changed && ws === "all") || wsAdjusted) && (
+                          <div className="flex items-center gap-2 text-[11px]">
+                            {changed && ws === "all" && (
+                              <button onClick={() => set(kind, b)} className="flex items-center gap-0.5 text-warn hover:underline"><RotateCcw size={11} /> desfazer</button>
+                            )}
+                            {wsAdjusted && (
+                              <button onClick={() => clearOverride(kind)} className="flex items-center gap-0.5 text-blueprint hover:underline"><RotateCcw size={11} /> usar o padrão</button>
+                            )}
+                          </div>
+                        )}
+                        {wsAdjusted && <span className="mt-0.5 inline-block rounded bg-blueprint-soft px-1.5 text-[11px] font-medium text-blueprint">ajustada para {ws}</span>}
+                        {notes.map((n) => <span key={n} className="mr-1 mt-0.5 inline-block rounded bg-paper px-1.5 text-[11px] text-muted ring-1 ring-line">{n}</span>)}
                       </td>
                       <td className="px-2 py-2">
-                        <select value={f.severity} disabled={!f.enabled} onChange={(e) => set(kind, { severity: e.target.value as FindingTypeConfig["severity"] })}
+                        <select value={f.severity} disabled={!f.enabled}
+                          onChange={(e) => { const sev = e.target.value as FindingTypeConfig["severity"]; if (ws === "all") set(kind, { severity: sev }); else setOverride(kind, { severity: sev }); }}
                           className="rounded-md border border-line bg-sheet px-1.5 py-1 font-medium" style={{ color: SEVERITY[f.severity].color }}>
                           {SEVERITIES.map((s) => <option key={s} value={s}>{SEVERITY[s].label} (−{data.discount_by_severity[s]})</option>)}
                         </select>
                       </td>
                       <td className="px-2 py-2 text-right tabular-nums">{f.enabled ? <span className="font-semibold text-bad">−{pts(effect)}</span> : "—"}</td>
                       <td className="px-2 py-2">
-                        <select value={f.phase} disabled={!f.enabled} onChange={(e) => set(kind, { phase: Number(e.target.value) })} className="rounded-md border border-line bg-sheet px-1.5 py-1">
+                        <select value={f.phase} disabled={!f.enabled || ws !== "all"} title={wsOnly} onChange={(e) => set(kind, { phase: Number(e.target.value) })} className="rounded-md border border-line bg-sheet px-1.5 py-1">
                           <option value={1}>Fase 1</option><option value={2}>Fase 2</option>
                         </select>
                       </td>
-                      <td className="px-2 py-2 text-center"><span className="inline-flex items-center gap-1"><Switch size="sm" on={f.lock} disabled={!f.enabled} onChange={(on) => set(kind, { lock: on })} label="Trava" />{f.lock && <Lock size={12} className="text-lock" />}</span></td>
-                      <td className="px-2 py-2 text-center"><span className="inline-flex items-center gap-1"><Switch size="sm" on={f.reduces_confidence} disabled={!f.enabled} onChange={(on) => set(kind, { reduces_confidence: on })} label="Reduz confiança" />{f.reduces_confidence && <ShieldAlert size={12} className="text-muted" />}</span></td>
+                      <td className="px-2 py-2 text-center"><span className="inline-flex items-center gap-1"><Switch size="sm" on={f.lock} disabled={!f.enabled || ws !== "all"} onChange={(on) => set(kind, { lock: on })} label="Trava" />{f.lock && <Lock size={12} className="text-lock" />}</span></td>
+                      <td className="px-2 py-2 text-center"><span className="inline-flex items-center gap-1"><Switch size="sm" on={f.reduces_confidence} disabled={!f.enabled || ws !== "all"} onChange={(on) => set(kind, { reduces_confidence: on })} label="Reduz confiança" />{f.reduces_confidence && <ShieldAlert size={12} className="text-muted" />}</span></td>
                       <td className="px-2 py-2">
-                        <Absorbs kind={kind} value={f.absorbs ?? []} disabled={!f.enabled}
+                        <Absorbs name={f.description} value={f.absorbs ?? []} disabled={!f.enabled || ws !== "all"}
                           options={entries.filter(([k, o]) => k !== kind && o.validation === v).map(([k, o]) => ({ kind: k, label: o.description }))}
                           onChange={(absorbs) => set(kind, { absorbs })} />
                       </td>
@@ -102,24 +157,99 @@ export function FindingRulesEditor({ data, base, onChange }: Props) {
   );
 }
 
-/** Tipos que este absorve: resumo clicável que abre a lista de marcação. */
-function Absorbs({ kind, value, options, disabled, onChange }: { kind: string; value: string[]; options: { kind: string; label: string }[]; disabled: boolean; onChange: (v: string[]) => void }) {
-  const label = (k: string) => options.find((o) => o.kind === k)?.label ?? k;
+/** Explicação de cada coluna da tabela de regras (ícone ao lado do nome). */
+const COLUMN_HELP: Record<string, React.ReactNode> = {
+  enabled: "Desligada, a verificação não é feita: não gera apontamento, não desconta e não entra no valor divergente.",
+  rule: "Cada linha é uma verificação que o Atest.AI faz no chamado. Quando ela encontra um problema, gera um apontamento, que tira pontos do score.",
+  severity: "Quanto o apontamento tira da nota da validação (Escopo, Orçamento ou Fotos). O número entre parênteses é o desconto.",
+  effect: "Quanto sai do score final (0 a 100): o desconto da severidade multiplicado pelo peso da validação. Ex.: −35 numa validação com peso 40% tira 14 pontos.",
+  phase: "Fase 1 vale desde já; Fase 2 só conta quando a análise roda na Fase 2.",
+  lock: "Ligada, o apontamento devolve o chamado ao fornecedor qualquer que seja o score (ex.: foto reaproveitada de outro chamado).",
+  confidence: "O apontamento indica que faltou informação para concluir. Um redutor deixa a confiança média; dois mandam o chamado para análise detalhada.",
+  absorbs: <>Evita punir duas vezes o mesmo problema. Se esta regra e uma das marcadas aparecem juntas no mesmo chamado, só esta desconta; a outra continua no parecer como evidência.
+    <span className="mt-1 block">Ex.: <i>Sem foto do serviço concluído</i> absorve <i>Foto não corresponde ao escopo</i>, porque a foto de outro ambiente é justamente o motivo de faltar a prova do serviço. Só dá para marcar regras da mesma validação.</span></>,
+  amount: "Quanto do orçamento entra no valor potencial divergente quando o apontamento aparece: a linha inteira, só o excedente ou nada. É definido no código.",
+};
+
+/** Cabeçalho de coluna com o ícone de ajuda (ⓘ) ao lado do nome. */
+function Th({ children, tip, className = "px-2", justify = "" }: { children: string; tip: React.ReactNode; className?: string; justify?: string }) {
   return (
-    <details className={`group relative text-[12px] ${disabled ? "pointer-events-none opacity-60" : ""}`}>
-      <summary className="cursor-pointer list-none rounded-md border border-line bg-sheet px-1.5 py-1 text-muted hover:text-ink">
-        {value.length ? value.map(label).join(", ") : "—"}
-      </summary>
-      <div className="absolute z-10 mt-1 w-64 space-y-1 rounded-md border border-line bg-sheet p-2 shadow-lg">
-        {options.map((o) => (
-          <label key={o.kind} className="flex items-center gap-2">
-            <input type="checkbox" checked={value.includes(o.kind)} aria-label={`${kind} absorve ${o.kind}`}
-              onChange={(e) => onChange(e.target.checked ? [...value, o.kind] : value.filter((x) => x !== o.kind))} />
-            {o.label}
-          </label>
-        ))}
-      </div>
-    </details>
+    <th className={`py-2 font-medium ${className}`}>
+      <span className={`inline-flex items-center gap-1 ${justify}`}>
+        {children}
+        <InfoTip size={12} label={`O que é “${children}”?`} text={<><b className="mb-0.5 block">{children}</b>{tip}</>} />
+      </span>
+    </th>
+  );
+}
+
+/** Tipos que este absorve: botão com o resumo que abre a lista de marcação flutuando sobre a página
+ * (fora da tabela, que tem rolagem horizontal e cortava a lista), sempre dentro da área visível. */
+function Absorbs({ name, value, options, disabled, onChange }: { name: string; value: string[]; options: { kind: string; label: string }[]; disabled: boolean; onChange: (v: string[]) => void }) {
+  const [open, setOpen] = useState(false);
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
+  const button = useRef<HTMLButtonElement>(null);
+  const panel = useRef<HTMLDivElement>(null);
+  const label = (k: string) => options.find((o) => o.kind === k)?.label ?? k;
+  const summary = value.length ? value.map(label).join(", ") : "nenhuma";
+
+  // posiciona abaixo do botão (ou acima, se não couber), alinhado para não sair da tela
+  useLayoutEffect(() => {
+    if (!open || !button.current || !panel.current) return;
+    const b = button.current.getBoundingClientRect();
+    const w = panel.current.offsetWidth;
+    const h = panel.current.offsetHeight;
+    const left = Math.max(8, Math.min(b.right - w, window.innerWidth - w - 8));
+    const below = b.bottom + 4;
+    const top = below + h > window.innerHeight - 8 && b.top - h - 4 > 8 ? b.top - h - 4 : below;
+    setPos({ top, left });
+  }, [open]);
+  useEffect(() => {
+    if (!open) return;
+    const away = (e: MouseEvent) => { if (!panel.current?.contains(e.target as Node) && !button.current?.contains(e.target as Node)) setOpen(false); };
+    const esc = (e: KeyboardEvent) => { if (e.key === "Escape") { setOpen(false); button.current?.focus(); } };
+    const close = () => setOpen(false);
+    document.addEventListener("mousedown", away);
+    document.addEventListener("keydown", esc);
+    window.addEventListener("resize", close);
+    window.addEventListener("scroll", close, true);
+    return () => {
+      document.removeEventListener("mousedown", away);
+      document.removeEventListener("keydown", esc);
+      window.removeEventListener("resize", close);
+      window.removeEventListener("scroll", close, true);
+    };
+  }, [open]);
+
+  return (
+    <>
+      <button ref={button} type="button" disabled={disabled} onClick={() => { setPos(null); setOpen(!open); }} aria-expanded={open}
+        aria-label={`${name} absorve: ${summary}. Clique para escolher`} title={value.length ? summary : undefined}
+        className="flex max-w-[180px] items-center gap-1 rounded-md border border-line bg-sheet px-1.5 py-1 text-left text-[12px] text-muted hover:text-ink disabled:opacity-60">
+        <span className="truncate">{value.length ? summary : "—"}</span>
+        <ChevronDown size={12} className={`shrink-0 transition ${open ? "rotate-180" : ""}`} />
+      </button>
+      {open && (
+        <div ref={panel} role="dialog" aria-label={`O que “${name}” absorve`}
+          style={{ position: "fixed", top: pos?.top ?? -9999, left: pos?.left ?? -9999 }}
+          className="z-50 w-80 max-w-[calc(100vw-16px)] rounded-lg border border-line bg-sheet p-3 text-[13px] shadow-xl">
+          <p className="mb-2 text-[12px] text-muted">Quando <b className="text-ink">{name}</b> aparece, estas deixam de descontar (seguem como evidência):</p>
+          <div className="max-h-64 space-y-1 overflow-y-auto">
+            {options.map((o) => (
+              <label key={o.kind} className="flex cursor-pointer items-start gap-2 rounded px-1 py-0.5 hover:bg-paper">
+                <input type="checkbox" className="mt-0.5 shrink-0" checked={value.includes(o.kind)} aria-label={`${name} absorve ${o.label}`}
+                  onChange={(e) => onChange(e.target.checked ? [...value, o.kind] : value.filter((x) => x !== o.kind))} />
+                <span>{o.label}</span>
+              </label>
+            ))}
+            {!options.length && <p className="text-muted">Não há outras regras nesta validação.</p>}
+          </div>
+          <div className="mt-2 flex justify-end">
+            <button type="button" onClick={() => setOpen(false)} className="rounded-md border border-line px-2.5 py-1 text-[12px] hover:bg-paper">Fechar</button>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 

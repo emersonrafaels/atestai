@@ -70,14 +70,14 @@ def pt_validation_error(errors: list[dict], limit: int = 3) -> str:
 TASK_PT = {
     "identify_attachments": "Identificação dos anexos",
     "scope": "Leitura do escopo",
-    "quote_review": "Orçamento × escopo",
+    "quote_review": "Orçamento",
     "photos": "Análise das fotos",
     "assessment": "Redação do parecer",
 }
 
 
 def error_message(e: BaseException) -> str:
-    """Erro de execução para a tela, em português: "[quote_review] …" vira "Falha em Orçamento × escopo: …"."""
+    """Erro de execução para a tela, em português: "[quote_review] …" vira "Falha em Orçamento: …"."""
     text = str(e).strip()
     if m := re.match(r"^\[(\w+)\]\s*(.*)$", text, re.S):
         task, rest = m.groups()

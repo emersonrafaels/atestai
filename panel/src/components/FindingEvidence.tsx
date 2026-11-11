@@ -136,7 +136,7 @@ function ScopeEvidence({ p, ticket }: { p: Assessment; ticket: TicketDetail | nu
       <div>
         <div className="mb-1 font-medium">Escopo como foi escrito</div>
         <blockquote className="rounded-md border-l-4 border-warn bg-sheet px-3 py-2 text-[15px] leading-snug">“{ticket?.scope ?? "—"}”</blockquote>
-        {ticket && <div className="mt-1 text-[12px] text-muted">Categoria {ticket.category_label} · sintoma {ticket.symptom_label}{ticket.environment ? ` · ambiente ${envLabel(ticket.environment)}` : ""}</div>}
+        {ticket && <div className="mt-1 text-[12px] text-muted">Categoria {ticket.category_label} · sintoma {ticket.symptom_label}{ticket.environment ? ` · local do chamado ${envLabel(ticket.environment)}` : ""}</div>}
       </div>
       {(s.requested_services?.length || s.acceptance_criteria?.length) ? (
         <div className="grid gap-2 md:grid-cols-2">

@@ -62,7 +62,7 @@ export const authorLabel = (a: string | null | undefined) => (!a || a === "analy
 export const TASK_LABELS: Record<string, string> = {
   identify_attachments: "Identificação dos anexos",
   scope: "Leitura do escopo",
-  quote_review: "Orçamento × escopo",
+  quote_review: "Orçamento",
   photos: "Análise das fotos",
   assessment: "Redação do parecer",
 };
@@ -80,7 +80,7 @@ export const MOMENT_LABEL: Record<string, string> = { before: "antes", after: "d
 
 // ============================================================================ score: de onde vem cada ponto
 
-export const VALIDATION_LABEL: Record<ValidationKind, string> = { scope: "Escopo", quote: "Orçamento × escopo", photos: "Evidências fotográficas" };
+export const VALIDATION_LABEL: Record<ValidationKind, string> = { scope: "Escopo", quote: "Orçamento", photos: "Evidências fotográficas" };
 export const VALIDATION_SHORT: Record<ValidationKind, string> = { scope: "Escopo", quote: "Orçamento", photos: "Fotos" };
 export const VALIDATIONS: ValidationKind[] = ["scope", "quote", "photos"];
 
@@ -189,12 +189,15 @@ export const STAGE_DOCS: Record<string, string[]> = {
   execution: ["Escopo", "Orçamento (planilha padrão)", "Fotos do antes", "Fotos do depois", "Demais documentos do checklist da categoria"],
 };
 
-/** Ambientes da agência como chegam no chamado. Valores fora da lista aparecem como vieram. */
-export const ENV_LABEL: Record<string, string> = {
-  backoffice: "backoffice", back_office: "backoffice", corridor: "corredor", self_service: "autoatendimento",
-  service: "salão de atendimento", boxes: "caixas", kitchen: "cozinha", parking: "estacionamento", treasury: "tesouraria",
-  hall: "salão", facade: "fachada", restroom: "banheiro",
-};
+/** Locais da agência (cadastro): código como chega no chamado → nome. Preenchido por registerLocations ao carregar a configuração. */
+export const ENV_LABEL: Record<string, string> = {};
+export function registerLocations(items: { value: string; label: string }[] | undefined) {
+  for (const k of Object.keys(ENV_LABEL)) delete ENV_LABEL[k];
+  for (const i of items ?? []) ENV_LABEL[i.value] = i.label;
+}
+/** Rótulo do campo branch.environment do chamado. */
+export const LOCAL_LABEL = "Local";
+/** Nome do local no cadastro; código fora do cadastro aparece como veio. */
 export const envLabel = (v: string | null | undefined) => (v ? ENV_LABEL[v] ?? v.replace(/_/g, " ") : "");
 
 export const PROVIDER_LABEL: Record<string, string> = { anthropic: "Anthropic", openai: "OpenAI", google: "Google", iara: "IARA" };

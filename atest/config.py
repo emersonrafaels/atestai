@@ -20,7 +20,7 @@ from typing import Any
 from dynaconf import Dynaconf, Validator
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from .domain import AttachmentCategory, Rubric
+from .domain import AttachmentCategory, Catalog, Rubric
 
 ROOT = Path(__file__).resolve().parent.parent
 DIR_CONFIG = ROOT / "config"
@@ -211,18 +211,20 @@ class ChecklistRequirement(_Section):
 
 
 class ChecklistRule(_Section):
-    """Regra de checklist para uma combinação categoria × manutenção × momento."""
+    """Regra de checklist para uma combinação esteira × categoria × manutenção × momento."""
 
+    workstream: str = "*"
     category: str = "*"
     maintenance: str = "*"
     moment: str = "*"
     requirements: list[ChecklistRequirement]
     enabled: bool = True
 
-    def house(self, category: str, maintenance: str, moment: str) -> int | None:
+    def house(self, category: str, maintenance: str, moment: str, workstream: str = "*") -> int | None:
         """Especificidade da regra (quanto maior, mais específica) ou None se não casa."""
         points = 0
-        for rule_value, value in ((self.category, category), (self.maintenance, maintenance), (self.moment, moment)):
+        pairs = ((self.category, category), (self.maintenance, maintenance), (self.moment, moment), (self.workstream, workstream))
+        for rule_value, value in pairs:
             if rule_value == "*":
                 continue
             if rule_value != value:
@@ -237,14 +239,14 @@ class Checklists(_Section):
     attachment_categories: dict[str, str]
     rules: list[ChecklistRule]
 
-    def requirements(self, category: str, maintenance: str, moment: str) -> list[ChecklistRequirement]:
-        """Requisitos ativos da regra ativa mais específica que casa com categoria, manutenção e momento."""
-        rule = self.rule_for(category, maintenance, moment)
+    def requirements(self, category: str, maintenance: str, moment: str, workstream: str = "*") -> list[ChecklistRequirement]:
+        """Requisitos ativos da regra ativa mais específica que casa com categoria, manutenção, momento e esteira."""
+        rule = self.rule_for(category, maintenance, moment, workstream)
         return [r for r in rule.requirements if r.enabled] if rule else []
 
-    def rule_for(self, category: str, maintenance: str, moment: str) -> ChecklistRule | None:
+    def rule_for(self, category: str, maintenance: str, moment: str, workstream: str = "*") -> ChecklistRule | None:
         """Regra ativa mais específica (em empate, a que vem por último no arquivo)."""
-        candidates = [(r.house(category, maintenance, moment), i, r) for i, r in enumerate(self.rules) if r.enabled]
+        candidates = [(r.house(category, maintenance, moment, workstream), i, r) for i, r in enumerate(self.rules) if r.enabled]
         valid = [(p, i, r) for p, i, r in candidates if p is not None]
         return max(valid, key=lambda x: (x[0], x[1]))[2] if valid else None
 
@@ -280,6 +282,7 @@ class Settings(BaseModel):
     costs: CostSettings
     rubric: Rubric
     checklists: Checklists
+    catalog: Catalog
     prompts: Prompts
 
     # atalhos de caminho (absolutos)
@@ -330,6 +333,7 @@ class Settings(BaseModel):
         target = {
             "rubric": self.rubric.model_dump(mode="json"),
             "checklists": self.checklists.model_dump(mode="json"),
+            "catalog": self.catalog.model_dump(mode="json"),  # os nomes vão no resumo do chamado enviado ao modelo
             "prompts": self.prompts.model_dump(),
             "models": self.models.model_dump(),
             "llm": self.llm.model_dump(include={"default_provider", "effort", "max_tokens", "image_max_side"}),
@@ -371,7 +375,7 @@ def build_dynaconf(environment: str | None = None) -> Dynaconf:
     """Carrega os TOML de config/ no ambiente pedido (ou em ATEST_ENV) com Dynaconf."""
     return Dynaconf(
         root_path=str(DIR_CONFIG),
-        settings_files=["settings.toml", "rubric.toml", "checklists.toml", "prompts.toml"],
+        settings_files=["settings.toml", "rubric.toml", "checklists.toml", "catalog.toml", "prompts.toml"],
         secrets=".secrets.toml",
         environments=True,
         env_switcher="ATEST_ENV",

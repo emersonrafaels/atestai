@@ -1,0 +1,64 @@
+# Cadastro de categorias, sintomas e locais do chamado (padrão de fábrica).
+# O portal de configuração (Configuração › Cadastros) grava alterações por cima, com histórico; este arquivo não muda.
+# - value: código gravado no chamado (Salesforce); label: nome na tela e nos prompts.
+# - categoria: workstreams = esteiras em que vale (vazio = SETA e SISR).
+# - sintoma: categories = categorias em que vale (vazio = todas).
+# - enabled = false: some das listas de escolha; chamados antigos continuam mostrando o nome.
+
+[default.catalog]
+categories = [
+  { value = "painting", label = "Pintura", workstreams = ["SETA"] },
+  { value = "waterproofing", label = "Impermeabilização", workstreams = ["SETA"] },
+  { value = "electrical", label = "Elétrica", workstreams = ["SETA"] },
+  { value = "lighting", label = "Iluminação", workstreams = ["SETA"] },
+  { value = "air_conditioning", label = "Ar-condicionado", workstreams = ["SETA"] },
+  { value = "plumbing", label = "Hidráulica", workstreams = ["SETA"] },
+  { value = "metalwork", label = "Serralheria e portas", workstreams = ["SETA"] },
+  { value = "cctv", label = "CFTV", workstreams = ["SISR"] },
+  { value = "alarm", label = "Alarme", workstreams = ["SISR"] },
+  { value = "cctv_and_alarm", label = "CFTV e alarme", workstreams = ["SISR"] },
+]
+
+symptoms = [
+  { value = "finish_wear", label = "Desgaste de pintura ou acabamento", categories = ["painting", "waterproofing", "metalwork"] },
+  { value = "moisture_infiltration", label = "Infiltração ou umidade", categories = ["waterproofing", "painting", "plumbing"] },
+  { value = "leak", label = "Vazamento", categories = ["plumbing", "air_conditioning", "waterproofing"] },
+  { value = "electrical_failure", label = "Falha elétrica", categories = ["electrical", "lighting", "air_conditioning"] },
+  { value = "poor_lighting", label = "Iluminação deficiente", categories = ["lighting", "electrical"] },
+  { value = "mechanical_failure", label = "Falha mecânica", categories = ["metalwork", "air_conditioning"] },
+  { value = "degraded_image", label = "Imagem com defeito", categories = ["cctv", "cctv_and_alarm"] },
+  { value = "no_image", label = "Sem imagem", categories = ["cctv", "cctv_and_alarm"] },
+  { value = "false_alarm", label = "Disparo falso", categories = ["alarm", "cctv_and_alarm"] },
+  { value = "device_inoperative", label = "Dispositivo não aciona", categories = ["alarm", "cctv", "cctv_and_alarm", "electrical", "metalwork"] },
+  { value = "preventive_maintenance", label = "Manutenção preventiva", categories = [] },
+]
+
+# Locais da agência. Os códigos em português são os que chegam do Salesforce; os em inglês são de chamados antigos
+# (desativados: não aparecem para escolha, mas continuam com o nome certo).
+locations = [
+  { value = "backoffice", label = "Backoffice" },
+  { value = "salão de atendimento", label = "Salão de atendimento" },
+  { value = "área de atendimento", label = "Área de atendimento" },
+  { value = "autoatendimento", label = "Autoatendimento" },
+  { value = "caixas", label = "Caixas" },
+  { value = "tesouraria", label = "Tesouraria" },
+  { value = "corredor", label = "Corredor" },
+  { value = "corredor da tesouraria", label = "Corredor da tesouraria" },
+  { value = "copa", label = "Copa" },
+  { value = "cozinha dos funcionários", label = "Cozinha dos funcionários" },
+  { value = "estacionamento", label = "Estacionamento" },
+  { value = "fachada", label = "Fachada" },
+  { value = "banheiro", label = "Banheiro" },
+  { value = "agência inteira", label = "Agência inteira" },
+  { value = "back_office", label = "Backoffice", enabled = false },
+  { value = "corridor", label = "Corredor", enabled = false },
+  { value = "self_service", label = "Autoatendimento", enabled = false },
+  { value = "service", label = "Salão de atendimento", enabled = false },
+  { value = "boxes", label = "Caixas", enabled = false },
+  { value = "kitchen", label = "Cozinha", enabled = false },
+  { value = "parking", label = "Estacionamento", enabled = false },
+  { value = "treasury", label = "Tesouraria", enabled = false },
+  { value = "hall", label = "Salão", enabled = false },
+  { value = "facade", label = "Fachada", enabled = false },
+  { value = "restroom", label = "Banheiro", enabled = false },
+]
