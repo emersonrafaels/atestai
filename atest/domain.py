@@ -51,6 +51,26 @@ class Moment(StrEnum):
     EXECUTION = "execution"  # retorno após a execução do serviço
 
 
+# O que cada etapa do chamado espera de evidência: vai no resumo do chamado, que abre todos os prompts.
+STAGE_EXPECTATIONS = {
+    "quote": (
+        "Momento da validação: APROVAÇÃO DO ORÇAMENTO. O serviço AINDA NÃO FOI FEITO. Nesta etapa se espera o orçamento "
+        "e fotos do problema (o antes) que mostrem o local, o dano e a extensão que justificam os itens e as quantidades. "
+        "Não se espera nem se cobra foto do depois, do serviço concluído, da peça instalada ou termo de conclusão: a falta "
+        "deles é normal nesta etapa."
+    ),
+    "execution": (
+        "Momento da validação: RETORNO APÓS A EXECUÇÃO (atestação do serviço). As fotos precisam comprovar o RESULTADO "
+        "pedido no local do escopo; foto do antes e documentos de conclusão conforme o checklist."
+    ),
+}
+
+
+def stage_expectations(moment: str) -> str:
+    """Texto do que se espera de evidência na etapa do chamado (aprovação do orçamento ou atestação)."""
+    return STAGE_EXPECTATIONS.get(str(moment), STAGE_EXPECTATIONS["execution"])
+
+
 # ============================================================================ cadastro (categorias, sintomas e locais)
 class CatalogEntry(DomainModel):
     """Item do cadastro: código gravado no chamado, nome na tela e onde vale."""
@@ -339,12 +359,11 @@ class Ticket(DomainModel):
         return v.strip()
 
     def summary_text(self) -> str:
-        """Resumo do chamado em português, usado no início de todos os prompts."""
-        moment = "aprovação do orçamento" if self.moment == Moment.QUOTE else "retorno após a execução do serviço"
+        """Resumo do chamado em português, usado no início de todos os prompts (inclui o que se espera na etapa)."""
         return (
             f"Chamado {self.ticket_id} | Esteira {self.workstream.value} ({self.maintenance_type.value})\n"
             f"Categoria: {self.category.label} | Sintoma: {self.symptom.label}\n"
-            f"Momento da validação: {moment}\n"
+            f"{stage_expectations(self.moment)}\n"
             f"Agência: {self.branch.name} (cód. {self.branch.code})"
             f" | Local do chamado: {location_label(self.branch.environment) or 'não informado'}\n"
             + (f"Impede a abertura da agência: {'sim' if self.blocks_opening else 'não'}\n" if self.blocks_opening is not None else "")

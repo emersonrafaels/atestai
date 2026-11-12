@@ -54,7 +54,12 @@ class ScopeReading(LlmOutput):
     requested_services: list[str] = Field(description="Ações pedidas, ex.: 'repintar paredes', 'limpar e ajustar foco da câmera 04'")
     mentioned_quantities: list[Quantity] = Field(description="Só quantidades explícitas no texto")
     acceptance_criteria: list[str] = Field(description="Frases verificáveis para conferir orçamento e fotos")
-    expected_evidence: list[str] = Field(description="Que fotos/documentos comprovariam o RESULTADO pedido")
+    expected_evidence: list[str] = Field(
+        description=(
+            "Evidências esperadas NA ETAPA do chamado: na aprovação do orçamento, fotos do problema (local, dano, extensão); "
+            "no retorno após a execução, fotos/documentos que comprovem o RESULTADO pedido"
+        )
+    )
     before_evidence_applicable: bool = Field(
         description="true se o serviço altera o estado físico (reparo, troca, pintura, limpeza); false para testes/inspeções"
     )
@@ -125,16 +130,21 @@ class PhotoAnalysis(LlmOutput):
     photos: list[AnalyzedPhoto]
     has_before_photo: bool
     done_justification: str = Field(
-        description="Antes de decidir done_service: que foto mostra o resultado pedido e o que confirma (ou contradiz) o local"
+        description=(
+            "Só no retorno após a execução (vazio na aprovação do orçamento). Antes de decidir done_service: que foto mostra o "
+            "resultado pedido e o que confirma (ou contradiz) o local"
+        )
     )
     done_service: Match = Field(
         description=(
             "yes = foto legível mostra o RESULTADO pedido no local do escopo; partial = mostra o resultado, mas nada na imagem "
             "permite confirmar o local (e nada o contradiz); no = nenhuma foto mostra o resultado, ou a foto contradiz o local; "
-            "undetermined = fotos ilegíveis"
+            "undetermined = fotos ilegíveis ou chamado na aprovação do orçamento (o serviço ainda não foi feito)"
         )
     )
-    items_without_photo: list[int]
+    items_without_photo: list[int] = Field(
+        description="Só no retorno após a execução: itens físicos cobrados sem foto que os evidencie; vazio na aprovação do orçamento"
+    )
     quantity_checks: list[QuantityCheck] = Field(
         description=(
             "Para cada item físico cobrado por quantidade ou área do que aparece danificado nas fotos (piso, revestimento, peças, "

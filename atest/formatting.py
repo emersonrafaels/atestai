@@ -19,6 +19,37 @@ def normalize_text(text: str) -> str:
     return " ".join(re.sub(r"[^a-z0-9 ]+", " ", text).split())
 
 
+# Frase que cobra prova do serviço feito (falta/pedido + foto/evidência + depois). Na aprovação do orçamento o serviço
+# ainda não foi feito: essas frases saem das observações e da mensagem ao fornecedor.
+_ASK = re.compile(
+    r"\b(falta|faltam|faltando|nao ha|nao tem|nenhum|nenhuma|sem fotos?|sem imagens?|ausencia|enviar|envie|reenviar|anexar|anexe|"
+    r"apresentar|apresente|incluir fotos?)\b"
+)
+_EVIDENCE = re.compile(r"\b(fotos?|imagens?|registros?|evidencia\w*|comprova\w*|prova|termo|mostra\w*|aparece\w*)\b")
+_AFTER = re.compile(
+    r"\b(depois|conclu\w*|finaliza\w*|instalad\w*|organizad\w*|executad\w*|servico pronto|resultado|"
+    r"apos (o|a) (servico|execucao|reparo|troca|instalacao|conserto|obra))\b"
+)
+
+
+def asks_for_after_service(sentence: str) -> bool:
+    """A frase cobra foto, documento ou prova do serviço já feito (o "depois")?"""
+    n = normalize_text(sentence)
+    return bool(_ASK.search(n) and _EVIDENCE.search(n) and _AFTER.search(n))
+
+
+def drop_after_service_requests(text: str) -> str:
+    """Tira as frases (ou ações separadas por ';') que cobram prova do serviço feito; o resto do texto fica igual."""
+    pieces = re.split(r"(?<=[.;!?])\s+", (text or "").strip())
+    kept = [p for p in pieces if p and not asks_for_after_service(p)]
+    if len(kept) == len([p for p in pieces if p]):
+        return text
+    out = " ".join(kept).strip().rstrip(";,").strip()
+    if out and out[-1] not in ".!?":
+        out += "."
+    return out[:1].upper() + out[1:] if out else ""
+
+
 def normalize_unit(unit: str) -> str:
     """Unidade comparável: "M²" e "m2" ficam iguais."""
     return unit.lower().replace("²", "2").replace(".", "").strip()

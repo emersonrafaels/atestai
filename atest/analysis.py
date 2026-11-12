@@ -59,6 +59,7 @@ class AnalysisContext:
             "amount_at_issue": self.amount_at_issue,
             "amount_at_issue_pct": self.amount_at_issue_pct,
             "observations": self.observations(),
+            "moment": self.ticket.data.moment.value,
         }
 
     def observations(self, limit: int = 600) -> list[str]:

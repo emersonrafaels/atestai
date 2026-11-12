@@ -20,7 +20,7 @@ from datetime import date, datetime, timedelta
 from .analysis import AnalysisContext, AnalysisStage
 from .attachments import attachment_parts
 from .domain import Attachment, AttachmentCategory, ClassifiedAttachment, EvaluatedDocument, EvaluatedItem, Finding, Match, Moment, Stage
-from .formatting import brl
+from .formatting import asks_for_after_service, brl
 from .llm import LlmSession
 from .llm_schemas import DocumentAnalysis, ScopeReading
 from .observability import event
@@ -71,6 +71,7 @@ class DocumentStage(AnalysisStage):
         ctx.documents = self.evaluated(analysis, docs)
         if ctx.ticket.data.moment == Moment.QUOTE:  # "instalação de…" pode ser o que será feito: só registra a dúvida
             for d in ctx.documents:
+                d.divergences = [x for x in d.divergences if not asks_for_after_service(x)]  # serviço ainda não feito: normal
                 if d.service_status == Match.UNDETERMINED and d.solution and d.legible != Match.NO:
                     d.divergences.append("Não dá para saber pelo documento se o serviço já foi feito ou se é o que será feito")
         ctx.findings += self.flag(ctx.ticket, ctx.documents)

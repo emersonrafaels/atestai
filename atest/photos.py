@@ -14,7 +14,8 @@ from pathlib import Path
 
 from .analysis import AnalysisContext, AnalysisStage
 from .attachments import HashCache, Hashes, attachment_parts, compute_hashes, detail_level, distance, exif_date
-from .domain import Attachment, ClassifiedAttachment, EvaluatedItem, EvaluatedPhoto, Finding, Match, Moment, Rubric, Stage
+from .domain import Attachment, ClassifiedAttachment, EvaluatedItem, EvaluatedPhoto, Finding, Match, Moment, Rubric, Stage, stage_expectations
+from .formatting import drop_after_service_requests
 from .llm import LlmSession, LlmTimeout
 from .llm_schemas import PhotoAnalysis, QuantityCheck, ScopeReading
 from .observability import event
@@ -24,6 +25,9 @@ from .repository import LoadedTicket, load_ticket
 from .scope import ScopeStage
 
 DEFAULT_CROPS = [0.02, 0.05, 0.1]
+
+# Apontamentos que cobram a prova do serviço feito: só valem no retorno após a execução, nunca na aprovação do orçamento.
+EXECUTION_ONLY = frozenset({"missing_after_photo", "after_photo_unconfirmed_location", "item_without_photo"})
 
 
 # --------------------------------------------------------------------------- índice de fotos (integridade)
@@ -104,7 +108,7 @@ class PhotoStage(AnalysisStage):
             ctx.photo_analysis = self.unread_analysis(len(photos))
             ctx.confidence_reducers.append("photos_not_analyzed")
         else:
-            ctx.photo_analysis = analysis
+            ctx.photo_analysis = analysis = self.for_moment(analysis, ctx.ticket.data.moment)
             ctx.findings += self.flag(ctx.ticket, ctx.scope, analysis, photos, ctx.items)
             ctx.findings += self.quantity_findings(analysis, ctx.items)
         ctx.integrity, integrity_findings = self.integrity(ctx.ticket, photos)  # por regra: vale mesmo sem a leitura do modelo
@@ -142,6 +146,17 @@ class PhotoStage(AnalysisStage):
                 event("photos_degraded", logging.WARNING, error=str(e)[:300], photos=len(chunk), chunk=n)
                 return None
         return self.merge(parts)
+
+    @staticmethod
+    def for_moment(analysis: PhotoAnalysis, moment: Moment) -> PhotoAnalysis:
+        """Na aprovação do orçamento o serviço ainda não foi feito: nada de "resultado não comprovado" nem de cobrança do
+        depois, mesmo que o modelo tenha respondido como se fosse a atestação."""
+        if moment != Moment.QUOTE:
+            return analysis
+        return analysis.model_copy(update={
+            "done_service": Match.UNDETERMINED, "done_justification": "", "items_without_photo": [],
+            "notes": drop_after_service_requests(analysis.notes),
+        })
 
     @staticmethod
     def unread_analysis(n_photos: int) -> PhotoAnalysis:
@@ -207,7 +222,8 @@ class PhotoStage(AnalysisStage):
         content: list[Part] = [
             TextPart(
                 f"{ticket.data.summary_text()}\n\nLEITURA DO ESCOPO:\n{ScopeStage.describe(scope)}\n\n"
-                f"ITENS DO ORÇAMENTO:\n{item_lines}\n\n{part}{len(photos)} fotos a seguir; use o número do anexo como 'index'."
+                f"ITENS DO ORÇAMENTO:\n{item_lines}\n\nLEMBRE A ETAPA: {stage_expectations(ticket.data.moment)}\n\n"
+                f"{part}{len(photos)} fotos a seguir; use o número do anexo como 'index'."
             )
         ]
         for a in photos:

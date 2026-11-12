@@ -6,8 +6,8 @@ import logging
 from typing import Any
 
 from .analysis import AnalysisContext, AnalysisStage
-from .domain import Confidence, Recommendation, Severity, Stage, ValidationResult
-from .formatting import brl
+from .domain import Confidence, Moment, Recommendation, Severity, Stage, ValidationResult
+from .formatting import brl, drop_after_service_requests
 from .llm_schemas import AssessmentText
 from .providers import TextPart
 
@@ -34,6 +34,19 @@ SUPPLIER_ACTIONS = {
     "item_without_photo": "enviar fotos que evidenciem o que foi cobrado ({ref})",
     "relevant_amount_at_issue": "revisar o orçamento: a maior parte do valor está em questão",
 }
+
+# Na aprovação do orçamento o serviço ainda não foi feito: o pedido ao fornecedor é sobre o problema e o orçamento.
+QUOTE_SUPPLIER_ACTIONS = {
+    **SUPPLIER_ACTIONS,
+    "photo_dated_before": "enviar fotos atuais do problema, tiradas para este chamado",
+    "unverifiable_quantity": "informar quantos equipamentos serão atendidos e enviar foto de cada um ({ref})",
+    "missing_before_photo": "enviar foto do problema a ser corrigido",
+}
+
+
+def supplier_actions(moment: str | None) -> dict[str, str]:
+    """Ações sugeridas ao fornecedor conforme a etapa do chamado (aprovação do orçamento ou atestação)."""
+    return QUOTE_SUPPLIER_ACTIONS if moment == Moment.QUOTE.value else SUPPLIER_ACTIONS
 
 
 class AssessmentWriter:
@@ -76,7 +89,8 @@ class AssessmentWriter:
         message = ""
         needs_action = rec in (Recommendation.RETURN_TO_SUPPLIER, Recommendation.RETURN_LOCKED, Recommendation.APPROVE_WITH_CAVEATS)
         if needs_action and findings:
-            actions = [SUPPLIER_ACTIONS[f["kind"]].format(ref=f["reference"] or "item") for f in findings if f["kind"] in SUPPLIER_ACTIONS]
+            table = supplier_actions(result.get("moment"))
+            actions = [table[f["kind"]].format(ref=f["reference"] or "item") for f in findings if f["kind"] in table]
             message = "; ".join(dict.fromkeys(actions)) + "."
             message = message[0].upper() + message[1:]
         return AssessmentText(summary=" ".join(parts), supplier_message=message)
@@ -96,3 +110,8 @@ class AssessmentStage(AnalysisStage):
         except Exception:
             log.exception("falha ao redigir o parecer; usando o texto por regra")
             ctx.text = AssessmentWriter.from_template(result)
+        if ctx.ticket.data.moment == Moment.QUOTE:  # serviço ainda não feito: nada de cobrar foto do depois ou termo de conclusão
+            ctx.text = ctx.text.model_copy(update={
+                "summary": drop_after_service_requests(ctx.text.summary),
+                "supplier_message": drop_after_service_requests(ctx.text.supplier_message),
+            })

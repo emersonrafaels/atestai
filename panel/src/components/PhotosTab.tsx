@@ -28,6 +28,7 @@ export function PhotosTab({ p, base, openPhoto, highlight = [] }: { p: Assessmen
             ? <Seal ok={done === "yes"} text="Prova do serviço concluído" />
             : <span className="rounded-full bg-[#fdf1dc] px-3 py-1 font-medium text-warn">Serviço aparece, local não confirmado</span>)}
           {done !== "yes" && p.moment === "execution" && <span className="text-muted">{summary.done_justification}</span>}
+          {p.moment === "quote" && <span className="text-muted">Aprovação do orçamento: o serviço ainda não foi feito, então não se espera foto do depois.</span>}
         </div>
       )}
       <QuantityChecks p={p} />

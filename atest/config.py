@@ -243,6 +243,15 @@ class ChecklistRule(_Section):
         return points
 
 
+# Tipos de anexo que só existem depois do serviço feito: não podem ser exigidos na aprovação do orçamento.
+AFTER_SERVICE_CATEGORIES = frozenset({"room_after_photo", "completion_certificate_doc"})
+
+
+def after_service_only(requirement: ChecklistRequirement) -> bool:
+    """A exigência só se cumpre com prova do serviço feito (foto do depois ou termo de conclusão)?"""
+    return bool(requirement.accepted) and set(requirement.accepted) <= AFTER_SERVICE_CATEGORIES
+
+
 class Checklists(_Section):
     """Checklists mínimos (config/checklists.toml)."""
 
@@ -250,9 +259,14 @@ class Checklists(_Section):
     rules: list[ChecklistRule]
 
     def requirements(self, category: str, maintenance: str, moment: str, workstream: str = "*") -> list[ChecklistRequirement]:
-        """Requisitos ativos da regra ativa mais específica que casa com categoria, manutenção, momento e esteira."""
+        """Requisitos ativos da regra ativa mais específica que casa com categoria, manutenção, momento e esteira.
+
+        Na aprovação do orçamento o serviço ainda não foi feito: exigência que só aceita prova do depois (regra de
+        "qualquer etapa" ou salva antes desta checagem) não vale.
+        """
         rule = self.rule_for(category, maintenance, moment, workstream)
-        return [r for r in rule.requirements if r.enabled] if rule else []
+        reqs = [r for r in rule.requirements if r.enabled] if rule else []
+        return [r for r in reqs if not after_service_only(r)] if moment == "quote" else reqs
 
     def rule_for(self, category: str, maintenance: str, moment: str, workstream: str = "*") -> ChecklistRule | None:
         """Regra ativa mais específica (em empate, a que vem por último no arquivo)."""

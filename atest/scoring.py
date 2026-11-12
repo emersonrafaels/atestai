@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 from .analysis import AnalysisContext, AnalysisStage
-from .domain import Finding, Stage
+from .domain import Finding, Moment, Stage
+from .photos import EXECUTION_ONLY
 from .quote import amount_at_issue
 from .score import ScoreCalculator
 
@@ -22,10 +23,12 @@ class ScoringStage(AnalysisStage):
         kinds = rubric.finding_types
         active = lambda k: kinds[k].enabled if k in kinds else True  # noqa: E731
 
+        quote_stage = ctx.ticket.data.moment == Moment.QUOTE
+
         def adjust(fs: list[Finding]) -> list[Finding]:
             out = []
             for f in fs:
-                if not active(f.kind):
+                if not active(f.kind) or (quote_stage and f.kind in EXECUTION_ONLY):  # aprovação do orçamento: sem cobrar o depois
                     continue
                 spec = kinds.get(f.kind)
                 if spec and spec.severity != f.severity:

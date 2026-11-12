@@ -23,7 +23,7 @@ from typing import Any, Literal
 
 from pydantic import ValidationError
 
-from .config import AdminSettings, Checklists, Settings
+from .config import AdminSettings, Checklists, Settings, after_service_only
 from .database import Database
 from .domain import MAINTENANCE_PT, MOMENT_PT, SEVERITY_PT, Catalog, Category, Rubric, Workstream, use_catalog
 from .formatting import pt_validation_error
@@ -161,6 +161,12 @@ def validate_section(section: Section, data: dict[str, Any], base: Settings, cat
                 raise AdminError(f"{where}: identificador '{r.id}' inválido (use minúsculas, números e _).", 422)
             if not r.description.strip() or not r.accepted:
                 raise AdminError(f"{where}: exigência '{r.id}' precisa de descrição e de pelo menos um tipo de anexo aceito.", 422)
+            if rule.moment in ("quote", "*") and r.enabled and after_service_only(r):
+                raise AdminError(
+                    f"{where}: a exigência “{r.description}” só aceita foto do depois ou termo de conclusão, e na aprovação do "
+                    "orçamento o serviço ainda não foi feito. Use a etapa “execução” para essa exigência.",
+                    422,
+                )
     return model.model_dump(mode="json")
 
 
