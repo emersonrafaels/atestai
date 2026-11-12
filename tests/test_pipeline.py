@@ -49,7 +49,10 @@ class FakeServer:
     @staticmethod
     def _task(schema: dict) -> str:
         props = schema.get("properties", {})
-        for key, name in (("attachments", "identify_attachments"), ("local", "scope"), ("photos", "photos"), ("summary", "assessment")):
+        tasks = (
+            ("attachments", "identify_attachments"), ("local", "scope"), ("photos", "photos"), ("documents", "documents"), ("summary", "assessment"),
+        )
+        for key, name in tasks:
             if key in props:
                 return name
         return "quote_review"

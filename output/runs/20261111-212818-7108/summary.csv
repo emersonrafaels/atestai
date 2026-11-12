@@ -1,0 +1,2 @@
+ticket_id;workstream;category;symptom;supplier;quoted_value;recommendation;score;scope_grade;quote_grade;photo_grade;confidence;finding_types;amount_at_issue;cost_brl;summary
+04164650;SETA;civil;piso_rodape_danificado;KYS Reforma e Construção LTDA;1627.61;approve;100;100;100;100;high;;0.0;0.6054;Recomendo aprovar o chamado 04164650: score 100, sem travas e com confiança alta. Escopo, orçamento e evidências fotográficas receberam nota 100, e o valor potencial divergente é R$ 0,00 (0% do orçamento).

@@ -6,7 +6,7 @@
   "category": "alarm",
   "symptom": "device_inoperative",
   "before_applicable": true,
-  "dataset": "demo",
+  "dataset": "scenarios",
   "quoted_value": 690.0,
   "items": [
     {

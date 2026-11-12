@@ -160,7 +160,7 @@ def ticket_json(c, attachments, value=None, status="forwarded_to_backoffice"):
         "dates": c["dates"],
         "status": status,
         "manager": {"first_check": "forwarded", "note": ""},
-        "dataset": c.get("dataset", "demo"),
+        "dataset": c.get("dataset", "scenarios"),  # casos do deck ficam junto com os cenários de teste
         "attachments": attachments,
     }
 
@@ -306,7 +306,7 @@ def build_cases(hist):
             "category": c["category"],
             "symptom": c["symptom"],
             "before_applicable": c["service_type"] != "preventive_security",
-            "dataset": "demo",
+            "dataset": "scenarios",
             "quoted_value": value,
             "items": items,
             "attachments": attachment_labels,

@@ -8,7 +8,7 @@ export type Recommendation =
   | "detailed_review"
   | "checklist_returned";
 
-export type Stage = "checklist" | "scope" | "quote" | "photos" | "score" | "assessment" | "done";
+export type Stage = "checklist" | "scope" | "quote" | "photos" | "documents" | "score" | "assessment" | "done";
 
 export interface Expected {
   recommendation: Recommendation;
@@ -38,9 +38,14 @@ export interface TicketSummary {
   category_label: string;
   symptom: string;
   symptom_label: string;
+  /** descrição detalhada do problema (o escopo pedido) */
   scope: string;
   branch: string;
   environment: string;
+  /** o problema está impedindo a abertura da agência? (null = não informado) */
+  blocks_opening?: boolean | null;
+  /** descrição da solução (opcional; pode vir já na aprovação do orçamento) */
+  solution_description?: string;
   supplier: string;
   quoted_value: number | null;
   moment: "quote" | "execution";
@@ -66,6 +71,8 @@ export interface QuoteItem {
   n: number;
   description: string;
   unit: string;
+  /** item da tabela de preços (LPU); planilhas sem a coluna vêm como true */
+  lpu?: boolean;
   quantity: number;
   unit_value: number;
   total_value: number;
@@ -164,6 +171,28 @@ export interface LlmCall {
   response: Record<string, unknown>;
 }
 
+export interface EvaluatedDocument {
+  file: string;
+  kind: string;
+  handwritten: boolean;
+  legible: "yes" | "partial" | "no" | "undetermined";
+  transcription: string;
+  issuer: string;
+  service_date: string;
+  start_time: string;
+  end_time: string;
+  branch: string;
+  problem: string;
+  solution: string;
+  has_signature: boolean;
+  /** o documento prova que o serviço já foi feito? (yes só com afirmação explícita) */
+  service_status?: "yes" | "partial" | "no" | "undetermined";
+  prices: { description: string; value: number; quote_item: number; same_product?: "yes" | "partial" | "no" | "undetermined" }[];
+  matches_ticket: "yes" | "partial" | "no" | "undetermined";
+  divergences: string[];
+  reason: string;
+}
+
 export interface Assessment {
   ticket_id: string;
   workstream: string;
@@ -204,6 +233,8 @@ export interface Assessment {
   quote_notes: string[];
   photos: EvaluatedPhoto[];
   photo_summary: Record<string, unknown> | null;
+  /** documentos lidos por OCR (foto de documento ou PDF) */
+  documents?: EvaluatedDocument[];
   summary: string;
   supplier_message: string;
   llm_calls: LlmCall[];
@@ -621,6 +652,9 @@ export interface RubricConfig {
   spreadsheet_value_tolerance: number;
   photo_date_tolerance_days: number;
   relevant_amount_at_issue_pct: number;
+  photo_quantity_tolerance_pct?: number;
+  max_amount_at_issue_for_approve_pct?: number;
+  market_price_tolerance_pct?: number;
   finding_types: Record<string, FindingTypeConfig>;
 }
 

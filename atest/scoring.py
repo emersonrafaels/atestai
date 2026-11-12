@@ -45,4 +45,4 @@ class ScoringStage(AnalysisStage):
         # materialidade: muito do orçamento em questão pesa além do desconto único de cada tipo
         ctx.findings += adjust(scorer.materiality_findings(ctx.amount_at_issue_pct, total, ctx.amount_at_issue))
         ctx.findings = scorer.mark_absorbed(scorer.filter_phase(ctx.findings, self.cfg.pipeline.phase))
-        ctx.score = scorer.compute(ctx.findings, ctx.confidence_reducers)
+        ctx.score = scorer.compute(ctx.findings, ctx.confidence_reducers, ctx.amount_at_issue_pct)

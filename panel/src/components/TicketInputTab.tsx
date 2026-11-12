@@ -17,11 +17,21 @@ export function TicketInputTab({ ch, openPhoto }: { ch: TicketDetail; openPhoto:
           <div><dt className="text-muted">Categoria</dt><dd className="font-semibold">{ch.category_label}</dd></div>
           <div><dt className="text-muted">Sintoma</dt><dd className="font-semibold">{ch.symptom_label}</dd></div>
           <div><dt className="text-muted">{LOCAL_LABEL}</dt><dd className="font-semibold">{envLabel(ch.environment) || <span className="font-normal text-muted">não informado</span>}</dd></div>
+          <div>
+            <dt className="text-muted">Impede a abertura da agência?</dt>
+            <dd className={`font-semibold ${ch.blocks_opening ? "text-bad" : ""}`}>{ch.blocks_opening == null ? <span className="font-normal text-muted">não informado</span> : ch.blocks_opening ? "Sim" : "Não"}</dd>
+          </div>
           <div><dt className="flex items-center gap-1 text-muted">Etapa da esteira <InfoTip term="stage" size={12} /></dt><dd className="font-semibold">{STAGE_LABEL[ch.moment] ?? ch.moment}</dd></div>
         </dl>
         <figure className="rounded-xl border border-line bg-sheet p-5">
-          <figcaption className="text-sm text-muted">Escopo descrito por quem abriu o chamado</figcaption>
+          <figcaption className="text-sm text-muted">Descrição detalhada do problema</figcaption>
           <blockquote className="mt-2 text-xl leading-snug">“{ch.scope}”</blockquote>
+          <div className="mt-4 border-t border-line pt-3">
+            <div className="text-sm text-muted">Descrição da solução</div>
+            {ch.solution_description?.trim()
+              ? <p className="mt-1 whitespace-pre-line text-[15px] leading-snug">{ch.solution_description}</p>
+              : <p className="mt-1 text-sm text-muted">Não informada.</p>}
+          </div>
         </figure>
       </section>
 
@@ -47,7 +57,9 @@ export function TicketInputTab({ ch, openPhoto }: { ch: TicketDetail; openPhoto:
               <thead className="bg-[#e7eef9] text-left text-[13px]">
                 <tr>
                   <th className="px-3 py-2 font-semibold">Item</th><th className="px-3 py-2 font-semibold">Descrição</th>
-                  <th className="px-3 py-2 font-semibold">Unidade</th><th className="px-3 py-2 text-right font-semibold">Quantidade</th>
+                  <th className="px-3 py-2 font-semibold">Unidade</th>
+                  <th className="px-3 py-2 text-center font-semibold" title="Item da tabela de preços (LPU)">LPU</th>
+                  <th className="px-3 py-2 text-right font-semibold">Quantidade</th>
                   <th className="px-3 py-2 text-right font-semibold">Valor unitário</th><th className="px-3 py-2 text-right font-semibold">Valor total</th>
                 </tr>
               </thead>
@@ -55,12 +67,16 @@ export function TicketInputTab({ ch, openPhoto }: { ch: TicketDetail; openPhoto:
                 {ch.quote.items.map((i) => (
                   <tr key={i.n} className="border-t border-line/70">
                     <td className="px-3 py-2">{i.n}</td><td className="px-3 py-2">{i.description}</td><td className="px-3 py-2">{i.unit}</td>
+                    <td className="px-3 py-2 text-center">
+                      <input type="checkbox" checked={i.lpu !== false} readOnly disabled aria-label={i.lpu !== false ? "Item da LPU" : "Item fora da LPU"}
+                        title={i.lpu !== false ? "Item da LPU" : "Item fora da LPU"} className="size-4 accent-[var(--color-blueprint)] disabled:opacity-100" />
+                    </td>
                     <td className="px-3 py-2 text-right">{num(i.quantity)}</td><td className="px-3 py-2 text-right">{brl(i.unit_value)}</td>
                     <td className="px-3 py-2 text-right">{brl(i.total_value)}</td>
                   </tr>
                 ))}
                 <tr className="border-t-2 border-ink/20 font-semibold">
-                  <td colSpan={5} className="px-3 py-2 text-right">Total</td><td className="px-3 py-2 text-right">{brl(ch.quote.total_value)}</td>
+                  <td colSpan={6} className="px-3 py-2 text-right">Total</td><td className="px-3 py-2 text-right">{brl(ch.quote.total_value)}</td>
                 </tr>
               </tbody>
             </table>

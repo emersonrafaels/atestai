@@ -98,7 +98,7 @@ REC_PT = {
     "detailed_review": "Análise detalhada",
     "checklist_returned": "Devolvido no checklist",
 }
-DATASET_PT = {"demo": "Demonstração", "validation": "Validação", "itau": "Itaú", "scenarios": "Cenários", "uploaded": "Enviados"}
+DATASET_PT = {"validation": "Validação", "itau": "Itaú", "scenarios": "Cenários", "uploaded": "Enviados"}
 
 
 def clean() -> None:

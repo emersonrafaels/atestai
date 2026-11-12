@@ -6,7 +6,7 @@
   "category": "alarm",
   "symptom": "false_alarm",
   "before_applicable": true,
-  "dataset": "demo",
+  "dataset": "scenarios",
   "quoted_value": 565.0,
   "items": [
     {

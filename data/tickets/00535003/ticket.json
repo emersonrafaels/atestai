@@ -14,7 +14,9 @@
     "name": "Fornecedor Theta Hidráulica Ltda.",
     "cnpj": "89.012.345/0001-67"
   },
+  "blocks_opening": false,
   "requested_scope": "Vazamento no sifão da pia da copa, com água acumulando no armário. Trocar o sifão e o registro de pressão da pia, que não fecha totalmente.",
+  "solution_description": "Troca do sifão e do registro de pressão da pia da copa, com teste de estanqueidade e secagem do armário.",
   "quoted_value": 420.0,
   "dates": {
     "opening": "2026-10-05",
@@ -26,7 +28,7 @@
     "first_check": "forwarded",
     "note": ""
   },
-  "dataset": "demo",
+  "dataset": "scenarios",
   "attachments": [
     {
       "file_name": "Orcamento_TH 1187.xlsx",

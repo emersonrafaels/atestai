@@ -14,7 +14,9 @@
     "name": "Fornecedor Delta Impermeabilizações Ltda.",
     "cnpj": "45.678.901/0001-23"
   },
+  "blocks_opening": false,
   "requested_scope": "Infiltração no teto e na parede do fundo do backoffice, próximo ao ar-condicionado: tratar a origem com impermeabilização, recompor o forro de gesso danificado (aprox. 4 m²) e repintar a área afetada (aprox. 12 m² de parede e 4 m² de teto).",
+  "solution_description": "Localização e vedação do ponto de infiltração, impermeabilização da área, troca das placas de gesso danificadas e pintura de acabamento.",
   "quoted_value": 1452.0,
   "dates": {
     "opening": "2026-09-10",
@@ -26,7 +28,7 @@
     "first_check": "forwarded",
     "note": ""
   },
-  "dataset": "demo",
+  "dataset": "scenarios",
   "attachments": [
     {
       "file_name": "Orcamento_DLT-445-26.xlsx",

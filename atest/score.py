@@ -19,7 +19,11 @@ BAND_REASONS = {
 }
 
 # Redutores de confiança que não são tipos de apontamento da régua (vêm das etapas), com o rótulo em português.
-EXTRA_REDUCERS = {"unreadable_quote": "orçamento não lido"}
+EXTRA_REDUCERS = {
+    "unreadable_quote": "orçamento não lido",
+    "photos_not_analyzed": "fotos não analisadas pelo modelo",
+    "documents_not_analyzed": "documentos não lidos pelo modelo",
+}
 
 
 class ScoreResult(BaseModel):
@@ -74,7 +78,7 @@ class ScoreCalculator:
         """Gabarito: tipos esperados (com o de valor relevante, se couber) e o resultado da régua para eles."""
         base = [k for k in kinds if k != "relevant_amount_at_issue"]
         findings = [self.finding(k, "") for k in base] + self.materiality_findings(amount_at_issue_pct)
-        return sorted({f.kind for f in findings}), self.compute(findings)
+        return sorted({f.kind for f in findings}), self.compute(findings, amount_at_issue_pct=amount_at_issue_pct)
 
     def reducer_label(self, kind: str) -> str:
         """Rótulo em português de um redutor de confiança (tipo da régua ou redutor extra das etapas)."""
@@ -107,7 +111,7 @@ class ScoreCalculator:
         by = self.absorbers(findings)
         return [f.model_copy(update={"absorbed_by": by.get((f.validation.value, f.kind), "")}) for f in findings]
 
-    def compute(self, findings: list[Finding], extra_reducers: list[str] | None = None) -> ScoreResult:
+    def compute(self, findings: list[Finding], extra_reducers: list[str] | None = None, amount_at_issue_pct: float = 0.0) -> ScoreResult:
         """Notas, score, confiança e recomendação a partir dos apontamentos.
 
         Cada tipo desconta uma vez por validação (como no simulador do deck); todos seguem listados como evidência.
@@ -117,7 +121,7 @@ class ScoreCalculator:
         score = round(sum(grades[v] * self.rubric.weights[v] for v in ValidationResult) / sum(self.rubric.weights.values()))
         reducers = sorted({f.kind for f in findings if f.reduces_confidence} | set(extra_reducers or []))
         confidence = self._confidence(len(reducers))
-        recommendation, reason = self._recommendation(findings, score, confidence, reducers)
+        recommendation, reason = self._recommendation(findings, score, confidence, reducers, amount_at_issue_pct)
         return ScoreResult(
             grades=Grades(**{v.value: n for v, n in grades.items()}),
             score=score,
@@ -142,7 +146,9 @@ class ScoreCalculator:
             return Confidence.MEDIUM
         return Confidence.HIGH
 
-    def _recommendation(self, findings: list[Finding], score: int, confidence: Confidence, reducers: list[str]) -> tuple[Recommendation, str]:
+    def _recommendation(
+        self, findings: list[Finding], score: int, confidence: Confidence, reducers: list[str], amount_at_issue_pct: float = 0.0
+    ) -> tuple[Recommendation, str]:
         locks = [f for f in findings if f.lock]
         if locks:  # trava de integridade vence qualquer nota
             return Recommendation.RETURN_LOCKED, f"Trava de integridade: {locks[0].description.lower()}. Devolver qualquer que seja a nota"
@@ -150,6 +156,13 @@ class ScoreCalculator:
             labels = "; ".join(self.reducer_label(r) for r in reducers)
             return Recommendation.DETAILED_REVIEW, f"Confiança baixa ({labels}): entrada insuficiente para concluir"
         band = next(b for b in sorted(self.rubric.bands, key=lambda b: -b.score_min) if score >= b.score_min)
+        limit = self.rubric.max_amount_at_issue_for_approve_pct
+        if band.recommendation == Recommendation.APPROVE and limit and amount_at_issue_pct > limit:
+            # nota alta, mas parte relevante do orçamento em questão: não aprova direto
+            reason = f"Score {score}, mas {amount_at_issue_pct:.0f}% do orçamento está em questão (acima de {limit:g}%)"
+            if confidence == Confidence.MEDIUM:
+                reason += "; confiança média: revisar com atenção"
+            return Recommendation.APPROVE_WITH_CAVEATS, reason
         reason = BAND_REASONS[band.recommendation]
         if confidence == Confidence.MEDIUM:
             reason += "; confiança média: revisar com atenção"

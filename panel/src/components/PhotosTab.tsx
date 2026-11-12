@@ -30,6 +30,7 @@ export function PhotosTab({ p, base, openPhoto, highlight = [] }: { p: Assessmen
           {done !== "yes" && p.moment === "execution" && <span className="text-muted">{summary.done_justification}</span>}
         </div>
       )}
+      <QuantityChecks p={p} />
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {p.photos.map((f, idx) => {
           const url = `${base}/${encodeURIComponent(f.file)}`;
@@ -61,6 +62,39 @@ export function PhotosTab({ p, base, openPhoto, highlight = [] }: { p: Assessmen
         })}
       </div>
     </div>
+  );
+}
+
+interface QuantityCheck { item: number; what_was_counted: string; per_photo: string; count_seen: number; estimated_quantity: number; reasoning: string }
+
+/** Contagem somando as fotos (ex.: peças de piso quebradas) contra a quantidade cobrada em cada item. */
+function QuantityChecks({ p }: { p: Assessment }) {
+  const checks = ((p.photo_summary as { quantity_checks?: QuantityCheck[] } | null)?.quantity_checks ?? []).filter((c) => p.items.some((i) => i.n === c.item));
+  if (!checks.length) return null;
+  const flagged = new Set(p.findings.filter((f) => f.kind === "quantity_above_photos").map((f) => f.reference));
+  return (
+    <section className="rounded-xl border border-line bg-sheet p-4">
+      <h3 className="font-semibold">Quantidade cobrada × o que as fotos mostram</h3>
+      <p className="mb-2 text-[13px] text-muted">Contagem somando todas as fotos; o mesmo ponto em duas fotos conta uma vez.</p>
+      <ul className="space-y-2 text-sm">
+        {checks.map((c) => {
+          const it = p.items.find((i) => i.n === c.item)!;
+          const over = flagged.has(`item ${it.n}: ${it.description}`);
+          return (
+            <li key={c.item} className={`rounded-lg px-3 py-2 ${over ? "bg-[#fbefed]" : "bg-paper/60"}`}>
+              <div className="flex flex-wrap items-baseline gap-x-2">
+                <b>Item {it.n}. {it.description}</b>
+                <span className={over ? "font-semibold text-bad" : "text-muted"}>
+                  cobrado {it.quantity.toLocaleString("pt-BR")} {it.unit} · fotos: {c.count_seen.toLocaleString("pt-BR")} {c.what_was_counted}
+                  {c.estimated_quantity > 0 ? ` ≈ ${c.estimated_quantity.toLocaleString("pt-BR", { maximumFractionDigits: 2 })} ${it.unit}` : " (não dá para estimar)"}
+                </span>
+              </div>
+              <div className="text-[12px] text-muted">{c.per_photo}{c.reasoning ? ` · ${c.reasoning}` : ""}</div>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
   );
 }
 

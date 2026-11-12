@@ -6,7 +6,7 @@
   "category": "cctv",
   "symptom": "no_image",
   "before_applicable": true,
-  "dataset": "demo",
+  "dataset": "scenarios",
   "quoted_value": 640.0,
   "items": [
     {

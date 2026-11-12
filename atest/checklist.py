@@ -21,7 +21,7 @@ from .domain import (
 from .llm import LlmSession
 from .llm_schemas import AttachmentIdentification
 from .providers import Part, TextPart
-from .repository import LoadedTicket, QuoteError, read_quote
+from .repository import LoadedTicket, QuoteError, read_ticket_quote
 
 
 class ChecklistStage(AnalysisStage):
@@ -58,7 +58,7 @@ class ChecklistStage(AnalysisStage):
         out = []
         for a in ticket.spreadsheets:
             try:
-                quote = read_quote(a.path)
+                quote = read_ticket_quote(ticket, a)
                 desc, ok = f"Orçamento {quote.number}: {len(quote.items)} itens, R$ {quote.total_value:,.2f}", True
             except QuoteError as e:
                 desc, ok = f"Planilha fora do padrão: {e}", False
@@ -135,5 +135,5 @@ class ChecklistStage(AnalysisStage):
         name = ticket.data.supplier.name.rstrip(".")
         rows = [f"Olá, {name}. O chamado {ticket.id} foi devolvido porque faltam evidências obrigatórias para análise:"]
         rows += [f"- {s}{'.' if i == len(shortfalls) - 1 else ';'}" for i, s in enumerate(shortfalls)]
-        rows.append("Reenvie os itens pelo próprio chamado. O prazo de aprovação conta a partir do envio completo.")
+        rows.append("Reenvie os itens pelo próprio chamado.")
         return "\n".join(rows)

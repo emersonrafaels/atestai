@@ -14,7 +14,9 @@
     "name": "Fornecedor Lambda Monitoramento Ltda.",
     "cnpj": "11.222.333/0001-44"
   },
+  "blocks_opening": false,
   "requested_scope": "Botão de pânico sem fio do caixa 2 não aciona a central. Substituir o dispositivo e programar na central.",
+  "solution_description": "Substituição do botão de pânico sem fio do caixa 2, programação na central e teste de acionamento.",
   "quoted_value": 690.0,
   "dates": {
     "opening": "2026-10-06",
@@ -26,7 +28,7 @@
     "first_check": "forwarded",
     "note": ""
   },
-  "dataset": "demo",
+  "dataset": "scenarios",
   "attachments": [
     {
       "file_name": "Orcamento_LMB-2026-118.xlsx",

@@ -1,0 +1,4 @@
+Caso 04159084 reconstituído a partir do Salesforce (agência 7942 - Rio da Pedra de Guaratiba, ATM Engenharia LTDA).
+As 3 imagens em attachments/ são SIMULADAS (geradas com OpenAI gpt-image-2 em 11/11/2026) para testar o Atest.AI;
+não são a evidência real do chamado. A origem também está no EXIF (ImageDescription) de cada imagem.
+Para usar as fotos reais, substitua os arquivos mantendo os mesmos nomes.

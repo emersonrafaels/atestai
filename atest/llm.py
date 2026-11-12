@@ -17,6 +17,7 @@ import logging
 import threading
 import time
 import uuid
+from contextlib import nullcontext
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Protocol, TypeVar
@@ -27,12 +28,51 @@ from . import providers
 from .config import Settings
 from .costs import CostCalculator
 from .domain import LlmCall
-from .observability import event
+from .formatting import plain_language
+from .observability import event, waiting
 from .providers import Part, Provider, ProviderError, ProviderResponse, Request
 
 log = logging.getLogger(__name__)
 T = TypeVar("T", bound=BaseModel)
 LlmError = ProviderError
+
+
+class LlmTimeout(ProviderError):
+    """O modelo não respondeu dentro do limite calculado para a chamada (API fora do ar ou travada)."""
+
+
+def call_timeout(cfg: Settings, images: int = 0, documents: int = 0, max_tokens: int = 4000) -> float:
+    """Limite de cada tentativa, pelo tamanho do pedido: muitas fotos ou PDFs e respostas longas ganham mais tempo."""
+    llm = cfg.llm
+    t = llm.timeout_base_s + images * llm.timeout_per_image_s + documents * llm.timeout_per_document_s
+    t += max_tokens / 1000 * llm.timeout_per_1k_tokens_s
+    return round(min(max(t, llm.timeout_min_s), llm.timeout_max_s), 1)
+
+
+def run_with_deadline(fn: Any, deadline_s: float, what: str) -> Any:
+    """Roda `fn` numa thread e desiste em `deadline_s`: a análise não fica presa se a API travar sem responder.
+
+    A thread presa segue até o tempo limite do próprio SDK (é daemon e não segura o processo).
+    """
+    import contextvars
+
+    box: dict[str, Any] = {}
+    ctx = contextvars.copy_context()
+
+    def target() -> None:
+        try:
+            box["value"] = ctx.run(fn)
+        except BaseException as e:  # noqa: BLE001 — repassado a quem chamou
+            box["error"] = e
+
+    thread = threading.Thread(target=target, daemon=True, name="atest-llm-call")
+    thread.start()
+    thread.join(deadline_s)
+    if thread.is_alive():
+        raise LlmTimeout(f"{what} não respondeu em {deadline_s:.0f} s; a API do modelo pode estar fora do ar ou travada", transient=True)
+    if "error" in box:
+        raise box["error"]
+    return box["value"]
 
 
 def short_hash(text: str) -> str:
@@ -57,6 +97,7 @@ class LlmClient(Protocol):
         max_tokens: int,
         meta: dict[str, Any],
         fallback: str | None = None,
+        timeout_s: float | None = None,
     ) -> tuple[T, LlmCall]:
         """Faz uma chamada com saída estruturada e devolve o objeto validado e o registro da chamada."""
         ...
@@ -150,9 +191,11 @@ class ProviderClient:
         max_tokens: int,
         meta: dict[str, Any],
         fallback: str | None = None,
+        timeout_s: float | None = None,
     ) -> tuple[T, LlmCall]:
         """Faz uma chamada com saída estruturada e devolve o objeto validado e o registro da chamada."""
         prov, req = self._request(task, system, parts, model, max_tokens)
+        req.timeout_s = timeout_s
         if (hit := self._from_cache(prov, req, output)) is not None:
             return hit
         start, t0 = datetime.now(), time.perf_counter()
@@ -162,7 +205,9 @@ class ProviderClient:
             if not (e.transient and fallback and fallback != model):
                 raise
             event("llm_fallback", logging.WARNING, task=task, model=model, fallback=fallback, error=str(e))
-            return self.structured(task=task, system=system, parts=parts, output=output, model=fallback, max_tokens=max_tokens, meta=meta)
+            return self.structured(
+                task=task, system=system, parts=parts, output=output, model=fallback, max_tokens=max_tokens, meta=meta, timeout_s=timeout_s
+            )
         self._store(prov, req, output, resp)
         return resp.obj, self._call(prov, req, output, resp.obj, resp, time.perf_counter() - t0, start)
 
@@ -223,14 +268,17 @@ class BatchClient(ProviderClient):
         max_tokens: int,
         meta: dict[str, Any],
         fallback: str | None = None,
+        timeout_s: float | None = None,
     ) -> tuple[T, LlmCall]:
         """Faz uma chamada com saída estruturada e devolve o objeto validado e o registro da chamada."""
         prov, req = self._request(task, system, parts, model, max_tokens)
+        req.timeout_s = timeout_s
         if (hit := self._from_cache(prov, req, output)) is not None:
             return hit
         if not self.provider(prov).supports_batch:  # sem lote nativo: segue síncrono
             return super().structured(
-                task=task, system=system, parts=parts, output=output, model=model, max_tokens=max_tokens, meta=meta, fallback=fallback
+                task=task, system=system, parts=parts, output=output, model=model, max_tokens=max_tokens, meta=meta, fallback=fallback,
+                timeout_s=timeout_s,
             )
         p = _Pending(custom_id=f"{meta.get('ticket', 'x')}-{task}-{uuid.uuid4().hex[:8]}", provider=prov, req=req, output=output)
         with self._cond:
@@ -274,9 +322,14 @@ class BatchClient(ProviderClient):
         self.batches.append(batch_id)
         event("batch_sent", provider=prov, batch_id=batch_id, requests=len(items), tasks=sorted({p.req.task for p in items}))
         deadline = time.monotonic() + self.cfg.batch.batch_max_hours * 3600
+        every = self.cfg.observability.heartbeat_s
+        last = time.monotonic()
         while not provider.batch_finished(batch_id):
             if time.monotonic() > deadline:
                 raise ProviderError(f"lote {batch_id} não terminou no prazo")
+            if every > 0 and time.monotonic() - last >= max(every, 60):  # lote leva minutos: no máximo um aviso por minuto
+                event("batch_waiting", provider=prov, batch_id=batch_id, elapsed_s=round(time.perf_counter() - t0))
+                last = time.monotonic()
             time.sleep(self.cfg.batch.batch_poll_interval_s)
         dur = time.perf_counter() - t0
         event("batch_done", provider=prov, batch_id=batch_id, duration_s=round(dur, 1))
@@ -325,18 +378,38 @@ class LlmSession:
     ) -> T:
         """Pede uma saída estruturada para a tarefa, com o modelo da tarefa, custo e registro no log."""
         model, fallback = self.model_for_task(task, fast)
-        obj, ch = self.client.structured(
-            task=task,
-            system=system or self.system(task),
-            parts=parts,
-            output=output,
-            model=model,
-            max_tokens=max_tokens,
-            meta={"ticket": self.ticket_id, **(meta or {})},
-            fallback=fallback,
+        images = sum(isinstance(p, providers.ImagePart) for p in parts)
+        docs = sum(isinstance(p, providers.DocumentPart) for p in parts)
+        # no terminal: "chamando..." e, se demorar, "ainda aguardando há N s" (no simulado não há chamada de verdade)
+        beat = self.cfg.observability.heartbeat_s
+        # limite pelo tamanho do pedido; o vigia dá uma nova tentativa de folga e não vale no envio em lote (que leva horas)
+        limit = call_timeout(self.cfg, images, docs, max_tokens)
+        deadline = 2 * limit + min(15, limit)
+        watched = not self.client.simulated and not self.client.via_batch
+        stalled = max(3, int(0.6 * deadline / beat) + 1) if beat > 0 else 3  # "possível travamento" perto do limite, não antes
+        watch = (
+            waiting("llm", beat, stalled_after=stalled, task=task, model=model, images=images, documents=docs, timeout_s=deadline)
+            if watched else nullcontext()
         )
+
+        def call() -> tuple[T, LlmCall]:
+            return self.client.structured(
+                task=task,
+                system=system or self.system(task),
+                parts=parts,
+                output=output,
+                model=model,
+                max_tokens=max_tokens,
+                meta={"ticket": self.ticket_id, **(meta or {})},
+                fallback=fallback,
+                timeout_s=limit,
+            )
+
+        with watch:
+            obj, ch = run_with_deadline(call, deadline, f"[{task}] O modelo") if watched else call()
         if not ch.simulated and not ch.from_cache:
             ch.cost_usd = self.costs.usd(ch.model, ch.input_tokens, ch.output_tokens, ch.cache_read_tokens, ch.cache_write_tokens, ch.via_batch)
+        obj = plain_language(obj)  # textos livres sem nomes internos de campos nem termos em inglês
         self.calls.append(ch)
         event(
             "llm_call",

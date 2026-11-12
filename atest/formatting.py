@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 import unicodedata
+from typing import Any
 
 
 def brl(value: float) -> str:
@@ -21,6 +22,73 @@ def normalize_text(text: str) -> str:
 def normalize_unit(unit: str) -> str:
     """Unidade comparável: "M²" e "m2" ficam iguais."""
     return unit.lower().replace("²", "2").replace(".", "").strip()
+
+
+# Unidades de valor global: com quantidade 1, "un", "vb" (verba), "cj" (conjunto) e "sv" (serviço) cobram a mesma coisa.
+LUMP_SUM_UNITS = {"un", "und", "unid", "unidade", "vb", "verba", "cj", "conj", "conjunto", "sv", "serv", "servico", "serviço", "gl", "global"}
+
+
+def same_unit(unit: str, reference: str, quantity: float) -> bool:
+    """A unidade cobrada é comparável à da referência? Iguais, ou ambas de valor global com quantidade 1."""
+    a, b = normalize_unit(unit), normalize_unit(reference)
+    return a == b or (quantity <= 1 and a in LUMP_SUM_UNITS and b in LUMP_SUM_UNITS)
+
+
+# Termos internos (nomes de campos e valores em inglês) que o modelo às vezes escreve nos textos livres → português.
+_INTERNAL_TERMS = {
+    "expected_quantity_max": "quantidade máxima esperada",
+    "plausible_quantity": "quantidade plausível",
+    "lpu_code": "código da LPU",
+    "NO_REFERENCE": "sem referência",
+    "SEM_REFERENCIA": "sem referência",
+    "duplicate_of": "item repetido",
+    "out_of_scope": "fora do escopo",
+    "to_justify": "a justificar",
+    "compliant": "aderente",
+    "matches_scope": "correspondência com o escopo",
+    "matches_ticket": "correspondência com o chamado",
+    "done_service": "serviço concluído",
+    "done_justification": "justificativa",
+    "has_before_photo": "foto do antes",
+    "items_without_photo": "itens sem foto",
+    "quantity_checks": "contagem nas fotos",
+    "estimated_quantity": "quantidade estimada",
+    "count_seen": "total visto",
+    "covered_items": "itens evidenciados",
+    "before_evidence_applicable": "foto do antes aplicável",
+    "vague_scope": "escopo vago",
+    "consistent_with_category_symptom": "coerência com categoria e sintoma",
+    "undetermined": "indeterminado",
+}
+_ASSIGNMENT = re.compile(r"\s*\(\s*[a-z]+(?:_[a-z]+)+\s*=\s*[^)]*\)")  # "(expected_quantity_max = -1)"
+_TERM = re.compile(r"\b(" + "|".join(sorted(map(re.escape, _INTERNAL_TERMS), key=len, reverse=True)) + r")\b")
+KEEP_VERBATIM = {"transcription"}  # transcrição (OCR) fica como está no documento
+
+
+def plain_text(text: str) -> str:
+    """Tira de um texto livre os nomes internos de campos e valores em inglês (ex.: '(expected_quantity_max = -1)')."""
+    if " " not in text:  # valor de campo (código, enum), não texto livre
+        return text
+    text = _ASSIGNMENT.sub("", text)
+    return _TERM.sub(lambda m: _INTERNAL_TERMS[m.group(1)], text)
+
+
+def plain_language(obj: Any) -> Any:
+    """Aplica plain_text em todos os textos livres de uma saída do modelo (modelos Pydantic, listas e dicionários)."""
+    from enum import Enum
+
+    from pydantic import BaseModel
+
+    if isinstance(obj, BaseModel):
+        updates = {k: plain_language(v) for k, v in obj.__dict__.items() if k not in KEEP_VERBATIM}
+        return obj.model_copy(update=updates)
+    if isinstance(obj, list):
+        return [plain_language(v) for v in obj]
+    if isinstance(obj, dict):
+        return {k: plain_language(v) for k, v in obj.items()}
+    if isinstance(obj, str) and not isinstance(obj, Enum):
+        return plain_text(obj)
+    return obj
 
 
 # Tipos de erro do Pydantic → texto em português (as mensagens originais vêm em inglês).
@@ -71,6 +139,7 @@ TASK_PT = {
     "identify_attachments": "Identificação dos anexos",
     "scope": "Leitura do escopo",
     "quote_review": "Orçamento",
+    "documents": "Leitura dos documentos",
     "photos": "Análise das fotos",
     "assessment": "Redação do parecer",
 }
@@ -81,5 +150,14 @@ def error_message(e: BaseException) -> str:
     text = str(e).strip()
     if m := re.match(r"^\[(\w+)\]\s*(.*)$", text, re.S):
         task, rest = m.groups()
-        return f"Falha em {TASK_PT.get(task, task.replace('_', ' '))}: {rest}"
-    return f"Falha na análise: {text or type(e).__name__}"
+        return f"Falha em {TASK_PT.get(task, task.replace('_', ' '))}: {_friendly(rest)}"
+    return f"Falha na análise: {_friendly(text) or type(e).__name__}"
+
+
+def _friendly(text: str) -> str:
+    """Erros de rede do SDK em português: conexão recusada, sem internet ou tempo esgotado."""
+    if re.search(r"APIConnectionError|ConnectError|Connection error|ConnectionError|getaddrinfo|Name or service not known", text):
+        return "não foi possível conectar à API do modelo (sem internet, API fora do ar ou bloqueio de rede). Tente de novo em instantes"
+    if re.search(r"APITimeoutError|ReadTimeout|timed out", text, re.I):
+        return "a API do modelo não respondeu no tempo limite (fora do ar ou sobrecarregada). Tente de novo em instantes"
+    return text

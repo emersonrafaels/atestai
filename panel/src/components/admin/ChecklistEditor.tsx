@@ -458,6 +458,7 @@ function Requirement({ n, q, attachments, others, onChange, onRemove }: {
 
 export const ATTACHMENT_SHORT: Record<string, string> = {
   quote_doc: "Orçamento (planilha)", completion_certificate_doc: "Termo de conclusão", technical_report_doc: "Relatório técnico",
+  price_reference_doc: "Referência de preço",
   room_before_photo: "Foto do antes", room_after_photo: "Foto do depois", equipment_photo: "Foto de equipamento",
   label_photo: "Foto da etiqueta", removed_items_photo: "Foto dos itens retirados", cctv_screen_photo: "Imagem de câmera/monitor",
   alarm_panel_photo: "Foto da central de alarme", other: "Outro",

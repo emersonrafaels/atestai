@@ -6,7 +6,7 @@
   "category": "lighting",
   "symptom": "poor_lighting",
   "before_applicable": true,
-  "dataset": "demo",
+  "dataset": "scenarios",
   "quoted_value": 5940.0,
   "items": [
     {

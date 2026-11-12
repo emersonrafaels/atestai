@@ -14,7 +14,9 @@
     "name": "Fornecedor Kappa Alarmes Ltda.",
     "cnpj": "01.234.567/0001-89"
   },
+  "blocks_opening": false,
   "requested_scope": "Sensor IVP do backoffice com disparos falsos: substituir o sensor e testar a zona.",
+  "solution_description": "Substituição do sensor IVP, reposicionamento longe de correntes de ar e teste de disparo da zona na central.",
   "quoted_value": 530.0,
   "dates": {
     "opening": "2026-10-27",

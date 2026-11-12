@@ -337,11 +337,14 @@ export function ScoreRubricEditor({ data, base, onChange }: Props) {
         <div className="grid gap-x-8 gap-y-3 text-sm md:grid-cols-2">
           {([
             ["price_tolerance_pct", "Tolerância de preço sobre a referência (LPU)", "%", "Acima de referência + tolerância vira “Preço acima da referência”."],
+            ["market_price_tolerance_pct", "Tolerância sobre o preço de mercado", "%", "Preço até N% acima de um anúncio ou cotação anexada não é apontado: cobre a margem do fornecedor sobre o varejo."],
+            ["max_amount_at_issue_for_approve_pct", "Valor em questão que impede aprovar direto", "%", "Acima desta fração do orçamento em questão, uma nota que aprovaria vira “Aprovar com ressalvas” (0 desliga)."],
             ["spreadsheet_value_tolerance", "Diferença aceita entre planilha e chamado", "R$", "Diferença de valor total tolerada antes de virar “Planilha divergente”."],
             ["photo_date_tolerance_days", "Tolerância da data da foto", "dias", "Foto tirada até N dias antes da abertura não é apontada."],
             ["hash_max_distance", "Semelhança para foto reaproveitada", "dist.", "Distância máxima (0 = idêntica) para considerar a foto uma cópia. Menor = mais rigoroso para acusar."],
             ["hash_max_distance_low_detail", "Semelhança em foto escura/tremida", "dist.", "Limite mais estrito para fotos com pouco detalhe."],
             ["hash_min_detail", "Detalhe mínimo da foto", "", "Abaixo disso a foto é considerada de pouco detalhe."],
+            ["photo_quantity_tolerance_pct", "Tolerância da quantidade sobre as fotos", "%", "Quantidade cobrada até N% acima do que as fotos mostram (somadas) não é apontada: cobre margem de corte e perda."],
             ["relevant_amount_at_issue_pct", "Valor divergente relevante", "%", "A partir desta fração do orçamento em questão, entra o apontamento “Valor divergente relevante” (cada tipo desconta uma vez; este pesa a materialidade)."],
           ] as const).map(([k, label, unit, help]) => (
             <label key={k} className="flex items-center justify-between gap-3">

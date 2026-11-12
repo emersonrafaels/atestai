@@ -203,7 +203,7 @@ function Compare({ o, c }: { o: TicketFacts; c: TicketFacts }) {
     { label: "Local do chamado", a: envLabel(o.environment), b: envLabel(c.environment), same: o.environment === c.environment },
     { icon: <Store size={14} />, label: "Fornecedor", a: <>{o.supplier_name}<div className="text-[12px] text-muted">CNPJ {o.supplier_cnpj}</div></>, b: <>{c.supplier_name}<div className="text-[12px] text-muted">CNPJ {c.supplier_cnpj}</div></>, same: o.supplier_cnpj === c.supplier_cnpj, hot: o.supplier_cnpj === c.supplier_cnpj },
     { label: "Esteira · categoria", a: <>{o.workstream} · {o.category_label}<div className="text-[12px] text-muted">{o.symptom_label}</div></>, b: <>{c.workstream} · {c.category_label}<div className="text-[12px] text-muted">{c.symptom_label}</div></> },
-    { label: "Escopo", a: <span className="italic">“{o.scope}”</span>, b: <span className="italic">“{c.scope}”</span> },
+    { label: "Descrição do problema", a: <span className="italic">“{o.scope}”</span>, b: <span className="italic">“{c.scope}”</span> },
     { icon: <CalendarClock size={14} />, label: "Abertura", a: day(o.opening), b: day(c.opening) },
     { label: "Envio do fornecedor", a: day(o.supplier_submission), b: day(c.supplier_submission) },
     { label: "Revisão do gestor", a: day(o.manager_review), b: day(c.manager_review) },

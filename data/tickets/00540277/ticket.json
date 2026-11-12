@@ -14,6 +14,7 @@
     "name": "Fornecedor Gama Instalações Elétricas Ltda.",
     "cnpj": "34.567.890/0001-12"
   },
+  "blocks_opening": false,
   "requested_scope": "Trocar as 4 lâmpadas tubulares queimadas do corredor da tesouraria.",
   "quoted_value": 188.0,
   "dates": {
@@ -26,7 +27,7 @@
     "first_check": "forwarded",
     "note": ""
   },
-  "dataset": "demo",
+  "dataset": "scenarios",
   "attachments": [
     {
       "file_name": "Orcamento_GAMA-1101.xlsx",

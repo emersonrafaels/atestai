@@ -45,7 +45,7 @@ from .domain import (
 from .evaluation import Evaluation, GroundTruthEvaluator, TicketComparison
 from .formatting import error_message, pt_validation_error
 from .observability import configure_logging, event
-from .repository import QuoteError, References, list_tickets, load_ground_truth, load_ticket, read_quote
+from .repository import QuoteError, References, list_tickets, load_ground_truth, load_ticket, read_quote, read_ticket_quote
 from .scenarios import catalog as scenario_catalog
 from .scenarios import tags_for
 from .spreadsheet import spreadsheet_template
@@ -94,6 +94,8 @@ class TicketSummary(BaseModel):
     branch: str
     environment: str
     supplier: str
+    blocks_opening: bool | None = None
+    solution_description: str = ""
     quoted_value: float | None
     moment: str
     maintenance_type: str
@@ -182,7 +184,7 @@ class RunRequest(BaseModel):
     """Pedido de execução vindo do painel (chamados escolhidos ou conjunto + amostra)."""
 
     tickets: list[str] = Field(default_factory=list, description="ids; ou use conjunto (+ amostra)")
-    dataset: str | None = Field(None, description="demonstracao | validacao | enviados | todos")
+    dataset: str | None = Field(None, description="scenarios | validation | itau | casos | uploaded | all")
     sample: int | None = Field(None, ge=1, description="amostra aleatória (reprodutível) do conjunto")
     simulated_noise: float = Field(0.0, ge=0, le=0.6, description="só no modo simulado")
     label: str = ""
@@ -354,7 +356,7 @@ class AppSettings(BaseModel):
 
 
 class Dataset(BaseModel):
-    """Conjunto de chamados disponível (demonstração, validação, enviados)."""
+    """Conjunto de chamados disponível (cenários de teste, validação, Itaú, casos do Salesforce, enviados)."""
 
     name: str
     label: str
@@ -570,6 +572,8 @@ def create_app(cfg: Settings) -> FastAPI:
             branch=d.branch.name,
             environment=d.branch.environment,
             supplier=d.supplier.name,
+            blocks_opening=d.blocks_opening,
+            solution_description=d.solution_description,
             quoted_value=d.quoted_value,
             moment=d.moment.value,
             maintenance_type=d.maintenance_type.value,
@@ -809,10 +813,10 @@ def create_app(cfg: Settings) -> FastAPI:
     @app.get("/api/datasets")
     def datasets() -> list[Dataset]:
         labels = {
-            "demo": "Demonstração (casos do deck)",
             "validation": "Validação (defeitos injetados)",
             "itau": "Itaú",
-            "scenarios": "Cenários de teste (um por tipo de problema)",
+            "casos": "Casos Itaú - Salesforce",
+            "scenarios": "Cenários de teste (casos do deck e um por tipo de problema)",
             "uploaded": "Enviados pelo painel",
         }
         counts = DatasetCatalog(cfg).counts()
@@ -840,7 +844,7 @@ def create_app(cfg: Settings) -> FastAPI:
         quote, error = None, None
         if ch.spreadsheets:
             try:
-                quote = read_quote(ch.spreadsheets[0].path)
+                quote = read_ticket_quote(ch)
             except QuoteError as e:
                 error = str(e)
         else:
@@ -934,13 +938,10 @@ def create_app(cfg: Settings) -> FastAPI:
         raise HTTPException(404, "anexo não encontrado")
 
     @app.get("/api/spreadsheet-template")
-    def download_template(category: str = "", symptom: str = "", scope: str = "") -> Response:
-        catalog = manager.cfg_base.catalog
+    def download_template() -> Response:
+        """Modelo da planilha de orçamento: só a aba Itens (os dados do chamado vêm do formulário do Novo chamado)."""
         return Response(
-            spreadsheet_template(
-                category=category, symptom=symptom, scope=scope,
-                categories=catalog.codes("categories", enabled_only=True), symptoms=catalog.codes("symptoms", enabled_only=True),
-            ),
+            spreadsheet_template(),
             media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             headers={"Content-Disposition": 'attachment; filename="modelo_orcamento_atest.xlsx"'},
         )
@@ -956,9 +957,11 @@ def create_app(cfg: Settings) -> FastAPI:
         branch_name: Annotated[str, Form(min_length=1)],
         branch_code: Annotated[str, Form()] = "0000",
         environment: Annotated[str, Form()] = "",  # local do chamado
-        supplier_name: Annotated[str, Form()] = "Fornecedor não informado",
+        supplier_name: Annotated[str, Form()] = "",  # em branco: usa o fornecedor da planilha
         supplier_cnpj: Annotated[str, Form()] = "",
         opened_on: Annotated[date | None, Form()] = None,
+        blocks_opening: Annotated[bool, Form()] = False,
+        solution_description: Annotated[str, Form(max_length=4000)] = "",
         spreadsheet: Annotated[UploadFile, File()] = ...,  # type: ignore[assignment]
         attachments: Annotated[list[UploadFile], File()] = [],  # noqa: B006
     ) -> TicketSummary:
@@ -973,8 +976,11 @@ def create_app(cfg: Settings) -> FastAPI:
             raise HTTPException(422, f"Sintoma '{symptom}' não está cadastrado (ou está desativado).")
         if sym.categories and category not in sym.categories:
             raise HTTPException(422, f"O sintoma {sym.label} não vale para a categoria {cat.label}.")
-        if environment and environment not in catalog.codes("locations", enabled_only=True):
+        loc = next((e for e in catalog.locations if e.value == environment and e.enabled), None)
+        if environment and loc is None:
             raise HTTPException(422, f"Local '{environment}' não está cadastrado (ou está desativado).")
+        if loc and loc.workstreams and workstream not in loc.workstreams:
+            raise HTTPException(422, f"O local {loc.label} não é da esteira {workstream.value}.")
         prefix = cfg.paths.upload_id_prefix
         existing = [int(p.name) for p in cfg.tickets_dir.iterdir() if p.name.startswith(prefix) and p.name.isdigit()]
         tid = str(max(existing, default=int(prefix + "0000000")) + 1).zfill(8)
@@ -986,8 +992,11 @@ def create_app(cfg: Settings) -> FastAPI:
                 raise HTTPException(422, "O orçamento precisa ser a planilha Excel padrão (.xlsx).")
             spreadsheet_path = tmp_dir / spreadsheet_name
             spreadsheet_path.write_bytes(spreadsheet.file.read())
+            # o que a planilha não trouxer (ou a aba Chamado inteira) vem deste formulário: basta cadastrar os itens
+            defaults = {"ticket_id": tid, "category": category, "symptom": symptom, "scope": scope, "number": "",
+                        "supplier": supplier_name.strip(), "supplier_cnpj": supplier_cnpj.strip()}
             try:
-                quote = read_quote(spreadsheet_path)
+                quote = read_quote(spreadsheet_path, defaults)
             except QuoteError as e:
                 raise HTTPException(422, f"Planilha fora do padrão: {e}. Baixe o modelo no painel.") from e
             goals = [
@@ -1016,7 +1025,12 @@ def create_app(cfg: Settings) -> FastAPI:
                     symptom=symptom,
                     requested_scope=scope,
                     branch={"code": branch_code, "name": branch_name, "environment": environment},
-                    supplier={"name": supplier_name, "cnpj": supplier_cnpj},
+                    supplier={
+                        "name": supplier_name.strip() or quote.supplier or "Fornecedor não informado",
+                        "cnpj": supplier_cnpj or quote.supplier_cnpj,  # o painel não pede CNPJ: vem da planilha
+                    },
+                    blocks_opening=blocks_opening,
+                    solution_description=solution_description.strip(),
                     quoted_value=quote.total_value,
                     origin="upload",
                     dataset="uploaded",

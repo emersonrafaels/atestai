@@ -6,7 +6,7 @@
   "category": "painting",
   "symptom": "finish_wear",
   "before_applicable": true,
-  "dataset": "demo",
+  "dataset": "scenarios",
   "quoted_value": 12480.0,
   "items": [
     {

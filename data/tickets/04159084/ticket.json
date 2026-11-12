@@ -1,0 +1,63 @@
+{
+  "ticket_id": "04159084",
+  "workstream": "SETA",
+  "maintenance_type": "corrective",
+  "moment": "quote",
+  "category": "electrical",
+  "symptom": "pecas_e_equipamentos_diversos",
+  "requested_scope": "Prezados, tivemos visita do time de engenharia para iniciar o modelo de modernização da agência em outubro. No mesmo dia veio um técnico da ATM, a quem sinalizamos o problema do quadro de energia. Precisamos de atuação com urgência devido ao emaranhado de fios, que pode dar curto.",
+  "solution_description": "Instalação de chapa de acrílico para proteção do quadro e desativação da medição da ENGIE.",
+  "branch": {
+    "code": "7942",
+    "name": "Rio da Pedra de Guaratiba",
+    "environment": "area_interna_publico"
+  },
+  "supplier": {
+    "name": "ATM Engenharia LTDA",
+    "cnpj": ""
+  },
+  "blocks_opening": false,
+  "quoted_value": 417.79,
+  "dates": {
+    "opening": "2026-10-20",
+    "supplier_submission": "2026-10-21",
+    "manager_review": null
+  },
+  "status": "forwarded_to_backoffice",
+  "origin": "dataset",
+  "dataset": "casos",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "attachments": [
+    {
+      "file_name": "Orcamento_ATM_04159084.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 5849,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-21"
+    },
+    {
+      "file_name": "IMG_20261020_094512.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 296309,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-21"
+    },
+    {
+      "file_name": "Screenshot_20261021-143208.png",
+      "content_type": "image/png",
+      "size_bytes": 997933,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-21"
+    },
+    {
+      "file_name": "IMG_20261020_111847.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 250816,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-21"
+    }
+  ]
+}

@@ -84,6 +84,12 @@ export function ScopeTab({ p, ticket, rubric, goTo }: { p: Assessment; ticket: T
           <blockquote className="rounded-lg border-l-4 border-blueprint/40 bg-paper/60 px-4 py-3 text-[17px] leading-snug">
             “{highlight(ticket?.scope ?? "", quantities)}”
           </blockquote>
+          {ticket?.solution_description?.trim() && (
+            <div className="mt-3 rounded-lg bg-paper/40 px-4 py-2.5 text-sm">
+              <div className="text-[12px] font-medium text-muted">Descrição da solução</div>
+              <p className="whitespace-pre-line">{ticket.solution_description}</p>
+            </div>
+          )}
           <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
             <Fact label="Tipo de manutenção">{MAINTENANCE_LABEL[p.maintenance_type] ?? p.maintenance_type}</Fact>
             <Fact label="Categoria">{ticket?.category_label ?? p.category.replace(/_/g, " ")}</Fact>

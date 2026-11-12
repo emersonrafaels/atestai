@@ -14,7 +14,9 @@
     "name": "Fornecedor Delta Impermeabilizações Ltda.",
     "cnpj": "45.678.901/0001-23"
   },
+  "blocks_opening": false,
   "requested_scope": "Infiltração no forro do backoffice: tratar a origem e recompor o forro de gesso (aprox. 6 m²).",
+  "solution_description": "Localização e vedação do ponto de infiltração, impermeabilização da área, troca das placas de gesso danificadas e pintura de acabamento.",
   "quoted_value": 3826.04,
   "dates": {
     "opening": "2026-11-01",

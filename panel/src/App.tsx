@@ -1,4 +1,4 @@
-import { BarChart3, BookOpen, ClipboardCheck, Compass, FileSearch, Cpu, Download, FlaskConical, HelpCircle, Images, Inbox, ListChecks, Loader2, Play, Plus, Receipt, RotateCcw, ScanSearch, Settings, Trash2, Wifi, WifiOff, X, type LucideIcon } from "lucide-react";
+import { BarChart3, BookOpen, ClipboardCheck, Compass, FileSearch, FileText, Cpu, Download, FlaskConical, HelpCircle, Images, Inbox, ListChecks, Loader2, Play, Plus, Receipt, RotateCcw, ScanSearch, Settings, Trash2, Wifi, WifiOff, X, type LucideIcon } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api, type TicketDetail, type TicketSummary, type AppSettings, type Dataset, type Run, type Assessment, type Recommendation, type ScenarioTag } from "./api";
 import { serverOutdated } from "./api";
@@ -7,6 +7,7 @@ import { ScopeTab } from "./components/ScopeTab";
 import { StageTimeline } from "./components/StageTimeline";
 import { TicketInputTab } from "./components/TicketInputTab";
 import { PhotosTab } from "./components/PhotosTab";
+import { DocumentsTab } from "./components/DocumentsTab";
 import { QuoteTab } from "./components/QuoteTab";
 import { AssessmentTab } from "./components/AssessmentTab";
 import { StageProgress } from "./components/StageProgress";
@@ -27,13 +28,14 @@ import { AdminView, CONFIG_CHANGED_EVENT } from "./components/admin/AdminView";
 import { ModelCombobox } from "./components/ui/ModelCombobox";
 import { ProviderPicker, findChoice, initialProvider, providerChoices, withProvider } from "./components/ui/ProviderPicker";
 
-type Tab = "assessment" | "scope" | "quote" | "photos" | "calls" | "input";
+type Tab = "assessment" | "scope" | "quote" | "photos" | "documents" | "calls" | "input";
 const TABS: { id: Tab; label: string; needsAssessment: boolean; icon: LucideIcon; hint: string }[] = [
   { id: "input", label: "Entrada do chamado", needsAssessment: false, icon: Inbox, hint: "O que chegou do Salesforce: escopo, orçamento e anexos" },
   { id: "assessment", label: "Parecer", needsAssessment: true, icon: ClipboardCheck, hint: "Checklist, recomendação, conta do score, apontamentos e a sua decisão" },
   { id: "scope", label: "Escopo", needsAssessment: true, icon: FileSearch, hint: "O texto do escopo, o que a IA extraiu dele e as verificações de clareza e coerência" },
   { id: "quote", label: "Orçamento", needsAssessment: true, icon: Receipt, hint: "Cada item do orçamento classificado contra o escopo e a tabela de referência" },
   { id: "photos", label: "Fotos", needsAssessment: true, icon: Images, hint: "O que cada foto mostra, se corresponde ao escopo e sinais de reaproveitamento" },
+  { id: "documents", label: "Documentos", needsAssessment: true, icon: FileText, hint: "Leitura (OCR) dos documentos anexados, inclusive manuscritos e PDFs, e conferência com o chamado" },
   { id: "calls", label: "Chamadas ao modelo", needsAssessment: true, icon: Cpu, hint: "Cada chamada à IA: tarefa, modelo, tempo, tokens, custo e o JSON devolvido" },
 ];
 
@@ -53,7 +55,7 @@ export default function App() {
   useEffect(() => { if (view === "admin") setAdminVisited(true); }, [view]);
   const [datasets, setDatasets] = useState<Dataset[]>([]);
   const [scenarioTags, setScenarioTags] = useState<ScenarioTag[]>([]);
-  const [dataset, setDataset] = useState("demo");
+  const [dataset, setDataset] = useState("scenarios");
   const [showNewTicket, setShowNewTicket] = useState(false);
   const [savedAssessment, setSavedAssessment] = useState<Assessment | null>(null);
   const [phase, setPhase] = useState(2);
@@ -95,6 +97,8 @@ export default function App() {
       setConfig(c);
       setPhase(c.phase);
       setBatchMode(c.batch_mode);
+      // a Análise já abre no modo API; sem credencial de nenhum provedor, fica no simulado (o único disponível)
+      setMode(c.api_available ? "api" : "simulated");
       const p = initialProvider(c);
       const choice = findChoice(c, p);
       setProvider(p);
@@ -105,8 +109,8 @@ export default function App() {
     api.scenarios().then(setScenarioTags).catch(() => undefined);
     api.tickets().then((cs) => {
       setTickets(cs);
-      const demo = cs.filter((c) => c.dataset === "demo");
-      const base = demo.length ? demo : cs;
+      const scenarios = cs.filter((c) => c.dataset === "scenarios");  // os casos do deck (00…) vêm primeiro
+      const base = scenarios.length ? scenarios : cs;
       setSelected(new Set(base.slice(0, 3).map((c) => c.ticket_id)));
       if (base.length) setFocus(base[0].ticket_id);
     }).catch((e) => setError(String(e.message ?? e)));
@@ -144,19 +148,30 @@ export default function App() {
     if (!assessment && TABS.find((a) => a.id === tab)?.needsAssessment) setTab("input");
   }, [assessment, tab]);
 
+  // acompanhamento da execução: aguenta falhas momentâneas do servidor; só desiste depois de ~30 s sem resposta.
+  // O tempo limite de cada chamada ao modelo fica no servidor (proporcional a fotos e PDFs): se a API do modelo
+  // travar, o chamado termina com erro e a execução segue para os próximos.
   const track = useCallback((id: string) => {
     if (timer.current) window.clearInterval(timer.current);
+    let failures = 0;
     timer.current = window.setInterval(async () => {
       try {
         const ex = await api.execution(id);
+        if (failures >= 5) setError(null);  // some o aviso de reconexão (outros erros ficam)
+        failures = 0;
         setRun(ex);
         if (ex.status === "completed" && timer.current) {
           window.clearInterval(timer.current);
           reloadTickets();
         }
       } catch (e) {
-        setError(String((e as Error).message));
-        if (timer.current) window.clearInterval(timer.current);
+        failures += 1;
+        if (failures >= 50) {
+          if (timer.current) window.clearInterval(timer.current);
+          setError(`O servidor do Atest.AI parou de responder (${(e as Error).message}). Confira se o "python main.py" está rodando e abra a execução de novo em Operação.`);
+        } else if (failures >= 5) {
+          setError("Sem resposta do servidor do Atest.AI; tentando reconectar…");
+        }
       }
     }, 600);
   }, [reloadTickets]);
@@ -359,14 +374,6 @@ export default function App() {
                 <ProviderPicker config={config} value={provider} onChange={chooseProvider} disabled={running} />
               </fieldset>
             )}
-            <fieldset data-tour="phase" className="flex items-center gap-2">
-              <legend className="sr-only">Fase da régua</legend>
-              <span className="flex items-center gap-1 text-[13px] text-muted">Régua <InfoTip term="phase" /></span>
-              <div className="flex rounded-lg border border-line bg-sheet p-0.5">
-                <SegmentButton active={phase === 1} onClick={() => setPhase(1)} hint="MVP: sem antes, ilegibilidade e reaproveitamento">Fase 1</SegmentButton>
-                <SegmentButton active={phase === 2} onClick={() => setPhase(2)} hint="Inclui as checagens da Fase 2">Fase 2</SegmentButton>
-              </div>
-            </fieldset>
             {mode === "api" && (
               <fieldset className="flex items-center gap-2">
                 <legend className="sr-only">Envio</legend>
@@ -495,6 +502,9 @@ export default function App() {
                       </span>
                     </Tooltip>
                     <span className="text-[15px]">{detail_level.category_label}, {detail_level.symptom_label.toLowerCase()}</span>
+                    {detail_level.blocks_opening && (
+                      <span className="rounded-full bg-[#fbefed] px-2.5 py-0.5 text-[12px] font-semibold text-bad">Impede a abertura da agência</span>
+                    )}
                   </div>
                 </div>
                 {focusState && focusState.status !== "done" && focusState.status !== "error" && <StageProgress state={focusState} />}
@@ -548,6 +558,7 @@ export default function App() {
               {assessment && tab === "scope" && <ScopeTab p={assessment} ticket={detail_level} rubric={rubric} goTo={goTo} />}
               {assessment && tab === "quote" && <QuoteTab p={assessment} highlight={highlight.items} />}
               {assessment && tab === "photos" && <PhotosTab p={assessment} base={`/api/tickets/${assessment.ticket_id}/attachments`} openPhoto={openPhoto} highlight={highlight.files} />}
+              {assessment && tab === "documents" && <DocumentsTab p={assessment} base={`/api/tickets/${assessment.ticket_id}/attachments`} openPhoto={openPhoto} />}
               {assessment && tab === "calls" && <LlmCallsTab p={assessment} />}
             </div>
           ) : (
@@ -686,7 +697,6 @@ function buildTour(view: View, a: { toAnalysis: () => void; toAssessment: () => 
     { target: "nav", title: "Três seções", body: <p><b>Análise</b> para trabalhar chamado a chamado, <b>Validação</b> para medir a qualidade do Atest.AI e <b>Operação</b> para custo e uso.</p> },
     { target: "ticket-list", title: "Lista de chamados", body: <p>Clique num chamado para abri-lo. Marque a caixa de seleção para incluí-lo na próxima análise. Filtre por conjunto e esteira no topo. O botão no canto (ou a tecla <b>[</b>) recolhe a lista para ganhar espaço.</p> },
     { target: "mode", title: "Modo de execução", body: <p><b>Simulado</b> demonstra o fluxo sem custo. <b>API</b> chama o modelo de verdade.</p> },
-    { target: "phase", title: "Fase da régua", body: <p>A Fase 2 inclui checagens extras: foto do antes, ilegibilidade e foto reaproveitada.</p> },
     { target: "run", title: "Analisar", body: <p>Roda o pipeline nos chamados marcados: checklist → escopo → orçamento → fotos → score → parecer.</p> },
     { target: "status", title: "Andamento", body: <p>Progresso da execução e quantas recomendações de cada tipo saíram.</p> },
     { target: "tabs", title: "Abas do chamado", body: <p>A <b>Entrada</b> está sempre disponível. As demais abrem depois da análise. Passe o mouse em cada aba para ver o que ela mostra.</p> },

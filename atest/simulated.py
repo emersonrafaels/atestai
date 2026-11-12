@@ -17,6 +17,7 @@ from .config import Settings
 from .domain import LlmCall, Match
 from .llm_schemas import (
     AttachmentIdentification,
+    DocumentAnalysis,
     PhotoAnalysis,
     QuoteReview,
     ScopeReading,
@@ -55,6 +56,7 @@ class SimulatedClient:
         max_tokens: int,
         meta: dict[str, Any],
         fallback: str | None = None,
+        timeout_s: float | None = None,
     ) -> tuple[T, LlmCall]:
         start = datetime.now()
         gt = load_ground_truth(self.cfg.ground_truth_dir, meta["ticket"])
@@ -154,7 +156,7 @@ class SimulatedClient:
                     "lpu_code": i["lpu_code"],
                 }
             )
-        return QuoteReview(items=items, notes="").model_dump()
+        return QuoteReview(items=items, uncovered_services=[], notes="").model_dump()
 
     def _photos(self, g: GroundTruth, meta: dict) -> dict:
         photos = []
@@ -181,8 +183,38 @@ class SimulatedClient:
             done_service=done,
             items_without_photo=[i["n"] for i in g.items if "item_without_photo" in i.get("findings", [])]
             or ([g.items[-1]["n"]] if "item_without_photo" in g.findings and g.items else []),
+            quantity_checks=[],
             notes="",
         ).model_dump()
+
+    def _documents(self, g: GroundTruth, meta: dict) -> dict:
+        """Leitura simulada: legível e do chamado, salvo quando o gabarito espera o contrário (resultado igual ao gabarito)."""
+        docs = []
+        for index, name in zip(meta["indices"], meta["attachments"], strict=True):
+            r = g.attachments.get(name, {})
+            docs.append(
+                {
+                    "index": index,
+                    "kind": r.get("document_kind", "other"),
+                    "handwritten": False,
+                    "legible": "no" if "unreadable_document" in g.findings else "yes",
+                    "transcription": "(simulado) " + r.get("description", ""),
+                    "issuer": "",
+                    "service_date": "",
+                    "start_time": "",
+                    "end_time": "",
+                    "branch": "",
+                    "problem": "",
+                    "solution": "",
+                    "has_signature": True,
+                    "service_status": "undetermined",
+                    "prices": [],
+                    "matches_ticket": "no" if "document_mismatch" in g.findings else "yes",
+                    "divergences": [],
+                    "reason": "(simulado)",
+                }
+            )
+        return DocumentAnalysis(documents=docs, notes="").model_dump()
 
     def _assessment(self, g: GroundTruth, meta: dict) -> dict:
         from .assessment import AssessmentWriter

@@ -78,6 +78,14 @@ class LlmSettings(_Section):
     effort: str = ""
     timeout_s: float = 180
     max_retries: int = Field(4, ge=0)
+    # limite de tempo por chamada, calculado pelo tamanho do pedido (llm.call_timeout): base + por imagem + por PDF + por
+    # mil tokens de resposta, entre o mínimo e o máximo. O vigia encerra a chamada em ~2x esse limite (uma nova tentativa).
+    timeout_base_s: float = Field(45, ge=0)
+    timeout_per_image_s: float = Field(6, ge=0)
+    timeout_per_document_s: float = Field(20, ge=0)
+    timeout_per_1k_tokens_s: float = Field(8, ge=0)
+    timeout_min_s: float = Field(60, ge=1)
+    timeout_max_s: float = Field(600, ge=1)
     image_max_side: int = 1568
     use_disk_cache: bool = True
     refresh_cache: bool = Field(False, description="Ignora as respostas já salvas no cache em disco (chama o modelo de novo), mas grava as novas")
@@ -182,6 +190,8 @@ class ObservabilitySettings(_Section):
     level: str = "INFO"
     log_json: bool = True
     log_console: bool = True
+    console_level: str = "INFO"  # INFO: acompanha a análise no terminal; WARNING: só avisos e erros
+    heartbeat_s: float = 30  # enquanto espera o modelo ou um lote, avisa a cada N segundos (0 desliga)
 
 
 class Price(_Section):
@@ -259,6 +269,7 @@ class Prompts(_Section):
     scope: str
     quote_review: str
     photos: str
+    documents: str
     assessment: str
 
 

@@ -42,6 +42,15 @@ max_tokens = 8000
 effort = ""                # vazio = padrão do modelo; ou low | medium | high | xhigh | max
 timeout_s = 180
 max_retries = 4
+# Tempo limite inteligente por chamada ao modelo: base + por imagem + por PDF + por mil tokens de resposta, entre o mínimo
+# e o máximo. Ex.: leitura do escopo ~1 min; análise de 6 fotos ~2 min; 30 fotos ~4,5 min. Se o modelo não responder em
+# ~2x esse limite (uma nova tentativa, mais até 15 s), a análise do chamado para com "API fora do ar ou travada".
+timeout_base_s = 45
+timeout_per_image_s = 6
+timeout_per_document_s = 20
+timeout_per_1k_tokens_s = 8
+timeout_min_s = 60
+timeout_max_s = 600
 image_max_side = 1568
 use_disk_cache = true    # não paga duas vezes pela mesma requisição
 
@@ -165,6 +174,8 @@ simulated_noise = 0.0        # só no modo simulado: probabilidade de o "modelo"
 level = "INFO"
 log_json = true            # um evento por linha em output/logs/atest.jsonl
 log_console = true
+console_level = "INFO"     # no terminal: INFO acompanha cada chamado, etapa e chamada ao modelo; WARNING só avisos e erros
+heartbeat_s = 30           # esperando o modelo ou um lote: avisa a cada N s; a partir do 3º aviso, alerta de possível travamento (0 desliga)
 
 [default.costs]
 # Preços em USD por milhão de tokens. Conferidos em nov/2026 na página de preços da Anthropic;

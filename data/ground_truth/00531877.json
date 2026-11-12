@@ -6,7 +6,7 @@
   "category": "air_conditioning",
   "symptom": "preventive_maintenance",
   "before_applicable": true,
-  "dataset": "demo",
+  "dataset": "scenarios",
   "quoted_value": 1372.0,
   "items": [
     {

@@ -1,0 +1,7 @@
+Caso 04164650 reconstituído a partir do Salesforce (agência 7856 - Guapimirim/RJ, KYS Reforma e Construção LTDA).
+As 6 fotos em attachments/ são SIMULADAS (geradas com OpenAI gpt-image-2 em 11/11/2026) para testar o Atest.AI;
+não são a evidência real do chamado. A origem também está no EXIF (ImageDescription) de cada imagem.
+Peças quebradas visíveis nas fotos simuladas (contagem feita olhando as imagens): 150214: 1; 150238: 2; 150301: 1
+(com lasca no canto da vizinha); 150327: 1 (trinca junto ao rodapé); 150349: 2; 150412: vista geral, não dá para contar.
+Total ~7 peças (~1,4 m² se 45x45 cm; ~2,5 m² se 60x60 cm) contra 4,6 m² cobrados em demolição, piso e rejunte.
+As fotos reais podem mostrar outra quantidade. Para usá-las, substitua os arquivos mantendo os mesmos nomes.

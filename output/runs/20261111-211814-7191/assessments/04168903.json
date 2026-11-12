@@ -1,0 +1,90 @@
+{
+  "ticket_id": "04168903",
+  "workstream": "SETA",
+  "category": "electrical",
+  "symptom": "energia_parcial",
+  "maintenance_type": "corrective",
+  "moment": "quote",
+  "branch": {
+    "code": "6260",
+    "name": "Indaiatuba - Vila Sfeir",
+    "environment": "area_interna_toda_agencia"
+  },
+  "supplier": "Fornecedor não informado",
+  "quoted_value": 244.0,
+  "requested_scope": "Lâmpada queimada do hall dos caixas eletrônicos.",
+  "generated_at": "2026-11-11T21:18:14.835749",
+  "rubric_version": "2026-11-v7",
+  "prompts_version": "2026-11-v12",
+  "config_signature": "c3b26c8b02fd",
+  "phase": 2,
+  "mode": "api",
+  "batch_mode": "sync",
+  "models": {
+    "main": "anthropic:claude-sonnet-5-5",
+    "fast": "anthropic:claude-sonnet-5-5"
+  },
+  "run_id": "20261111-211814-7191",
+  "record_id": 78,
+  "checklist": {
+    "category": "electrical",
+    "maintenance": "corrective",
+    "moment": "quote",
+    "complete": false,
+    "uploaded": 1,
+    "total": 2,
+    "requirements": [
+      {
+        "id": "quote",
+        "description": "Orçamento na planilha Excel padrão",
+        "met": true,
+        "attachments": [
+          "Orcamento_04168903.xlsx"
+        ]
+      },
+      {
+        "id": "problem_photo",
+        "description": "Foto do problema a ser corrigido",
+        "met": false,
+        "attachments": []
+      }
+    ],
+    "missing": [
+      "problem_photo"
+    ]
+  },
+  "attachments": [
+    {
+      "index": 1,
+      "name": "Orcamento_04168903.xlsx",
+      "category": "quote_doc",
+      "moment": "undetermined",
+      "readable": true,
+      "short_description": "Orçamento : 3 itens, R$ 244.00"
+    }
+  ],
+  "recommendation": "checklist_returned",
+  "recommendation_reason": "Checklist mínimo incompleto: 1 de 2 itens obrigatórios",
+  "score": null,
+  "grades": null,
+  "confidence": null,
+  "confidence_reducers": [],
+  "findings": [],
+  "amount_at_issue": 0.0,
+  "amount_at_issue_pct": 0.0,
+  "scope": null,
+  "items": [],
+  "quote_notes": [],
+  "photos": [],
+  "photo_summary": null,
+  "documents": [],
+  "summary": "Devolvido: checklist mínimo incompleto (1 de 2). Sem score: o chamado não segue para a pessoa analista.",
+  "supplier_message": "Olá, Fornecedor não informado. O chamado 04168903 foi devolvido porque faltam evidências obrigatórias para análise:\n- foto do problema a ser corrigido.\nReenvie os itens pelo próprio chamado. O prazo de aprovação conta a partir do envio completo.",
+  "llm_calls": [],
+  "duration_s": 0.02,
+  "stage_durations_s": {
+    "checklist": 0.015
+  },
+  "cost_usd": 0.0,
+  "cost_brl": 0.0
+}

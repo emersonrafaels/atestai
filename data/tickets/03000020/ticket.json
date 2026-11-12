@@ -14,7 +14,9 @@
     "name": "Fornecedor Alfa Manutenção Predial Ltda.",
     "cnpj": "12.345.678/0001-90"
   },
+  "blocks_opening": false,
   "requested_scope": "Repintura das paredes do salão de atendimento (aprox. 94 m²), cor padrão da agência.",
+  "solution_description": "Lixamento e correção das imperfeições com massa corrida, selador e duas demãos de tinta acrílica na cor padrão, com proteção do mobiliário.",
   "quoted_value": 3581.4,
   "dates": {
     "opening": "2026-11-09",

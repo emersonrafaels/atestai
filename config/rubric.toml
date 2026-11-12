@@ -2,7 +2,7 @@
 # Alterar aqui muda notas, score e recomendação sem tocar no código. Suba a versão a cada mudança.
 
 [default.rubric]
-version = "2026-11-v5"  # v5: escopo vago alto, quantidade não verificável, item sem foto e valor divergente relevante; v4: absorção entre tipos (absorbs) e foto do depois com local não confirmado; v3: chaves em inglês
+version = "2026-11-v8"  # v8: serviço pedido sem item no orçamento, serviço executado antes da aprovação, valor em questão limita "Aprovar" e tolerância própria para preço de mercado; v7: quantidade cobrada acima do que as fotos mostram; v6: leitura de documentos (OCR): documento ilegível, de outro chamado, com data fora da janela e preço acima do mercado; v5: escopo vago alto, quantidade não verificável, item sem foto e valor divergente relevante; v4: absorção entre tipos (absorbs) e foto do depois com local não confirmado; v3: chaves em inglês
 
 # peso de cada validação no score (somam 100)
 weights = { scope = 20, quote = 40, photos = 40 }
@@ -36,6 +36,12 @@ photo_date_tolerance_days = 1
 # valor potencial divergente a partir desta fração do orçamento gera o apontamento relevant_amount_at_issue
 # (cada tipo desconta uma vez; isto pesa a materialidade quando muitos itens têm o mesmo problema)
 relevant_amount_at_issue_pct = 50
+# quantidade cobrada x quantidade que as fotos mostram (somando todas): acima de N% vira quantity_above_photos
+photo_quantity_tolerance_pct = 25
+# acima deste % do orçamento em questão, uma nota que aprovaria vira "Aprovar com ressalvas" (0 desliga)
+max_amount_at_issue_for_approve_pct = 10
+# preço de mercado anexado (anúncio, cotação): até N% acima não é apontado (margem do fornecedor sobre o varejo)
+market_price_tolerance_pct = 25
 
 # --- tipos de apontamento -----------------------------------------------------------------------
 # amount_at_issue: "item" (o item inteiro), "excess" (só o que passa da referência/quantidade) ou "none"
@@ -94,6 +100,29 @@ severity = "medium"
 amount_at_issue = "excess"
 description = "Preço acima da referência"
 
+[default.rubric.finding_types.scope_not_quoted]
+validation = "scope"
+severity = "high"
+reduces_confidence = true
+description = "Serviço pedido no chamado sem item no orçamento"
+
+[default.rubric.finding_types.service_before_approval]
+validation = "scope"
+severity = "high"
+description = "Serviço executado antes da aprovação do orçamento"
+
+[default.rubric.finding_types.price_above_market]
+validation = "quote"
+severity = "medium"
+amount_at_issue = "excess"
+description = "Preço acima do valor de mercado apresentado em documento"
+
+[default.rubric.finding_types.quantity_above_photos]
+validation = "quote"
+severity = "medium"
+amount_at_issue = "excess"
+description = "Quantidade cobrada acima do que as fotos mostram"
+
 [default.rubric.finding_types.spreadsheet_mismatch]
 validation = "quote"
 severity = "medium"
@@ -146,3 +175,21 @@ severity = "critical"
 phase = 2
 lock = true
 description = "Foto reaproveitada de outro chamado"
+
+# --- documentos (leitura por OCR de fotos de documentos e PDFs) ---
+[default.rubric.finding_types.unreadable_document]
+validation = "photos"
+severity = "low"
+reduces_confidence = true
+description = "Documento ilegível"
+
+[default.rubric.finding_types.document_mismatch]
+validation = "photos"
+severity = "high"
+description = "Documento não corresponde ao chamado"
+
+[default.rubric.finding_types.document_date_inconsistent]
+validation = "photos"
+severity = "medium"
+phase = 2
+description = "Data do documento fora do período do chamado"

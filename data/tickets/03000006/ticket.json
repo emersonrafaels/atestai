@@ -14,6 +14,7 @@
     "name": "Fornecedor Alfa Manutenção Predial Ltda.",
     "cnpj": "12.345.678/0001-90"
   },
+  "blocks_opening": false,
   "requested_scope": "Verificar o salão de atendimento. Urgente.",
   "quoted_value": 5638.8,
   "dates": {

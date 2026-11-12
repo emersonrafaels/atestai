@@ -11,7 +11,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, ClassVar
 
-from .domain import Attachment, ChecklistResult, ClassifiedAttachment, EvaluatedItem, Finding, Stage
+from .domain import Attachment, ChecklistResult, ClassifiedAttachment, EvaluatedDocument, EvaluatedItem, Finding, Stage
 from .llm_schemas import AssessmentText, PhotoAnalysis, ScopeReading
 from .score import ScoreCalculator, ScoreResult
 
@@ -38,6 +38,7 @@ class AnalysisContext:
     quote_notes: list[str] = field(default_factory=list)
     photos: list[Attachment] = field(default_factory=list)
     photo_analysis: PhotoAnalysis | None = None
+    documents: list[EvaluatedDocument] = field(default_factory=list)
     integrity: dict[str, dict] = field(default_factory=dict)
     score: ScoreResult | None = None
     amount_at_issue: float = 0.0
@@ -50,14 +51,30 @@ class AnalysisContext:
         return self.halt is not None
 
     def scoring_input(self) -> dict[str, Any]:
-        """Resultado consolidado (score + apontamentos + valor em questão), usado na redação do parecer."""
+        """Resultado consolidado (score + apontamentos + valor em questão + observações das etapas), para a redação do parecer."""
         assert self.score is not None
         return {
             **self.score.model_dump(mode="json"),
             "findings": [f.model_dump(mode="json") for f in self.findings],
             "amount_at_issue": self.amount_at_issue,
             "amount_at_issue_pct": self.amount_at_issue_pct,
+            "observations": self.observations(),
         }
+
+    def observations(self, limit: int = 600) -> list[str]:
+        """Observações das etapas que não viram apontamento (orçamento, fotos, documentos), resumidas para o parecer."""
+
+        def cut(text: str) -> str:
+            text = " ".join(text.split())
+            return text if len(text) <= limit else text[: limit - 1].rstrip() + "…"
+
+        out = [f"Orçamento: {cut(n)}" for n in self.quote_notes if n.strip()]
+        if self.photo_analysis is not None and self.photo_analysis.notes.strip():
+            out.append(f"Fotos: {cut(self.photo_analysis.notes)}")
+        for d in self.documents:
+            if d.divergences:
+                out.append(f"Documento {d.file}: {cut('; '.join(d.divergences))}")
+        return out
 
 
 class AnalysisStage(ABC):

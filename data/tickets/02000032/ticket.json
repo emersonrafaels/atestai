@@ -14,7 +14,9 @@
     "name": "Fornecedor Eta Elétrica e Manutenção Ltda.",
     "cnpj": "78.901.234/0001-56"
   },
+  "blocks_opening": false,
   "requested_scope": "Substituir 5 tomadas danificadas no backoffice, uma com sinais de queima.",
+  "solution_description": "Troca das tomadas danificadas por modelos no padrão NBR 14136, revisão das conexões do circuito e teste com multímetro.",
   "quoted_value": 455.0,
   "dates": {
     "opening": "2026-11-04",

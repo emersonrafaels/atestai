@@ -23,7 +23,7 @@ def stage(cls, cfg, ref, **kwargs):
     return cls(cfg, ref, ScoreCalculator(ref.rubric), **kwargs)
 
 
-def review(quote, lpu: dict[int, str], by_item: dict | None = None) -> QuoteReview:
+def review(quote, lpu: dict[int, str], by_item: dict | None = None, uncovered: list[str] | None = None) -> QuoteReview:
     by_item = by_item or {}
     items = []
     for i in quote.items:
@@ -39,7 +39,7 @@ def review(quote, lpu: dict[int, str], by_item: dict | None = None) -> QuoteRevi
                 duplicate_of=0,
             )
         )
-    return QuoteReview(items=items, notes="")
+    return QuoteReview(items=items, uncovered_services=uncovered or [], notes="")
 
 
 def test_dynaconf_reads_toml_environment_and_variable(monkeypatch):
@@ -72,19 +72,46 @@ def test_checklist_unified_by_category(cfg):
 
 
 def test_every_ticket_has_category_symptom_scope_and_spreadsheet(cfg):
+    from atest.repository import read_ticket_quote
+
     for p in list_tickets(cfg.tickets_dir):
         ch = load_ticket(p)
-        quote = read_quote(ch.spreadsheets[0].path)
+        quote = read_ticket_quote(ch)  # planilha completa (aba Chamado) ou só com os itens
         assert ch.data.category and ch.data.symptom and ch.data.requested_scope
         assert quote.scope == ch.data.requested_scope
 
 
 def test_nonstandard_spreadsheet(cfg, tmp_path):
-    wb = load_workbook(load_ticket(cfg.tickets_dir / "00534519").spreadsheets[0].path)
+    """Sem a Tabela do Excel, os itens são lidos pelas colunas; sem as colunas dos itens, a planilha é recusada."""
+    path = load_ticket(cfg.tickets_dir / "00534519").spreadsheets[0].path
+    wb = load_workbook(path)
     del wb["Itens"].tables["tbItens"]
+    wb.save(tmp_path / "no_table.xlsx")
+    assert read_quote(tmp_path / "no_table.xlsx").items == read_quote(path).items
+    wb["Itens"]["B1"] = "Serviço"  # sem a coluna Descrição
     wb.save(tmp_path / "bad.xlsx")
-    with pytest.raises(QuoteError, match="tbItens"):
+    with pytest.raises(QuoteError, match="itens"):
         read_quote(tmp_path / "bad.xlsx")
+
+
+def test_items_only_spreadsheet_uses_ticket_data(cfg, tmp_path):
+    """Planilha só com os itens (sem a aba Chamado): o resto vem do chamado e não há planilha divergente."""
+    from openpyxl import Workbook
+
+    from atest.repository import quote_defaults
+
+    ch = load_ticket(cfg.tickets_dir / "00534519")
+    wb = Workbook()
+    ws = wb.active
+    ws.append(["Descrição", "Quantidade", "Valor unitário"])  # sem Item, Unidade e Valor total: são completados
+    ws.append(["Tomada 2P+T 10A", 6, 28.0])
+    ws.append(["Disjuntor 20A", 1, 64.0])
+    wb.save(tmp_path / "itens.xlsx")
+    with pytest.raises(QuoteError, match="Chamado"):
+        read_quote(tmp_path / "itens.xlsx")  # sem os dados do chamado, a aba Chamado continua obrigatória
+    q = read_quote(tmp_path / "itens.xlsx", quote_defaults(ch.data))
+    assert [(i.n, i.unit, i.total_value) for i in q.items] == [(1, "un", 168.0), (2, "un", 64.0)]
+    assert (q.ticket_id, q.category, q.symptom, q.scope) == (ch.data.ticket_id, ch.data.category, ch.data.symptom, ch.data.requested_scope)
 
 
 def test_amount_at_issue_counts_only_excess(cfg, ref):
@@ -160,7 +187,9 @@ def test_after_photo_with_unconfirmed_location_reduces_confidence(cfg, ref):
     photo_stage = stage(PhotoStage, cfg, ref)
 
     def kinds(done: Match) -> list[str]:
-        analysis = PhotoAnalysis(photos=[], has_before_photo=True, done_justification="", done_service=done, items_without_photo=[], notes="")
+        analysis = PhotoAnalysis(
+            photos=[], has_before_photo=True, done_justification="", done_service=done, items_without_photo=[], quantity_checks=[], notes=""
+        )
         return [f.kind for f in photo_stage.flag(ticket, scope, analysis, [])]
 
     assert kinds(Match.YES) == []
@@ -231,7 +260,9 @@ def test_items_without_photo_become_one_finding(cfg, ref):
     photo_stage = stage(PhotoStage, cfg, ref)
 
     def flag(done: Match, missing: list[int]):
-        analysis = PhotoAnalysis(photos=[], has_before_photo=True, done_justification="", done_service=done, items_without_photo=missing, notes="")
+        analysis = PhotoAnalysis(
+            photos=[], has_before_photo=True, done_justification="", done_service=done, items_without_photo=missing, quantity_checks=[], notes=""
+        )
         return photo_stage.flag(ticket, scope, analysis, [], items)
 
     found = [f for f in flag(Match.YES, [2, 3]) if f.kind == "item_without_photo"]
@@ -313,3 +344,173 @@ def test_rubric_adjusted_by_workstream(cfg):
     assert r.for_workstream("SISR").finding_types["vague_scope"].enabled is False
     assert r.for_workstream("SETA").finding_types["vague_scope"].severity == "low"
     assert r.finding_types["vague_scope"].enabled and r.finding_types["vague_scope"].severity == cfg.rubric.finding_types["vague_scope"].severity
+
+
+def test_documents_ocr_findings(cfg, ref):
+    """Leitura de documentos: datas, documento de outro chamado, ilegível e preço de mercado abaixo do cobrado."""
+    from datetime import date
+
+    from atest.documents import DocumentStage, parse_date
+    from atest.domain import DocumentPrice, EvaluatedDocument, Match
+
+    assert parse_date("Data do atendimento: 20/10/2026") == date(2026, 10, 20)
+    assert parse_date("20/10/26") == date(2026, 10, 20) and parse_date("sem data") is None
+
+    ch = load_ticket(cfg.tickets_dir / "04159084")
+    quote_stage = stage(QuoteStage, cfg, ref)
+    from atest.repository import read_ticket_quote
+
+    quote = read_ticket_quote(ch)
+    items, _, _ = quote_stage.flag(ch, quote, review(quote, {1: ""}))
+    doc_stage = stage(DocumentStage, cfg, ref)
+
+    def doc(**kw) -> EvaluatedDocument:
+        return EvaluatedDocument(**{"file": "x.jpg", "legible": Match.YES, "matches_ticket": Match.YES, **kw})
+
+    ok = doc(service_date="20/10/2026")
+    assert doc_stage.flag(ch, [ok]) == []
+    bad = [doc(service_date="01/09/2026"), doc(matches_ticket=Match.NO, divergences=["outra agência"]), doc(legible=Match.NO)]
+    kinds = [f.kind for f in doc_stage.flag(ch, bad)]
+    assert kinds == ["document_date_inconsistent", "document_mismatch", "unreadable_document"]
+
+    # print do anúncio: chapa de acrílico a R$ 303,25 contra R$ 417,79 cobrados (38% acima, tolerância 10%)
+    ad = doc(kind="price_reference", prices=[DocumentPrice(description="Placa acrílico branco", value=303.25, quote_item=1)])
+    found = doc_stage.market_prices([ad], items)
+    assert [f.kind for f in found] == ["price_above_market"] and found[0].amount_at_issue == round(417.79 - 303.25, 2)
+    assert items[0].amount_at_issue == round(417.79 - 303.25, 2)
+    assert doc_stage.market_prices([doc(prices=[DocumentPrice(description="x", value=400.0, quote_item=1)])], items) == []  # dentro da tolerância
+
+
+def test_lpu_column(cfg, ref, tmp_path):
+    """Coluna LPU: sem ela (planilhas antigas) ou em branco, o item é da LPU; "Não" tira o item da comparação com a LPU."""
+    from openpyxl import Workbook
+
+    from atest.repository import quote_defaults, read_ticket_quote
+
+    old = read_ticket_quote(load_ticket(cfg.tickets_dir / "00534519"))
+    assert all(i.lpu for i in old.items)  # planilha antiga, sem a coluna
+    ch = load_ticket(cfg.tickets_dir / "04159084")
+    new = read_ticket_quote(ch)
+    assert [i.lpu for i in new.items] == [False]  # chapa de acrílico, fora da LPU
+
+    wb = Workbook()
+    ws = wb.active
+    ws.append(["Descrição", "Unidade", "LPU", "Quantidade", "Valor unitário"])
+    ws.append(["Tomada 2P+T", "un", "Sim", 2, 30.0])
+    ws.append(["Chapa de acrílico", "un", "não", 1, 400.0])
+    ws.append(["Disjuntor", "un", None, 1, 60.0])
+    ws.append(["Fio 2,5 mm", "m", True, 10, 3.0])  # caixa de seleção do Excel
+    wb.save(tmp_path / "lpu.xlsx")
+    q = read_quote(tmp_path / "lpu.xlsx", quote_defaults(ch.data))
+    assert [i.lpu for i in q.items] == [True, False, True, True]
+    ws.append(["Parafuso", "un", "talvez", 4, 1.0])
+    wb.save(tmp_path / "bad_lpu.xlsx")
+    with pytest.raises(QuoteError, match="LPU"):
+        read_quote(tmp_path / "bad_lpu.xlsx", quote_defaults(ch.data))
+
+    # item fora da LPU não é comparado com a tabela, mesmo que o modelo aponte um código parecido
+    quote_stage = stage(QuoteStage, cfg, ref)
+    _, findings, _ = quote_stage.flag(ch, new, review(new, {1: "ELE-004"}))  # código barato (un): na LPU, daria preço acima
+    assert "price_above_reference" not in [f.kind for f in findings]
+    as_lpu = new.model_copy(update={"items": [i.model_copy(update={"lpu": True}) for i in new.items]})
+    _, findings, _ = quote_stage.flag(ch, as_lpu, review(as_lpu, {1: "ELE-004"}))
+    assert "price_above_reference" in [f.kind for f in findings]  # controle: marcado como LPU, a comparação acontece
+
+
+def test_quantity_above_photos(cfg, ref):
+    """Fotos somam ~7 peças quebradas (≈1,42 m²) e o orçamento cobra 4,6 m²: apontamento sobre o excedente; deslocamento fica de fora."""
+    from atest.llm_schemas import PhotoAnalysis, QuantityCheck
+    from atest.repository import read_ticket_quote
+
+    ch = load_ticket(cfg.tickets_dir / "04164650")
+    quote = read_ticket_quote(ch)
+    items, _, _ = stage(QuoteStage, cfg, ref).flag(ch, quote, review(quote, {n: "" for n in range(1, 6)}))
+    check = dict(what_was_counted="peças quebradas", per_photo="Anexo 2: 1; Anexo 3: 2", count_seen=7, reasoning="peças de 45x45 cm")
+    analysis = PhotoAnalysis(
+        photos=[], has_before_photo=True, done_justification="", done_service="undetermined", items_without_photo=[], notes="",
+        quantity_checks=[
+            QuantityCheck(item=1, estimated_quantity=1.42, **check),
+            QuantityCheck(item=2, estimated_quantity=1.42, **check),
+            QuantityCheck(item=3, estimated_quantity=-1, **check),  # não dá para estimar: não aponta
+            QuantityCheck(item=4, estimated_quantity=4.0, **check),  # 4,6 está dentro da tolerância de 25%
+        ],
+    )
+    found = stage(PhotoStage, cfg, ref).quantity_findings(analysis, items)
+    assert [f.kind for f in found] == ["quantity_above_photos"] * 2
+    assert found[1].amount_at_issue == round((4.6 - 1.42) * 209.88, 2)
+    assert items[1].amount_at_issue == found[1].amount_at_issue
+
+
+def test_plain_language_and_lump_sum_units(cfg, ref):
+    """Textos do modelo sem nomes internos de campos; 'un' e 'vb' com quantidade 1 são a mesma cobrança (preço comparado)."""
+    from atest.formatting import plain_language, plain_text, same_unit
+    from atest.llm_schemas import QuoteReview
+
+    text = "As quantidades não puderam ser confrontadas (expected_quantity_max = -1). O item ficou NO_REFERENCE e compliant."
+    assert plain_text(text) == "As quantidades não puderam ser confrontadas. O item ficou sem referência e aderente."
+    r = plain_language(QuoteReview(items=[], uncovered_services=[], notes="Sem lpu_code para o item 2."))
+    assert r.notes == "Sem código da LPU para o item 2."
+    assert plain_text("NO_REFERENCE") == "NO_REFERENCE"  # valor de campo (sem espaço) não muda
+    assert same_unit("un", "vb", 1) and not same_unit("un", "vb", 2) and same_unit("m²", "M2", 4.6)
+
+    from atest.repository import read_ticket_quote
+
+    ch = load_ticket(cfg.tickets_dir / "04164650")
+    quote = read_ticket_quote(ch)
+    _, _, notes = stage(QuoteStage, cfg, ref).flag(ch, quote, review(quote, {1: "", 2: "", 3: "", 4: "", 5: "GER-001"}))
+    assert not [n for n in notes if "Item 5" in n]  # deslocamento 1 un x GER-001 em vb: comparado, sem nota
+
+
+def test_scope_not_quoted_and_service_before_approval(cfg, ref):
+    """Serviço pedido sem item vira apontamento; 'executado antes da aprovação' só com prova explícita no documento."""
+    from atest.documents import DocumentStage
+    from atest.domain import EvaluatedDocument, Match
+    from atest.repository import read_ticket_quote
+
+    ch = load_ticket(cfg.tickets_dir / "04159084")  # aprovação de orçamento
+    quote = read_ticket_quote(ch)
+    asked = ["Organizar a fiação emaranhada do quadro", "Desativar a medição da ENGIE"]
+    _, findings, _ = stage(QuoteStage, cfg, ref).flag(ch, quote, review(quote, {1: ""}, uncovered=asked))
+    gap = [f for f in findings if f.kind == "scope_not_quoted"]
+    assert len(gap) == 1 and "Organizar a fiação" in gap[0].evidence and gap[0].reduces_confidence
+    _, findings, _ = stage(QuoteStage, cfg, ref).flag(ch, quote, review(quote, {1: ""}))
+    assert "scope_not_quoted" not in [f.kind for f in findings]
+
+    docs = stage(DocumentStage, cfg, ref)
+    solution = "instalação de chapa de acrílico p/ proteção do quadro"
+
+    def rat(status: Match) -> EvaluatedDocument:
+        return EvaluatedDocument(file="rat.jpg", legible=Match.YES, matches_ticket=Match.YES, service_date="20/10/2026",
+                                 solution=solution, service_status=status)
+
+    assert [f.kind for f in docs.flag(ch, [rat(Match.YES)])] == ["service_before_approval"]
+    assert docs.flag(ch, [rat(Match.UNDETERMINED)]) == []  # "instalação de…" pode ser o que será feito
+    assert docs.flag(ch, [rat(Match.NO)]) == []
+
+
+def test_amount_at_issue_caps_approve_and_market_price_tolerance(cfg, ref):
+    """Nota de aprovar com mais de 10% do orçamento em questão vira 'Aprovar com ressalvas'; preço de mercado tem tolerância própria."""
+    from atest.documents import DocumentStage
+    from atest.domain import DocumentPrice, EvaluatedDocument, Match
+    from atest.repository import read_ticket_quote
+
+    calc = ScoreCalculator(ref.rubric)
+    assert calc.compute([], amount_at_issue_pct=9).recommendation == Recommendation.APPROVE
+    r = calc.compute([], amount_at_issue_pct=27)
+    assert r.recommendation == Recommendation.APPROVE_WITH_CAVEATS and "27% do orçamento" in r.recommendation_reason
+
+    ch = load_ticket(cfg.tickets_dir / "04159084")
+    quote = read_ticket_quote(ch)
+    items, _, _ = stage(QuoteStage, cfg, ref).flag(ch, quote, review(quote, {1: ""}))
+    docs = stage(DocumentStage, cfg, ref)
+
+    def ad(value: float, same: Match) -> EvaluatedDocument:
+        price = DocumentPrice(description="Placa acrílico", value=value, quote_item=1, same_product=same)
+        return EvaluatedDocument(file="ad.png", legible=Match.YES, matches_ticket=Match.PARTIAL, prices=[price])
+
+    assert docs.market_prices([ad(350.0, Match.YES)], items) == []  # 19% acima: dentro dos 25%
+    assert docs.market_prices([ad(303.25, Match.NO)], items) == []  # outro produto: não compara
+    sure = docs.market_prices([ad(303.25, Match.YES)], items)
+    assert len(sure) == 1 and not sure[0].reduces_confidence
+    unsure = docs.market_prices([ad(303.25, Match.PARTIAL)], items)
+    assert unsure[0].reduces_confidence and unsure[0].evidence.startswith("Produto não confirmado")

@@ -1,6 +1,6 @@
 """Validação 2 — Orçamento: o que foi cobrado faz sentido para o que foi pedido?
 
-1. A planilha Excel padrão é lida por regra (repository.read_quote), sem LLM.
+1. A planilha Excel é lida por regra (repository.read_ticket_quote), sem LLM; o que ela não trouxer vem do chamado.
 2. O modelo principal confere cada item contra o escopo: aderente / fora do escopo / a justificar, quantidade
    plausível, duplicidade e código equivalente na LPU.
 3. Regras determinísticas: preço × LPU, duplicidade textual, coerência planilha × chamado e valor em questão
@@ -13,11 +13,11 @@ import difflib
 
 from .analysis import AnalysisContext, AnalysisStage
 from .domain import AmountAtIssue, EvaluatedItem, Finding, ItemClassification, LpuItem, Quote, QuoteItem, Rubric, Stage
-from .formatting import brl, normalize_text, normalize_unit
+from .formatting import brl, normalize_text, normalize_unit, same_unit
 from .llm import LlmSession
 from .llm_schemas import ItemReview, QuoteReview, ScopeReading
 from .providers import TextPart
-from .repository import LoadedTicket, QuoteError, read_quote
+from .repository import LoadedTicket, QuoteError, read_ticket_quote
 from .scope import ScopeStage
 
 DUPLICATE_SIMILARITY = 0.8  # descrição ≥ 80% parecida conta como duplicidade (com mesma unidade, quantidade e preço)
@@ -31,7 +31,7 @@ class QuoteStage(AnalysisStage):
 
     def run(self, ctx: AnalysisContext) -> None:
         try:
-            quote = read_quote(ctx.ticket.spreadsheets[0].path)
+            quote = read_ticket_quote(ctx.ticket)
         except (QuoteError, IndexError) as e:
             ctx.confidence_reducers.append("unreadable_quote")
             ctx.quote_notes.append(f"Orçamento não lido: {e}")
@@ -46,7 +46,9 @@ class QuoteStage(AnalysisStage):
     def review_items(self, session: LlmSession, ticket: LoadedTicket, scope: ScopeReading, quote: Quote) -> QuoteReview:
         """Pede ao modelo principal a classificação de cada item, com a LPU da esteira no prompt de sistema."""
         items = "\n".join(
-            f"{i.n}. {i.description} | {i.quantity:g} {i.unit} | unit. R$ {i.unit_value:.2f} | total R$ {i.total_value:.2f}" for i in quote.items
+            f"{i.n}. {i.description} | {i.quantity:g} {i.unit} | unit. R$ {i.unit_value:.2f} | total R$ {i.total_value:.2f}"
+            + ("" if i.lpu else " | FORA DA LPU")
+            for i in quote.items
         )
         workstream = ticket.data.workstream.value
         system = f"{session.system('quote_review')}\n\nTABELA DE REFERÊNCIA (LPU) DA ESTEIRA {workstream}:\n{self.references.lpu_text(workstream)}"
@@ -83,13 +85,17 @@ class QuoteStage(AnalysisStage):
 
         if diffs := self.spreadsheet_mismatches(ticket, quote):
             general.append(self.scorer.finding("spreadsheet_mismatch", "; ".join(diffs).capitalize(), quote.file))
+        uncovered = [s.strip() for s in review.uncovered_services if s.strip()]
+        if uncovered and "scope_not_quoted" in self.rubric.finding_types:
+            evidence = "Pedido no chamado sem item no orçamento: " + "; ".join(uncovered)
+            general.append(self.scorer.finding("scope_not_quoted", evidence, "escopo × orçamento"))
 
         for item in quote.items:
             r = by_n.get(item.n)
             label = f"item {item.n}: {item.description}"
             findings = self._classification_findings(item, r, label)
             findings += self._quantity_findings(item, r, label)
-            ref = lpu.get(r.lpu_code) if r else None
+            ref = lpu.get(r.lpu_code) if r and item.lpu else None  # item fora da LPU não tem preço de referência na tabela
             price_finding, note = self._price_check(item, ref, label)
             findings += price_finding
             notes += note
@@ -101,7 +107,7 @@ class QuoteStage(AnalysisStage):
                     **item.model_dump(),
                     classification=r.classification if r else ItemClassification.COMPLIANT,
                     reason=r.reason if r else "",
-                    lpu_code=r.lpu_code if r else "NO_REFERENCE",
+                    lpu_code=(r.lpu_code if r else "NO_REFERENCE") if item.lpu else "NO_REFERENCE",
                     reference_price=ref.reference_price if ref else None,
                     expected_quantity_max=qmax,
                     amount_at_issue=self._amount_at_issue(item, findings),
@@ -137,8 +143,9 @@ class QuoteStage(AnalysisStage):
     def _price_check(self, item: QuoteItem, ref: LpuItem | None, label: str) -> tuple[list[Finding], list[str]]:
         if ref is None:
             return [], []
-        if normalize_unit(ref.unit) != normalize_unit(item.unit):
-            return [], [f"Item {item.n}: unidade '{item.unit}' diferente da referência {ref.code} ('{ref.unit}'); preço não comparado"]
+        if not same_unit(item.unit, ref.unit, item.quantity):
+            msg = f"Item {item.n}: cobrado em '{item.unit}' e a referência {ref.code} da LPU é em '{ref.unit}'; o preço não foi comparado"
+            return [], [msg]
         if item.unit_value <= ref.reference_price * (1 + self.rubric.price_tolerance_pct / 100):
             return [], []
         p, rp = item.unit_value, ref.reference_price

@@ -6,7 +6,7 @@
   "category": "cctv_and_alarm",
   "symptom": "preventive_maintenance",
   "before_applicable": false,
-  "dataset": "demo",
+  "dataset": "scenarios",
   "quoted_value": 824.0,
   "items": [
     {

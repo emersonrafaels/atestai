@@ -33,7 +33,7 @@ export function QuoteTab({ p, highlight = [] }: { p: Assessment; highlight?: num
                   <td className="px-3 py-2.5 tabular-nums">{i.n}</td>
                   <td className="px-3 py-2.5">
                     <div className="font-medium">{i.description}</div>
-                    <div className="text-[13px] text-muted">{i.reason}{i.lpu_code && i.lpu_code !== "NO_REFERENCE" && i.lpu_code !== "SEM_REFERENCIA" ? ` · ${i.lpu_code}` : " · sem referência na LPU"}</div>
+                    <div className="text-[13px] text-muted">{i.reason}{i.lpu === false ? " · item fora da LPU" : i.lpu_code && i.lpu_code !== "NO_REFERENCE" && i.lpu_code !== "SEM_REFERENCIA" ? ` · ${i.lpu_code}` : " · sem referência na LPU"}</div>
                     {i.findings.filter((a) => a.kind !== "out_of_scope_item" && a.kind !== "unjustified_replacement").map((a, k) => (
                       <div key={k} className="mt-1 text-[13px] text-warn">{findingLabel(a.kind)}: {a.evidence}</div>
                     ))}

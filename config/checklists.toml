@@ -5,7 +5,8 @@
 [default.checklists.attachment_categories]
 quote_doc = "Orçamento do fornecedor (planilha Excel padrão)"
 completion_certificate_doc = "Termo de conclusão assinado pela agência"
-technical_report_doc = "Relatório técnico, laudo ou relatório de preventiva"
+technical_report_doc = "Relatório técnico, laudo, relatório de preventiva ou relatório/ordem de atendimento do técnico (inclusive preenchido à mão)"
+price_reference_doc = "Print de anúncio, site de loja ou cotação mostrando preço de produto ou serviço (referência de mercado)"
 room_before_photo = "Foto do local ou do problema ANTES do serviço (dano, defeito, estado anterior)"
 room_after_photo = "Foto do local DEPOIS do serviço concluído"
 equipment_photo = "Foto aproximada de equipamento ou componente (câmera, sensor, fonte, aparelho, peça)"

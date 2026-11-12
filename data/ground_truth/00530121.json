@@ -6,7 +6,7 @@
   "category": "waterproofing",
   "symptom": "moisture_infiltration",
   "before_applicable": true,
-  "dataset": "demo",
+  "dataset": "scenarios",
   "quoted_value": 1452.0,
   "items": [
     {

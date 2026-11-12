@@ -79,6 +79,7 @@ class Request:
     max_tokens: int
     effort: str = ""
     extras: dict[str, Any] = field(default_factory=dict)
+    timeout_s: float | None = None  # limite de cada tentativa (llm.call_timeout); fora da chave de cache
 
     def key(self, output: type[BaseModel], provider: str) -> str:
         """Identifica a requisição para cache e auditoria: provedor, modelo, prompt, conteúdo e schema."""

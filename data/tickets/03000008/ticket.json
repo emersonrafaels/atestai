@@ -14,7 +14,9 @@
     "name": "Fornecedor Beta Sistemas de Segurança Ltda.",
     "cnpj": "23.456.789/0001-01"
   },
+  "blocks_opening": false,
   "requested_scope": "Câmera do autoatendimento com imagem desfocada: limpeza e ajuste de foco.",
+  "solution_description": "Limpeza da lente e da cúpula, reajuste do foco e do enquadramento e conferência da imagem no gravador.",
   "quoted_value": 2760.0,
   "dates": {
     "opening": "2026-10-28",

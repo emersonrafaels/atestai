@@ -19,7 +19,7 @@ interface Props {
 const KINDS: { id: CatalogKind; label: string; one: string; hint: string }[] = [
   { id: "categories", label: "Categorias", one: "categoria", hint: "Especialidade do chamado. Define o checklist e em qual esteira (SETA ou SISR) ela aparece." },
   { id: "symptoms", label: "Sintomas", one: "sintoma", hint: "A queixa em uma expressão. Ligue cada sintoma às categorias em que ele faz sentido." },
-  { id: "locations", label: "Locais", one: "local", hint: "Onde fica o serviço na agência (backoffice, tesouraria, fachada…)." },
+  { id: "locations", label: "Locais", one: "local", hint: "Onde fica o problema na agência. SETA e SISR têm listas diferentes no Salesforce: escolha a esteira de cada local." },
 ];
 const WS_OPTIONS: [string, string][] = [["", "SETA e SISR"], ["SETA", "SETA"], ["SISR", "SISR"]];
 
@@ -88,7 +88,7 @@ export function CatalogEditor({ data, base, onChange, usage, checklists }: Props
             <tr>
               <th className="w-14 px-4 py-2 font-medium">Ativo</th>
               <th className="px-2 py-2 font-medium">Nome</th>
-              {kind === "categories" && <th className="px-2 py-2 font-medium">Esteira</th>}
+              {kind !== "symptoms" && <th className="px-2 py-2 font-medium">Esteira</th>}
               {kind === "symptoms" && <th className="px-2 py-2 font-medium">Vale para as categorias</th>}
               <th className="px-2 py-2 font-medium">Uso</th>
               <th className="w-10 px-4 py-2" />
@@ -114,7 +114,7 @@ export function CatalogEditor({ data, base, onChange, usage, checklists }: Props
                       {dupLabel && <span className="text-bad">nome repetido</span>}
                     </div>
                   </td>
-                  {kind === "categories" && (
+                  {kind !== "symptoms" && (
                     <td className="px-2 py-2">
                       <select value={e.workstreams.length === 1 ? e.workstreams[0] : ""} onChange={(ev) => update(i, { workstreams: ev.target.value ? [ev.target.value] : [] })}
                         aria-label={`Esteira de ${e.label}`} className="rounded-md border border-line bg-sheet px-1.5 py-1">
@@ -174,7 +174,7 @@ function NewEntry({ kind, one, data, onAdd }: { kind: CatalogKind; one: string; 
   const add = (ev: React.FormEvent) => {
     ev.preventDefault();
     if (!label.trim() || problem) return;
-    onAdd({ value, label: label.trim(), enabled: true, workstreams: kind === "categories" && ws ? [ws] : [], categories: kind === "symptoms" ? cats : [] });
+    onAdd({ value, label: label.trim(), enabled: true, workstreams: kind !== "symptoms" && ws ? [ws] : [], categories: kind === "symptoms" ? cats : [] });
     setLabel(""); setCode(""); setCodeTouched(false); setCats([]);
   };
   const catLabel = (v: string) => data.categories.find((c) => c.value === v)?.label ?? v;
@@ -192,7 +192,7 @@ function NewEntry({ kind, one, data, onAdd }: { kind: CatalogKind; one: string; 
           <input value={value} onChange={(e) => { setCodeTouched(true); setCode(slug(e.target.value)); }} placeholder="gerado pelo nome"
             className="w-full rounded-md border border-line px-2 py-1.5 font-mono text-[13px] outline-none focus:border-blueprint" />
         </label>
-        {kind === "categories" && (
+        {kind !== "symptoms" && (
           <label>
             <span className="mb-1 block text-[12px] font-medium text-muted">Esteira</span>
             <select value={ws} onChange={(e) => setWs(e.target.value)} className="rounded-md border border-line bg-sheet px-2 py-1.5">

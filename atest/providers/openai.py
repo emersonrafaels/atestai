@@ -41,6 +41,8 @@ class OpenAIProvider(Provider):
         }
         if req.effort in ("low", "medium", "high"):
             kwargs["reasoning"] = {"effort": req.effort}
+        if req.timeout_s:
+            kwargs["timeout"] = req.timeout_s  # limite desta chamada (calculado pelo tamanho)
         try:
             resp = self.client.responses.parse(**kwargs)
         except (self._openai.APIConnectionError, self._openai.RateLimitError, self._openai.InternalServerError) as e:

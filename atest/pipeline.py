@@ -1,4 +1,4 @@
-"""Orquestrador do Atest.AI: checklist → escopo → orçamento × escopo → fotos → score → parecer.
+"""Orquestrador do Atest.AI: checklist → escopo → orçamento → fotos → documentos (OCR) → score → parecer.
 
 O orquestrador não conhece regra de negócio: ele roda as etapas (`AnalysisStage`) em ordem sobre um
 `AnalysisContext`, mede o tempo de cada uma, avisa o progresso e monta o `Assessment` final. Trocar, remover ou
@@ -17,6 +17,7 @@ from .assessment import AssessmentStage
 from .checklist import ChecklistStage
 from .config import Settings
 from .costs import CostCalculator
+from .documents import DocumentStage
 from .domain import Assessment, Stage
 from .llm import LlmClient, LlmSession
 from .observability import context, event, timed_stage
@@ -50,13 +51,14 @@ class Orchestrator:
         self.stages = list(stages) if stages is not None else self.default_stages(index)
 
     def default_stages(self, photo_index: PhotoIndex | None) -> list[AnalysisStage]:
-        """As seis etapas do deck, na ordem."""
+        """As etapas do deck, na ordem, com a leitura dos documentos depois das fotos."""
         args = (self.cfg, self.references, self.scorer)
         return [
             ChecklistStage(*args),
             ScopeStage(*args),
             QuoteStage(*args),
             PhotoStage(*args, index=photo_index),
+            DocumentStage(*args),
             ScoringStage(*args),
             AssessmentStage(*args),
         ]
@@ -133,8 +135,9 @@ class Orchestrator:
             "quote_notes": ctx.quote_notes,
             "photos": PhotoStage.evaluated_photos(ctx.photo_analysis, ctx.photos, ctx.integrity),
             "photo_summary": ctx.photo_analysis.model_dump(
-                mode="json", include={"has_before_photo", "done_service", "done_justification", "items_without_photo", "notes"}
+                mode="json", include={"has_before_photo", "done_service", "done_justification", "items_without_photo", "quantity_checks", "notes"}
             ),
+            "documents": ctx.documents,
             "summary": ctx.text.summary,
             "supplier_message": ctx.text.supplier_message,
         }

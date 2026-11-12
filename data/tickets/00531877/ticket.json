@@ -14,6 +14,7 @@
     "name": "Fornecedor Épsilon Climatização Ltda.",
     "cnpj": "56.789.012/0001-34"
   },
+  "blocks_opening": false,
   "requested_scope": "Manutenção preventiva mensal (PMOC) dos 4 aparelhos split de 18.000 BTU do backoffice: limpeza de filtros, evaporadoras e condensadoras, higienização e verificação de funcionamento.",
   "quoted_value": 1372.0,
   "dates": {
@@ -26,7 +27,7 @@
     "first_check": "forwarded",
     "note": ""
   },
-  "dataset": "demo",
+  "dataset": "scenarios",
   "attachments": [
     {
       "file_name": "Orcamento_EPS-PMOC-1010.xlsx",

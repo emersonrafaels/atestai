@@ -1,6 +1,6 @@
 # Atest.AI: código, dataset sintético e painel de demonstração
 
-Implementa o fluxo da apresentação v26. Cada chamado passa pelo **checklist mínimo**, por três validações (**escopo**, **orçamento × escopo** e **evidências fotográficas**) e recebe um **score de 0 a 100** pela régua do deck. O resultado é um **parecer** em modo copiloto: o modelo aponta, a régua decide, a pessoa analista confirma.
+Implementa o fluxo da apresentação v26. Cada chamado passa pelo **checklist mínimo**, por três validações (**escopo**, **orçamento** e **evidências fotográficas**, que incluem a **leitura por OCR dos documentos** anexados: relatório de atendimento manuscrito, termo, laudo, nota ou print de preço, em foto ou PDF) e recebe um **score de 0 a 100** pela régua do deck. O resultado é um **parecer** em modo copiloto: o modelo aponta, a régua decide, a pessoa analista confirma.
 
 Todos os dados são fictícios: agências, fornecedores, CNPJs, valores e fotos.
 
@@ -147,7 +147,7 @@ O `Orchestrator` inteiro vira um único nó do grafo. Também passa a valer a pe
 ## O painel
 
 - **Cenários**: acha chamados por tipo de problema (escopo mal preenchido, orçamento com vários erros, foto de outro ambiente, checklist incompleto...). Mostra o catálogo com um chamado por cenário e, para cada tipo, os chamados de todos os conjuntos cujo gabarito traz aquele problema. Um clique abre o chamado na Análise; **Selecionar** marca todos para analisar de uma vez. A mesma lista fica em [`docs/cenarios.md`](docs/cenarios.md).
-- **Análise**: lista de chamados (filtro por conjunto e esteira), modo simulado ou API, régua Fase 1/2, síncrono ou batch. Abas: entrada do chamado, parecer (carimbo, notas, apontamentos, mensagem ao fornecedor, feedback), escopo, orçamento, fotos e chamadas ao modelo; o botão Parecer em JSON fica ao lado. **Novo chamado** envia planilha e fotos pela tela.
+- **Análise**: lista de chamados (filtro por conjunto e esteira), modo simulado ou API, régua Fase 1/2, síncrono ou batch. Abas: entrada do chamado, parecer (carimbo, notas, apontamentos, mensagem ao fornecedor, feedback), escopo, orçamento, fotos, documentos (transcrição por OCR, campos lidos e divergências com o chamado) e chamadas ao modelo; o botão Parecer em JSON fica ao lado. **Novo chamado** envia a planilha (só os itens) e as fotos e documentos pela tela.
 - **Validação**: roda um conjunto inteiro (ou uma amostra) e mostra a leitura de ciência de dados: portão de qualidade, acurácia com IC 95% por bootstrap, kappa de Cohen, F1 de "pegar problema", matriz de confusão, dispersão do score, precisão/cobertura/F1 por tipo de apontamento, acurácia por categoria, valor em questão, latência e custo p50/p95, e os casos divergentes.
 - **Operação**: histórico de execuções, custos e feedbacks.
 
@@ -169,7 +169,7 @@ O **orçamento é sempre Excel**, com duas abas em formato Tabela: `Chamado`/`tb
 
 ## Dados
 
-- **Demonstração** (13 chamados, `00…`): os casos do deck e variações, com gabarito escrito à mão.
+- **Cenários de teste** inclui os 13 casos do deck (`00…`) e variações, com gabarito escrito à mão.
 - **Validação** (80 chamados, `0100…`): 10 modelos de serviço × 8, com defeitos injetados por sorteio. O gabarito é calculado pela própria régua a partir dos defeitos.
 - **Cenários** (`0300…`): **um chamado por tipo de problema**, com os defeitos fixos em vez de sorteados (`generator/build_scenarios_dataset.py`). Se um defeito não puder ser aplicado, a geração falha, em vez de pular o defeito em silêncio. Um teste (`test_every_scenario_type_has_a_ticket_in_the_catalog`) garante que todo tipo de cenário de `atest/scenarios.py` tem pelo menos um chamado no catálogo.
 - **Itaú** (41 chamados, `0200…`): a mesma mecânica da validação (defeitos sorteados, gabarito pela régua), em agências no padrão Itaú e com **fotos fotorrealistas geradas por IA** com a identidade visual do banco. Agências, fornecedores, CNPJs e valores continuam fictícios; a marca aparece só para demonstração interna. São 20 chamados de execução (10 modelos × 2, `02000001`–`02000020`) e 21 de **Aprovação de Orçamento** (`02000021`–`02000041`): os 7 modelos que têm foto do problema (pintura, infiltração, lâmpadas, ar-condicionado, tomadas, câmera e sensor) × 3, só com a planilha e as fotos do antes, como o fornecedor envia antes de executar (`quote_stage()` em `generator/build_validation_dataset.py`).

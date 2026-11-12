@@ -14,7 +14,9 @@
     "name": "Fornecedor Beta Sistemas de Segurança Ltda.",
     "cnpj": "23.456.789/0001-01"
   },
+  "blocks_opening": false,
   "requested_scope": "Câmera 07 do estacionamento sem imagem no gravador desde 25/09. Diagnosticar e corrigir.",
+  "solution_description": "Diagnóstico do cabeamento e da fonte da câmera 07, troca do componente com defeito e conferência da gravação no NVR.",
   "quoted_value": 640.0,
   "dates": {
     "opening": "2026-09-25",
@@ -26,7 +28,7 @@
     "first_check": "forwarded",
     "note": ""
   },
-  "dataset": "demo",
+  "dataset": "scenarios",
   "attachments": [
     {
       "file_name": "Orcamento_BETA-OS-7840.xlsx",

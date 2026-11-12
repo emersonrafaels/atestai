@@ -14,7 +14,9 @@
     "name": "Fornecedor Iota Segurança Eletrônica Ltda.",
     "cnpj": "90.123.456/0001-78"
   },
+  "blocks_opening": false,
   "requested_scope": "Preventiva semestral do sistema de segurança da agência: teste das 12 câmeras e dos sensores do alarme, com relatório.",
+  "solution_description": "Teste de cada câmera e sensor, verificação da gravação no NVR e da comunicação da central, com relatório fotográfico.",
   "quoted_value": 1384.0,
   "dates": {
     "opening": "2026-10-31",

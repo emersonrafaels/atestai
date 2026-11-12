@@ -14,7 +14,9 @@
     "name": "Fornecedor Eta Elétrica e Manutenção Ltda.",
     "cnpj": "78.901.234/0001-56"
   },
+  "blocks_opening": false,
   "requested_scope": "Substituir 6 tomadas danificadas na área de atendimento (uma com sinais de queima) e o disjuntor do circuito 14 do quadro de distribuição, que está desarmando.",
+  "solution_description": "Troca das 6 tomadas danificadas e do disjuntor do circuito 14, com reaperto das conexões do quadro e teste de carga.",
   "quoted_value": 654.0,
   "dates": {
     "opening": "2026-10-03",
@@ -26,7 +28,7 @@
     "first_check": "forwarded",
     "note": ""
   },
-  "dataset": "demo",
+  "dataset": "scenarios",
   "attachments": [
     {
       "file_name": "Orcamento_ETA-2026-331.xlsx",

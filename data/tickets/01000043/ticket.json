@@ -14,6 +14,7 @@
     "name": "Fornecedor Gama Instalações Elétricas Ltda.",
     "cnpj": "34.567.890/0001-12"
   },
+  "blocks_opening": false,
   "requested_scope": "Trocar as 8 lâmpadas tubulares queimadas do backoffice.",
   "quoted_value": 552.0,
   "dates": {

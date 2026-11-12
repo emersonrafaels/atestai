@@ -1,0 +1,4 @@
+ticket_id;supplier;missing;supplier_message
+04168903;Fornecedor não informado;problem_photo;"Olá, Fornecedor não informado. O chamado 04168903 foi devolvido porque faltam evidências obrigatórias para análise:
+- foto do problema a ser corrigido.
+Reenvie os itens pelo próprio chamado. O prazo de aprovação conta a partir do envio completo."

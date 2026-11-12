@@ -82,6 +82,6 @@
     "photos": 100
   },
   "score": 88,
-  "recommendation": "approve",
+  "recommendation": "approve_with_caveats",
   "confidence": "high"
 }

@@ -1,0 +1,578 @@
+{
+  "ticket_id": "04159084",
+  "workstream": "SETA",
+  "category": "electrical",
+  "symptom": "pecas_e_equipamentos_diversos",
+  "maintenance_type": "corrective",
+  "moment": "quote",
+  "branch": {
+    "code": "7942",
+    "name": "Rio da Pedra de Guaratiba",
+    "environment": "area_interna_publico"
+  },
+  "supplier": "ATM Engenharia LTDA",
+  "quoted_value": 417.79,
+  "requested_scope": "Prezados, tivemos visita do time de engenharia para iniciar o modelo de modernização da agência em outubro. No mesmo dia veio um técnico da ATM, a quem sinalizamos o problema do quadro de energia. Precisamos de atuação com urgência devido ao emaranhado de fios, que pode dar curto.",
+  "generated_at": "2026-11-12T00:21:29.658851",
+  "rubric_version": "2026-11-v8",
+  "prompts_version": "2026-11-v14",
+  "config_signature": "39a068d030d3",
+  "phase": 2,
+  "mode": "api",
+  "batch_mode": "sync",
+  "models": {
+    "main": "anthropic:claude-sonnet-5-5",
+    "fast": "anthropic:claude-sonnet-5-5"
+  },
+  "run_id": "20261112-002038-92d9",
+  "record_id": 88,
+  "checklist": {
+    "category": "electrical",
+    "maintenance": "corrective",
+    "moment": "quote",
+    "complete": true,
+    "uploaded": 2,
+    "total": 2,
+    "requirements": [
+      {
+        "id": "quote",
+        "description": "Orçamento na planilha Excel padrão",
+        "met": true,
+        "attachments": [
+          "Orcamento_ATM_04159084.xlsx"
+        ]
+      },
+      {
+        "id": "problem_photo",
+        "description": "Foto do problema a ser corrigido",
+        "met": true,
+        "attachments": [
+          "IMG_20261020_094512.jpg"
+        ]
+      }
+    ],
+    "missing": []
+  },
+  "attachments": [
+    {
+      "index": 1,
+      "name": "Orcamento_ATM_04159084.xlsx",
+      "category": "quote_doc",
+      "moment": "undetermined",
+      "readable": true,
+      "short_description": "Orçamento : 1 itens, R$ 417.79"
+    },
+    {
+      "index": 2,
+      "name": "IMG_20261020_094512.jpg",
+      "category": "room_before_photo",
+      "moment": "before",
+      "readable": true,
+      "short_description": "Quadro de energia aberto com fios emaranhados e medidor, agência ao fundo"
+    },
+    {
+      "index": 3,
+      "name": "Screenshot_20261021-143208.png",
+      "category": "price_reference_doc",
+      "moment": "undetermined",
+      "readable": true,
+      "short_description": "Print do Mercado Livre: placa acrílico branco 2mm 100x50cm por R$ 303,25"
+    },
+    {
+      "index": 4,
+      "name": "IMG_20261020_111847.jpg",
+      "category": "technical_report_doc",
+      "moment": "undetermined",
+      "readable": true,
+      "short_description": "Relatório de atendimento técnico manuscrito da ATM, assinado pelo técnico e pela agência"
+    }
+  ],
+  "recommendation": "detailed_review",
+  "recommendation_reason": "Confiança baixa (preço acima do valor de mercado apresentado em documento; serviço pedido no chamado sem item no orçamento): entrada insuficiente para concluir",
+  "score": 87,
+  "grades": {
+    "scope": 65,
+    "quote": 85,
+    "photos": 100
+  },
+  "confidence": "low",
+  "confidence_reducers": [
+    "price_above_market",
+    "scope_not_quoted"
+  ],
+  "findings": [
+    {
+      "kind": "scope_not_quoted",
+      "validation": "scope",
+      "severity": "high",
+      "discount": 35,
+      "description": "Serviço pedido no chamado sem item no orçamento",
+      "evidence": "Pedido no chamado sem item no orçamento: Corrigir ou organizar o emaranhado de fios do quadro de energia, eliminando o risco de curto; Desativar a medição da ENGIE; Visita técnica e deslocamento do fornecedor até a agência",
+      "reference": "escopo × orçamento",
+      "lock": false,
+      "reduces_confidence": true,
+      "phase": 1,
+      "amount_at_issue": 0.0,
+      "absorbed_by": ""
+    },
+    {
+      "kind": "price_above_market",
+      "validation": "quote",
+      "severity": "medium",
+      "discount": 15,
+      "description": "Preço acima do valor de mercado apresentado em documento",
+      "evidence": "Produto não confirmado (o orçamento não traz especificação para comparar). Item 1 cobrado a R$ 417,79; o documento Screenshot_20261021-143208.png mostra Placa Acrílico Branco Chapa 2mm 100x50cm a R$ 303,25 (38% acima, tolerância 25%)",
+      "reference": "item 1: Chapa de acrílico",
+      "lock": false,
+      "reduces_confidence": true,
+      "phase": 1,
+      "amount_at_issue": 114.54,
+      "absorbed_by": ""
+    }
+  ],
+  "amount_at_issue": 114.54,
+  "amount_at_issue_pct": 27.4,
+  "scope": {
+    "local": "Rio da Pedra de Guaratiba (cód. 7942) – Área interna - Público",
+    "environment": "Quadro de energia da agência, na área interna de atendimento ao público, com emaranhado de fios com risco de curto",
+    "equipment": "Quadro de energia",
+    "requested_services": [
+      "Atuar com urgência no quadro de energia para corrigir o emaranhado de fios que pode causar curto",
+      "Instalar chapa de acrílico para proteção do quadro (conforme solução descrita no chamado)",
+      "Desativar a medição da ENGIE (conforme solução descrita no chamado)"
+    ],
+    "mentioned_quantities": [],
+    "acceptance_criteria": [
+      "O orçamento trata do quadro de energia da agência 7942, na área interna - público",
+      "O orçamento prevê a correção ou organização do emaranhado de fios do quadro, eliminando o risco de curto",
+      "O orçamento prevê a instalação da chapa de acrílico de proteção do quadro",
+      "O orçamento prevê a desativação da medição da ENGIE, e o serviço está descrito de forma que o analista consiga entender o que será feito",
+      "As fotos mostram o quadro de energia com a fiação organizada e sem fios emaranhados expostos",
+      "As fotos mostram a chapa de acrílico instalada protegendo o quadro",
+      "Há comprovação da desativação da medição da ENGIE, como foto do medidor ou documento da concessionária"
+    ],
+    "expected_evidence": [
+      "Foto do quadro de energia com a fiação organizada e sem emaranhado, após o serviço",
+      "Foto do quadro com a chapa de acrílico de proteção instalada",
+      "Foto ou documento que comprove a desativação da medição da ENGIE",
+      "Foto do quadro fechado e identificado, mostrando o local na área interna da agência"
+    ],
+    "before_evidence_applicable": true,
+    "consistent_with_category_symptom": true,
+    "coherence_note": "",
+    "vague_scope": false,
+    "vague_reason": ""
+  },
+  "items": [
+    {
+      "n": 1,
+      "description": "Chapa de acrílico",
+      "unit": "un",
+      "lpu": false,
+      "quantity": 1.0,
+      "unit_value": 417.79,
+      "total_value": 417.79,
+      "classification": "compliant",
+      "reason": "A chapa de acrílico para proteção do quadro de energia foi pedida na solução descrita no chamado e a quantidade de uma unidade é coerente com um único quadro.",
+      "lpu_code": "NO_REFERENCE",
+      "reference_price": null,
+      "expected_quantity_max": 1.0,
+      "amount_at_issue": 114.54,
+      "findings": [
+        {
+          "kind": "price_above_market",
+          "validation": "quote",
+          "severity": "medium",
+          "discount": 15,
+          "description": "Preço acima do valor de mercado apresentado em documento",
+          "evidence": "Produto não confirmado (o orçamento não traz especificação para comparar). Item 1 cobrado a R$ 417,79; o documento Screenshot_20261021-143208.png mostra Placa Acrílico Branco Chapa 2mm 100x50cm a R$ 303,25 (38% acima, tolerância 25%)",
+          "reference": "item 1: Chapa de acrílico",
+          "lock": false,
+          "reduces_confidence": true,
+          "phase": 1,
+          "amount_at_issue": 114.54,
+          "absorbed_by": ""
+        }
+      ]
+    }
+  ],
+  "quote_notes": [
+    "O orçamento tem apenas a chapa de acrílico. Faltam itens para organizar a fiação do quadro, que é o problema urgente do chamado, e para desativar a medição da ENGIE. Também não há item de mão de obra para instalar a chapa, nem de visita técnica. Vale pedir ao fornecedor que complete o orçamento ou explique se esses serviços estão incluídos no valor da chapa."
+  ],
+  "photos": [
+    {
+      "file": "IMG_20261020_094512.jpg",
+      "environment": "Área interna da agência, junto ao quadro de energia aberto; ao fundo aparecem a logomarca do Itaú e um balcão de atendimento",
+      "what_it_shows": "Quadro de energia aberto com disjuntores e um medidor. Há um grande emaranhado de fios coloridos soltos na frente do medidor e dos disjuntores. O interior está sujo e a fiação está desorganizada. Não há chapa de acrílico instalada.",
+      "moment": "before",
+      "readable": true,
+      "matches_scope": "yes",
+      "reason": "A foto mostra o quadro de energia na área interna da agência, com o emaranhado de fios descrito no chamado. A data do arquivo (20/10/2026) é a da abertura do chamado, o que indica que é uma foto do estado anterior ao serviço. Mostra o problema, mas não o serviço concluído.",
+      "covered_items": [],
+      "exif_date": null,
+      "reused_from": null,
+      "integrity_signals": []
+    }
+  ],
+  "photo_summary": {
+    "has_before_photo": true,
+    "done_justification": "A única foto mostra o quadro ainda com a fiação toda emaranhada e sem chapa de acrílico. Nenhuma foto mostra o quadro organizado, a chapa instalada ou o medidor desativado. O resultado pedido não aparece.",
+    "done_service": "no",
+    "items_without_photo": [
+      1
+    ],
+    "quantity_checks": [],
+    "notes": "A foto confirma o local (área interna da agência, com a marca do Itaú ao fundo) e o problema relatado, mas é só do 'antes'. Faltam fotos do quadro com a fiação organizada, do quadro com a chapa de acrílico instalada e da comprovação da desativação da medição da ENGIE. O item 1 (chapa de acrílico) não aparece em nenhuma foto. O orçamento traz apenas a chapa de acrílico; não há item para organizar a fiação nem para desativar a medição, embora o escopo peça os dois serviços."
+  },
+  "documents": [
+    {
+      "file": "Screenshot_20261021-143208.png",
+      "kind": "price_reference",
+      "handwritten": false,
+      "legible": "yes",
+      "transcription": "14:32 63% mercado livre Buscar no Mercado Livre Informe seu CEP 1 / 5 Novo Placa Acrílico Branco Chapa 2mm 100x50cm 4.8 (47) R$ 303,25 em 10x R$ 30,33 sem juros Frete grátis Saiba os prazos de entrega e as formas de envio. Calcular o prazo de entrega Comprar agora Adicionar ao carrinho",
+      "issuer": "Mercado Livre",
+      "service_date": "21/10/2026",
+      "start_time": "",
+      "end_time": "",
+      "branch": "",
+      "problem": "",
+      "solution": "",
+      "has_signature": false,
+      "service_status": "undetermined",
+      "prices": [
+        {
+          "description": "Placa Acrílico Branco Chapa 2mm 100x50cm",
+          "value": 303.25,
+          "quote_item": 1,
+          "same_product": "partial"
+        }
+      ],
+      "matches_ticket": "partial",
+      "divergences": [
+        "O anúncio custa R$ 303,25, abaixo dos R$ 417,79 da chapa de acrílico no orçamento (diferença de R$ 114,54).",
+        "O orçamento não traz espessura, cor nem medidas da chapa, então não dá para confirmar que é o mesmo produto do anúncio (2mm, branca, 100x50cm)."
+      ],
+      "reason": "O anúncio é de uma chapa de acrílico, parecida com o item do orçamento, mas o orçamento não tem especificação para confirmar e não cita agência nem chamado."
+    },
+    {
+      "file": "IMG_20261020_111847.jpg",
+      "kind": "service_report",
+      "handwritten": true,
+      "legible": "yes",
+      "transcription": "ATM ENGENHARIA LTDA - RELATÓRIO DE ATENDIMENTO TÉCNICO Data do atendimento: 20/10/2026 Hora início: 09:40 Hora término: 11:15 Agência: 7942 - Rio da Pedra de Guaratiba Descrição do problema: quadro de energia c/ fios emaranhados, risco de curto Descrição da solução: instalação de chapa de acrílico p/ proteção do quadro e desativação da medição da ENGIE Assinatura do técnico [assinatura] Assinatura do responsável da agência [assinatura]",
+      "issuer": "ATM Engenharia LTDA",
+      "service_date": "20/10/2026",
+      "start_time": "09:40",
+      "end_time": "11:15",
+      "branch": "7942 - Rio da Pedra de Guaratiba",
+      "problem": "Quadro de energia com fios emaranhados, risco de curto",
+      "solution": "Instalação de chapa de acrílico para proteção do quadro e desativação da medição da ENGIE",
+      "has_signature": true,
+      "service_status": "undetermined",
+      "prices": [],
+      "matches_ticket": "yes",
+      "divergences": [
+        "O relatório não cita a organização ou correção dos fios emaranhados, só a chapa de acrílico e a desativação da medição.",
+        "O relatório é de 20/10/2026, mesmo dia da abertura do chamado, e a solução está escrita como substantivo (\"instalação\", \"desativação\"), sem afirmar que foi feita.",
+        "Não dá para saber pelo documento se o serviço já foi feito ou se é o que será feito"
+      ],
+      "reason": "Agência, quadro de energia, problema e solução batem com o chamado, mas o texto descreve o serviço em substantivo e não prova que foi executado."
+    }
+  ],
+  "summary": "Recomendo análise detalhada: o orçamento traz só a chapa de acrílico e não cobre a organização da fiação do quadro (o problema urgente do chamado), a desativação da medição da ENGIE nem a visita técnica. A chapa está a R$ 417,79 contra R$ 303,25 no anúncio de referência, com valor potencial divergente de R$ 114,54 (27% do orçamento), mas o produto não pôde ser confirmado por falta de especificação. As fotos mostram apenas o 'antes', sem comprovação de execução, e a confiança é baixa.",
+  "supplier_message": "Incluir no orçamento o serviço de organização da fiação do quadro de energia, ou justificar que já está incluído; incluir item para desativação da medição da ENGIE ou justificar a ausência; incluir mão de obra de instalação da chapa e visita técnica/deslocamento, ou informar que estão no valor da chapa; informar espessura, cor e medidas da chapa de acrílico e justificar o preço de R$ 417,79 frente ao valor de R$ 303,25 do anúncio de referência; enviar fotos do quadro com a fiação organizada, do quadro com a chapa instalada e da comprovação da desativação da medição; esclarecer se o serviço já foi executado ou se será executado, pois o relatório de 20/10/2026 não deixa isso claro.",
+  "llm_calls": [
+    {
+      "task": "identify_attachments",
+      "provider": "anthropic",
+      "model": "anthropic:claude-sonnet-5-5",
+      "resolved_model": "claude-sonnet-5-5",
+      "prompt_version": "2026-11-v14",
+      "prompt_hash": "0fc9398acff7",
+      "schema_hash": "cc0bb58f3035",
+      "start": "2026-11-12T00:20:38.820695",
+      "duration_s": 0.0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 0,
+      "cost_usd": 0.0,
+      "from_cache": true,
+      "simulated": false,
+      "via_batch": false,
+      "batch_id": null,
+      "response": {
+        "attachments": [
+          {
+            "index": 2,
+            "category": "room_before_photo",
+            "moment": "before",
+            "readable": true,
+            "short_description": "Quadro de energia aberto com fios emaranhados e medidor, agência ao fundo"
+          },
+          {
+            "index": 3,
+            "category": "price_reference_doc",
+            "moment": "undetermined",
+            "readable": true,
+            "short_description": "Print do Mercado Livre: placa acrílico branco 2mm 100x50cm por R$ 303,25"
+          },
+          {
+            "index": 4,
+            "category": "technical_report_doc",
+            "moment": "undetermined",
+            "readable": true,
+            "short_description": "Relatório de atendimento técnico manuscrito da ATM, assinado pelo técnico e pela agência"
+          }
+        ]
+      }
+    },
+    {
+      "task": "scope",
+      "provider": "anthropic",
+      "model": "anthropic:claude-sonnet-5-5",
+      "resolved_model": "claude-sonnet-5-5",
+      "prompt_version": "2026-11-v14",
+      "prompt_hash": "5a5504771051",
+      "schema_hash": "def08ad3c954",
+      "start": "2026-11-12T00:20:38.831564",
+      "duration_s": 0.0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 0,
+      "cost_usd": 0.0,
+      "from_cache": true,
+      "simulated": false,
+      "via_batch": false,
+      "batch_id": null,
+      "response": {
+        "local": "Rio da Pedra de Guaratiba (cód. 7942) – Área interna - Público",
+        "environment": "Quadro de energia da agência, na área interna de atendimento ao público, com emaranhado de fios com risco de curto",
+        "equipment": "Quadro de energia",
+        "requested_services": [
+          "Atuar com urgência no quadro de energia para corrigir o emaranhado de fios que pode causar curto",
+          "Instalar chapa de acrílico para proteção do quadro (conforme solução descrita no chamado)",
+          "Desativar a medição da ENGIE (conforme solução descrita no chamado)"
+        ],
+        "mentioned_quantities": [],
+        "acceptance_criteria": [
+          "O orçamento trata do quadro de energia da agência 7942, na área interna - público",
+          "O orçamento prevê a correção ou organização do emaranhado de fios do quadro, eliminando o risco de curto",
+          "O orçamento prevê a instalação da chapa de acrílico de proteção do quadro",
+          "O orçamento prevê a desativação da medição da ENGIE, e o serviço está descrito de forma que o analista consiga entender o que será feito",
+          "As fotos mostram o quadro de energia com a fiação organizada e sem fios emaranhados expostos",
+          "As fotos mostram a chapa de acrílico instalada protegendo o quadro",
+          "Há comprovação da desativação da medição da ENGIE, como foto do medidor ou documento da concessionária"
+        ],
+        "expected_evidence": [
+          "Foto do quadro de energia com a fiação organizada e sem emaranhado, após o serviço",
+          "Foto do quadro com a chapa de acrílico de proteção instalada",
+          "Foto ou documento que comprove a desativação da medição da ENGIE",
+          "Foto do quadro fechado e identificado, mostrando o local na área interna da agência"
+        ],
+        "before_evidence_applicable": true,
+        "consistent_with_category_symptom": true,
+        "coherence_note": "",
+        "vague_scope": false,
+        "vague_reason": ""
+      }
+    },
+    {
+      "task": "quote_review",
+      "provider": "anthropic",
+      "model": "anthropic:claude-sonnet-5-5",
+      "resolved_model": "claude-sonnet-5-5",
+      "prompt_version": "2026-11-v14",
+      "prompt_hash": "507adbf6a15e",
+      "schema_hash": "209053abff88",
+      "start": "2026-11-12T00:20:38.908072",
+      "duration_s": 32.39,
+      "input_tokens": 1093,
+      "output_tokens": 369,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 3072,
+      "cost_usd": 0.013556,
+      "from_cache": false,
+      "simulated": false,
+      "via_batch": false,
+      "batch_id": null,
+      "response": {
+        "items": [
+          {
+            "n": 1,
+            "classification": "compliant",
+            "reason": "A chapa de acrílico para proteção do quadro de energia foi pedida na solução descrita no chamado e a quantidade de uma unidade é coerente com um único quadro.",
+            "expected_quantity_max": 1.0,
+            "plausible_quantity": true,
+            "duplicate_of": 0,
+            "lpu_code": "NO_REFERENCE"
+          }
+        ],
+        "uncovered_services": [
+          "Corrigir ou organizar o emaranhado de fios do quadro de energia, eliminando o risco de curto",
+          "Desativar a medição da ENGIE",
+          "Visita técnica e deslocamento do fornecedor até a agência"
+        ],
+        "notes": "O orçamento tem apenas a chapa de acrílico. Faltam itens para organizar a fiação do quadro, que é o problema urgente do chamado, e para desativar a medição da ENGIE. Também não há item de mão de obra para instalar a chapa, nem de visita técnica. Vale pedir ao fornecedor que complete o orçamento ou explique se esses serviços estão incluídos no valor da chapa."
+      }
+    },
+    {
+      "task": "photos",
+      "provider": "anthropic",
+      "model": "anthropic:claude-sonnet-5-5",
+      "resolved_model": "claude-sonnet-5-5",
+      "prompt_version": "2026-11-v14",
+      "prompt_hash": "96ac62848950",
+      "schema_hash": "c918dcef1447",
+      "start": "2026-11-12T00:21:11.404859",
+      "duration_s": 0.0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 0,
+      "cost_usd": 0.0,
+      "from_cache": true,
+      "simulated": false,
+      "via_batch": false,
+      "batch_id": null,
+      "response": {
+        "photos": [
+          {
+            "index": 2,
+            "environment": "Área interna da agência, junto ao quadro de energia aberto; ao fundo aparecem a logomarca do Itaú e um balcão de atendimento",
+            "what_it_shows": "Quadro de energia aberto com disjuntores e um medidor. Há um grande emaranhado de fios coloridos soltos na frente do medidor e dos disjuntores. O interior está sujo e a fiação está desorganizada. Não há chapa de acrílico instalada.",
+            "moment": "before",
+            "readable": true,
+            "matches_scope": "yes",
+            "reason": "A foto mostra o quadro de energia na área interna da agência, com o emaranhado de fios descrito no chamado. A data do arquivo (20/10/2026) é a da abertura do chamado, o que indica que é uma foto do estado anterior ao serviço. Mostra o problema, mas não o serviço concluído.",
+            "covered_items": []
+          }
+        ],
+        "has_before_photo": true,
+        "done_justification": "A única foto mostra o quadro ainda com a fiação toda emaranhada e sem chapa de acrílico. Nenhuma foto mostra o quadro organizado, a chapa instalada ou o medidor desativado. O resultado pedido não aparece.",
+        "done_service": "no",
+        "items_without_photo": [
+          1
+        ],
+        "quantity_checks": [],
+        "notes": "A foto confirma o local (área interna da agência, com a marca do Itaú ao fundo) e o problema relatado, mas é só do 'antes'. Faltam fotos do quadro com a fiação organizada, do quadro com a chapa de acrílico instalada e da comprovação da desativação da medição da ENGIE. O item 1 (chapa de acrílico) não aparece em nenhuma foto. O orçamento traz apenas a chapa de acrílico; não há item para organizar a fiação nem para desativar a medição, embora o escopo peça os dois serviços."
+      }
+    },
+    {
+      "task": "documents",
+      "provider": "anthropic",
+      "model": "anthropic:claude-sonnet-5-5",
+      "resolved_model": "claude-sonnet-5-5",
+      "prompt_version": "2026-11-v14",
+      "prompt_hash": "64c044effe25",
+      "schema_hash": "af61368433c7",
+      "start": "2026-11-12T00:21:14.228553",
+      "duration_s": 10.93,
+      "input_tokens": 5223,
+      "output_tokens": 1362,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 3197,
+      "cost_usd": 0.032058,
+      "from_cache": false,
+      "simulated": false,
+      "via_batch": false,
+      "batch_id": null,
+      "response": {
+        "documents": [
+          {
+            "index": 3,
+            "kind": "price_reference",
+            "handwritten": false,
+            "legible": "yes",
+            "transcription": "14:32 63% mercado livre Buscar no Mercado Livre Informe seu CEP 1 / 5 Novo Placa Acrílico Branco Chapa 2mm 100x50cm 4.8 (47) R$ 303,25 em 10x R$ 30,33 sem juros Frete grátis Saiba os prazos de entrega e as formas de envio. Calcular o prazo de entrega Comprar agora Adicionar ao carrinho",
+            "issuer": "Mercado Livre",
+            "service_date": "21/10/2026",
+            "start_time": "",
+            "end_time": "",
+            "branch": "",
+            "problem": "",
+            "solution": "",
+            "has_signature": false,
+            "service_status": "undetermined",
+            "prices": [
+              {
+                "description": "Placa Acrílico Branco Chapa 2mm 100x50cm",
+                "value": 303.25,
+                "quote_item": 1,
+                "same_product": "partial"
+              }
+            ],
+            "matches_ticket": "partial",
+            "divergences": [
+              "O anúncio custa R$ 303,25, abaixo dos R$ 417,79 da chapa de acrílico no orçamento (diferença de R$ 114,54).",
+              "O orçamento não traz espessura, cor nem medidas da chapa, então não dá para confirmar que é o mesmo produto do anúncio (2mm, branca, 100x50cm)."
+            ],
+            "reason": "O anúncio é de uma chapa de acrílico, parecida com o item do orçamento, mas o orçamento não tem especificação para confirmar e não cita agência nem chamado."
+          },
+          {
+            "index": 4,
+            "kind": "service_report",
+            "handwritten": true,
+            "legible": "yes",
+            "transcription": "ATM ENGENHARIA LTDA - RELATÓRIO DE ATENDIMENTO TÉCNICO Data do atendimento: 20/10/2026 Hora início: 09:40 Hora término: 11:15 Agência: 7942 - Rio da Pedra de Guaratiba Descrição do problema: quadro de energia c/ fios emaranhados, risco de curto Descrição da solução: instalação de chapa de acrílico p/ proteção do quadro e desativação da medição da ENGIE Assinatura do técnico [assinatura] Assinatura do responsável da agência [assinatura]",
+            "issuer": "ATM Engenharia LTDA",
+            "service_date": "20/10/2026",
+            "start_time": "09:40",
+            "end_time": "11:15",
+            "branch": "7942 - Rio da Pedra de Guaratiba",
+            "problem": "Quadro de energia com fios emaranhados, risco de curto",
+            "solution": "Instalação de chapa de acrílico para proteção do quadro e desativação da medição da ENGIE",
+            "has_signature": true,
+            "service_status": "undetermined",
+            "prices": [],
+            "matches_ticket": "yes",
+            "divergences": [
+              "O relatório não cita a organização ou correção dos fios emaranhados, só a chapa de acrílico e a desativação da medição.",
+              "O relatório é de 20/10/2026, mesmo dia da abertura do chamado, e a solução está escrita como substantivo (\"instalação\", \"desativação\"), sem afirmar que foi feita."
+            ],
+            "reason": "Agência, quadro de energia, problema e solução batem com o chamado, mas o texto descreve o serviço em substantivo e não prova que foi executado."
+          }
+        ],
+        "notes": "O relatório do técnico (anexo 4) confere com o chamado em agência, problema e solução, mas não prova execução: a solução está escrita como \"instalação\" e \"desativação\", sem verbo no passado, e o horário pode ser só a visita de diagnóstico. Há assinaturas do técnico e do responsável da agência. A correção dos fios emaranhados não aparece no relatório. O anúncio do Mercado Livre (anexo 3) mostra chapa de acrílico branca 2mm 100x50cm por R$ 303,25, menor que o valor do orçamento (R$ 417,79). Como o orçamento não traz especificação, a equivalência fica parcial."
+      }
+    },
+    {
+      "task": "assessment",
+      "provider": "anthropic",
+      "model": "anthropic:claude-sonnet-5-5",
+      "resolved_model": "claude-sonnet-5-5",
+      "prompt_version": "2026-11-v14",
+      "prompt_hash": "939320f79502",
+      "schema_hash": "54e4cbe91987",
+      "start": "2026-11-12T00:21:25.186605",
+      "duration_s": 4.47,
+      "input_tokens": 1513,
+      "output_tokens": 478,
+      "cache_read_tokens": 828,
+      "cache_write_tokens": 0,
+      "cost_usd": 0.007889,
+      "from_cache": false,
+      "simulated": false,
+      "via_batch": false,
+      "batch_id": null,
+      "response": {
+        "summary": "Recomendo análise detalhada: o orçamento traz só a chapa de acrílico e não cobre a organização da fiação do quadro (o problema urgente do chamado), a desativação da medição da ENGIE nem a visita técnica. A chapa está a R$ 417,79 contra R$ 303,25 no anúncio de referência, com valor potencial divergente de R$ 114,54 (27% do orçamento), mas o produto não pôde ser confirmado por falta de especificação. As fotos mostram apenas o 'antes', sem comprovação de execução, e a confiança é baixa.",
+        "supplier_message": "Incluir no orçamento o serviço de organização da fiação do quadro de energia, ou justificar que já está incluído; incluir item para desativação da medição da ENGIE ou justificar a ausência; incluir mão de obra de instalação da chapa e visita técnica/deslocamento, ou informar que estão no valor da chapa; informar espessura, cor e medidas da chapa de acrílico e justificar o preço de R$ 417,79 frente ao valor de R$ 303,25 do anúncio de referência; enviar fotos do quadro com a fiação organizada, do quadro com a chapa instalada e da comprovação da desativação da medição; esclarecer se o serviço já foi executado ou se será executado, pois o relatório de 20/10/2026 não deixa isso claro."
+      }
+    }
+  ],
+  "duration_s": 51.42,
+  "stage_durations_s": {
+    "checklist": 0.582,
+    "scope": 0.014,
+    "quote": 32.468,
+    "photos": 2.616,
+    "documents": 11.26,
+    "score": 0.001,
+    "assessment": 4.475
+  },
+  "cost_usd": 0.053503,
+  "cost_brl": 0.2889
+}

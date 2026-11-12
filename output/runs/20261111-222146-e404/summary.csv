@@ -1,0 +1,2 @@
+ticket_id;workstream;category;symptom;supplier;quoted_value;recommendation;score;scope_grade;quote_grade;photo_grade;confidence;finding_types;amount_at_issue;cost_brl;summary
+04168903;SETA;electrical;energia_parcial;Fornecedor não informado;244.0;checklist_returned;;;;;;;0.0;0.0;Devolvido: checklist mínimo incompleto (1 de 2). Sem score: o chamado não segue para a pessoa analista.

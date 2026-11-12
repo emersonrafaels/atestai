@@ -14,6 +14,7 @@
     "name": "Fornecedor Theta Hidráulica Ltda.",
     "cnpj": "89.012.345/0001-67"
   },
+  "blocks_opening": false,
   "requested_scope": "Vazamento no sifão da pia da cozinha dos funcionários. Trocar o sifão.",
   "quoted_value": 548.0,
   "dates": {

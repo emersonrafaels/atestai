@@ -26,6 +26,7 @@ export const STAGES: { id: Stage; label: string }[] = [
   { id: "scope", label: "Escopo" },
   { id: "quote", label: "Orçamento" },
   { id: "photos", label: "Fotos" },
+  { id: "documents", label: "Documentos" },
   { id: "score", label: "Score" },
   { id: "assessment", label: "Parecer" },
 ];
@@ -37,6 +38,13 @@ export const FINDING_LABELS: Record<string, string> = {
   duplicate_item: "Item duplicado",
   quantity_above_expected: "Quantidade acima",
   price_above_reference: "Preço acima da referência",
+  price_above_market: "Preço acima do mercado",
+  quantity_above_photos: "Quantidade acima das fotos",
+  scope_not_quoted: "Serviço pedido sem orçamento",
+  service_before_approval: "Executado antes da aprovação",
+  unreadable_document: "Documento ilegível",
+  document_mismatch: "Documento não confere",
+  document_date_inconsistent: "Data do documento fora do período",
   photo_mismatch: "Foto não corresponde",
   missing_after_photo: "Sem foto do concluído",
   after_photo_unconfirmed_location: "Local do depois não confirmado",
@@ -51,6 +59,8 @@ export const FINDING_LABELS: Record<string, string> = {
   relevant_amount_at_issue: "Valor divergente relevante",
   // redutor de confiança que não é apontamento da régua (vem da leitura da planilha)
   unreadable_quote: "Orçamento não lido",
+  photos_not_analyzed: "Fotos não analisadas pelo modelo",
+  documents_not_analyzed: "Documentos não lidos pelo modelo",
 };
 
 /** Rótulo de um tipo de apontamento ou redutor; valor desconhecido aparece legível, sem "_". */
@@ -64,6 +74,7 @@ export const TASK_LABELS: Record<string, string> = {
   scope: "Leitura do escopo",
   quote_review: "Orçamento",
   photos: "Análise das fotos",
+  documents: "Leitura dos documentos (OCR)",
   assessment: "Redação do parecer",
 };
 

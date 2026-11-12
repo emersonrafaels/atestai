@@ -181,8 +181,8 @@ def validate_catalog(model: Catalog) -> dict[str, Any]:
                 raise AdminError(f"Todo {one} precisa de um nome ('{e.value}' está sem).", 422)
             if kind != "locations" and not CODE.fullmatch(e.value):
                 raise AdminError(f"Código '{e.value}' inválido para {one}: use de 2 a 40 letras minúsculas, números e _.", 422)
-            if kind != "categories" and e.workstreams:
-                raise AdminError(f"Só categorias têm esteira (veja “{e.label}”).", 422)
+            if kind == "symptoms" and e.workstreams:
+                raise AdminError(f"Só categorias e locais têm esteira (veja “{e.label}”).", 422)
             if kind != "symptoms" and e.categories:
                 raise AdminError(f"Só sintomas se ligam a categorias (veja “{e.label}”).", 422)
     if not [c for c in model.categories if c.enabled] or not [y for y in model.symptoms if y.enabled]:
@@ -208,6 +208,9 @@ FIELD_PT = {
     "hash_max_distance_low_detail": "Distância máxima de semelhança (foto com pouco detalhe)",
     "hash_min_detail": "Detalhe mínimo da foto",
     "relevant_amount_at_issue_pct": "Valor divergente relevante (% do orçamento)",
+    "photo_quantity_tolerance_pct": "Tolerância da quantidade sobre as fotos (%)",
+    "max_amount_at_issue_for_approve_pct": "Valor em questão que impede aprovar direto (% do orçamento)",
+    "market_price_tolerance_pct": "Tolerância sobre o preço de mercado (%)",
 }
 
 
@@ -416,15 +419,20 @@ class AdminStore:
             raise AdminError("Descreva o motivo da alteração: ele fica no histórico.", 422)
         before = self.section_data(section, base)
         catalog = Catalog.model_validate(self.section_data("catalog", base))
+        if section == "catalog" and data is not None:
+            data = {k: v for k, v in data.items() if k != REMOVED_KEY}  # restaurar uma versão antiga traz a marcação junto
         normalized = validate_section(section, data, base, catalog) if data is not None else None
         after = normalized if normalized is not None else self.base_data(section, base)
+        stored = normalized
         if section == "catalog":
             self.check_removed_codes(before, after, base)
+            if normalized is not None:  # o que saiu do padrão fica marcado, para não voltar quando o arquivo ganhar itens novos
+                stored = {**normalized, REMOVED_KEY: removed_from_base(base, normalized)}
         summary = describe_changes(section, before, after) if normalized is not None else ["Voltou ao padrão dos arquivos de configuração"]
         with self.db._transaction() as con:
             cur = con.execute(
                 "INSERT INTO config_versions(section, data, author, comment, summary, created_at) VALUES (?, ?, ?, ?, ?, ?)",
-                (section, json.dumps(normalized, ensure_ascii=False) if normalized is not None else None, author, comment.strip()[:500],
+                (section, json.dumps(stored, ensure_ascii=False) if stored is not None else None, author, comment.strip()[:500],
                  json.dumps(summary, ensure_ascii=False), datetime.now().isoformat(timespec="seconds")),
             )
             return int(cur.lastrowid)
@@ -452,6 +460,10 @@ class AdminStore:
         data = dict(latest["data"])
         if section == "rubric":
             data["finding_types"] = self.merge_finding_types(base, data.get("finding_types", {}))
+        if section == "catalog":
+            data = merge_catalog(base, data)
+        if section == "checklists":  # tipo de anexo novo no código entra também nas versões salvas antes dele
+            data["attachment_categories"] = {**base.checklists.attachment_categories, **data.get("attachment_categories", {})}
         return data
 
     @staticmethod
@@ -476,6 +488,10 @@ class AdminStore:
                 if section == "rubric":  # a versão da régua mostra que veio do portal
                     data["version"] = f"{base.rubric.version}+portal.{latest['id']}"
                     data["finding_types"] = self.merge_finding_types(base, data.get("finding_types", {}))
+                if section == "catalog":
+                    data = merge_catalog(base, data)
+                if section == "checklists":
+                    data["attachment_categories"] = {**base.checklists.attachment_categories, **data.get("attachment_categories", {})}
                 changes[section] = data
         cfg = base.with_overrides(**changes) if changes else base
         use_catalog(cfg.catalog)
@@ -483,6 +499,29 @@ class AdminStore:
 
 
 USAGE_PT = {"tickets": "chamado(s)", "ground_truth": "gabarito(s)", "rules": "regra(s) de checklist"}
+REMOVED_KEY = "removed"  # na versão salva do cadastro: códigos do padrão que o portal apagou
+
+
+def removed_from_base(base: Settings, data: dict[str, Any]) -> dict[str, list[str]]:
+    """Códigos do cadastro padrão (TOML) que não estão na versão salva, por tipo."""
+    return {k: sorted(set(base.catalog.codes(k)) - {e["value"] for e in data.get(k, [])}) for k in CATALOG_PT}
+
+
+def merge_catalog(base: Settings, saved: dict[str, Any]) -> dict[str, Any]:
+    """Cadastro salvo pelo portal com os itens novos do padrão (TOML) acrescentados.
+
+    A versão salva vale para os itens que ela tem (nome, ativo, vínculos). Um item que entrou no arquivo depois que a
+    versão foi salva aparece também; um item que o portal apagou (marcado em `removed`) continua fora.
+    """
+    removed = saved.get(REMOVED_KEY) or {}
+    out: dict[str, Any] = {}
+    for kind in CATALOG_PT:
+        entries = list(saved.get(kind, []))
+        have = {e["value"] for e in entries}
+        gone = set(removed.get(kind, []))
+        entries += [e.model_dump(mode="json") for e in base.catalog.entries(kind) if e.value not in have and e.value not in gone]
+        out[kind] = entries
+    return out
 
 
 def catalog_usage(cfg: Settings, checklists: dict[str, Any]) -> dict[str, dict[str, dict[str, int]]]:

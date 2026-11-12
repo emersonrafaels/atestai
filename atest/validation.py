@@ -425,7 +425,7 @@ class ValidationReporter:
 
 # ============================================================================ conjuntos
 class DatasetCatalog:
-    """Conjuntos de chamados disponíveis (demonstração, validação, enviados pelo painel) e amostragem reprodutível."""
+    """Conjuntos de chamados disponíveis (cenários de teste, validação, enviados pelo painel…) e amostragem reprodutível."""
 
     def __init__(self, cfg: Settings):
         self.cfg = cfg

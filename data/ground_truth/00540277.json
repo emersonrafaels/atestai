@@ -6,7 +6,7 @@
   "category": "plumbing",
   "symptom": "leak",
   "before_applicable": true,
-  "dataset": "demo",
+  "dataset": "scenarios",
   "quoted_value": 188.0,
   "items": [
     {

@@ -14,7 +14,9 @@
     "name": "Fornecedor Épsilon Climatização Ltda.",
     "cnpj": "56.789.012/0001-34"
   },
+  "blocks_opening": false,
   "requested_scope": "Manutenção preventiva (PMOC) dos 2 aparelhos split do salão de atendimento: limpeza, higienização e verificação.",
+  "solution_description": "Limpeza e higienização de filtros, evaporadoras e condensadoras, medição de temperatura e corrente e registro no PMOC.",
   "quoted_value": 1620.0,
   "dates": {
     "opening": "2026-10-29",

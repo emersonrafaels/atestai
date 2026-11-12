@@ -63,7 +63,8 @@ class AnthropicProvider(Provider):
 
     def generate(self, req: Request, output: type[T]) -> ProviderResponse[T]:
         try:
-            resp = self.client.messages.parse(**self._params(req), output_format=output)
+            extra = {"timeout": req.timeout_s} if req.timeout_s else {}  # limite desta chamada (calculado pelo tamanho)
+            resp = self.client.messages.parse(**self._params(req), output_format=output, **extra)
         except (self._anthropic.APIConnectionError, self._anthropic.RateLimitError, self._anthropic.InternalServerError) as e:
             raise ProviderError(f"[{req.task}] {type(e).__name__}: {e}", transient=True) from e
         self._check(resp.stop_reason, req)

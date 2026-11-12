@@ -14,6 +14,7 @@
     "name": "Fornecedor Iota Segurança Eletrônica Ltda.",
     "cnpj": "90.123.456/0001-78"
   },
+  "blocks_opening": false,
   "requested_scope": "Verificar a agência inteira. Urgente.",
   "quoted_value": 2987.7,
   "dates": {

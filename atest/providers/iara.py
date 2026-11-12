@@ -98,6 +98,116 @@ def strip_fences(text: str) -> str:
     return text
 
 
+def extract_json(text: str) -> Any:
+    """JSON da resposta, mesmo com texto antes/depois ou cercas de código (comum em Claude via Bedrock).
+
+    Tenta o texto inteiro; senão, o primeiro objeto/lista completo encontrado (contando chaves e colchetes fora de strings).
+    """
+    text = strip_fences(text)
+    try:
+        return json.loads(text)
+    except ValueError:
+        pass
+    start = next((i for i, c in enumerate(text) if c in "{["), None)
+    while start is not None:
+        depth, in_str, esc = 0, False, False
+        for i in range(start, len(text)):
+            c = text[i]
+            if in_str:
+                esc = not esc and c == "\\"
+                if c == '"' and not esc:
+                    in_str = False
+                continue
+            if c == '"':
+                in_str = True
+            elif c in "{[":
+                depth += 1
+            elif c in "}]":
+                depth -= 1
+                if depth == 0:
+                    try:
+                        return json.loads(text[start : i + 1])
+                    except ValueError:
+                        break
+        start = next((i for i in range(start + 1, len(text)) if text[i] in "{["), None)
+    raise ValueError("nenhum JSON na resposta")
+
+
+# valores que o modelo escreve em português ou com outra grafia → valor do schema (enums de llm_schemas)
+_ENUM_SYNONYMS = {
+    "sim": "yes", "s": "yes", "true": "yes", "verdadeiro": "yes",
+    "não": "no", "nao": "no", "n": "no", "false": "no", "falso": "no",
+    "parcial": "partial", "parcialmente": "partial", "em parte": "partial",
+    "indeterminado": "undetermined", "indefinido": "undetermined", "não determinado": "undetermined", "unknown": "undetermined",
+    "n/a": "undetermined", "na": "undetermined",
+    "antes": "before", "depois": "after", "durante": "during",
+    "aderente": "compliant", "fora do escopo": "out_of_scope", "a justificar": "to_justify",
+}
+_BOOL_WORDS = {"sim": True, "yes": True, "true": True, "verdadeiro": True, "s": True,
+               "não": False, "nao": False, "no": False, "false": False, "falso": False, "n": False}
+
+
+def _coerce(err: dict, value: Any) -> tuple[bool, Any]:
+    """Valor corrigido para um erro de tipo simples (enum, número, booleano, nulo), ou (False, None) se não souber."""
+    kind = err["type"]
+    if kind in ("enum", "literal_error") and isinstance(value, str):
+        expected = [str(x).strip("'\" ") for x in re.findall(r"'([^']*)'", str((err.get("ctx") or {}).get("expected", "")))]
+        low = value.strip().lower()
+        for cand in (low, _ENUM_SYNONYMS.get(low, ""), low.replace(" ", "_")):
+            if cand and (not expected or cand in expected):
+                return True, cand
+        return False, None
+    if kind in ("int_parsing", "int_type", "int_from_float") and isinstance(value, str | float):
+        if isinstance(value, float) and value.is_integer():
+            return True, int(value)
+        m = re.search(r"-?\d+", str(value))
+        return (True, int(m.group(0))) if m else (False, None)
+    if kind in ("float_parsing", "float_type") and isinstance(value, str):
+        m = re.search(r"-?\d+(?:[.,]\d+)?", value.replace(".", "") if re.search(r"\d\.\d{3},", value) else value)
+        return (True, float(m.group(0).replace(",", "."))) if m else (False, None)
+    if kind in ("bool_parsing", "bool_type") and isinstance(value, str) and value.strip().lower() in _BOOL_WORDS:
+        return True, _BOOL_WORDS[value.strip().lower()]
+    return False, None
+
+
+def _normalize(data: Any, error: ValidationError, output: type[BaseModel], repairs: list[str]) -> bool:
+    """Corrige, no lugar, desvios comuns de backends que não aplicam o schema à risca: campo extra, nulo em texto ou
+    lista, enum em português ou com outra grafia, número como texto ("Anexo 3", "1,42") e booleano como "sim"/"não"."""
+    fixed = False
+    for err in error.errors():
+        loc = err["loc"]
+        if not loc:
+            continue
+        parent = data
+        try:
+            for step in loc[:-1]:
+                parent = parent[step]
+        except (KeyError, IndexError, TypeError):
+            continue
+        key = loc[-1]
+        if not isinstance(parent, dict | list) or (isinstance(parent, dict) and key not in parent):
+            continue
+        where = ".".join(map(str, loc))
+        if err["type"] == "extra_forbidden" and isinstance(parent, dict):
+            del parent[key]
+            repairs.append(f"campo extra '{where}' descartado")
+            fixed = True
+            continue
+        if parent[key] is None:
+            ok, value = _empty_value(_field_annotation(output, loc))
+            if ok and value is not None:
+                parent[key] = value
+                repairs.append(f"'{where}' veio nulo; preenchido com {json.dumps(value)}")
+                fixed = True
+            continue
+        ok, value = _coerce(err, parent[key])
+        if ok and value != parent[key]:
+            repairs.append(f"'{where}': {json.dumps(parent[key], ensure_ascii=False)} → {json.dumps(value)}")
+            parent[key] = value
+            fixed = True
+    return fixed
+
+
 # erros do Pydantic de "esperava lista/objeto e veio outra coisa": candidatos a JSON que veio como string
 _CONTAINER_ERRORS = {"list_type", "dict_type", "model_type", "model_attributes_type", "tuple_type", "set_type"}
 
@@ -136,7 +246,7 @@ def parse_output(data: Any, output: type[T], max_rounds: int = 20) -> tuple[T, l
         except ValidationError as e:
             if _repair(data, e, repairs):
                 continue
-            # objeto embrulhado numa chave que não é campo do schema: {"NomeDoSchema": {...}}
+            # objeto embrulhado numa chave que não é campo do schema: {"NomeDoSchema": {...}} (antes de descartar extras)
             if isinstance(data, dict) and len(data) == 1:
                 ((key, inner),) = data.items()
                 inner = _loads(inner) if isinstance(inner, str) else inner
@@ -144,6 +254,8 @@ def parse_output(data: Any, output: type[T], max_rounds: int = 20) -> tuple[T, l
                     data = inner
                     repairs.append(f"objeto embrulhado em '{key}'")
                     continue
+            if _normalize(data, e, output, repairs):  # enum em português, número como texto, nulo, campo extra
+                continue
             if _fill_missing(data, e, output, repairs):  # último recurso: resposta parcial no formato certo
                 continue
             raise
@@ -399,7 +511,7 @@ class IaraProvider(Provider):
         if not text.strip():
             raise ProviderError(f"[{req.task}] resposta da IARA vazia")
         try:
-            data = json.loads(strip_fences(text))
+            data = extract_json(text)  # aceita texto antes/depois do JSON (comum em Claude via Bedrock)
         except ValueError as e:
             raise ProviderError(f"[{req.task}] resposta da IARA não é JSON: {text[:300]!r}") from e
         try:

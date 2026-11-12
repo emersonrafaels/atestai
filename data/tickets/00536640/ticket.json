@@ -14,7 +14,9 @@
     "name": "Fornecedor Iota Segurança Eletrônica Ltda.",
     "cnpj": "90.123.456/0001-78"
   },
+  "blocks_opening": false,
   "requested_scope": "Manutenção preventiva semestral do sistema de segurança: teste das 8 câmeras e dos 12 sensores do alarme, verificação da central e do gravador (NVR) e emissão de relatório.",
+  "solution_description": "Teste de cada câmera e sensor, verificação da gravação no NVR e da comunicação da central, com relatório fotográfico.",
   "quoted_value": 824.0,
   "dates": {
     "opening": "2026-10-01",
@@ -26,7 +28,7 @@
     "first_check": "forwarded",
     "note": ""
   },
-  "dataset": "demo",
+  "dataset": "scenarios",
   "attachments": [
     {
       "file_name": "Orcamento_IOTA-PRV-2026-02.xlsx",

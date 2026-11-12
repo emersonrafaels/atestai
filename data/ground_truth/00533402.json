@@ -6,7 +6,7 @@
   "category": "metalwork",
   "symptom": "mechanical_failure",
   "before_applicable": true,
-  "dataset": "demo",
+  "dataset": "scenarios",
   "quoted_value": 660.0,
   "items": [
     {

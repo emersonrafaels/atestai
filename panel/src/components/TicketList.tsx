@@ -48,7 +48,7 @@ export function TicketList(p: Props) {
             className="-ml-1.5 rounded-md p-1 text-muted hover:bg-paper hover:text-ink"><PanelLeftClose size={18} /></button>
         </Tooltip>
         <label htmlFor="dataset" className="text-muted">Conjunto</label>
-        <InfoTip text="Demonstração traz os casos do deck; Validação, chamados com defeitos injetados; Enviados, os que você mandou pelo painel." />
+        <InfoTip text="Cenários de teste traz os casos do deck e um chamado por tipo de problema; Validação, chamados com defeitos injetados; Casos Itaú - Salesforce, casos reais cadastrados a partir do Salesforce; Enviados, os que você mandou pelo painel." />
         <select id="dataset" value={p.dataset} onChange={(e) => p.setDataset(e.target.value)}
           className="flex-1 rounded-md border border-line bg-sheet px-2 py-1">
           {p.datasets.filter((c) => c.name !== "all").map((c) => <option key={c.name} value={c.name}>{c.label.split(" (")[0]} ({c.n})</option>)}
@@ -208,6 +208,7 @@ function Rail(p: Props & { visible: TicketSummary[] }) {
                   <b>{c.ticket_id}</b> · {c.workstream}<br />
                   {MAINTENANCE_LABEL[c.maintenance_type] ?? c.maintenance_type} · {c.category_label} · {c.symptom_label} · {STAGE_LABEL[c.moment] ?? c.moment}<br />
                   <span className="opacity-80">{c.branch}{c.environment ? ` · local: ${envLabel(c.environment)}` : ""}</span><br />
+                  {c.blocks_opening && <><b>Impede a abertura da agência</b><br /></>}
                   {running ? "Analisando…" : failed ? "Erro na análise" : rec ? <>{REC[rec].label}{score !== null ? ` · score ${score}` : ""}</> : "Ainda não analisado"}
                   {isMarked ? " · marcado" : ""}
                   <span className="mt-1 block opacity-70">Clique para abrir · Shift+clique para {isMarked ? "desmarcar" : "marcar"}</span>

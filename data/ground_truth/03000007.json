@@ -108,7 +108,7 @@
     "photos": 100
   },
   "score": 86,
-  "recommendation": "approve",
+  "recommendation": "approve_with_caveats",
   "confidence": "high",
   "scenario": {
     "id": "quote_out_of_scope",

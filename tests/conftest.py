@@ -1,7 +1,7 @@
 import pytest
 
 from atest.config import load_settings
-from atest.repository import References, list_tickets, load_ticket
+from atest.repository import References, list_tickets
 
 
 @pytest.fixture(scope="session")
@@ -31,5 +31,5 @@ def ref(cfg) -> References:
 
 @pytest.fixture(scope="session")
 def demo(cfg) -> list[str]:
-    """Os 13 chamados do conjunto de demonstração (o de validação tem o próprio portão: main.py, acao = "validar")."""
-    return [p.name for p in list_tickets(cfg.tickets_dir) if load_ticket(p).data.dataset == "demo"]
+    """Os 13 casos do deck (números 00…, hoje no conjunto Cenários de teste); o de validação tem o próprio portão."""
+    return [p.name for p in list_tickets(cfg.tickets_dir) if p.name.startswith("00")]

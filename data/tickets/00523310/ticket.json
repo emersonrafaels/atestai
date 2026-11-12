@@ -14,7 +14,9 @@
     "name": "Fornecedor Gama Instalações Elétricas Ltda.",
     "cnpj": "34.567.890/0001-12"
   },
+  "blocks_opening": false,
   "requested_scope": "Troca de 12 luminárias do backoffice por modelo LED padrão da agência.",
+  "solution_description": "Retirada das luminárias antigas e instalação de 12 luminárias LED padrão da agência, com teste do circuito.",
   "quoted_value": 5940.0,
   "dates": {
     "opening": "2026-09-24",
@@ -26,7 +28,7 @@
     "first_check": "forwarded",
     "note": ""
   },
-  "dataset": "demo",
+  "dataset": "scenarios",
   "attachments": [
     {
       "file_name": "Orcamento_GAMA-1029.xlsx",

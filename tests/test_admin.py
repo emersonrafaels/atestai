@@ -180,3 +180,70 @@ def test_catalog_crud_and_rules(admin_cfg):
     assert r.status_code == 422 and "esteira" in r.json()["detail"]
     r = c.post("/api/tickets", data={**form, "workstream": "SETA", "symptom": "leak"}, files=[("spreadsheet", ("q.xlsx", sheet))])
     assert r.status_code == 422 and "não vale" in r.json()["detail"]
+
+
+def test_location_by_workstream_and_blocks_opening(admin_cfg):
+    """Local da outra esteira é recusado no envio; 'impede a abertura' vai para o chamado e para o resumo do modelo."""
+    c = TestClient(create_app(admin_cfg))
+    sheet = next((admin_cfg.tickets_dir / "00534519" / "attachments").glob("*.xlsx")).read_bytes()
+    form = {"workstream": "SETA", "category": "plumbing", "symptom": "leak", "maintenance_type": "corrective", "moment": "execution",
+            "scope": "Vazamento na copa", "branch_name": "Ag. Teste", "environment": "sala_de_seguranca"}
+    r = c.post("/api/tickets", data=form, files=[("spreadsheet", ("q.xlsx", sheet))])
+    assert r.status_code == 422 and "esteira" in r.json()["detail"]
+    ok = {**form, "environment": "area_interna_backoffice", "blocks_opening": "true", "solution_description": "Trocar a mangueira do dreno"}
+    r = c.post("/api/tickets", data=ok, files=[("spreadsheet", ("q.xlsx", sheet))])
+    assert r.status_code == 201, r.text
+    tid = r.json()["ticket_id"]
+    try:
+        assert r.json()["blocks_opening"] is True and r.json()["solution_description"] == "Trocar a mangueira do dreno"
+        from atest.repository import load_ticket
+
+        text = load_ticket(admin_cfg.tickets_dir / tid).data.summary_text()
+        assert "Impede a abertura da agência: sim" in text and "Área interna - backoffice" in text
+        assert "DESCRIÇÃO DA SOLUÇÃO (informada no chamado): Trocar a mangueira do dreno" in text
+    finally:
+        assert c.delete(f"/api/tickets/{tid}").status_code == 204
+
+
+def test_saved_catalog_gets_new_default_items(admin_cfg):
+    """Versão salva do cadastro + item novo no arquivo: o novo aparece; o que o portal apagou continua fora."""
+    store = AdminStore(Database(admin_cfg.database_file), admin_cfg.admin)
+    data = admin_cfg.catalog.model_dump(mode="json")
+    data["locations"] = [e for e in data["locations"] if e["value"] != "todas"]  # sem uso: pode apagar
+    store.save("catalog", data, admin_cfg, "tester", "tira 'Todas'")
+    newer = admin_cfg.catalog.model_dump(mode="json")
+    newer["categories"].append({"value": "vidracaria", "label": "Vidraçaria", "enabled": True, "workstreams": ["SETA"], "categories": []})
+    base2 = admin_cfg.with_overrides(**{"catalog": newer})  # o arquivo ganhou uma categoria depois da versão salva
+    eff = store.apply(base2).catalog
+    assert "vidracaria" in eff.codes("categories")
+    assert "todas" not in eff.codes("locations")
+    assert "vidracaria" in [e["value"] for e in store.section_data("catalog", base2)["categories"]]
+
+
+def test_upload_with_items_only_and_items_template(admin_cfg, tmp_path):
+    """Novo chamado: o modelo tem só a aba Itens e a planilha enviada pode ter só os itens."""
+    import io
+
+    from openpyxl import Workbook, load_workbook
+
+    c = TestClient(create_app(admin_cfg))
+    model = load_workbook(io.BytesIO(c.get("/api/spreadsheet-template").content))
+    assert model.sheetnames == ["Itens"]  # os dados do chamado vêm do formulário
+    assert [c.value for c in model["Itens"][1]] == ["Descrição", "Unidade", "LPU", "Quantidade", "Valor unitário"]  # o total é calculado
+
+    wb = Workbook()
+    wb.active.append(["Descrição", "Unidade", "Quantidade", "Valor unitário"])  # sem valor total nem linha de total
+    wb.active.append(["Troca do sifão", "un", 2, 42.5])
+    buf = io.BytesIO()
+    wb.save(buf)
+    form = {"workstream": "SETA", "category": "plumbing", "symptom": "leak", "maintenance_type": "corrective", "moment": "quote",
+            "scope": "Vazamento na copa", "branch_name": "Ag. Centro", "supplier_name": "Hidro Ltda"}
+    r = c.post("/api/tickets", data=form, files=[("spreadsheet", ("itens.xlsx", buf.getvalue()))])
+    assert r.status_code == 201, r.text
+    tid = r.json()["ticket_id"]
+    try:
+        assert r.json()["quoted_value"] == 85.0 and r.json()["supplier"] == "Hidro Ltda"
+        detail = c.get(f"/api/tickets/{tid}").json()
+        assert detail["quote_error"] is None and detail["quote"]["ticket_id"] == tid and detail["quote"]["scope"] == "Vazamento na copa"
+    finally:
+        assert c.delete(f"/api/tickets/{tid}").status_code == 204

@@ -6,7 +6,7 @@
   "category": "cctv",
   "symptom": "degraded_image",
   "before_applicable": true,
-  "dataset": "demo",
+  "dataset": "scenarios",
   "quoted_value": 4260.0,
   "items": [
     {

@@ -1,0 +1,42 @@
+{
+  "ticket_id": "04168903",
+  "workstream": "SETA",
+  "maintenance_type": "corrective",
+  "moment": "quote",
+  "category": "electrical",
+  "symptom": "energia_parcial",
+  "requested_scope": "Lâmpada queimada do hall dos caixas eletrônicos.",
+  "solution_description": "",
+  "branch": {
+    "code": "6260",
+    "name": "Indaiatuba - Vila Sfeir",
+    "environment": "area_interna_toda_agencia"
+  },
+  "supplier": {
+    "name": "Fornecedor não informado",
+    "cnpj": ""
+  },
+  "blocks_opening": false,
+  "quoted_value": 244.0,
+  "dates": {
+    "opening": "2026-11-10",
+    "supplier_submission": "2026-11-11",
+    "manager_review": null
+  },
+  "status": "forwarded_to_backoffice",
+  "origin": "dataset",
+  "dataset": "casos",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "attachments": [
+    {
+      "file_name": "Orcamento_04168903.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 5939,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-11"
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "n": 1,
+  "exact_recommendation": 1,
+  "direction": 1,
+  "checklist": 1,
+  "avg_score_error": 12.0,
+  "by_kind": {
+    "item_without_photo": {
+      "tp": 0,
+      "fp": 1,
+      "fn": 0
+    },
+    "missing_before_photo": {
+      "tp": 1,
+      "fp": 0,
+      "fn": 0
+    },
+    "out_of_scope_item": {
+      "tp": 1,
+      "fp": 0,
+      "fn": 0
+    },
+    "photo_mismatch": {
+      "tp": 1,
+      "fp": 0,
+      "fn": 0
+    },
+    "quantity_above_expected": {
+      "tp": 1,
+      "fp": 0,
+      "fn": 0
+    },
+    "unverifiable_quantity": {
+      "tp": 0,
+      "fp": 1,
+      "fn": 0
+    }
+  },
+  "by_ticket": [
+    {
+      "ticket_id": "00482193",
+      "expected": "return_to_supplier",
+      "obtained": "return_to_supplier",
+      "expected_score": 60,
+      "obtained_score": 48,
+      "recommendation_ok": true,
+      "direction_ok": true,
+      "checklist_ok": true,
+      "missed": [],
+      "extra": [
+        "item_without_photo",
+        "unverifiable_quantity"
+      ]
+    }
+  ]
+}

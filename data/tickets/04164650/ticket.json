@@ -1,0 +1,84 @@
+{
+  "ticket_id": "04164650",
+  "workstream": "SETA",
+  "maintenance_type": "corrective",
+  "moment": "quote",
+  "category": "civil",
+  "symptom": "piso_rodape_danificado",
+  "requested_scope": "Substituição de piso cerâmico quebrado no autoatendimento.",
+  "solution_description": "",
+  "branch": {
+    "code": "7856",
+    "name": "Guapimirim - RJ",
+    "environment": "area_interna_publico"
+  },
+  "supplier": {
+    "name": "KYS Reforma e Construção LTDA",
+    "cnpj": ""
+  },
+  "blocks_opening": false,
+  "quoted_value": 1627.61,
+  "dates": {
+    "opening": "2026-10-01",
+    "supplier_submission": "2026-10-02",
+    "manager_review": null
+  },
+  "status": "forwarded_to_backoffice",
+  "origin": "dataset",
+  "dataset": "casos",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "attachments": [
+    {
+      "file_name": "Orcamento_KYS_04164650.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 6074,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-02"
+    },
+    {
+      "file_name": "IMG_20261001_150214.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 215522,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-02"
+    },
+    {
+      "file_name": "IMG_20261001_150238.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 214940,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-02"
+    },
+    {
+      "file_name": "IMG_20261001_150301.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 286711,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-02"
+    },
+    {
+      "file_name": "IMG_20261001_150327.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 258272,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-02"
+    },
+    {
+      "file_name": "IMG_20261001_150349.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 257764,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-02"
+    },
+    {
+      "file_name": "IMG_20261001_150412.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 251044,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-02"
+    }
+  ]
+}

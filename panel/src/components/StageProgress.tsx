@@ -2,7 +2,7 @@ import { Check } from "lucide-react";
 import type { TicketState } from "../api";
 import { STAGES } from "../format";
 
-/** Progresso do pipeline de um chamado: a sequência real checklist → escopo → orçamento → fotos → score → parecer. */
+/** Progresso do pipeline de um chamado: a sequência real checklist → escopo → orçamento → fotos → documentos → score → parecer. */
 export function StageProgress({ state, compact = false }: { state: TicketState; compact?: boolean }) {
   const returnedAtChecklist = state.assessment?.recommendation === "checklist_returned";
   return (

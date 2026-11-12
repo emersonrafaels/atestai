@@ -14,7 +14,9 @@
     "name": "Fornecedor Zeta Serralheria e Portas ME",
     "cnpj": "67.890.123/0001-45"
   },
+  "blocks_opening": false,
   "requested_scope": "Porta do backoffice não fecha sozinha: trocar a mola aérea e regular.",
+  "solution_description": "Substituição da mola aérea e regulagem da velocidade de fechamento e do batente.",
   "quoted_value": 660.0,
   "dates": {
     "opening": "2026-11-10",

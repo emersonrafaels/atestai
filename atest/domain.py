@@ -58,7 +58,7 @@ class CatalogEntry(DomainModel):
     value: str = Field(min_length=1, max_length=60)
     label: str = Field(min_length=1, max_length=80)
     enabled: bool = Field(True, description="desativado: some das listas de escolha, mas chamados antigos seguem com o nome")
-    workstreams: list[Workstream] = Field(default_factory=list, description="categoria: esteiras em que vale (vazio = SETA e SISR)")
+    workstreams: list[Workstream] = Field(default_factory=list, description="categoria ou local: esteiras em que vale (vazio = SETA e SISR)")
     categories: list[str] = Field(default_factory=list, description="sintoma: categorias em que vale (vazio = todas)")
 
 
@@ -152,6 +152,7 @@ class AttachmentCategory(StrEnum):
     QUOTE_DOC = "quote_doc"
     COMPLETION_CERTIFICATE_DOC = "completion_certificate_doc"
     TECHNICAL_REPORT_DOC = "technical_report_doc"
+    PRICE_REFERENCE_DOC = "price_reference_doc"
     ROOM_BEFORE_PHOTO = "room_before_photo"
     ROOM_AFTER_PHOTO = "room_after_photo"
     EQUIPMENT_PHOTO = "equipment_photo"
@@ -259,6 +260,7 @@ class Stage(StrEnum):
     SCOPE = "scope"
     QUOTE = "quote"
     PHOTOS = "photos"
+    DOCUMENTS = "documents"
     SCORE = "score"
     ASSESSMENT = "assessment"
     DONE = "done"
@@ -314,14 +316,18 @@ class Ticket(DomainModel):
     moment: Moment = Moment.EXECUTION
     category: Category
     symptom: Symptom
-    requested_scope: str = Field(min_length=3, description="Escopo descrito por quem abriu o chamado, em linguagem natural")
+    requested_scope: str = Field(min_length=3, description="Descrição detalhada do problema, escrita por quem abriu o chamado (o escopo)")
+    solution_description: str = Field(
+        "", max_length=4000, description="Descrição da solução (opcional): o que será ou foi feito; pode vir já na aprovação do orçamento"
+    )
     branch: Branch
     supplier: Supplier
+    blocks_opening: bool | None = Field(None, description="o problema está impedindo a abertura da agência? (None = não informado)")
     quoted_value: float | None = Field(default=None, ge=0)
     dates: Dates
     status: str = "forwarded_to_backoffice"
     origin: str = Field("dataset", description="dataset | upload (enviado pelo painel)")
-    dataset: str = Field("demo", description="demonstracao | validacao | enviados")
+    dataset: str = Field("scenarios", description="scenarios (cenários de teste e casos do deck) | validation | itau | casos | uploaded")
     manager: ManagerReview = Field(default_factory=ManagerReview)
     attachments: list[AttachmentMeta] = Field(default_factory=list)
 
@@ -341,9 +347,11 @@ class Ticket(DomainModel):
             f"Momento da validação: {moment}\n"
             f"Agência: {self.branch.name} (cód. {self.branch.code})"
             f" | Local do chamado: {location_label(self.branch.environment) or 'não informado'}\n"
-            f"Fornecedor: {self.supplier.name}\n"
+            + (f"Impede a abertura da agência: {'sim' if self.blocks_opening else 'não'}\n" if self.blocks_opening is not None else "")
+            + f"Fornecedor: {self.supplier.name}\n"
             f"Abertura: {self.dates.opening:%d/%m/%Y} | Envio do fornecedor: {self.dates.supplier_submission:%d/%m/%Y}\n"
             f"ESCOPO SOLICITADO: {self.requested_scope}"
+            + (f"\nDESCRIÇÃO DA SOLUÇÃO (informada no chamado): {self.solution_description.strip()}" if self.solution_description.strip() else "")
         )
 
 
@@ -375,6 +383,7 @@ class QuoteItem(DomainModel):
     n: int = Field(ge=1)
     description: str = Field(min_length=1)
     unit: str
+    lpu: bool = Field(True, description="item da tabela de preços (LPU); False = fora da LPU. Planilha sem a coluna: True")
     quantity: float = Field(gt=0)
     unit_value: float = Field(ge=0)
     total_value: float = Field(ge=0)
@@ -393,6 +402,7 @@ class Quote(DomainModel):
     ticket_id: str
     number: str
     supplier: str
+    supplier_cnpj: str = ""
     issued_on: date | None = None
     category: Category
     symptom: Symptom
@@ -490,6 +500,15 @@ class Rubric(DomainModel):
     spreadsheet_value_tolerance: float = 1.0
     photo_date_tolerance_days: int = 1
     relevant_amount_at_issue_pct: float = Field(50, ge=0, le=100, description="valor potencial divergente (% do orçamento) que vira apontamento")
+    max_amount_at_issue_for_approve_pct: float = Field(
+        10, ge=0, le=100, description="acima deste % do orçamento em questão, 'Aprovar' vira 'Aprovar com ressalvas' (0 desliga)"
+    )
+    market_price_tolerance_pct: float = Field(
+        25, ge=0, description="preço até N% acima do valor de mercado anexado não é apontado (margem do fornecedor sobre o varejo)"
+    )
+    photo_quantity_tolerance_pct: float = Field(
+        25, ge=0, description="quantidade cobrada até N% acima do que as fotos mostram não é apontada (margem de corte e perda)"
+    )
     finding_types: dict[str, FindingType]
 
     def for_workstream(self, workstream: str) -> Rubric:
@@ -576,6 +595,38 @@ class EvaluatedPhoto(DomainModel):
     integrity_signals: list[str] = Field(default_factory=list)
 
 
+class DocumentPrice(DomainModel):
+    """Preço citado num documento (anúncio, cotação, nota), ligado ao item do orçamento quando há."""
+
+    description: str
+    value: float
+    quote_item: int = 0
+    same_product: Match = Match.UNDETERMINED
+
+
+class EvaluatedDocument(DomainModel):
+    """Documento anexado (imagem ou PDF) depois da leitura (OCR) e da conferência contra o chamado."""
+
+    file: str
+    kind: str = "other"
+    handwritten: bool = False
+    legible: Match
+    transcription: str = ""
+    issuer: str = ""
+    service_date: str = ""
+    start_time: str = ""
+    end_time: str = ""
+    branch: str = ""
+    problem: str = ""
+    solution: str = ""
+    has_signature: bool = False
+    service_status: Match = Match.UNDETERMINED
+    prices: list[DocumentPrice] = Field(default_factory=list)
+    matches_ticket: Match
+    divergences: list[str] = Field(default_factory=list)
+    reason: str = ""
+
+
 class Grades(DomainModel):
     """Nota de 0 a 100 de cada validação."""
 
@@ -649,6 +700,7 @@ class Assessment(DomainModel):
     quote_notes: list[str] = Field(default_factory=list)
     photos: list[EvaluatedPhoto] = Field(default_factory=list)
     photo_summary: dict[str, Any] | None = None
+    documents: list[EvaluatedDocument] = Field(default_factory=list, description="documentos lidos por OCR (imagem ou PDF)")
 
     summary: str = ""
     supplier_message: str = ""

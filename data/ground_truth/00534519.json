@@ -6,7 +6,7 @@
   "category": "electrical",
   "symptom": "electrical_failure",
   "before_applicable": true,
-  "dataset": "demo",
+  "dataset": "scenarios",
   "quoted_value": 654.0,
   "items": [
     {

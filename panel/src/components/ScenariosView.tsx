@@ -16,7 +16,7 @@ interface Props {
   selectTickets: (ids: string[]) => void;
 }
 
-const DATASET_SHORT: Record<string, string> = { demo: "Demo", validation: "Validação", itau: "Itaú", scenarios: "Cenários", uploaded: "Enviado" };
+const DATASET_SHORT: Record<string, string> = { validation: "Validação", casos: "Salesforce", itau: "Itaú", scenarios: "Cenários", uploaded: "Enviado" };
 const CHIPS_SHOWN = 14;
 
 /**

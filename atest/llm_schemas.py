@@ -6,6 +6,8 @@ As descrições dos campos fazem parte das instruções: o modelo as lê junto c
 
 from __future__ import annotations
 
+from typing import Literal
+
 from pydantic import BaseModel, ConfigDict, Field
 
 from .domain import AttachmentCategory, ItemClassification, Match, PhotoMoment
@@ -81,6 +83,12 @@ class QuoteReview(LlmOutput):
     """Saída da tarefa quote_review."""
 
     items: list[ItemReview]
+    uncovered_services: list[str] = Field(
+        description=(
+            "Serviços pedidos no escopo (ou na descrição da solução) que não têm nenhum item no orçamento, um por linha, em "
+            "português simples. Não liste o que já está dentro de outro item (ex.: mão de obra embutida no item do serviço)."
+        )
+    )
     notes: str
 
 
@@ -96,6 +104,19 @@ class AnalyzedPhoto(LlmOutput):
     matches_scope: Match
     reason: str
     covered_items: list[int] = Field(description="Itens do orçamento que a foto evidencia")
+
+
+class QuantityCheck(LlmOutput):
+    """Contagem, somando as fotos, do que um item físico do orçamento cobra (peças, área, unidades)."""
+
+    item: int = Field(description="Número do item do orçamento")
+    what_was_counted: str = Field(description="O que foi contado, ex.: 'peças de piso quebradas', 'luminárias apagadas'")
+    per_photo: str = Field(description="Quanto aparece em cada foto, ex.: 'Anexo 2: 1; Anexo 3: 2'; mesmo ponto em duas fotos conta uma vez")
+    count_seen: float = Field(description="Total visto somando as fotos, na unidade contada (ex.: 7 peças)")
+    estimated_quantity: float = Field(
+        description="Quantidade estimada NA UNIDADE DO ITEM (ex.: 7 peças de 45x45 cm = 1,42 m²); -1 se não dá para estimar"
+    )
+    reasoning: str = Field(description="Como chegou à estimativa (tamanho da peça assumido, margem de corte), em uma frase")
 
 
 class PhotoAnalysis(LlmOutput):
@@ -114,6 +135,76 @@ class PhotoAnalysis(LlmOutput):
         )
     )
     items_without_photo: list[int]
+    quantity_checks: list[QuantityCheck] = Field(
+        description=(
+            "Para cada item físico cobrado por quantidade ou área do que aparece danificado nas fotos (piso, revestimento, peças, "
+            "luminárias): some o que as fotos mostram e estime a quantidade na unidade do item. Itens que dependem da mesma área "
+            "(ex.: demolição, piso novo e rejunte) recebem um check cada. Não inclua deslocamento, visita ou mão de obra genérica."
+        )
+    )
+    notes: str
+
+
+# --------------------------------------------------------------------------- documentos (OCR)
+class ReadPrice(LlmOutput):
+    """Preço que aparece num documento."""
+
+    description: str = Field(description="Produto ou serviço como escrito no documento")
+    value: float = Field(description="Preço unitário em reais, como número (ex.: 303.25)")
+    quote_item: int = Field(description="Número do item do orçamento a que este preço se refere; 0 se não corresponde a nenhum")
+    same_product: Match = Field(
+        description=(
+            "yes = mesmo produto do item (especificação e medidas batem); partial = parece o mesmo, mas o orçamento não traz "
+            "especificação ou medidas para confirmar; no = outro produto ou outra especificação"
+        )
+    )
+
+
+class ReadDocument(LlmOutput):
+    """Leitura (OCR) de um documento anexado e conferência com o chamado."""
+
+    index: int
+    kind: Literal["service_report", "completion_certificate", "technical_report", "price_reference", "invoice", "other"] = Field(
+        description=(
+            "service_report = relatório/ordem de atendimento do técnico; completion_certificate = termo de conclusão; "
+            "technical_report = laudo ou relatório técnico; price_reference = anúncio, print de loja ou cotação de preço; "
+            "invoice = nota fiscal ou recibo"
+        )
+    )
+    handwritten: bool = Field(description="true se o conteúdo principal foi preenchido à mão")
+    legible: Match = Field(description="yes = dá para ler tudo; partial = partes ilegíveis; no = não dá para ler o conteúdo")
+    transcription: str = Field(description="Transcrição fiel do texto, na ordem de leitura; trechos que não dá para ler como [ilegível]")
+    issuer: str = Field(description="Empresa, loja ou pessoa que emitiu o documento; vazio se não aparece")
+    service_date: str = Field(description="Data do atendimento ou do documento em dd/mm/aaaa; vazio se não aparece")
+    start_time: str = Field(description="Hora de início (hh:mm); vazio se não aparece")
+    end_time: str = Field(description="Hora de término (hh:mm); vazio se não aparece")
+    branch: str = Field(description="Agência citada (código e/ou nome); vazio se não aparece")
+    problem: str = Field(description="Problema descrito no documento; vazio se não há")
+    solution: str = Field(description="Solução ou serviço descrito no documento; vazio se não há")
+    has_signature: bool = Field(description="true se há assinatura ou carimbo")
+    service_status: Match = Field(
+        description=(
+            "O documento PROVA que o serviço já foi feito? yes só com afirmação explícita: verbo no passado ('foi instalada', "
+            "'trocamos', 'executado'), 'serviço concluído' marcado ou termo de conclusão/aceite assinado. no = descreve proposta, "
+            "diagnóstico ou o que será feito. undetermined = só substantivo ('instalação de…', 'troca de…') ou não dá para saber"
+        )
+    )
+    prices: list[ReadPrice] = Field(description="Preços que aparecem no documento (anúncio, cotação, nota)")
+    matches_ticket: Match = Field(
+        description=(
+            "yes = o documento é deste chamado (agência, serviço) e confirma o que foi pedido/feito; no = algo ESCRITO contradiz o "
+            "chamado (outra agência, outro serviço, outro equipamento); partial = é do contexto, mas não confirma o ponto pedido; "
+            "undetermined = ilegível"
+        )
+    )
+    divergences: list[str] = Field(description="Cada diferença concreta entre o documento e o chamado ou o orçamento; vazio se não há")
+    reason: str = Field(description="Uma frase justificando matches_ticket")
+
+
+class DocumentAnalysis(LlmOutput):
+    """Saída da tarefa documents."""
+
+    documents: list[ReadDocument]
     notes: str
 
 
