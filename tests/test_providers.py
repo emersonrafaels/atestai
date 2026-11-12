@@ -217,8 +217,8 @@ def test_iara_errors_and_retries(monkeypatch):
     with pytest.raises(ProviderError, match="max_tokens") as e:
         iara.IaraProvider(client=FakeIara(_completion('{"resp', finish="length"))).generate(_req(TextPart("x")), Output)
     assert not e.value.transient
-    with pytest.raises(ProviderError, match="fora do schema"):
-        iara.IaraProvider(client=FakeIara(_completion('{"outro": 1}'))).generate(_req(TextPart("x")), Output)
+    with pytest.raises(ProviderError, match="fora do formato esperado"):  # json_schema e depois json_object: ambos falham
+        iara.IaraProvider(client=FakeIara(_completion('{"outro": 1}'), _completion('{"outro": 2}'))).generate(_req(TextPart("x")), Output)
     # 429 / 5xx: repete até max_retries e, se esgotar, sinaliza erro transitório (aciona a contingência)
     fake = FakeIara(HttpError(429), HttpError(503), _completion('{"response": "ok"}'))
     assert iara.IaraProvider(client=fake, max_retries=2).generate(_req(TextPart("x")), Output).obj.response == "ok"
@@ -486,3 +486,51 @@ def test_iara_fills_omitted_list_and_text_fields_but_not_booleans():
     for unrelated in ({}, {"resultado": "ok"}):  # resposta vazia ou de outro formato não vira "nada a apontar"
         with pytest.raises(ValidationError):
             parse_output(dict(unrelated), PhotoAnalysis)
+
+
+def test_iara_bedrock_schema_echo_tool_calls_and_mode_fallback(monkeypatch):
+    """Erro visto no Itaú (fotos via Claude/Bedrock): dados dentro de "properties", JSON em tool_calls, resposta vazia."""
+    from atest import llm_schemas
+    from atest.providers import iara
+
+    photos = {"photos": [], "has_before_photo": True, "done_justification": "", "done_service": "no",
+              "items_without_photo": [], "quantity_checks": [], "notes": ""}
+    out = llm_schemas.PhotoAnalysis
+    # eco do JSON Schema e dados embrulhados com chave extra: os dados são encontrados, nunca reduzidos a {}
+    obj, repairs = iara.parse_output({"type": "object", "properties": dict(photos)}, out)
+    assert obj.has_before_photo and repairs == ["dados dentro de 'properties'"]
+    obj, _ = iara.parse_output({"data": dict(photos), "meta": 1}, out)
+    assert obj.done_service == "no"
+    with pytest.raises(ValidationError) as e:
+        iara.parse_output({"type": "object", "title": "x"}, out)  # sem dados em lugar nenhum: erro, mas com o original
+    assert "input_value={'type': 'object'" in str(e.value)
+
+    events = []
+    monkeypatch.setattr(iara, "event", lambda name, *a, **kw: events.append((name, kw)))
+    # JSON só em tool_calls (gateway traduz a saída estruturada do Bedrock para chamada de ferramenta)
+    call = SimpleNamespace(function=SimpleNamespace(arguments=json.dumps(photos)))
+    resp = _completion(None)
+    resp.choices[0].message.tool_calls = [call]
+    r = iara.IaraProvider(client=FakeIara(resp)).generate(_req(TextPart("x")), out)
+    assert r.obj.has_before_photo and events[-1][1]["repairs"][0] == "JSON lido de tool_calls"
+
+    # {} em json_schema → repete em json_object (schema no prompt) e lê a resposta certa
+    fake = FakeIara(_completion("{}"), _completion(json.dumps(photos)))
+    r = iara.IaraProvider(client=fake).generate(_req(TextPart("x")), out)
+    assert r.obj.has_before_photo
+    assert fake.calls[0]["response_format"]["type"] == "json_schema" and fake.calls[1]["response_format"] == {"type": "json_object"}
+    assert "JSON Schema" in fake.calls[1]["messages"][0]["content"]
+    assert any(n == "iara_json_mode_fallback" for n, _ in events)
+
+    # backend recusa json_object (400) → modo prompt, sem response_format
+    fake = FakeIara(_completion("{}"), HttpError(400), _completion(json.dumps(photos)))
+    assert iara.IaraProvider(client=fake).generate(_req(TextPart("x")), out).obj.has_before_photo
+    assert "response_format" not in fake.calls[2]
+
+    # falha final: mensagem curta com o início da resposta e o bruto no log de diagnóstico
+    with pytest.raises(ProviderError) as e:
+        iara.IaraProvider(client=FakeIara(_completion("{}"), _completion('Não consegui analisar as fotos.'))).generate(_req(TextPart("x")), out)
+    assert "fora do formato esperado (não é JSON)" in str(e.value) and "Não consegui analisar" in str(e.value)
+    assert "validation error" not in str(e.value)
+    bad = [kw for n, kw in events if n == "iara_bad_output"][-1]
+    assert bad["raw"] == "Não consegui analisar as fotos." and bad["mode"] == "json_object"

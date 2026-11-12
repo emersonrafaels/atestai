@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import io
 import json
+import logging
 import os
 import random
 import re
@@ -189,6 +190,11 @@ def _normalize(data: Any, error: ValidationError, output: type[BaseModel], repai
             continue
         where = ".".join(map(str, loc))
         if err["type"] == "extra_forbidden" and isinstance(parent, dict):
+            # só descarta campo extra num objeto que já tem campos do schema (nunca reduz a resposta a {})
+            model = _field_annotation(output, loc[:-1]) if loc[:-1] else output
+            fields = set(model.model_fields) if isinstance(model, type) and issubclass(model, BaseModel) else set()
+            if not set(parent) & fields:
+                continue
             del parent[key]
             repairs.append(f"campo extra '{where}' descartado")
             fixed = True
@@ -223,6 +229,42 @@ def _loads(value: str) -> Any:
         return None
 
 
+_PAYLOAD_KEYS = ("properties", "data", "output", "result", "response", "json", "arguments", "content", "value")
+
+
+def _find_payload(data: Any, output: type[BaseModel], depth: int = 3) -> tuple[dict, str] | None:
+    """Dados de verdade quando o topo da resposta não tem nenhum campo do schema.
+
+    Claude via Bedrock às vezes imita o JSON Schema ({"type": "object", "properties": {...dados...}}) ou embrulha os
+    dados ({"data": {...}}, {"NomeDoSchema": "...json..."}). Procura, até `depth` níveis abaixo, o objeto com mais
+    campos do schema (chaves conhecidas primeiro). Devolve o objeto e o caminho, ou None se o topo já é a resposta.
+    """
+    fields = set(output.model_fields)
+    if not isinstance(data, dict) or set(data) & fields:
+        return None
+    best: tuple[int, dict, str] | None = None
+    frontier: list[tuple[dict, str]] = [(data, "")]
+    for _ in range(depth):
+        nxt: list[tuple[dict, str]] = []
+        for node, path in frontier:
+            keys = sorted(node, key=lambda k: (k not in _PAYLOAD_KEYS, str(k)))
+            for k in keys:
+                value = node[k]
+                if isinstance(value, str):
+                    value = _loads(value)
+                if not isinstance(value, dict):
+                    continue
+                where = f"{path}.{k}" if path else str(k)
+                score = len(set(value) & fields)
+                if score and (best is None or score > best[0]):
+                    best = (score, value, where)
+                nxt.append((value, where))
+        if best:
+            break
+        frontier = nxt
+    return (best[1], best[2]) if best else None
+
+
 def parse_output(data: Any, output: type[T], max_rounds: int = 20) -> tuple[T, list[str]]:
     """Valida a resposta no schema, corrigindo o JSON "duplamente codificado" que alguns modelos devolvem pela IARA.
 
@@ -240,6 +282,10 @@ def parse_output(data: Any, output: type[T], max_rounds: int = 20) -> tuple[T, l
         if isinstance(data, str) and (inner := _loads(data)) is not None:
             data = inner
             repairs.append("resposta inteira como string")
+            continue
+        if (found := _find_payload(data, output)) is not None:  # antes de qualquer descarte: nunca perde os dados
+            data, where = found
+            repairs.append(f"dados dentro de '{where}'")
             continue
         try:
             return output.model_validate(data), repairs
@@ -453,18 +499,19 @@ class IaraProvider(Provider):
         return self._clients[backend]
 
     # ------------------------------------------------------------------ chamada
-    def _kwargs(self, req: Request, model: str, output: type) -> dict[str, Any]:
+    def _kwargs(self, req: Request, model: str, output: type, json_mode: str | None = None) -> dict[str, Any]:
+        json_mode = json_mode or self.json_mode
         kwargs: dict[str, Any] = {
             "model": model,
-            "messages": convert(req, output, self.json_mode, self.pdf_mode),
+            "messages": convert(req, output, json_mode, self.pdf_mode),
             "max_tokens": req.max_tokens,
         }
-        if self.json_mode == "json_schema":
+        if json_mode == "json_schema":
             kwargs["response_format"] = {
                 "type": "json_schema",
                 "json_schema": {"name": output.__name__, "schema": strict_schema(output), "strict": True},
             }
-        elif self.json_mode == "json_object":
+        elif json_mode == "json_object":
             kwargs["response_format"] = {"type": "json_object"}
         if req.effort in ("low", "medium", "high"):
             kwargs["reasoning_effort"] = req.effort
@@ -495,40 +542,109 @@ class IaraProvider(Provider):
                 f"[{req.task}] o modelo {model} não lê imagens nem PDFs e esta tarefa envia anexos; "
                 "escolha um modelo com visão (ex.: gpt-4.1, claude-sonnet-5, gemini-2.5-flash) ou use-o só em tarefas de texto"
             )
-        resp = self._create(self.client(backend), self._kwargs(req, model, output), req.task)
+        # json_schema que volta fora do formato (ex.: Claude via Bedrock com schema grande): tenta uma vez em json_object,
+        # com o schema nas instruções; se o backend recusar json_object, em "prompt" (sem response_format)
+        modes = [self.json_mode] + (["json_object"] if self.json_mode == "json_schema" else [])
+        bad: _BadOutput | None = None
+        for i, mode in enumerate(modes):
+            try:
+                resp = self._create(self.client(backend), self._kwargs(req, model, output, mode), req.task)
+            except ProviderError as e:
+                if i == 0 or e.transient or mode != "json_object":
+                    raise
+                mode = "prompt"
+                resp = self._create(self.client(backend), self._kwargs(req, model, output, mode), req.task)
+            try:
+                return self._read(resp, req, output, model, backend)
+            except _BadOutput as e:
+                bad = e
+                if i + 1 < len(modes):
+                    event("iara_json_mode_fallback", logging.WARNING, task=req.task, model=model, backend=backend,
+                          from_mode=mode, to_mode=modes[i + 1], reason=e.detail)
+                    continue
+                event("iara_bad_output", logging.WARNING, task=req.task, model=model, backend=backend, mode=mode,
+                      detail=e.detail, finish_reason=e.finish_reason, tool_calls=e.tool_calls, raw=e.raw[:3000])
+        assert bad is not None
+        raise bad
+
+    @staticmethod
+    def _candidates(message: Any) -> list[tuple[str, Any]]:
+        """De onde ler o JSON: texto (ou blocos de texto), blocos tool_use, tool_calls e function_call (gateways que
+        traduzem a saída estruturada do Bedrock para chamada de ferramenta)."""
+        out: list[tuple[str, Any]] = []
+        content = _get(message, "content")
+        if isinstance(content, list):
+            text = "".join(_get(b, "text", "") or "" for b in content)
+            if text.strip():
+                out.append(("content", text))
+            out += [("tool_use", _get(b, "input")) for b in content if _get(b, "type") == "tool_use" and _get(b, "input")]
+        elif isinstance(content, str) and content.strip():
+            out.append(("content", content))
+        for call in _get(message, "tool_calls") or []:
+            if (args := _get(_get(call, "function"), "arguments")) not in (None, ""):
+                out.append(("tool_calls", args))
+        if (args := _get(_get(message, "function_call"), "arguments")) not in (None, ""):
+            out.append(("function_call", args))
+        return out
+
+    def _read(self, resp: Any, req: Request, output: type[T], model: str, backend: str) -> ProviderResponse[T]:
         choices = _get(resp, "choices") or []
         if not choices:
             raise ProviderError(f"[{req.task}] resposta da IARA sem choices")
         choice = choices[0]
         message = _get(choice, "message")
-        if _get(choice, "finish_reason") == "length":
+        finish = _get(choice, "finish_reason")
+        if finish == "length":
             raise ProviderError(f"[{req.task}] resposta cortada por max_tokens ({req.max_tokens})")
         if refusal := _get(message, "refusal"):
             raise ProviderError(f"[{req.task}] recusa do modelo: {refusal}")
-        text = _get(message, "content") or ""
-        if isinstance(text, list):  # alguns backends devolvem a lista de blocos de conteúdo
-            text = "".join(_get(b, "text", "") or "" for b in text)
-        if not text.strip():
-            raise ProviderError(f"[{req.task}] resposta da IARA vazia")
-        try:
-            data = extract_json(text)  # aceita texto antes/depois do JSON (comum em Claude via Bedrock)
-        except ValueError as e:
-            raise ProviderError(f"[{req.task}] resposta da IARA não é JSON: {text[:300]!r}") from e
-        try:
-            obj, repairs = parse_output(data, output)
-        except ValidationError as e:
-            raise ProviderError(f"[{req.task}] resposta fora do schema {output.__name__}: {e}") from e
-        if repairs:
-            # comportamento esperado de alguns backends (ex.: Claude via Bedrock) e já corrigido: fica só no log JSON,
-            # sem aviso no console (que mostra WARNING ou acima)
-            event("iara_json_repaired", task=req.task, model=model, backend=backend, repairs=repairs)
-        u = _get(resp, "usage")
-        cache = _get(_get(u, "prompt_tokens_details"), "cached_tokens", 0) or 0
-        prompt = _get(u, "prompt_tokens", 0) or 0
-        # prompt_tokens inclui os tokens lidos do cache; separamos para o cálculo de custo (mesma convenção dos outros provedores)
-        return ProviderResponse(
-            obj=obj,
-            usage=Usage(input=max(0, prompt - cache), output=_get(u, "completion_tokens", 0) or 0, cache_read_tokens=cache),
-            resolved_model=_get(resp, "model") or model,
-            response_id=_get(resp, "id") or "",
-        )
+        candidates = self._candidates(message)
+        has_tools = any(src in ("tool_calls", "function_call", "tool_use") for src, _ in candidates)
+        raw = next((v if isinstance(v, str) else json.dumps(v, ensure_ascii=False) for _, v in candidates), "")
+        detail = "resposta vazia"
+        for source, value in candidates:
+            try:
+                data = extract_json(value) if isinstance(value, str) else value  # aceita texto antes/depois do JSON
+            except ValueError:
+                detail = "não é JSON"
+                continue
+            try:
+                obj, repairs = parse_output(data, output)
+            except ValidationError as e:
+                detail = _schema_detail(e)
+                continue
+            if source != "content":
+                repairs.insert(0, f"JSON lido de {source}")
+            if repairs:
+                # comportamento esperado de alguns backends (ex.: Claude via Bedrock) e já corrigido: fica só no log JSON
+                event("iara_json_repaired", task=req.task, model=model, backend=backend, repairs=repairs)
+            u = _get(resp, "usage")
+            cache = _get(_get(u, "prompt_tokens_details"), "cached_tokens", 0) or 0
+            prompt = _get(u, "prompt_tokens", 0) or 0
+            # prompt_tokens inclui os tokens lidos do cache; separamos para o cálculo de custo (mesma convenção dos outros)
+            return ProviderResponse(
+                obj=obj,
+                usage=Usage(input=max(0, prompt - cache), output=_get(u, "completion_tokens", 0) or 0, cache_read_tokens=cache),
+                resolved_model=_get(resp, "model") or model,
+                response_id=_get(resp, "id") or "",
+            )
+        raise _BadOutput(req.task, detail, raw, finish, has_tools)
+
+
+class _BadOutput(ProviderError):
+    """Resposta da IARA que não deu para ler no formato esperado (guarda o bruto para o log de diagnóstico)."""
+
+    def __init__(self, task: str, detail: str, raw: str, finish_reason: Any, tool_calls: bool):
+        preview = " ".join(raw.split())[:200]
+        super().__init__(f"[{task}] resposta da IARA fora do formato esperado ({detail}); início da resposta: {preview!r}")
+        self.detail, self.raw, self.finish_reason, self.tool_calls = detail, raw, finish_reason, tool_calls
+
+
+def _schema_detail(error: ValidationError) -> str:
+    """Resumo curto de um erro de schema: campos que faltaram ou o primeiro problema."""
+    errors = error.errors()
+    missing = sorted({str(e["loc"][0]) for e in errors if e["type"] == "missing" and e["loc"]})
+    if missing:
+        return "campos faltando: " + ", ".join(missing)
+    first = errors[0]
+    return f"{'.'.join(map(str, first['loc']))}: {first['msg']}" if errors else "fora do schema"

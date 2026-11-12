@@ -124,6 +124,11 @@ def humanize(name: str, f: dict[str, Any]) -> str:
                 f"{_num(f.get('input_tokens'), 0)} tokens de entrada, {_num(f.get('output_tokens'), 0)} de saída · US$ {_num(f.get('cost_usd'), 4)}")
     if name == "llm_fallback":
         return f"{_task(f.get('task'))}: {model} falhou ({f.get('error')}); tentando {str(f.get('fallback', '')).split(':')[-1]}"
+    if name == "iara_json_mode_fallback":
+        return f"{_task(f.get('task'))}: resposta da IARA fora do formato ({f.get('reason')}); repetindo em modo {f.get('to_mode')}"
+    if name == "iara_bad_output":
+        return (f"{_task(f.get('task'))}: resposta da IARA ilegível ({f.get('detail')}, modo {f.get('mode')}); "
+                "a resposta bruta foi gravada em output/logs/atest.jsonl (evento iara_bad_output)")
     if name == "photos_retry":
         return f"Análise das fotos falhou ({f.get('error')}); tentando de novo"
     if name == "photos_chunked":
