@@ -600,6 +600,22 @@ function validationMessage(detail: unknown): string {
   return `Dados inválidos: ${parts.join("; ")}${detail.length > 3 ? `; e mais ${detail.length - 3}` : ""}`;
 }
 
+// Marcação de chamada de ferramenta que o modelo às vezes deixa vazar para um texto (ex.: '</parameter><parameter
+// name="supplier_message">'). Nunca é conteúdo: some de tudo que chega da API, inclusive de pareceres antigos.
+const TOOL_TAG = /<\/?(?:antml:)?(?:parameter|invoke|function_calls|function_results|tool_use|tool_result)\b[^>]*>/gi;
+
+/** Tira a marcação de chamada de ferramenta de todos os textos de uma resposta da API. */
+export function stripToolMarkup<T>(value: T): T {
+  if (typeof value === "string") {
+    return (value.includes("<") ? value.replace(TOOL_TAG, " ").replace(/[ \t]{2,}/g, " ").trim() : value) as T;
+  }
+  if (Array.isArray(value)) return value.map(stripToolMarkup) as T;
+  if (value && typeof value === "object") {
+    return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, stripToolMarkup(v)])) as T;
+  }
+  return value;
+}
+
 async function ask<T>(url: string, init?: RequestInit): Promise<T> {
   const json = !(init?.body instanceof FormData);
   const r = await fetch(url, { ...(json ? { headers: { "Content-Type": "application/json" } } : {}), ...init });
@@ -614,7 +630,7 @@ async function ask<T>(url: string, init?: RequestInit): Promise<T> {
     throw new Error(msg);
   }
   if (r.status === 204) return undefined as T;
-  return r.json() as Promise<T>;
+  return stripToolMarkup((await r.json()) as T);
 }
 
 export const api = {

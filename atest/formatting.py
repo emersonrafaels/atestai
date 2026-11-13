@@ -104,21 +104,56 @@ def plain_text(text: str) -> str:
     return _TERM.sub(lambda m: _INTERNAL_TERMS[m.group(1)], text)
 
 
+# Marcação de chamada de ferramenta que o modelo às vezes deixa vazar para dentro de um campo de texto
+# (ex.: '... ajustar o valor.</parameter><parameter name="supplier_message">Enviar ...'). Nunca é conteúdo.
+_TOOL_TAG = re.compile(r"</?(?:antml:)?(?:parameter|invoke|function_calls|function_results|tool_use|tool_result)\b[^>]*>", re.I)
+_NAMED_PARAM = re.compile(r"</?(?:antml:)?parameter\b[^>]*?\bname=\"([A-Za-z_][\w]*)\"[^>]*>", re.I)
+
+
+def strip_tool_markup(text: str) -> str:
+    """Tira a marcação de chamada de ferramenta de um texto e arruma os espaços que sobram."""
+    if "<" not in text:
+        return text
+    return re.sub(r"[ \t]{2,}", " ", _TOOL_TAG.sub(" ", text)).strip()
+
+
+def rehome_leaked_fields(data: dict[str, Any]) -> dict[str, Any]:
+    """Campo que trouxe grudado o texto de outro campo (`<parameter name="outro">texto`): o texto volta para o campo dele.
+
+    Só preenche o outro campo se ele veio vazio; o trecho vazado nunca fica no campo errado.
+    """
+    out = dict(data)
+    for key, value in data.items():
+        if not isinstance(value, str) or not _NAMED_PARAM.search(value):
+            continue
+        parts = _NAMED_PARAM.split(value)  # [antes, nome1, texto1, nome2, texto2, ...]
+        out[key] = parts[0]
+        for name, text in zip(parts[1::2], parts[2::2], strict=True):
+            target = out.get(name)
+            if name != key and isinstance(target, str) and not strip_tool_markup(target):
+                out[name] = text
+    return out
+
+
 def plain_language(obj: Any) -> Any:
-    """Aplica plain_text em todos os textos livres de uma saída do modelo (modelos Pydantic, listas e dicionários)."""
+    """Aplica plain_text em todos os textos livres de uma saída do modelo (modelos Pydantic, listas e dicionários).
+
+    Antes, tira a marcação de chamada de ferramenta que o modelo às vezes deixa vazar para os textos.
+    """
     from enum import Enum
 
     from pydantic import BaseModel
 
     if isinstance(obj, BaseModel):
-        updates = {k: plain_language(v) for k, v in obj.__dict__.items() if k not in KEEP_VERBATIM}
+        fields = rehome_leaked_fields(obj.__dict__)
+        updates = {k: plain_language(v) if k not in KEEP_VERBATIM else v for k, v in fields.items()}
         return obj.model_copy(update=updates)
     if isinstance(obj, list):
         return [plain_language(v) for v in obj]
     if isinstance(obj, dict):
-        return {k: plain_language(v) for k, v in obj.items()}
+        return {k: plain_language(v) for k, v in rehome_leaked_fields(obj).items()}
     if isinstance(obj, str) and not isinstance(obj, Enum):
-        return plain_text(obj)
+        return plain_text(strip_tool_markup(obj))
     return obj
 
 
