@@ -40,6 +40,9 @@ class GoogleProvider(Provider):
             resp = self.client.models.generate_content(model=req.model, contents=convert(req), config=config)
         except errors.ServerError as e:
             raise ProviderError(f"[{req.task}] {e}", transient=True) from e
+        finish = str(getattr((resp.candidates or [None])[0], "finish_reason", "") or "")
+        if finish.endswith("MAX_TOKENS"):
+            raise ProviderError(f"[{req.task}] resposta cortada em max_output_tokens={req.max_tokens}", truncated=True)
         obj = resp.parsed if isinstance(resp.parsed, output) else (output.model_validate_json(resp.text) if resp.text else None)
         if obj is None:
             raise ProviderError(f"[{req.task}] resposta sem JSON válido")

@@ -57,7 +57,7 @@ class AnthropicProvider(Provider):
     @staticmethod
     def _check(stop_reason: str | None, req: Request) -> None:
         if stop_reason == "max_tokens":
-            raise ProviderError(f"[{req.task}] resposta cortada em max_tokens={req.max_tokens}")
+            raise ProviderError(f"[{req.task}] resposta cortada em max_tokens={req.max_tokens}", truncated=True)
         if stop_reason == "refusal":
             raise ProviderError(f"[{req.task}] o modelo recusou a solicitação")
 
@@ -98,7 +98,7 @@ class AnthropicProvider(Provider):
                     raise ProviderError(f"requisição do lote terminou como '{r.result.type}'", transient=r.result.type == "expired")
                 msg = r.result.message
                 if msg.stop_reason in ("max_tokens", "refusal"):
-                    raise ProviderError(f"lote: stop_reason={msg.stop_reason}")
+                    raise ProviderError(f"lote: stop_reason={msg.stop_reason}", truncated=msg.stop_reason == "max_tokens")
                 text = "".join(b.text for b in msg.content if b.type == "text")
                 out[r.custom_id] = ProviderResponse(
                     obj=output.model_validate_json(text),

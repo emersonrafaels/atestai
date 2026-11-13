@@ -595,7 +595,7 @@ class IaraProvider(Provider):
         message = _get(choice, "message")
         finish = _get(choice, "finish_reason")
         if finish == "length":
-            raise ProviderError(f"[{req.task}] resposta cortada por max_tokens ({req.max_tokens})")
+            raise ProviderError(f"[{req.task}] resposta cortada por max_tokens ({req.max_tokens})", truncated=True)
         if refusal := _get(message, "refusal"):
             raise ProviderError(f"[{req.task}] recusa do modelo: {refusal}")
         candidates = self._candidates(message)

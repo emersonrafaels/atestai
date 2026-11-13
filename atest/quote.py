@@ -76,7 +76,11 @@ class QuoteStage(AnalysisStage):
             f"\n\nSERVIÇOS PEDIDOS (um registro em service_coverage para cada número):\n{services}"
             "\n\nClassifique todos os itens e confira a cobertura de todos os serviços pedidos."
         )
-        return session.ask("quote_review", [TextPart(text)], QuoteReview, system=system, max_tokens=4000)
+        # a resposta cresce com os itens (classificação e motivo de cada um) e com os serviços pedidos (cobertura):
+        # limite fixo cortava orçamentos maiores
+        n_services = max(1, services.count("\n") + 1)
+        max_tokens = min(12000, 2500 + 450 * len(quote.items) + 300 * n_services)
+        return session.ask("quote_review", [TextPart(text)], QuoteReview, system=system, max_tokens=max_tokens)
 
     # ------------------------------------------------------------------ regras
     def spreadsheet_mismatches(self, ticket: LoadedTicket, quote: Quote) -> list[str]:

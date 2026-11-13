@@ -34,6 +34,9 @@ from .providers import Part, Provider, ProviderError, ProviderResponse, Request
 
 log = logging.getLogger(__name__)
 T = TypeVar("T", bound=BaseModel)
+
+# teto da nova tentativa quando a resposta é cortada no limite de tokens de saída
+MAX_OUTPUT_TOKENS = 16000
 LlmError = ProviderError
 
 
@@ -378,7 +381,30 @@ class LlmSession:
         max_tokens: int = 4000,
         meta: dict[str, Any] | None = None,
     ) -> T:
-        """Pede uma saída estruturada para a tarefa, com o modelo da tarefa, custo e registro no log."""
+        """Pede uma saída estruturada para a tarefa, com o modelo da tarefa, custo e registro no log.
+
+        Resposta cortada no limite de tokens de saída: uma nova tentativa com o dobro do limite (até MAX_OUTPUT_TOKENS).
+        """
+        try:
+            return self._ask(task, parts, output, system=system, fast=fast, max_tokens=max_tokens, meta=meta)
+        except providers.ProviderError as e:
+            bigger = min(MAX_OUTPUT_TOKENS, 2 * max_tokens)
+            if not e.truncated or bigger <= max_tokens:
+                raise
+            event("llm_truncated_retry", logging.WARNING, task=task, max_tokens=max_tokens, retry_max_tokens=bigger)
+            return self._ask(task, parts, output, system=system, fast=fast, max_tokens=bigger, meta=meta)
+
+    def _ask(
+        self,
+        task: str,
+        parts: list[Part],
+        output: type[T],
+        *,
+        system: str | None,
+        fast: bool,
+        max_tokens: int,
+        meta: dict[str, Any] | None,
+    ) -> T:
         model, fallback = self.model_for_task(task, fast)
         images = sum(isinstance(p, providers.ImagePart) for p in parts)
         docs = sum(isinstance(p, providers.DocumentPart) for p in parts)

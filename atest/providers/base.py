@@ -112,11 +112,13 @@ class ProviderResponse(Generic[T]):
 
 
 class ProviderError(RuntimeError):
-    """Erro do provedor; `transitorio=True` indica que vale tentar o modelo de contingência."""
+    """Erro do provedor; `transient=True` indica que vale tentar o modelo de contingência e `truncated=True`, que a
+    resposta foi cortada no limite de tokens de saída (vale tentar de novo com um limite maior)."""
 
-    def __init__(self, msg: str, transient: bool = False):
+    def __init__(self, msg: str, transient: bool = False, truncated: bool = False):
         super().__init__(msg)
         self.transient = transient
+        self.truncated = truncated
 
 
 # --------------------------------------------------------------------------- contrato

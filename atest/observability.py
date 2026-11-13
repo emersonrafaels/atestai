@@ -122,6 +122,9 @@ def humanize(name: str, f: dict[str, Any]) -> str:
         origin = " (do cache)" if f.get("from_cache") else " (via lote)" if f.get("via_batch") else ""
         return (f"{_task(f.get('task'))}: resposta de {model} em {_num(f.get('duration_s'))} s{origin} · "
                 f"{_num(f.get('input_tokens'), 0)} tokens de entrada, {_num(f.get('output_tokens'), 0)} de saída · US$ {_num(f.get('cost_usd'), 4)}")
+    if name == "llm_truncated_retry":
+        return (f"{_task(f.get('task'))}: resposta cortada no limite de {_num(f.get('max_tokens'), 0)} tokens; "
+                f"tentando de novo com {_num(f.get('retry_max_tokens'), 0)}")
     if name == "llm_fallback":
         return f"{_task(f.get('task'))}: {model} falhou ({f.get('error')}); tentando {str(f.get('fallback', '')).split(':')[-1]}"
     if name == "iara_json_mode_fallback":

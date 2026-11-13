@@ -48,7 +48,8 @@ class OpenAIProvider(Provider):
         except (self._openai.APIConnectionError, self._openai.RateLimitError, self._openai.InternalServerError) as e:
             raise ProviderError(f"[{req.task}] {type(e).__name__}: {e}", transient=True) from e
         if resp.status == "incomplete":
-            raise ProviderError(f"[{req.task}] resposta incompleta: {resp.incomplete_details}")
+            reason = getattr(resp.incomplete_details, "reason", "")
+            raise ProviderError(f"[{req.task}] resposta incompleta: {resp.incomplete_details}", truncated=reason == "max_output_tokens")
         obj = resp.output_parsed
         if obj is None:
             raise ProviderError(f"[{req.task}] resposta sem JSON válido (possível recusa)")
