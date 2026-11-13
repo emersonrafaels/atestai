@@ -1,0 +1,70 @@
+{
+  "ticket_id": "04172318",
+  "workstream": "SISR",
+  "maintenance_type": "corrective",
+  "moment": "quote",
+  "category": "porta_giratoria",
+  "symptom": "porta_travando",
+  "requested_scope": "PORTA GIRATORIA DA ENTRADA TRAVANDO TODA HORA SEM MOTIVO, CLIENTE PASSA SEM NADA DE METAL E ELA TRAVA E APITA. ja aconteceu varias vezes hj e ta fazendo fila na porta, cliente reclamando",
+  "solution_description": "porta com defeito no sistema de deteccao, equipamento antigo. recomendamos substituicao completa da porta giratoria por uma nova p/ resolver definitivo",
+  "branch": {
+    "code": "1520",
+    "name": "Campinas Cambuí (fictícia)",
+    "environment": "saguao"
+  },
+  "supplier": {
+    "name": "Giratec Portas de Segurança LTDA (fictício)",
+    "cnpj": ""
+  },
+  "blocks_opening": false,
+  "quoted_value": 66380.0,
+  "dates": {
+    "opening": "2026-11-05",
+    "supplier_submission": "2026-11-06",
+    "manager_review": null
+  },
+  "status": "forwarded_to_backoffice",
+  "origin": "dataset",
+  "dataset": "casos",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "attachments": [
+    {
+      "file_name": "Orcamento_Giratec_04172318.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 6099,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-06"
+    },
+    {
+      "file_name": "IMG_20260312_154402.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 314848,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-06"
+    },
+    {
+      "file_name": "IMG_20261106_101215.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 281177,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-06"
+    },
+    {
+      "file_name": "IMG_20261106_101540.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 203155,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-06"
+    },
+    {
+      "file_name": "Screenshot_20261106-112030.png",
+      "content_type": "image/png",
+      "size_bytes": 1317244,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-06"
+    }
+  ]
+}

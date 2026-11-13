@@ -83,10 +83,10 @@
   "optional": [],
   "grades": {
     "scope": 100,
-    "quote": 65,
+    "quote": 80,
     "photos": 100
   },
-  "score": 86,
-  "recommendation": "approve_with_caveats",
+  "score": 92,
+  "recommendation": "return_to_supplier",
   "confidence": "high"
 }

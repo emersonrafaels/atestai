@@ -84,15 +84,27 @@ class ItemReview(LlmOutput):
     lpu_code: str = Field(description="Código equivalente na tabela de referência, ou NO_REFERENCE")
 
 
+class ServiceCoverage(LlmOutput):
+    """Um serviço pedido no chamado e os itens do orçamento que o executam (racional do engenheiro que aprova o orçamento)."""
+
+    n: int = Field(description="Número do serviço na lista SERVIÇOS PEDIDOS")
+    service: str = Field(description="O serviço pedido, como na lista")
+    items: list[int] = Field(description="Itens do orçamento que executam este serviço; vazio se nenhum")
+    covered: Match = Field(
+        description=(
+            "yes = há item que executa o serviço por completo; partial = há item, mas ele não resolve todo o pedido (ex.: "
+            "chapa de proteção sem organizar a fiação); no = nenhum item executa o serviço"
+        )
+    )
+    note: str = Field(description="Uma frase de engenheiro: o que falta ou por que o item cobre o pedido")
+
+
 class QuoteReview(LlmOutput):
     """Saída da tarefa quote_review."""
 
     items: list[ItemReview]
-    uncovered_services: list[str] = Field(
-        description=(
-            "Serviços pedidos no escopo (ou na descrição da solução) que não têm nenhum item no orçamento, um por linha, em "
-            "português simples. Não liste o que já está dentro de outro item (ex.: mão de obra embutida no item do serviço)."
-        )
+    service_coverage: list[ServiceCoverage] = Field(
+        description="Um registro para CADA serviço da lista SERVIÇOS PEDIDOS, na mesma ordem: que itens o executam e se cobrem o pedido"
     )
     notes: str
 
@@ -129,6 +141,13 @@ class PhotoAnalysis(LlmOutput):
 
     photos: list[AnalyzedPhoto]
     has_before_photo: bool
+    problem_assessment: str = Field(
+        "",
+        description=(
+            "Leitura de engenheiro: o que as fotos mostram do problema (extensão, gravidade, risco à segurança ou ao uso da "
+            "agência) e se isso justifica o serviço orçado, ou se o orçado parece insuficiente ou excessivo para o que se vê"
+        ),
+    )
     done_justification: str = Field(
         description=(
             "Só no retorno após a execução (vazio na aprovação do orçamento). Antes de decidir done_service: que foto mostra o "
@@ -147,7 +166,8 @@ class PhotoAnalysis(LlmOutput):
     )
     quantity_checks: list[QuantityCheck] = Field(
         description=(
-            "Para cada item físico cobrado por quantidade ou área do que aparece danificado nas fotos (piso, revestimento, peças, "
+            "Obrigatório para cada item da lista ITENS A CONTAR NAS FOTOS (e para outro item físico cobrado por quantidade ou "
+            "área do que aparece nas fotos (piso, revestimento, peças, "
             "luminárias): some o que as fotos mostram e estime a quantidade na unidade do item. Itens que dependem da mesma área "
             "(ex.: demolição, piso novo e rejunte) recebem um check cada. Não inclua deslocamento, visita ou mão de obra genérica."
         )

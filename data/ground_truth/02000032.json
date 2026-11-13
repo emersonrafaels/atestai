@@ -78,15 +78,16 @@
   "checklist_ok": true,
   "missing": [],
   "findings": [
-    "duplicate_item"
+    "duplicate_item",
+    "relevant_amount_at_issue"
   ],
   "optional": [],
   "grades": {
     "scope": 100,
-    "quote": 65,
+    "quote": 69,
     "photos": 100
   },
-  "score": 86,
-  "recommendation": "approve_with_caveats",
+  "score": 88,
+  "recommendation": "return_to_supplier",
   "confidence": "high"
 }

@@ -1,0 +1,49 @@
+{
+  "ticket_id": "04098817",
+  "workstream": "SISR",
+  "maintenance_type": "corrective",
+  "moment": "execution",
+  "category": "cctv",
+  "symptom": "no_image",
+  "requested_scope": "furtaram o cabo da camera do estacionamento a noite, camera sem imagem no gravador",
+  "solution_description": "recomposto 18m de cabo utp c/ eletroduto e reconectado a camera. testado ok",
+  "branch": {
+    "code": "2210",
+    "name": "Mesquita - RJ (fictícia)",
+    "environment": "estacionamento"
+  },
+  "supplier": {
+    "name": "Protegex Sistemas de Segurança LTDA (fictício)",
+    "cnpj": ""
+  },
+  "blocks_opening": false,
+  "quoted_value": 1290.0,
+  "dates": {
+    "opening": "2026-08-17",
+    "supplier_submission": "2026-08-18",
+    "manager_review": "2026-08-19"
+  },
+  "status": "approved",
+  "origin": "dataset",
+  "dataset": "casos",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "attachments": [
+    {
+      "file_name": "IMG_20260818_074410.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 317895,
+      "sent_by": "supplier",
+      "data_upload": "2026-08-18"
+    },
+    {
+      "file_name": "IMG_20260818_075236.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 282858,
+      "sent_by": "supplier",
+      "data_upload": "2026-08-18"
+    }
+  ]
+}

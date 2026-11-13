@@ -140,11 +140,11 @@
   ],
   "grades": {
     "scope": 65,
-    "quote": 35,
-    "photos": 60
+    "quote": 11,
+    "photos": 77
   },
-  "score": 51,
-  "recommendation": "detailed_review",
+  "score": 48,
+  "recommendation": "return_to_supplier",
   "confidence": "low",
   "scenario": {
     "id": "everything",

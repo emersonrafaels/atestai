@@ -39,7 +39,8 @@ def review(quote, lpu: dict[int, str], by_item: dict | None = None, uncovered: l
                 duplicate_of=0,
             )
         )
-    return QuoteReview(items=items, uncovered_services=uncovered or [], notes="")
+    coverage = [{"n": n, "service": s, "items": [], "covered": "no", "note": ""} for n, s in enumerate(uncovered or [], 1)]
+    return QuoteReview(items=items, service_coverage=coverage, notes="")
 
 
 def test_dynaconf_reads_toml_environment_and_variable(monkeypatch):
@@ -274,17 +275,23 @@ def test_items_without_photo_become_one_finding(cfg, ref):
 def test_relevant_amount_at_issue_threshold(ref):
     calc = ScoreCalculator(ref.rubric)
     limit = ref.rubric.relevant_amount_at_issue_pct
-    assert calc.materiality_findings(limit - 0.1) == []
-    found = calc.materiality_findings(limit, total=1000, amount=limit * 10)
+    assert calc.materiality_findings([], limit - 0.1) == []
+    found = calc.materiality_findings([], limit, total=1000, amount=limit * 10)
     assert [f.kind for f in found] == ["relevant_amount_at_issue"] and found[0].validation == "quote"
+    # teto: a nota de Orçamento não passa de 100 − % em questão; desconta só o que falta para chegar lá
+    assert found[0].discount == round(limit)
+    half = calc.materiality_findings(aps(ref, "quantity_above_photos"), 50.0)
+    assert half[0].discount == 35 and calc.compute(aps(ref, "quantity_above_photos") + half).grades.quote == 50
+    assert calc.materiality_findings(aps(ref, "out_of_scope_item", "duplicate_item"), 20.0) == []  # já abaixo do teto
 
 
 def test_vague_scope_case_scores_lower(ref):
     """Caso do 03000004: escopo vago, quantidades não verificáveis (100% em questão), local não confirmado, itens sem foto."""
     calc = ScoreCalculator(ref.rubric)
     findings = aps(ref, "vague_scope", "unverifiable_quantity", "after_photo_unconfirmed_location", "item_without_photo")
-    r = calc.compute(findings + calc.materiality_findings(100.0))
-    assert (r.grades.scope, r.grades.quote, r.grades.photos, r.score) == (65, 70, 70, 69)
+    r = calc.compute(findings + calc.materiality_findings(findings, 100.0), amount_at_issue_pct=100.0)
+    assert (r.grades.scope, r.grades.quote, r.grades.photos, r.score) == (65, 0, 70, 41)
+    # tudo em questão porque o escopo é vago: falta informação para concluir, não é só ajuste do fornecedor
     assert r.recommendation == Recommendation.DETAILED_REVIEW
 
 
@@ -448,7 +455,7 @@ def test_plain_language_and_lump_sum_units(cfg, ref):
 
     text = "As quantidades não puderam ser confrontadas (expected_quantity_max = -1). O item ficou NO_REFERENCE e compliant."
     assert plain_text(text) == "As quantidades não puderam ser confrontadas. O item ficou sem referência e aderente."
-    r = plain_language(QuoteReview(items=[], uncovered_services=[], notes="Sem lpu_code para o item 2."))
+    r = plain_language(QuoteReview(items=[], service_coverage=[], notes="Sem lpu_code para o item 2."))
     assert r.notes == "Sem código da LPU para o item 2."
     assert plain_text("NO_REFERENCE") == "NO_REFERENCE"  # valor de campo (sem espaço) não muda
     assert same_unit("un", "vb", 1) and not same_unit("un", "vb", 2) and same_unit("m²", "M2", 4.6)
@@ -472,7 +479,8 @@ def test_scope_not_quoted_and_service_before_approval(cfg, ref):
     asked = ["Organizar a fiação emaranhada do quadro", "Desativar a medição da ENGIE"]
     _, findings, _ = stage(QuoteStage, cfg, ref).flag(ch, quote, review(quote, {1: ""}, uncovered=asked))
     gap = [f for f in findings if f.kind == "scope_not_quoted"]
-    assert len(gap) == 1 and "Organizar a fiação" in gap[0].evidence and gap[0].reduces_confidence
+    # falta do fornecedor: devolve (não é incerteza da entrada, então não reduz a confiança)
+    assert len(gap) == 1 and "Organizar a fiação" in gap[0].evidence and gap[0].returns and not gap[0].reduces_confidence
     _, findings, _ = stage(QuoteStage, cfg, ref).flag(ch, quote, review(quote, {1: ""}))
     assert "scope_not_quoted" not in [f.kind for f in findings]
 
@@ -513,4 +521,4 @@ def test_amount_at_issue_caps_approve_and_market_price_tolerance(cfg, ref):
     sure = docs.market_prices([ad(303.25, Match.YES)], items)
     assert len(sure) == 1 and not sure[0].reduces_confidence
     unsure = docs.market_prices([ad(303.25, Match.PARTIAL)], items)
-    assert unsure[0].reduces_confidence and unsure[0].evidence.startswith("Produto não confirmado")
+    assert not unsure[0].reduces_confidence and unsure[0].evidence.startswith("Produto não confirmado")

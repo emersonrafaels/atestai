@@ -119,6 +119,11 @@ export interface Finding {
   amount_at_issue: number;
   /** tipo que absorveu este apontamento (régua: `absorbs`): segue como evidência, mas não desconta */
   absorbed_by?: string;
+  /** falta do fornecedor: leva a devolver qualquer que seja a nota (régua v9) */
+  returns?: boolean;
+  /** fração do que foi enviado que o tipo atinge (1 = tudo) e a mesma fração em palavras ("3 de 6 fotos") */
+  extent?: number;
+  extent_label?: string;
 }
 
 export interface EvaluatedItem extends QuoteItem {
@@ -193,6 +198,14 @@ export interface EvaluatedDocument {
   reason: string;
 }
 
+export interface ServiceCoverage {
+  n: number;
+  service: string;
+  items: number[];
+  covered: "yes" | "partial" | "no" | "undetermined";
+  note: string;
+}
+
 export interface Assessment {
   ticket_id: string;
   workstream: string;
@@ -231,6 +244,8 @@ export interface Assessment {
   scope: Record<string, unknown> | null;
   items: EvaluatedItem[];
   quote_notes: string[];
+  /** serviços pedidos × itens do orçamento que os executam (pareceres antigos não têm) */
+  service_coverage?: ServiceCoverage[];
   photos: EvaluatedPhoto[];
   photo_summary: Record<string, unknown> | null;
   /** documentos lidos por OCR (foto de documento ou PDF) */
@@ -374,6 +389,10 @@ export interface RubricInfo {
   confidence: { medium_with_n_reducers: number; low_with_n_reducers: number };
   /** tipo de apontamento → tipos da mesma validação que ele absorve (deixam de descontar quando ele aparece) */
   absorbs?: Record<string, string[]>;
+  proportional_floor?: number;
+  relevant_amount_at_issue_pct?: number;
+  max_amount_at_issue_for_approve_pct?: number;
+  max_amount_at_issue_for_caveats_pct?: number;
 }
 
 export interface Dataset {
@@ -629,6 +648,10 @@ export interface FindingTypeConfig {
   reduces_confidence: boolean;
   lock: boolean;
   amount_at_issue: "item" | "excess" | "none";
+  /** como medir a fração atingida (desconto proporcional) */
+  extent?: "value" | "photos" | "items" | "documents" | "services" | "whole";
+  /** falta do fornecedor: devolve qualquer que seja a nota */
+  returns?: boolean;
   enabled: boolean;
   /** tipos da mesma validação que deixam de descontar quando este aparece */
   absorbs?: string[];
@@ -654,6 +677,8 @@ export interface RubricConfig {
   relevant_amount_at_issue_pct: number;
   photo_quantity_tolerance_pct?: number;
   max_amount_at_issue_for_approve_pct?: number;
+  max_amount_at_issue_for_caveats_pct?: number;
+  proportional_floor?: number;
   market_price_tolerance_pct?: number;
   finding_types: Record<string, FindingTypeConfig>;
 }

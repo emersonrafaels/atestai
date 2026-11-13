@@ -95,15 +95,16 @@
   "missing": [],
   "findings": [
     "price_above_reference",
-    "quantity_above_expected"
+    "quantity_above_expected",
+    "relevant_amount_at_issue"
   ],
   "optional": [],
   "grades": {
     "scope": 100,
-    "quote": 70,
+    "quote": 78,
     "photos": 100
   },
-  "score": 88,
+  "score": 91,
   "recommendation": "approve_with_caveats",
   "confidence": "high"
 }

@@ -78,11 +78,17 @@ export interface Simulation {
  */
 export function simulate(p: Assessment, rubric: RubricInfo, removed: Set<string>): Simulation | null {
   if (p.score === null || !p.grades) return null;
-  const kept = p.findings.filter((f) => !removed.has(f.kind));
+  // o teto do valor em questão é refeito abaixo, com o valor que sobra
+  const kept = p.findings.filter((f) => !removed.has(f.kind) && f.kind !== "relevant_amount_at_issue");
   const impacts = explainFindings(kept, rubric);
   const lost: Record<ValidationKind, number> = { scope: 0, quote: 0, photos: 0 };
   kept.forEach((f, k) => (lost[f.validation] += impacts[k].gradePts));
   const grades = { scope: 100 - lost.scope, quote: 100 - lost.quote, photos: 100 - lost.photos };
+  // valor em questão que sobra: proporção do valor dos apontamentos mantidos
+  const allAmount = p.findings.reduce((s, f) => s + f.amount_at_issue, 0);
+  const keptAmount = kept.reduce((s, f) => s + f.amount_at_issue, 0);
+  const pct = allAmount > 0 ? (p.amount_at_issue_pct * keptAmount) / allAmount : p.amount_at_issue_pct;
+  if (pct > 0 && pct >= (rubric.relevant_amount_at_issue_pct ?? 10)) grades.quote = Math.min(grades.quote, Math.max(0, Math.round(100 - pct)));
   const totalW = VALIDATIONS.reduce((s, v) => s + rubric.weights[v], 0) || 100;
   const score = Math.round(VALIDATIONS.reduce((s, v) => s + grades[v] * rubric.weights[v], 0) / totalW);
 
@@ -92,9 +98,17 @@ export function simulate(p: Assessment, rubric: RubricInfo, removed: Set<string>
   const confidence = reducers.size >= rubric.confidence.low_with_n_reducers ? "low" : reducers.size >= rubric.confidence.medium_with_n_reducers ? "medium" : "high";
 
   let recommendation: Recommendation;
+  const gap = kept.some((f, k) => f.returns && !impacts[k].absorbedBy);
+  const back = rubric.max_amount_at_issue_for_caveats_pct ?? 30;
+  const approveCap = rubric.max_amount_at_issue_for_approve_pct ?? 10;
   if (kept.some((f) => f.lock)) recommendation = "return_locked";
+  else if (gap) recommendation = "return_to_supplier";  // falta do fornecedor vence a nota
   else if (confidence === "low") recommendation = "detailed_review";
-  else recommendation = [...rubric.bands].sort((a, b) => b.score_min - a.score_min).find((b) => score >= b.score_min)?.recommendation ?? "return_to_supplier";
+  else if (back && pct >= back) recommendation = "return_to_supplier";
+  else {
+    recommendation = [...rubric.bands].sort((a, b) => b.score_min - a.score_min).find((b) => score >= b.score_min)?.recommendation ?? "return_to_supplier";
+    if (recommendation === "approve" && approveCap && pct > approveCap) recommendation = "approve_with_caveats";
+  }
   return { grades, score, confidence, recommendation, kept: kept.length };
 }
 

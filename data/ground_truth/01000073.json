@@ -92,15 +92,16 @@
   "checklist_ok": true,
   "missing": [],
   "findings": [
-    "price_above_reference"
+    "price_above_reference",
+    "relevant_amount_at_issue"
   ],
   "optional": [],
   "grades": {
     "scope": 100,
-    "quote": 85,
+    "quote": 90,
     "photos": 100
   },
-  "score": 94,
+  "score": 96,
   "recommendation": "approve_with_caveats",
   "confidence": "high"
 }

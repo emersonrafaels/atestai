@@ -123,10 +123,10 @@
   "optional": [],
   "grades": {
     "scope": 100,
-    "quote": 15,
+    "quote": 38,
     "photos": 100
   },
-  "score": 66,
+  "score": 75,
   "recommendation": "return_to_supplier",
   "confidence": "high"
 }

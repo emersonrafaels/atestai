@@ -91,15 +91,16 @@
   "findings": [
     "missing_before_photo",
     "price_above_reference",
-    "quantity_above_expected"
+    "quantity_above_expected",
+    "relevant_amount_at_issue"
   ],
   "optional": [],
   "grades": {
     "scope": 100,
-    "quote": 70,
+    "quote": 83,
     "photos": 85
   },
-  "score": 82,
+  "score": 87,
   "recommendation": "approve_with_caveats",
   "confidence": "high"
 }

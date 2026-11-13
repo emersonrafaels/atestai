@@ -279,6 +279,7 @@ class Prompts(_Section):
     """Prompts de sistema por tarefa (config/prompts.toml, em português) e sua versão."""
 
     version: str
+    engineer: str = ""  # preâmbulo comum a todas as tarefas: o olhar do engenheiro que aprova orçamentos e atesta serviços
     identify_attachments: str
     scope: str
     quote_review: str

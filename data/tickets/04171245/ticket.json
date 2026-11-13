@@ -1,0 +1,70 @@
+{
+  "ticket_id": "04171245",
+  "workstream": "SISR",
+  "maintenance_type": "corrective",
+  "moment": "quote",
+  "category": "cctv",
+  "symptom": "no_image",
+  "requested_scope": "boa noite, agencia foi vandalizada de madrugada (03/11) levaram os cabos das cameras de fora, 4 cameras fachada e estacionamento. no dvr aparece sem video nos canais 1 ao 4 o resto ta gravando normal. precisa resolver urgente pq ta sem monitoramento na parte externa!!",
+  "solution_description": "Sera necessario a troca das 4 cameras externas e do gravador NVR por equipamentos novos e passagem de cabeamento novo pois os equipamento foram danificados pelo vandalismo",
+  "branch": {
+    "code": "3361",
+    "name": "Nova Iguaçu Centro (fictícia)",
+    "environment": "area_externa"
+  },
+  "supplier": {
+    "name": "Protegex Sistemas de Segurança LTDA (fictício)",
+    "cnpj": ""
+  },
+  "blocks_opening": false,
+  "quoted_value": 30060.0,
+  "dates": {
+    "opening": "2026-11-03",
+    "supplier_submission": "2026-11-04",
+    "manager_review": null
+  },
+  "status": "forwarded_to_backoffice",
+  "origin": "dataset",
+  "dataset": "casos",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "attachments": [
+    {
+      "file_name": "Orcamento_Protegex_04171245.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 6145,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-04"
+    },
+    {
+      "file_name": "IMG_20261104_081530.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 261105,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-04"
+    },
+    {
+      "file_name": "IMG_20261104_082012.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 403278,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-04"
+    },
+    {
+      "file_name": "IMG_20261104_082640.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 220829,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-04"
+    },
+    {
+      "file_name": "IMG_20261104_083105.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 293640,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-04"
+    }
+  ]
+}

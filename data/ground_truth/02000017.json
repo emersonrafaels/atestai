@@ -125,10 +125,10 @@
   "optional": [],
   "grades": {
     "scope": 100,
-    "quote": 50,
-    "photos": 35
+    "quote": 61,
+    "photos": 37
   },
-  "score": 54,
+  "score": 59,
   "recommendation": "return_locked",
   "confidence": "medium"
 }

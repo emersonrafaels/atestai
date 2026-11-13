@@ -96,16 +96,17 @@
   "missing": [],
   "findings": [
     "out_of_scope_item",
-    "price_above_reference"
+    "price_above_reference",
+    "relevant_amount_at_issue"
   ],
   "optional": [],
   "grades": {
     "scope": 100,
-    "quote": 50,
+    "quote": 64,
     "photos": 100
   },
-  "score": 80,
-  "recommendation": "approve_with_caveats",
+  "score": 86,
+  "recommendation": "return_to_supplier",
   "confidence": "high",
   "scenario": {
     "id": "quote_multiple_quote_stage",

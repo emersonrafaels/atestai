@@ -15,7 +15,7 @@ from pathlib import Path
 from .analysis import AnalysisContext, AnalysisStage
 from .attachments import HashCache, Hashes, attachment_parts, compute_hashes, detail_level, distance, exif_date
 from .domain import Attachment, ClassifiedAttachment, EvaluatedItem, EvaluatedPhoto, Finding, Match, Moment, Rubric, Stage, stage_expectations
-from .formatting import drop_after_service_requests
+from .formatting import drop_after_service_requests, normalize_text, normalize_unit
 from .llm import LlmSession, LlmTimeout
 from .llm_schemas import PhotoAnalysis, QuantityCheck, ScopeReading
 from .observability import event
@@ -28,6 +28,24 @@ DEFAULT_CROPS = [0.02, 0.05, 0.1]
 
 # Apontamentos que cobram a prova do serviço feito: só valem no retorno após a execução, nunca na aprovação do orçamento.
 EXECUTION_ONLY = frozenset({"missing_after_photo", "after_photo_unconfirmed_location", "item_without_photo"})
+
+# Itens que o engenheiro sempre confere contando nas fotos: cobrados por área/comprimento/volume, ou por peça com mais de uma.
+MEASURED_UNITS = {"m2", "m", "ml", "m3", "mt", "mts", "metro", "metros", "metro linear"}
+PIECE_UNITS = {"un", "und", "unid", "unidade", "unidades", "pc", "pç", "pcs", "peca", "peça", "pecas", "peças"}
+# itens que não aparecem na foto, pelo começo da descrição ("Demolição ... com transporte" continua contável)
+NOT_VISIBLE = ("desloca", "visita", "mao de obra", "frete", "transporte", "taxa", "diaria", "art ", "projeto")
+
+
+def countable_items(items: list[EvaluatedItem]) -> list[EvaluatedItem]:
+    """Itens físicos cuja quantidade dá para conferir pelas fotos (piso em m², rodapé em m, 6 luminárias...)."""
+    out = []
+    for i in items:
+        desc, unit = normalize_text(i.description), normalize_unit(i.unit)
+        if f"{desc} ".startswith(NOT_VISIBLE):
+            continue
+        if unit in MEASURED_UNITS or (unit in PIECE_UNITS and i.quantity > 1):
+            out.append(i)
+    return out
 
 
 # --------------------------------------------------------------------------- índice de fotos (integridade)
@@ -109,6 +127,7 @@ class PhotoStage(AnalysisStage):
             ctx.confidence_reducers.append("photos_not_analyzed")
         else:
             ctx.photo_analysis = analysis = self.for_moment(analysis, ctx.ticket.data.moment)
+            ctx.photo_analysis = analysis = self.with_unchecked_items(analysis, ctx.items)
             ctx.findings += self.flag(ctx.ticket, ctx.scope, analysis, photos, ctx.items)
             ctx.findings += self.quantity_findings(analysis, ctx.items)
         ctx.integrity, integrity_findings = self.integrity(ctx.ticket, photos)  # por regra: vale mesmo sem a leitura do modelo
@@ -146,6 +165,18 @@ class PhotoStage(AnalysisStage):
                 event("photos_degraded", logging.WARNING, error=str(e)[:300], photos=len(chunk), chunk=n)
                 return None
         return self.merge(parts)
+
+    @staticmethod
+    def with_unchecked_items(analysis: PhotoAnalysis, items: list[EvaluatedItem]) -> PhotoAnalysis:
+        """Item que devia ter sido contado nas fotos e não foi: fica registrado nas observações (nada passa calado)."""
+        checked = {c.item for c in analysis.quantity_checks}
+        missing = [i for i in countable_items(items) if i.n not in checked]
+        if not missing:
+            return analysis
+        event("photos_quantity_unchecked", logging.WARNING, items=[i.n for i in missing])
+        names = "; ".join(f"item {i.n} ({i.description}, {i.quantity:g} {i.unit})" for i in missing)
+        note = f"Quantidade não conferida pelas fotos: {names}."
+        return analysis.model_copy(update={"notes": f"{analysis.notes} {note}".strip()})
 
     @staticmethod
     def for_moment(analysis: PhotoAnalysis, moment: Moment) -> PhotoAnalysis:
@@ -190,6 +221,7 @@ class PhotoStage(AnalysisStage):
         return PhotoAnalysis(
             photos=[f for p in parts for f in p.photos],
             has_before_photo=any(p.has_before_photo for p in parts),
+            problem_assessment=" ".join(p.problem_assessment for p in parts if p.problem_assessment).strip(),
             done_justification=" ".join(p.done_justification for p in parts if p.done_justification).strip(),
             done_service=done,
             items_without_photo=sorted(missing),
@@ -217,13 +249,18 @@ class PhotoStage(AnalysisStage):
     ) -> PhotoAnalysis:
         """Envia as fotos ao modelo principal com o escopo e os itens do orçamento (ou um lote delas, em `batch`)."""
         item_lines = "\n".join(f"{i.n}. {i.description} ({i.quantity:g} {i.unit})" for i in items) or "(orçamento não lido)"
+        to_count = countable_items(items)
+        count_lines = (
+            "ITENS A CONTAR NAS FOTOS (um quantity_check para cada, somando as fotos; -1 se não der para contar):\n"
+            + "\n".join(f"{i.n}. {i.description}: cobrado {i.quantity:g} {i.unit}" for i in to_count) + "\n\n"
+        ) if to_count else ""
         part = (f"Lote {batch[0]} de {batch[1]} das fotos do chamado: avalie só estas fotos; contagens e itens sem foto se "
                 "referem a este lote. ") if batch else ""
         content: list[Part] = [
             TextPart(
                 f"{ticket.data.summary_text()}\n\nLEITURA DO ESCOPO:\n{ScopeStage.describe(scope)}\n\n"
                 f"ITENS DO ORÇAMENTO:\n{item_lines}\n\nLEMBRE A ETAPA: {stage_expectations(ticket.data.moment)}\n\n"
-                f"{part}{len(photos)} fotos a seguir; use o número do anexo como 'index'."
+                f"{count_lines}{part}{len(photos)} fotos a seguir; use o número do anexo como 'index'."
             )
         ]
         for a in photos:

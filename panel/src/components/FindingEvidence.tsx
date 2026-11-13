@@ -6,7 +6,7 @@ import { brl, num, MOMENT_LABEL, envLabel } from "../format";
 import { locate, type Located } from "../evidence";
 import type { LightboxItem } from "./ui/Lightbox";
 
-export type GoTo = (tab: "assessment" | "scope" | "quote" | "photos" | "calls" | "input", highlight?: { items?: number[]; files?: string[] }) => void;
+export type GoTo = (tab: "assessment" | "scope" | "quote" | "photos" | "documents" | "calls" | "input", highlight?: { items?: number[]; files?: string[] }) => void;
 
 interface Props {
   f: Finding;

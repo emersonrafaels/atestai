@@ -156,7 +156,11 @@ class SimulatedClient:
                     "lpu_code": i["lpu_code"],
                 }
             )
-        return QuoteReview(items=items, uncovered_services=[], notes="").model_dump()
+        # o escopo simulado tem um serviço pedido: coberto por todos os itens, salvo quando o gabarito diz que falta item
+        gap = "scope_not_quoted" in g.findings
+        coverage = [{"n": 1, "service": "(simulado a partir do gabarito)", "items": [] if gap else [i["n"] for i in g.items],
+                     "covered": "no" if gap else "yes", "note": "(simulado)"}]
+        return QuoteReview(items=items, service_coverage=coverage, notes="").model_dump()
 
     def _photos(self, g: GroundTruth, meta: dict) -> dict:
         photos = []

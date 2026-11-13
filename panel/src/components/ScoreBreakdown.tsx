@@ -1,6 +1,6 @@
-import { Lock, ShieldAlert } from "lucide-react";
+import { Lock, ShieldAlert, Undo2 } from "lucide-react";
 import type { Assessment, RubricInfo } from "../api";
-import { findingLabel, GLOSSARY, REC, VALIDATIONS, VALIDATION_LABEL, explainFindings, pts } from "../format";
+import { discountText, findingLabel, GLOSSARY, REC, VALIDATIONS, VALIDATION_LABEL, explainFindings, pts } from "../format";
 import { InfoTip, Tooltip } from "./ui/Tooltip";
 
 const gradeColor = (g: number) => (g >= 85 ? "var(--color-ok)" : g >= 70 ? "var(--color-warn)" : "var(--color-bad)");
@@ -15,6 +15,8 @@ export function ScoreBreakdown({ p, rubric }: { p: Assessment; rubric: RubricInf
   const impacts = explainFindings(p.findings, rubric);
   const locked = p.findings.some((f) => f.lock);
   const lowConfidence = p.recommendation === "detailed_review";
+  // falta do fornecedor (régua v9): volta ao fornecedor qualquer que seja a faixa
+  const supplierGap = !locked && p.recommendation === "return_to_supplier" && /fornecedor precisa ajustar/.test(p.recommendation_reason);
 
   const rows = VALIDATIONS.map((v) => {
     const grade = p.grades![v];
@@ -40,7 +42,7 @@ export function ScoreBreakdown({ p, rubric }: { p: Assessment; rubric: RubricInf
             <div className="mt-2 flex flex-wrap items-baseline gap-x-1.5 gap-y-1 text-[13px] tabular-nums text-muted">
               <span>100</span>
               {r.discounts.map(({ f, imp }, k) => (
-                <Tooltip key={k} content={<><b>{f.description}</b><br />Severidade {f.severity === "critical" ? "crítica" : f.severity === "high" ? "alta" : f.severity === "medium" ? "média" : "baixa"}: −{imp.gradePts} na nota{imp.capped ? " (limitado: a nota não fica abaixo de 0)" : ""}.</>}>
+                <Tooltip key={k} content={<><b>{f.description}</b><br />{discountText(f, rubric)}<br />−{imp.gradePts} na nota{imp.capped ? " (limitado: a nota não fica abaixo de 0)" : ""}.</>}>
                   <span className="cursor-help rounded px-1 font-semibold text-bad underline decoration-dotted underline-offset-2">−{imp.gradePts}</span>
                 </Tooltip>
               ))}
@@ -85,6 +87,12 @@ export function ScoreBreakdown({ p, rubric }: { p: Assessment; rubric: RubricInf
 
       <BandScale score={p.score} rubric={rubric} />
 
+      {supplierGap && (
+        <p className="flex items-start gap-2 rounded-lg bg-[#fbefed] px-3 py-2 text-sm text-bad">
+          <Undo2 size={16} className="mt-0.5 shrink-0" />
+          <span>Falta do fornecedor: {p.recommendation_reason.replace(/^O fornecedor precisa ajustar: /, "")}. O que precisa ser ajustado está claro, então o chamado volta ao fornecedor independente da faixa do score. <InfoTip term="supplier_gap" /></span>
+        </p>
+      )}
       {(locked || lowConfidence) && (
         <p className="flex items-start gap-2 rounded-lg bg-[#f1ecfa] px-3 py-2 text-sm text-lock">
           {locked ? <Lock size={16} className="mt-0.5 shrink-0" /> : <ShieldAlert size={16} className="mt-0.5 shrink-0" />}

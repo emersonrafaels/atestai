@@ -98,10 +98,10 @@
   "optional": [],
   "grades": {
     "scope": 100,
-    "quote": 20,
+    "quote": 45,
     "photos": 100
   },
-  "score": 68,
+  "score": 78,
   "recommendation": "return_to_supplier",
   "confidence": "high"
 }

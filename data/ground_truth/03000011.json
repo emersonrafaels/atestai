@@ -113,7 +113,8 @@
   "checklist_ok": true,
   "missing": [],
   "findings": [
-    "duplicate_item"
+    "duplicate_item",
+    "relevant_amount_at_issue"
   ],
   "optional": [],
   "grades": {
@@ -122,7 +123,7 @@
     "photos": 100
   },
   "score": 86,
-  "recommendation": "approve_with_caveats",
+  "recommendation": "return_to_supplier",
   "confidence": "high",
   "scenario": {
     "id": "quote_duplicate",

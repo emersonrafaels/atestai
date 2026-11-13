@@ -217,7 +217,7 @@ def test_api_run_feedback_upload_and_metrics(cfg):
 
     # persistência: uma app nova (como após reiniciar) lê a execução e o último parecer do banco
     c2 = TestClient(create_app(cfg))
-    assert c2.get(f"/api/runs/{e['id']}").json()["tickets"]["00482193"]["assessment"]["score"] == 60
+    assert c2.get(f"/api/runs/{e['id']}").json()["tickets"]["00482193"]["assessment"]["score"] == 72  # v9: 3 de 6 fotos fora do escopo
     last = next(x for x in c2.get("/api/tickets").json() if x["ticket_id"] == "00482193")["last"]
     assert last["assessment_id"] == assessment["record_id"]
 

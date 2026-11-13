@@ -1,0 +1,15 @@
+CASO FICTÍCIO criado para testar o Atest.AI (não é um chamado real do Salesforce): agência, fornecedor, valores e
+problemas foram inventados. As imagens em attachments/ são SIMULADAS (geradas com OpenAI gpt-image-2 em 13/11/2026);
+não são evidência real. A origem também está no EXIF (ImageDescription) de cada imagem.
+
+Chamado 04172318 - Porta giratória travando sem motivo (aprovação do orçamento).
+Problemas plantados (o que o parecer deveria apontar):
+- SOLUÇÃO INCORRETA: o sintoma (detector disparando sem metal) pede calibração ou a placa do detector; a solução troca a
+  porta inteira -> itens 1 e 2 sem justificativa técnica (R$ 55.200).
+- PREÇO ACIMA DO MERCADO: item 1 a R$ 52.800 contra R$ 28.900 do anúncio anexado (Screenshot_20261106-112030.png, loja
+  fictícia), 83% acima.
+- PREÇO ACIMA DA REFERÊNCIA: placa controladora (item 3) a R$ 4.890 contra R$ 1.450 da LPU (PGD-002); mão de obra (item 5)
+  a R$ 185/h contra R$ 110/h (SIS-002). A placa nova também é incoerente com a troca da porta inteira.
+- ITEM FORA DO ESCOPO: pintura da fachada (item 6).
+- FOTO COM DATA ANTERIOR À ABERTURA: IMG_20260312_154402.jpg tem data de 12/03/2026 no EXIF (abertura em 05/11/2026).
+Item correto: ajuste e calibração do detector (item 4), que é o serviço que resolve o sintoma.

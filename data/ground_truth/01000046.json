@@ -99,9 +99,9 @@
   "grades": {
     "scope": 100,
     "quote": 100,
-    "photos": 35
+    "photos": 37
   },
-  "score": 74,
+  "score": 75,
   "recommendation": "return_locked",
   "confidence": "medium"
 }

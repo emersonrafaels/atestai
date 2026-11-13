@@ -105,7 +105,19 @@ export const DEFAULT_RUBRIC: RubricInfo = {
     { score_min: 0, recommendation: "return_to_supplier" },
   ],
   confidence: { medium_with_n_reducers: 1, low_with_n_reducers: 2 },
+  proportional_floor: 0.5,
+  relevant_amount_at_issue_pct: 10,
+  max_amount_at_issue_for_approve_pct: 10,
+  max_amount_at_issue_for_caveats_pct: 30,
 };
+
+/** Como o desconto do apontamento foi calculado: severidade (máximo) × quanto do que foi enviado ele atinge. */
+export function discountText(f: Finding, rubric: RubricInfo): string {
+  if (f.kind === "relevant_amount_at_issue") return `${f.extent_label || "valor em questão"}: a nota de Orçamento não passa de 100 − esse percentual`;
+  const full = rubric.discount_by_severity[f.severity];
+  if (!f.extent_label || f.discount >= full) return `${SEVERITY[f.severity].label} (−${full})${f.extent_label ? `, atinge ${f.extent_label}` : ""}`;
+  return `${SEVERITY[f.severity].label} (até −${full}), atinge ${f.extent_label}: −${f.discount}`;
+}
 
 export interface FindingImpact {
   /** pontos tirados da nota da validação (0–100) */
@@ -157,15 +169,17 @@ export const pts = (v: number) => v.toLocaleString("pt-BR", { maximumFractionDig
 // ============================================================================ glossário (tooltips, tour e modal de ajuda)
 export const GLOSSARY: Record<string, { term: string; text: string }> = {
   score: { term: "Score de conformidade", text: "Nota de 0 a 100 do chamado. É a média ponderada das notas de Escopo, Orçamento e Fotos. Quem dá a nota é a régua, não o modelo: o modelo só aponta divergências." },
-  grade: { term: "Nota da validação", text: "Cada validação começa com 100 e perde pontos a cada apontamento, conforme a severidade. Nunca fica abaixo de 0." },
+  grade: { term: "Nota da validação", text: "Cada validação começa com 100 e perde pontos a cada apontamento, conforme a severidade e quanto do que foi enviado ele atinge. Nunca fica abaixo de 0." },
+  proportional: { term: "Desconto proporcional", text: "O desconto acompanha quanto do que o fornecedor enviou o problema atinge: 1 foto fora do escopo em 6 pesa menos que 6 em 6; R$ 20 em questão num orçamento de R$ 10 mil pesa menos que o orçamento inteiro. Atingir tudo desconta a severidade inteira; atingir pouco desconta pelo menos metade dela. Mandar mais fotos e informações não aumenta a punição." },
+  supplier_gap: { term: "Falta do fornecedor", text: "Serviço pedido no chamado sem item no orçamento, item fora do escopo ou cobrado em dobro, ou 30% ou mais do orçamento em questão: o que precisa ser ajustado está claro, então o chamado volta ao fornecedor qualquer que seja o score." },
   weight: { term: "Peso", text: "Quanto cada validação vale no score final. Ex.: um desconto de 35 na nota de Orçamento (peso 40%) tira 14 pontos do score." },
-  severity: { term: "Severidade", text: "Gravidade do apontamento. Define quantos pontos ele tira da nota da validação: Crítico −60, Alto −35, Médio −15, Baixo −5." },
+  severity: { term: "Severidade", text: "Gravidade do apontamento. Define o máximo que ele tira da nota da validação: Crítico −60, Alto −35, Médio −15, Baixo −5. Quando atinge só parte do que foi enviado (1 de 6 fotos, 10% do orçamento), desconta menos, nunca menos da metade." },
   absorbed: { term: "Apontamento absorvido", text: "Quando dois apontamentos descrevem o mesmo problema (ex.: a foto do depois é de outro ambiente e, por isso, falta a prova do serviço), a régua desconta só o mais amplo. O outro segue listado como evidência. Se o mais amplo for marcado como não procede, o absorvido volta a descontar." },
-  once: { term: "Desconto único por tipo", text: "Se o mesmo tipo de apontamento aparece várias vezes na mesma validação, ele desconta uma vez só. As demais ocorrências ficam listadas como evidência. Quando o problema se repete a ponto de deixar boa parte do orçamento em questão, entra o apontamento “Valor divergente relevante”." },
+  once: { term: "Desconto único por tipo", text: "Se o mesmo tipo de apontamento aparece várias vezes na mesma validação, ele desconta uma vez só. As demais ocorrências ficam listadas como evidência. O desconto do tipo já considera todas as ocorrências juntas (ex.: 4 itens com quantidade acima das fotos = a soma do valor deles). Com boa parte do orçamento em questão, entra também o apontamento “Valor divergente relevante”." },
   lock: { term: "Trava de integridade", text: "Apontamento grave (ex.: foto reaproveitada de outro chamado). Devolve o chamado qualquer que seja o score." },
   confidence: { term: "Confiança", text: "Quanto dá para confiar na análise com a entrada recebida. Escopo vago ou foto ilegível reduzem a confiança. Confiança baixa manda o chamado para análise detalhada." },
-  amount: { term: "Valor potencial divergente", text: "Quanto do orçamento pode estar divergente do escopo ou da referência. Item fora do escopo, sem justificativa, duplicado ou com quantidade não verificável conta inteiro; preço ou quantidade acima contam só o excedente. Acima do limite da régua (padrão: 50% do orçamento), vira o apontamento “Valor divergente relevante”." },
-  bands: { term: "Faixas de recomendação", text: "85 ou mais: aprovar. De 70 a 84: aprovar com ressalvas. Abaixo de 70: devolver ao fornecedor. Travas e confiança baixa vencem a faixa." },
+  amount: { term: "Valor potencial divergente", text: "Quanto do orçamento pode estar divergente do escopo ou da referência. Item fora do escopo, sem justificativa, duplicado ou com quantidade não verificável conta inteiro; preço ou quantidade acima contam só o excedente. A nota de Orçamento não passa de 100 − % em questão (ex.: 50% em questão → nota no máximo 50). Com 30% ou mais em questão, o chamado volta ao fornecedor." },
+  bands: { term: "Faixas de recomendação", text: "85 ou mais: aprovar. De 70 a 84: aprovar com ressalvas. Abaixo de 70: devolver ao fornecedor. Travas, faltas do fornecedor e confiança baixa vencem a faixa." },
   checklist: { term: "Checklist mínimo", text: "Documentos obrigatórios para a categoria (ex.: foto do depois, termo de conclusão). Se faltar algo, o chamado volta antes de qualquer análise e não recebe score." },
   phase: { term: "Fase da régua", text: "Fase 1 é o MVP: não cobra foto do antes nem checa ilegibilidade e reaproveitamento. Fase 2 inclui essas checagens." },
   mode: { term: "Modo", text: "Simulado demonstra o fluxo com respostas simuladas, sem chamar o modelo e sem custo. API chama o modelo de verdade e gera custo." },

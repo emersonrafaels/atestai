@@ -100,15 +100,16 @@
     "duplicate_item",
     "photo_dated_before",
     "price_above_reference",
+    "relevant_amount_at_issue",
     "unreadable_photo"
   ],
   "optional": [],
   "grades": {
     "scope": 100,
-    "quote": 50,
-    "photos": 80
+    "quote": 55,
+    "photos": 87
   },
-  "score": 72,
-  "recommendation": "approve_with_caveats",
+  "score": 77,
+  "recommendation": "return_to_supplier",
   "confidence": "medium"
 }

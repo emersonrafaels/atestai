@@ -103,6 +103,7 @@
   "findings": [
     "missing_before_photo",
     "out_of_scope_item",
+    "relevant_amount_at_issue",
     "vague_scope"
   ],
   "optional": [
@@ -112,10 +113,10 @@
   ],
   "grades": {
     "scope": 65,
-    "quote": 65,
+    "quote": 52,
     "photos": 85
   },
-  "score": 73,
-  "recommendation": "approve_with_caveats",
+  "score": 68,
+  "recommendation": "return_to_supplier",
   "confidence": "medium"
 }

@@ -131,10 +131,10 @@
   ],
   "grades": {
     "scope": 100,
-    "quote": 15,
+    "quote": 11,
     "photos": 0
   },
-  "score": 26,
+  "score": 24,
   "recommendation": "return_locked",
   "confidence": "high"
 }

@@ -10,12 +10,14 @@
 from __future__ import annotations
 
 import difflib
+import logging
 
 from .analysis import AnalysisContext, AnalysisStage
-from .domain import AmountAtIssue, EvaluatedItem, Finding, ItemClassification, LpuItem, Quote, QuoteItem, Rubric, Stage
+from .domain import AmountAtIssue, EvaluatedItem, Finding, ItemClassification, LpuItem, Match, Quote, QuoteItem, Rubric, Stage
 from .formatting import brl, normalize_text, normalize_unit, same_unit
 from .llm import LlmSession
 from .llm_schemas import ItemReview, QuoteReview, ScopeReading
+from .observability import event
 from .providers import TextPart
 from .repository import LoadedTicket, QuoteError, read_ticket_quote
 from .scope import ScopeStage
@@ -39,8 +41,23 @@ class QuoteStage(AnalysisStage):
         assert ctx.scope is not None
         review = self.review_items(ctx.session, ctx.ticket, ctx.scope, quote)
         items, findings, notes = self.flag(ctx.ticket, quote, review)
-        ctx.items, ctx.quote_notes = items, notes
+        ctx.items, ctx.quote_notes = items, notes + self.unchecked_services(ctx.scope, review)
+        ctx.service_coverage = sorted(review.service_coverage, key=lambda c: c.n)
         ctx.findings += findings
+
+    @staticmethod
+    def requested_services(scope: ScopeReading) -> list[str]:
+        """Serviços pedidos (escopo e descrição da solução), numerados no pedido ao modelo."""
+        return [s.strip() for s in scope.requested_services if s.strip()]
+
+    def unchecked_services(self, scope: ScopeReading, review: QuoteReview) -> list[str]:
+        """Serviço pedido que o modelo não conferiu contra o orçamento: fica como observação (nada passa calado)."""
+        done = {c.n for c in review.service_coverage}
+        missing = [s for n, s in enumerate(self.requested_services(scope), 1) if n not in done]
+        if missing:
+            event("quote_coverage_incomplete", logging.WARNING, missing=missing)
+            return ["Serviço pedido não conferido contra o orçamento: " + "; ".join(missing)]
+        return []
 
     # ------------------------------------------------------------------ conferência pelo modelo
     def review_items(self, session: LlmSession, ticket: LoadedTicket, scope: ScopeReading, quote: Quote) -> QuoteReview:
@@ -50,11 +67,14 @@ class QuoteStage(AnalysisStage):
             + ("" if i.lpu else " | FORA DA LPU")
             for i in quote.items
         )
+        services = "\n".join(f"{n}. {s}" for n, s in enumerate(self.requested_services(scope), 1)) or "1. " + ticket.data.requested_scope
         workstream = ticket.data.workstream.value
         system = f"{session.system('quote_review')}\n\nTABELA DE REFERÊNCIA (LPU) DA ESTEIRA {workstream}:\n{self.references.lpu_text(workstream)}"
         text = (
             f"{ticket.data.summary_text()}\n\nLEITURA DO ESCOPO:\n{ScopeStage.describe(scope)}"
-            f"\n\nITENS DO ORÇAMENTO:\n{items}\n\nClassifique todos os itens."
+            f"\n\nITENS DO ORÇAMENTO:\n{items}"
+            f"\n\nSERVIÇOS PEDIDOS (um registro em service_coverage para cada número):\n{services}"
+            "\n\nClassifique todos os itens e confira a cobertura de todos os serviços pedidos."
         )
         return session.ask("quote_review", [TextPart(text)], QuoteReview, system=system, max_tokens=4000)
 
@@ -85,10 +105,13 @@ class QuoteStage(AnalysisStage):
 
         if diffs := self.spreadsheet_mismatches(ticket, quote):
             general.append(self.scorer.finding("spreadsheet_mismatch", "; ".join(diffs).capitalize(), quote.file))
-        uncovered = [s.strip() for s in review.uncovered_services if s.strip()]
+        uncovered = [c.service.strip() for c in review.service_coverage if c.covered == Match.NO and c.service.strip()]
         if uncovered and "scope_not_quoted" in self.rubric.finding_types:
             evidence = "Pedido no chamado sem item no orçamento: " + "; ".join(uncovered)
             general.append(self.scorer.finding("scope_not_quoted", evidence, "escopo × orçamento"))
+        for c in review.service_coverage:  # item que resolve só parte do pedido: o engenheiro registra o que falta
+            if c.covered == Match.PARTIAL and c.service.strip():
+                notes.append(f"Coberto só em parte: {c.service.strip()}" + (f" ({c.note.strip()})" if c.note.strip() else ""))
 
         for item in quote.items:
             r = by_n.get(item.n)

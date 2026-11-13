@@ -356,8 +356,10 @@ class LlmSession:
         self.calls: list[LlmCall] = []
 
     def system(self, task: str) -> str:
-        """Prompt de sistema da tarefa (config/prompts.toml, em português)."""
-        return getattr(self.cfg.prompts, task).strip()
+        """Prompt de sistema da tarefa (config/prompts.toml, em português), depois do preâmbulo comum de engenheiro."""
+        engineer = self.cfg.prompts.engineer.strip()
+        task_prompt = getattr(self.cfg.prompts, task).strip()
+        return f"{engineer}\n\n{task_prompt}" if engineer else task_prompt
 
     def model_for_task(self, task: str, fast: bool) -> tuple[str, str | None]:
         """Modelo da tarefa (sobrescrita em [models.tasks] ou o papel principal/rápido) e o de contingência do papel."""

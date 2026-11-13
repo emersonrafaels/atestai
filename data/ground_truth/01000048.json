@@ -82,9 +82,9 @@
   "grades": {
     "scope": 100,
     "quote": 100,
-    "photos": 85
+    "photos": 90
   },
-  "score": 94,
+  "score": 96,
   "recommendation": "approve",
   "confidence": "high"
 }

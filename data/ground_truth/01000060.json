@@ -131,10 +131,10 @@
   ],
   "grades": {
     "scope": 65,
-    "quote": 35,
-    "photos": 65
+    "quote": 21,
+    "photos": 77
   },
-  "score": 53,
+  "score": 52,
   "recommendation": "return_to_supplier",
   "confidence": "medium"
 }

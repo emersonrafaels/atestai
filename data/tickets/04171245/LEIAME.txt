@@ -1,0 +1,13 @@
+CASO FICTÍCIO criado para testar o Atest.AI (não é um chamado real do Salesforce): agência, fornecedor, valores e
+problemas foram inventados. As imagens em attachments/ são SIMULADAS (geradas com OpenAI gpt-image-2 em 13/11/2026);
+não são evidência real. A origem também está no EXIF (ImageDescription) de cada imagem.
+
+Chamado 04171245 - CFTV, vandalismo com furto dos cabos das câmeras externas (aprovação do orçamento).
+Problemas plantados (o que o parecer deveria apontar):
+- FOTO REAPROVEITADA: IMG_20261104_082640.jpg é cópia recortada (4% das bordas) e recomprimida, com data nova no EXIF,
+  da foto IMG_20260818_074410.jpg do chamado antigo 04098817 (outra agência, agosto; está em data/history) -> trava.
+- SOLUÇÃO INCORRETA: o pedido é recompor os cabos furtados; a solução troca as 4 câmeras e o gravador. As fotos mostram as
+  câmeras intactas e o gravador funcionando (canais 5 a 16 com imagem) -> itens 2 e 3 sem justificativa (R$ 17.000).
+- ITEM DUPLICADO: item 7 "Deslocamento técnico até a agência" repete o item 6 "Visita técnica e deslocamento".
+- QUANTIDADE ACIMA: 220 m de cabo para 4 câmeras externas (as fotos sugerem lances de ~15 m, ~60 m no total).
+Itens corretos: eletroduto antivandalismo (item 4), conectores (item 5) e a visita (item 6).

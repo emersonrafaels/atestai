@@ -140,10 +140,10 @@
   ],
   "grades": {
     "scope": 65,
-    "quote": 0,
+    "quote": 20,
     "photos": 100
   },
-  "score": 53,
+  "score": 61,
   "recommendation": "return_to_supplier",
   "confidence": "medium"
 }

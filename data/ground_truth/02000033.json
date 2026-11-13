@@ -86,10 +86,10 @@
   "optional": [],
   "grades": {
     "scope": 85,
-    "quote": 50,
+    "quote": 17,
     "photos": 100
   },
-  "score": 77,
-  "recommendation": "approve_with_caveats",
+  "score": 64,
+  "recommendation": "return_to_supplier",
   "confidence": "medium"
 }

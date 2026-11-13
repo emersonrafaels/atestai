@@ -109,6 +109,6 @@
     "photos": 100
   },
   "score": 80,
-  "recommendation": "approve_with_caveats",
+  "recommendation": "return_to_supplier",
   "confidence": "high"
 }

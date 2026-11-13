@@ -1,0 +1,13 @@
+CASO FICTÍCIO criado para testar o Atest.AI (não é um chamado real do Salesforce): agência, fornecedor, valores e
+problemas foram inventados. As imagens em attachments/ são SIMULADAS (geradas com OpenAI gpt-image-2 em 13/11/2026);
+não são evidência real. A origem também está no EXIF (ImageDescription) de cada imagem.
+
+Chamado 04173506 - Fechadura biométrica não reconhece as digitais (atestação do serviço).
+Problemas plantados (o que o parecer deveria apontar):
+- ORÇAMENTO DIFERENTE DA SOLUÇÃO: a solução descreve limpeza, firmware e recadastramento; o orçamento cobra um leitor novo
+  (item 1) e uma fechadura eletromagnética (item 2) sem justificativa (a fechadura funciona; o problema é a leitura).
+- PREÇO ACIMA DA REFERÊNCIA: leitor biométrico a R$ 4.650 contra R$ 850 da LPU (BIO-001), 447% acima.
+- QUANTIDADE ACIMA: 40 recadastramentos de digital para os 9 funcionários citados na solução.
+- FOTO DO SERVIÇO DE OUTRO AMBIENTE: a foto do depois (IMG_20261107_160455.jpg) mostra um leitor novo numa catraca do saguão
+  de entrada, não na porta da tesouraria do escopo.
+Item correto: limpeza e atualização de firmware (item 4) e a visita (item 5).

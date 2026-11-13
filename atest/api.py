@@ -802,7 +802,10 @@ def create_app(cfg: Settings) -> FastAPI:
             signature=manager.cfg_base.signature(),
             validation=cfg.validation.model_dump(),
             rubric={
-                **manager.cfg_base.rubric.model_dump(mode="json", include={"weights", "discount_by_severity", "bands", "confidence"}),
+                **manager.cfg_base.rubric.model_dump(mode="json", include={
+                    "weights", "discount_by_severity", "bands", "confidence", "proportional_floor", "relevant_amount_at_issue_pct",
+                    "max_amount_at_issue_for_approve_pct", "max_amount_at_issue_for_caveats_pct",
+                }),
                 "absorbs": {k: t.absorbs for k, t in manager.cfg_base.rubric.finding_types.items() if t.absorbs},
             },
             models=model_options(),

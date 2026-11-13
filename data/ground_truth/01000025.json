@@ -78,10 +78,10 @@
   "optional": [],
   "grades": {
     "scope": 100,
-    "quote": 70,
+    "quote": 77,
     "photos": 100
   },
-  "score": 88,
+  "score": 91,
   "recommendation": "approve_with_caveats",
   "confidence": "high"
 }

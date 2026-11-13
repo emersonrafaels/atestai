@@ -137,10 +137,10 @@
   "optional": [],
   "grades": {
     "scope": 100,
-    "quote": 0,
+    "quote": 22,
     "photos": 100
   },
-  "score": 60,
+  "score": 69,
   "recommendation": "return_to_supplier",
   "confidence": "high",
   "scenario": {

@@ -452,6 +452,17 @@ class AmountAtIssue(StrEnum):
     NONE = "none"
 
 
+class Extent(StrEnum):
+    """Como medir quanto do que o fornecedor enviou o apontamento atinge (desconto proporcional)."""
+
+    VALUE = "value"  # valor em questão do tipo ÷ total do orçamento
+    PHOTOS = "photos"  # fotos apontadas ÷ fotos analisadas
+    ITEMS = "items"  # itens apontados ÷ itens a conferir
+    SERVICES = "services"  # serviços pedidos sem item (parcial conta metade) ÷ serviços pedidos
+    DOCUMENTS = "documents"  # documentos apontados ÷ documentos lidos
+    WHOLE = "whole"  # o chamado inteiro (escopo vago, falta a foto do depois…)
+
+
 class FindingOverride(DomainModel):
     """Ajuste de um tipo de apontamento numa esteira: o que não vier preenchido segue o padrão."""
 
@@ -469,6 +480,8 @@ class FindingType(DomainModel):
     reduces_confidence: bool = False
     lock: bool = False
     amount_at_issue: AmountAtIssue = AmountAtIssue.NONE
+    extent: Extent = Field(Extent.WHOLE, description="como medir a fração atingida: o desconto cresce com ela (proporcional ao que foi enviado)")
+    returns: bool = Field(False, description="falta do fornecedor: com este apontamento, a recomendação é no máximo devolver ao fornecedor")
     enabled: bool = Field(True, description="desativado: o apontamento não é gerado nem desconta (portal de configuração)")
     absorbs: list[str] = Field(
         default_factory=list,
@@ -518,7 +531,15 @@ class Rubric(DomainModel):
     hash_method: str = ""
     spreadsheet_value_tolerance: float = 1.0
     photo_date_tolerance_days: int = 1
-    relevant_amount_at_issue_pct: float = Field(50, ge=0, le=100, description="valor potencial divergente (% do orçamento) que vira apontamento")
+    relevant_amount_at_issue_pct: float = Field(
+        10, ge=0, le=100, description="a partir deste % do orçamento em questão, a nota de Orçamento fica limitada a 100 − % em questão"
+    )
+    proportional_floor: float = Field(
+        0.5, ge=0, le=1, description="fração da severidade que o apontamento desconta mesmo atingindo pouco do que foi enviado"
+    )
+    max_amount_at_issue_for_caveats_pct: float = Field(
+        30, ge=0, le=100, description="a partir deste % do orçamento em questão, o chamado volta ao fornecedor (0 desliga)"
+    )
     max_amount_at_issue_for_approve_pct: float = Field(
         10, ge=0, le=100, description="acima deste % do orçamento em questão, 'Aprovar' vira 'Aprovar com ressalvas' (0 desliga)"
     )
@@ -551,6 +572,9 @@ class Finding(DomainModel):
     phase: int = 1
     amount_at_issue: float = 0.0
     absorbed_by: str = Field("", description="tipo que absorveu este apontamento: segue como evidência, mas não desconta")
+    returns: bool = Field(False, description="falta do fornecedor: leva a devolver ao fornecedor qualquer que seja a nota")
+    extent: float = Field(1.0, ge=0, le=1, description="fração do que foi enviado que o tipo atinge (1 = tudo)")
+    extent_label: str = Field("", description="a fração em palavras, ex.: '2 de 3 serviços pedidos', '25% do orçamento'")
 
 
 class EvaluatedRequirement(DomainModel):
@@ -717,6 +741,9 @@ class Assessment(DomainModel):
     scope: dict[str, Any] | None = None
     items: list[EvaluatedItem] = Field(default_factory=list)
     quote_notes: list[str] = Field(default_factory=list)
+    service_coverage: list[dict[str, Any]] = Field(
+        default_factory=list, description="serviços pedidos × itens do orçamento que os executam (racional do engenheiro)"
+    )
     photos: list[EvaluatedPhoto] = Field(default_factory=list)
     photo_summary: dict[str, Any] | None = None
     documents: list[EvaluatedDocument] = Field(default_factory=list, description="documentos lidos por OCR (imagem ou PDF)")

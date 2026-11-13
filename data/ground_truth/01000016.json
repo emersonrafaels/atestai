@@ -110,15 +110,16 @@
   "findings": [
     "duplicate_item",
     "photo_mismatch",
+    "relevant_amount_at_issue",
     "unreadable_photo"
   ],
   "optional": [],
   "grades": {
     "scope": 100,
-    "quote": 65,
-    "photos": 60
+    "quote": 63,
+    "photos": 74
   },
-  "score": 70,
-  "recommendation": "approve_with_caveats",
+  "score": 75,
+  "recommendation": "return_to_supplier",
   "confidence": "medium"
 }

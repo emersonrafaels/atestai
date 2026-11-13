@@ -79,9 +79,9 @@
   "grades": {
     "scope": 100,
     "quote": 85,
-    "photos": 70
+    "photos": 74
   },
-  "score": 82,
+  "score": 84,
   "recommendation": "approve_with_caveats",
   "confidence": "high"
 }

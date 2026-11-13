@@ -83,6 +83,7 @@
   "findings": [
     "price_above_reference",
     "quantity_above_expected",
+    "relevant_amount_at_issue",
     "vague_scope"
   ],
   "optional": [
@@ -92,10 +93,10 @@
   ],
   "grades": {
     "scope": 65,
-    "quote": 70,
+    "quote": 52,
     "photos": 100
   },
-  "score": 81,
-  "recommendation": "approve_with_caveats",
+  "score": 74,
+  "recommendation": "return_to_supplier",
   "confidence": "medium"
 }

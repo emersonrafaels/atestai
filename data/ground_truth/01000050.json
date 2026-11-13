@@ -115,15 +115,16 @@
   "missing": [],
   "findings": [
     "duplicate_item",
+    "relevant_amount_at_issue",
     "unreadable_photo"
   ],
   "optional": [],
   "grades": {
     "scope": 100,
-    "quote": 65,
-    "photos": 95
+    "quote": 70,
+    "photos": 97
   },
-  "score": 84,
-  "recommendation": "approve_with_caveats",
+  "score": 87,
+  "recommendation": "return_to_supplier",
   "confidence": "medium"
 }

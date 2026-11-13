@@ -1,0 +1,56 @@
+{
+  "ticket_id": "04173506",
+  "workstream": "SISR",
+  "maintenance_type": "corrective",
+  "moment": "execution",
+  "category": "fechadura_biometrica",
+  "symptom": "biometria_nao_reconhece",
+  "requested_scope": "leitor biometrico da porta da tesouraria nao reconhece digital de ninguem desde dia 04/11, estamos entrando so com a chave de emergencia. favor verificar c/ urgencia",
+  "solution_description": "realizado limpeza do sensor otico, atualizacao do firmware e recadastro das digitais dos 9 funcionarios da agencia. leitor voltou a funcionar normal",
+  "branch": {
+    "code": "4417",
+    "name": "Belo Horizonte Savassi (fictícia)",
+    "environment": "tesouraria"
+  },
+  "supplier": {
+    "name": "BioAcesso Tecnologia LTDA (fictício)",
+    "cnpj": ""
+  },
+  "blocks_opening": false,
+  "quoted_value": 7670.0,
+  "dates": {
+    "opening": "2026-11-04",
+    "supplier_submission": "2026-11-07",
+    "manager_review": null
+  },
+  "status": "forwarded_to_backoffice",
+  "origin": "dataset",
+  "dataset": "casos",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "attachments": [
+    {
+      "file_name": "Orcamento_BioAcesso_04173506.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 6062,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-07"
+    },
+    {
+      "file_name": "IMG_20261105_093012.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 175263,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-07"
+    },
+    {
+      "file_name": "IMG_20261107_160455.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 262877,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-07"
+    }
+  ]
+}

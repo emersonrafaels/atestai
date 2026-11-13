@@ -1,16 +1,18 @@
 import { ArrowDown, Check, ChevronDown, Copy, Lock, MapPin, ShieldAlert, ThumbsDown, Undo2, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Assessment, RubricInfo, TicketDetail } from "../api";
-import { brl, brl4, REC, SEVERITY, findingLabel, CONFIDENCE_LABEL, VALIDATIONS, VALIDATION_LABEL, VALIDATION_SHORT, explainFindings, GLOSSARY, pts, STAGE_LABEL, MAINTENANCE_LABEL } from "../format";
+import { brl, brl4, REC, SEVERITY, discountText, findingLabel, CONFIDENCE_LABEL, VALIDATIONS, VALIDATION_LABEL, VALIDATION_SHORT, explainFindings, GLOSSARY, pts, STAGE_LABEL, MAINTENANCE_LABEL } from "../format";
 import { locate } from "../evidence";
 import { ScoreGauge } from "./ScoreBadge";
 import { DecisionPanel } from "./DecisionPanel";
+import { EngineerInsights, hasInsights } from "./EngineerInsights";
 import { ScoreBreakdown } from "./ScoreBreakdown";
 import { FindingEvidence, whereLabel, type GoTo } from "./FindingEvidence";
 import type { LightboxItem } from "./ui/Lightbox";
 import { InfoBox } from "./ui/InfoBox";
 import { InfoTip, Tooltip } from "./ui/Tooltip";
 import { StepTitle } from "./ui/StepTitle";
+import { actions, highlight, SentenceList, splitLead } from "./ui/RichText";
 
 interface Props {
   p: Assessment;
@@ -114,8 +116,8 @@ export function AssessmentTab({ p, rubric, ticket, openPhoto, goTo, openTicket }
           </Tooltip>
           <div className="min-w-0 flex-1 space-y-3">
             <h2 className="largo text-2xl font-bold" style={{ color: REC[p.recommendation].color }}>{REC[p.recommendation].label}</h2>
-            <p className="text-sm font-medium text-muted">Por quê: <span className="text-ink">{p.recommendation_reason}</span></p>
-            <p className="text-[15px] leading-relaxed">{p.summary}</p>
+            <Reason text={p.recommendation_reason} />
+            <Summary text={p.summary} color={REC[p.recommendation].color} onItems={(items) => goTo("quote", { items })} />
             <dl className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
               {p.score !== null && (
                 <Fact label="Score" help={<InfoTip term="score" />}><b className="tabular-nums">{p.score}</b><span className="text-muted">/100</span></Fact>
@@ -134,7 +136,10 @@ export function AssessmentTab({ p, rubric, ticket, openPhoto, goTo, openTicket }
         </div>
       </section>
 
-      {/* 3. a conta do score */}
+      {/* 3. o racional do engenheiro: cobertura do pedido, quantidade × fotos, preço e leitura do problema */}
+      {p.score !== null && hasInsights(p) && <EngineerInsights p={p} n={++n} goTo={goTo} openPhoto={openPhoto} />}
+
+      {/* 4. a conta do score */}
       <section data-tour="score-breakdown" className="rounded-xl border border-line bg-sheet p-5">
         <StepTitle n={++n} sub={p.score !== null
           ? "Cada validação começa com 100 pontos e perde pontos a cada apontamento. O score é a média ponderada das três notas."
@@ -190,19 +195,29 @@ export function AssessmentTab({ p, rubric, ticket, openPhoto, goTo, openTicket }
                             <span className={`font-medium ${off ? "line-through decoration-ink/40" : ""}`}>{f.description}</span>
                             {f.lock && <span className="flex items-center gap-1 rounded bg-[#ece6f6] px-1.5 py-0.5 text-[11px] font-semibold text-lock"><Lock size={11} /> Trava</span>}
                             {f.reduces_confidence && <span className="flex items-center gap-1 rounded bg-paper px-1.5 py-0.5 text-[11px] font-semibold text-muted"><ShieldAlert size={11} /> Reduz confiança</span>}
+                            {f.returns && !f.absorbed_by && (
+                              <Tooltip content={GLOSSARY.supplier_gap.text}>
+                                <span className="flex cursor-help items-center gap-1 rounded bg-[#fbefed] px-1.5 py-0.5 text-[11px] font-semibold text-bad"><Undo2 size={11} /> Devolve</span>
+                              </Tooltip>
+                            )}
                             {off && <span className="rounded bg-[#fbefed] px-1.5 py-0.5 text-[11px] font-semibold text-bad">Não procede</span>}
                           </div>
-                          <div className="mt-1 text-muted">{f.evidence}</div>
+                          <div className="mt-1 text-muted">{highlight(f.evidence)}</div>
                           <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px]">
                             {where && <span className="flex items-center gap-1 font-medium text-blueprint"><MapPin size={12} /> {where}</span>}
                             {f.amount_at_issue > 0 && <span className="text-muted">Potencial divergente: <b className="text-bad">{brl(f.amount_at_issue)}</b></span>}
+                            {f.extent_label && f.kind !== "relevant_amount_at_issue" && !imp.repeated && !imp.absorbedBy && (
+                              <Tooltip content={GLOSSARY.proportional.text}>
+                                <span className="cursor-help text-muted">Atinge <b className="text-ink">{f.extent_label}</b></span>
+                              </Tooltip>
+                            )}
                             <span className="ml-auto flex items-center gap-0.5 font-medium text-blueprint">
                               {isOpen ? "Ocultar" : "Ver onde está o erro"} <ChevronDown size={14} className={`transition ${isOpen ? "rotate-180" : ""}`} />
                             </span>
                           </div>
                         </button>
                         <div className="flex flex-col gap-1.5">
-                          <Impact f={f} imp={imp} weight={rubric.weights[f.validation]} off={off} />
+                          <Impact f={f} imp={imp} weight={rubric.weights[f.validation]} off={off} rubric={rubric} />
                           <Tooltip content={off
                             ? "Desfazer: o apontamento volta a contar"
                             : `Marque se este apontamento está errado. A régua é recalculada na seção da decisão.${many ? ` Vale para os ${countByKind[f.kind]} apontamentos deste tipo.` : ""}`}>
@@ -241,7 +256,14 @@ export function AssessmentTab({ p, rubric, ticket, openPhoto, goTo, openTicket }
           {unfounded.size > 0 && (
             <p className="mt-2 rounded-md bg-[#fdf6e4] px-3 py-1.5 text-[13px]">Você marcou apontamentos como não procedentes: retire-os da mensagem antes de enviar.</p>
           )}
-          <p className="mt-3 whitespace-pre-line rounded-lg bg-paper/60 p-4 text-[15px] leading-relaxed">{p.supplier_message}</p>
+          <ol className="mt-3 space-y-2 rounded-lg bg-paper/60 p-4 text-[15px]">
+            {actions(p.supplier_message).map((a, i) => (
+              <li key={i} className="flex gap-3 leading-relaxed">
+                <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-sheet text-[12px] font-semibold text-ink shadow-sm tabular-nums">{i + 1}</span>
+                <span className="min-w-0">{highlight(a, (items) => goTo("quote", { items }))}</span>
+              </li>
+            ))}
+          </ol>
         </section>
       )}
 
@@ -264,6 +286,34 @@ export function AssessmentTab({ p, rubric, ticket, openPhoto, goTo, openTicket }
   );
 }
 
+/** "Confiança baixa (motivo 1; motivo 2): conclusão" → conclusão em destaque e cada motivo como etiqueta. */
+function Reason({ text }: { text: string }) {
+  const m = /^(.*?)\s*\(([^()]+)\)\s*:\s*(.*)$/s.exec(text);
+  if (!m) return <p className="text-sm font-medium text-muted">Por quê: <span className="text-ink">{highlight(text)}</span></p>;
+  const [, head, list, tail] = m;
+  const reasons = list.split(/\s*;\s*/).filter(Boolean);
+  return (
+    <div className="text-sm">
+      <p className="font-medium text-muted">Por quê: <span className="text-ink">{head}{tail ? `: ${tail}` : ""}</span></p>
+      <ul className="mt-1.5 flex flex-wrap gap-1.5">
+        {reasons.map((r) => <li key={r} className="rounded-full border border-line bg-paper px-2.5 py-0.5 text-[13px] text-ink">{r.charAt(0).toUpperCase() + r.slice(1)}</li>)}
+      </ul>
+    </div>
+  );
+}
+
+/** Resumo do parecer: a manchete ("Recomendo …") em destaque e cada frase numa linha, com o assunto e os números à vista. */
+function Summary({ text, color, onItems }: { text: string; color: string; onItems: (items: number[]) => void }) {
+  if (!text.trim()) return null;
+  const { lead, body } = splitLead(text);
+  return (
+    <div className="rounded-lg border border-line border-l-4 bg-paper/40 px-4 py-3" style={{ borderLeftColor: color }}>
+      {lead && <p className="mb-2 text-[15px] font-semibold" style={{ color }}>{lead}</p>}
+      <SentenceList text={body} onItems={onItems} className="text-[15px]" />
+    </div>
+  );
+}
+
 function Fact({ label, help, children }: { label: string; help?: React.ReactNode; children: React.ReactNode }) {
   return (
     <div>
@@ -274,7 +324,7 @@ function Fact({ label, help, children }: { label: string; help?: React.ReactNode
 }
 
 /** Quanto o apontamento pesou: pontos no score (destaque) e na nota da validação. */
-function Impact({ f, imp, weight, off }: { f: Assessment["findings"][number]; imp: ReturnType<typeof explainFindings>[number]; weight: number; off: boolean }) {
+function Impact({ f, imp, weight, off, rubric }: { f: Assessment["findings"][number]; imp: ReturnType<typeof explainFindings>[number]; weight: number; off: boolean; rubric: RubricInfo }) {
   if (imp.absorbedBy) {
     return (
       <Tooltip className="flex" content={<>{GLOSSARY.absorbed.text}<br />Aqui: absorvido por <b>{findingLabel(imp.absorbedBy)}</b>.</>}>
@@ -298,7 +348,7 @@ function Impact({ f, imp, weight, off }: { f: Assessment["findings"][number]; im
   return (
     <Tooltip className="flex" content={off
       ? "Marcado como não procede: na revisão, estes pontos voltam para o score."
-      : <>Tira <b>{imp.gradePts}</b> da nota de {VALIDATION_SHORT[f.validation]} (de 100).<br />Como {VALIDATION_SHORT[f.validation]} vale {weight}% do score: {imp.gradePts} × {weight}% = <b>{pts(imp.scorePts)}</b> pontos a menos no score.{imp.capped ? " A nota já estava perto de 0, então o desconto foi limitado." : ""}</>}>
+      : <>{discountText(f, rubric)}.<br />Tira <b>{imp.gradePts}</b> da nota de {VALIDATION_SHORT[f.validation]} (de 100).<br />Como {VALIDATION_SHORT[f.validation]} vale {weight}% do score: {imp.gradePts} × {weight}% = <b>{pts(imp.scorePts)}</b> pontos a menos no score.{imp.capped ? " A nota já estava perto de 0, então o desconto foi limitado." : ""}</>}>
       <div className={`flex w-full cursor-help items-center gap-3 rounded-md px-3 py-2 sm:flex-col sm:items-end sm:justify-center sm:gap-0 sm:text-right ${off ? "bg-paper" : "bg-[#fbefed]"}`}>
         <span className={`largo text-xl font-bold leading-none tabular-nums ${off ? "text-muted line-through" : "text-bad"}`}>−{pts(imp.scorePts)}</span>
         <span className="text-[12px] text-ink/80">ponto{imp.scorePts === 1 ? "" : "s"} no score</span>

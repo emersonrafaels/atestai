@@ -1,4 +1,4 @@
-import { ChevronDown, Lock, RotateCcw, ShieldAlert } from "lucide-react";
+import { ChevronDown, Lock, RotateCcw, ShieldAlert, Undo2 } from "lucide-react";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { FindingTypeConfig, RubricConfig } from "../../api";
 import { pts, REC, SEVERITY, VALIDATIONS, VALIDATION_LABEL, VALIDATION_SHORT } from "../../format";
@@ -14,6 +14,10 @@ interface Props {
 }
 
 const AMOUNT: Record<string, string> = { item: "Linha inteira", excess: "Só o excedente", none: "—" };
+const EXTENT: Record<string, string> = {
+  value: "Valor em questão", photos: "Fotos atingidas", items: "Itens atingidos", documents: "Documentos atingidos",
+  services: "Serviços sem item", whole: "Chamado inteiro",
+};
 const SEVERITIES = ["critical", "high", "medium", "low"] as const;
 type WsView = "all" | "SETA" | "SISR";
 type Override = NonNullable<FindingTypeConfig["by_workstream"]>["SETA"];
@@ -84,7 +88,7 @@ export function FindingRulesEditor({ data, base, onChange }: Props) {
             {VALIDATION_LABEL[v]} <span className="text-[13px] font-normal text-muted">peso {data.weights[v]}% no score</span>
           </h3>
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[980px] text-sm">
+            <table className="w-full min-w-[1160px] text-sm">
               <thead className="bg-paper/60 text-left text-[12px] text-muted">
                 <tr>
                   <Th tip={COLUMN_HELP.enabled} className="w-14 px-4">Ativa</Th>
@@ -94,6 +98,8 @@ export function FindingRulesEditor({ data, base, onChange }: Props) {
                   <Th tip={COLUMN_HELP.phase}>Fase</Th>
                   <Th tip={COLUMN_HELP.lock} className="text-center" justify="justify-center">Trava</Th>
                   <Th tip={COLUMN_HELP.confidence} className="text-center" justify="justify-center">Reduz confiança</Th>
+                  <Th tip={COLUMN_HELP.returns} className="text-center" justify="justify-center">Devolve</Th>
+                  <Th tip={COLUMN_HELP.extent}>Proporcional a</Th>
                   <Th tip={COLUMN_HELP.absorbs}>Absorve</Th>
                   <Th tip={COLUMN_HELP.amount} className="px-4">Valor divergente</Th>
                 </tr>
@@ -139,6 +145,12 @@ export function FindingRulesEditor({ data, base, onChange }: Props) {
                       </td>
                       <td className="px-2 py-2 text-center"><span className="inline-flex items-center gap-1"><Switch size="sm" on={f.lock} disabled={!f.enabled || ws !== "all"} onChange={(on) => set(kind, { lock: on })} label="Trava" />{f.lock && <Lock size={12} className="text-lock" />}</span></td>
                       <td className="px-2 py-2 text-center"><span className="inline-flex items-center gap-1"><Switch size="sm" on={f.reduces_confidence} disabled={!f.enabled || ws !== "all"} onChange={(on) => set(kind, { reduces_confidence: on })} label="Reduz confiança" />{f.reduces_confidence && <ShieldAlert size={12} className="text-muted" />}</span></td>
+                      <td className="px-2 py-2 text-center"><span className="inline-flex items-center gap-1"><Switch size="sm" on={!!f.returns} disabled={!f.enabled || ws !== "all"} onChange={(on) => set(kind, { returns: on })} label="Devolve ao fornecedor" />{f.returns && <Undo2 size={12} className="text-bad" />}</span></td>
+                      <td className="px-2 py-2">
+                        <select value={f.extent ?? "whole"} disabled={!f.enabled || ws !== "all"} title={wsOnly} onChange={(e) => set(kind, { extent: e.target.value as FindingTypeConfig["extent"] })} className="rounded-md border border-line bg-sheet px-1.5 py-1 text-[13px]">
+                          {Object.entries(EXTENT).map(([k, label]) => <option key={k} value={k}>{label}</option>)}
+                        </select>
+                      </td>
                       <td className="px-2 py-2">
                         <Absorbs name={f.description} value={f.absorbs ?? []} disabled={!f.enabled || ws !== "all"}
                           options={entries.filter(([k, o]) => k !== kind && o.validation === v).map(([k, o]) => ({ kind: k, label: o.description }))}
@@ -166,6 +178,8 @@ const COLUMN_HELP: Record<string, React.ReactNode> = {
   phase: "Fase 1 vale desde já; Fase 2 só conta quando a análise roda na Fase 2.",
   lock: "Ligada, o apontamento devolve o chamado ao fornecedor qualquer que seja o score (ex.: foto reaproveitada de outro chamado).",
   confidence: "O apontamento indica que faltou informação para concluir. Um redutor deixa a confiança média; dois mandam o chamado para análise detalhada.",
+  returns: "Falta do fornecedor: o que ajustar já está claro (ex.: serviço pedido sem item no orçamento). Ligada, o chamado volta ao fornecedor qualquer que seja o score.",
+  extent: "O desconto acompanha quanto do que foi enviado o apontamento atinge: valor em questão sobre o orçamento, fotos, itens ou documentos atingidos, ou serviços pedidos sem item. “Chamado inteiro” desconta sempre a severidade toda.",
   absorbs: <>Evita punir duas vezes o mesmo problema. Se esta regra e uma das marcadas aparecem juntas no mesmo chamado, só esta desconta; a outra continua no parecer como evidência.
     <span className="mt-1 block">Ex.: <i>Sem foto do serviço concluído</i> absorve <i>Foto não corresponde ao escopo</i>, porque a foto de outro ambiente é justamente o motivo de faltar a prova do serviço. Só dá para marcar regras da mesma validação.</span></>,
   amount: "Quanto do orçamento entra no valor potencial divergente quando o apontamento aparece: a linha inteira, só o excedente ou nada. É definido no código.",
@@ -339,13 +353,15 @@ export function ScoreRubricEditor({ data, base, onChange }: Props) {
             ["price_tolerance_pct", "Tolerância de preço sobre a referência (LPU)", "%", "Acima de referência + tolerância vira “Preço acima da referência”."],
             ["market_price_tolerance_pct", "Tolerância sobre o preço de mercado", "%", "Preço até N% acima de um anúncio ou cotação anexada não é apontado: cobre a margem do fornecedor sobre o varejo."],
             ["max_amount_at_issue_for_approve_pct", "Valor em questão que impede aprovar direto", "%", "Acima desta fração do orçamento em questão, uma nota que aprovaria vira “Aprovar com ressalvas” (0 desliga)."],
+            ["max_amount_at_issue_for_caveats_pct", "Valor em questão que devolve ao fornecedor", "%", "A partir desta fração do orçamento em questão, o chamado volta ao fornecedor qualquer que seja a nota (0 desliga)."],
+            ["proportional_floor", "Piso do desconto proporcional", "×", "Fração da severidade que o apontamento desconta mesmo atingindo pouco do que foi enviado (0,5 = pelo menos metade). 1 desliga a proporcionalidade."],
             ["spreadsheet_value_tolerance", "Diferença aceita entre planilha e chamado", "R$", "Diferença de valor total tolerada antes de virar “Planilha divergente”."],
             ["photo_date_tolerance_days", "Tolerância da data da foto", "dias", "Foto tirada até N dias antes da abertura não é apontada."],
             ["hash_max_distance", "Semelhança para foto reaproveitada", "dist.", "Distância máxima (0 = idêntica) para considerar a foto uma cópia. Menor = mais rigoroso para acusar."],
             ["hash_max_distance_low_detail", "Semelhança em foto escura/tremida", "dist.", "Limite mais estrito para fotos com pouco detalhe."],
             ["hash_min_detail", "Detalhe mínimo da foto", "", "Abaixo disso a foto é considerada de pouco detalhe."],
             ["photo_quantity_tolerance_pct", "Tolerância da quantidade sobre as fotos", "%", "Quantidade cobrada até N% acima do que as fotos mostram (somadas) não é apontada: cobre margem de corte e perda."],
-            ["relevant_amount_at_issue_pct", "Valor divergente relevante", "%", "A partir desta fração do orçamento em questão, entra o apontamento “Valor divergente relevante” (cada tipo desconta uma vez; este pesa a materialidade)."],
+            ["relevant_amount_at_issue_pct", "Valor em questão que limita a nota", "%", "A partir desta fração do orçamento em questão, a nota de Orçamento não passa de 100 − % em questão (entra o apontamento “Valor divergente relevante”)."],
           ] as const).map(([k, label, unit, help]) => (
             <label key={k} className="flex items-center justify-between gap-3">
               <span className="flex items-center gap-1">{label} <InfoTip text={help} size={12} /></span>

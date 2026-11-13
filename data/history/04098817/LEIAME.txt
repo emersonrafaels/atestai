@@ -1,0 +1,6 @@
+CASO FICTÍCIO criado para testar o Atest.AI (não é um chamado real do Salesforce): agência, fornecedor, valores e
+problemas foram inventados. As imagens em attachments/ são SIMULADAS (geradas com OpenAI gpt-image-2 em 13/11/2026);
+não são evidência real. A origem também está no EXIF (ImageDescription) de cada imagem.
+
+Chamado ANTIGO fictício (agosto/2026), só no histórico de fotos: a foto IMG_20260818_074410.jpg é a origem
+da foto reaproveitada no caso 04171245.

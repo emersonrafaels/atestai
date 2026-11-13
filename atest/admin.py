@@ -134,6 +134,10 @@ def validate_section(section: Section, data: dict[str, Any], base: Settings, cat
                     raise AdminError(msg, 422)
         if model.confidence.medium_with_n_reducers > model.confidence.low_with_n_reducers:
             raise AdminError("A confiança média precisa de menos redutores do que a baixa.", 422)
+        approve, back = model.max_amount_at_issue_for_approve_pct, model.max_amount_at_issue_for_caveats_pct
+        if approve and back and back < approve:
+            msg = f"O valor em questão que devolve ao fornecedor ({back:g}%) precisa ser maior que o que impede aprovar direto ({approve:g}%)."
+            raise AdminError(msg, 422)
         return model.model_dump(mode="json")
 
     assert isinstance(model, Checklists)
@@ -213,10 +217,19 @@ FIELD_PT = {
     "hash_max_distance": "Distância máxima de semelhança das fotos",
     "hash_max_distance_low_detail": "Distância máxima de semelhança (foto com pouco detalhe)",
     "hash_min_detail": "Detalhe mínimo da foto",
-    "relevant_amount_at_issue_pct": "Valor divergente relevante (% do orçamento)",
+    "relevant_amount_at_issue_pct": "Valor em questão que limita a nota de Orçamento (% do orçamento)",
+    "max_amount_at_issue_for_caveats_pct": "Valor em questão que devolve ao fornecedor (% do orçamento)",
+    "proportional_floor": "Piso do desconto proporcional (fração da severidade)",
     "photo_quantity_tolerance_pct": "Tolerância da quantidade sobre as fotos (%)",
     "max_amount_at_issue_for_approve_pct": "Valor em questão que impede aprovar direto (% do orçamento)",
     "market_price_tolerance_pct": "Tolerância sobre o preço de mercado (%)",
+}
+
+
+# Como o desconto de um tipo cresce com o que foi enviado (régua: extent) → português.
+EXTENT_PT = {
+    "value": "valor em questão", "photos": "fotos atingidas", "items": "itens atingidos", "documents": "documentos atingidos",
+    "services": "serviços pedidos sem item", "whole": "chamado inteiro",
 }
 
 
@@ -241,7 +254,9 @@ def describe_changes(section: Section, before: dict[str, Any], after: dict[str, 
                 out.append(f"“{name}”: severidade {SEVERITY_PT.get(b.get('severity'), b.get('severity'))} → {SEVERITY_PT.get(a['severity'], a['severity'])}")
             if b.get("phase") != a.get("phase"):
                 out.append(f"“{name}”: fase {b.get('phase')} → {a.get('phase')}")
-            for flag, label in (("lock", "trava"), ("reduces_confidence", "reduz confiança")):
+            if b.get("extent", "whole") != a.get("extent", "whole"):
+                out.append(f"“{name}”: proporcional a {EXTENT_PT.get(a.get('extent', 'whole'), a.get('extent'))}")
+            for flag, label in (("lock", "trava"), ("reduces_confidence", "reduz confiança"), ("returns", "devolve ao fornecedor")):
                 if bool(b.get(flag)) != bool(a.get(flag)):
                     out.append(f"“{name}”: {label} {'ligada' if a.get(flag) else 'desligada'}")
             if sorted(b.get("absorbs", [])) != sorted(a.get("absorbs", [])):

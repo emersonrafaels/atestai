@@ -101,10 +101,10 @@
   "optional": [],
   "grades": {
     "scope": 100,
-    "quote": 85,
-    "photos": 80
+    "quote": 92,
+    "photos": 87
   },
-  "score": 86,
+  "score": 92,
   "recommendation": "approve",
   "confidence": "medium"
 }

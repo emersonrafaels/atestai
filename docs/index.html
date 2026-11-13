@@ -431,7 +431,7 @@ AssessmentText: summary, supplier_message</code></pre>
       <thead><tr><th>Apontamento</th><th>Validação</th><th>Severidade</th><th class="num">Desconto</th><th>Detector</th><th>Como é detectado</th><th>Em questão</th></tr></thead>
       <tbody id="findings-body"></tbody>
     </table></div>
-    <p class="small muted">Fonte: <code>config/rubric.toml</code> (versão 2026-11-v3). Descontos por severidade: crítica −60, alta −35, média −15, baixa −5.</p>
+    <p class="small muted">Fonte: <code>config/rubric.toml</code> (versão 2026-11-v9). Descontos por severidade (máximos): crítica −60, alta −35, média −15, baixa −5; o apontamento que atinge só parte do que foi enviado desconta menos, nunca menos da metade.</p>
   </section>
 
   <!-- ================================================================== RÉGUA -->
@@ -439,16 +439,18 @@ AssessmentText: summary, supplier_message</code></pre>
     <div class="section-head"><h2>Régua e simulador de score</h2><div class="tags"><span class="tag">Todos</span></div></div>
     <p>A régua é a parte que <b>decide</b>. Ela é determinística: os mesmos apontamentos dão sempre o mesmo resultado.</p>
     <div class="grid c3">
-      <div class="card"><h4>1. Nota por validação</h4><p class="small">Começa em 100 e desconta cada tipo de apontamento uma vez (mínimo 0).</p></div>
+      <div class="card"><h4>1. Nota por validação</h4><p class="small">Começa em 100 e desconta cada tipo de apontamento uma vez (mínimo 0). O desconto é proporcional ao que o problema atinge do que foi enviado: severidade × (0,5 + 0,5 × fração de fotos, itens, serviços pedidos ou valor do orçamento). A nota de Orçamento não passa de 100 − % do orçamento em questão.</p></div>
       <div class="card"><h4>2. Score ponderado</h4><p class="small">Escopo × 20 + Orçamento × 40 + Fotos × 40, dividido por 100.</p></div>
-      <div class="card"><h4>3. Recomendação</h4><p class="small">Pela ordem de precedência abaixo: checklist, trava, confiança, faixas.</p></div>
+      <div class="card"><h4>3. Recomendação</h4><p class="small">Pela ordem de precedência abaixo: checklist, trava, falta do fornecedor, confiança, valor em questão, faixas.</p></div>
     </div>
 
     <h3>Ordem de precedência da recomendação</h3>
     <ol class="ladder">
       <li><div><b>Checklist incompleto</b> → <i>Devolvido: checklist incompleto</i>. Sem score.</div></li>
       <li><div><b>Trava de integridade</b> (foto reaproveitada) → <i>Devolver (trava)</i>, qualquer que seja a nota.</div></li>
+      <li><div><b>Falta do fornecedor</b> (serviço pedido no chamado sem item no orçamento, item fora do escopo ou duplicado) → <i>Devolver ao fornecedor</i>, qualquer que seja a nota: o que ajustar já está claro.</div></li>
       <li><div><b>Confiança baixa</b> (2 ou mais <span class="term" tabindex="0" data-tip="Sinais de que a entrada não permite concluir com segurança: escopo vago, escopo incoerente, foto ilegível, orçamento ilegível.">redutores de confiança</span>) → <i>Análise detalhada</i>: a entrada não permite concluir.</div></li>
+      <li><div><b>30% ou mais do orçamento em questão</b> → <i>Devolver ao fornecedor</i>.</div></li>
       <li><div><b>Faixas do score:</b> ≥ 85 <i>Aprovar</i> · 70 a 84 <i>Aprovar com ressalvas</i> · &lt; 70 <i>Devolver ao fornecedor</i>. Com 1 redutor, a confiança é média e o motivo pede atenção.</div></li>
     </ol>
 

@@ -2,13 +2,18 @@
 # Alterar aqui muda notas, score e recomendação sem tocar no código. Suba a versão a cada mudança.
 
 [default.rubric]
-version = "2026-11-v8"  # v8: serviço pedido sem item no orçamento, serviço executado antes da aprovação, valor em questão limita "Aprovar" e tolerância própria para preço de mercado; v7: quantidade cobrada acima do que as fotos mostram; v6: leitura de documentos (OCR): documento ilegível, de outro chamado, com data fora da janela e preço acima do mercado; v5: escopo vago alto, quantidade não verificável, item sem foto e valor divergente relevante; v4: absorção entre tipos (absorbs) e foto do depois com local não confirmado; v3: chaves em inglês
+version = "2026-11-v9"  # v9: desconto proporcional ao que foi enviado (fração de fotos, itens, serviços, documentos ou valor), valor em questão limita a nota de Orçamento, faltas do fornecedor devolvem (serviço pedido sem item, item fora do escopo ou duplicado; 30% ou mais do orçamento em questão) e "serviço pedido sem item" deixa de reduzir a confiança; v8: serviço pedido sem item no orçamento, serviço executado antes da aprovação, valor em questão limita "Aprovar" e tolerância própria para preço de mercado; v7: quantidade cobrada acima do que as fotos mostram; v6: leitura de documentos (OCR): documento ilegível, de outro chamado, com data fora da janela e preço acima do mercado; v5: escopo vago alto, quantidade não verificável, item sem foto e valor divergente relevante; v4: absorção entre tipos (absorbs) e foto do depois com local não confirmado; v3: chaves em inglês
 
 # peso de cada validação no score (somam 100)
 weights = { scope = 20, quote = 40, photos = 40 }
 
 # desconto por severidade; cada tipo de apontamento desconta uma vez por validação
 discount_by_severity = { critical = 60, high = 35, medium = 15, low = 5 }
+# Proporcional ao que foi enviado: o tipo desconta severidade × (piso + (1 − piso) × fração atingida).
+# extent = "value" (valor em questão ÷ orçamento), "photos", "items", "documents", "services" (serviços pedidos sem item)
+# ou "whole" (o chamado inteiro: desconta a severidade toda). Ex.: 1 foto fora do escopo em 6, Alto: 35 × (0,5 + 0,5/6) = 20.
+proportional_floor = 0.5
+# returns = true num tipo: falta do fornecedor (o que ajustar já está claro) → no máximo "Devolver ao fornecedor"
 # absorbs = ["tipo"] num tipo de apontamento: se os dois aparecem na mesma validação, o absorvido segue como evidência,
 # mas não desconta (é o mesmo problema visto por outro ângulo; descontar os dois puniria duas vezes)
 
@@ -33,9 +38,11 @@ hash_min_detail = 9.0     # abaixo disso a foto é "pouco detalhe" (desvio das b
 hash_method = "phash + dhash (soma das distâncias de Hamming)"
 spreadsheet_value_tolerance = 1.00   # R$ de diferença aceitos entre planilha e chamado
 photo_date_tolerance_days = 1
-# valor potencial divergente a partir desta fração do orçamento gera o apontamento relevant_amount_at_issue
-# (cada tipo desconta uma vez; isto pesa a materialidade quando muitos itens têm o mesmo problema)
-relevant_amount_at_issue_pct = 50
+# a partir desta fração do orçamento em questão, a nota de Orçamento fica limitada a 100 − % em questão
+# (o apontamento relevant_amount_at_issue desconta o que falta para o teto; pesa quando muitos itens têm o mesmo problema)
+relevant_amount_at_issue_pct = 10
+# a partir desta fração do orçamento em questão, o chamado volta ao fornecedor qualquer que seja a nota (0 desliga)
+max_amount_at_issue_for_caveats_pct = 30
 # quantidade cobrada x quantidade que as fotos mostram (somando todas): acima de N% vira quantity_above_photos
 photo_quantity_tolerance_pct = 25
 # acima deste % do orçamento em questão, uma nota que aprovaria vira "Aprovar com ressalvas" (0 desliga)
@@ -59,30 +66,37 @@ reduces_confidence = true
 description = "Escopo incoerente com a categoria ou o sintoma"
 
 [default.rubric.finding_types.out_of_scope_item]
+extent = "value"
+returns = true  # cobra o que não foi pedido: o orçamento precisa ser corrigido pelo fornecedor
 validation = "quote"
 severity = "high"
 amount_at_issue = "item"
 description = "Item fora do escopo"
 
 [default.rubric.finding_types.unjustified_replacement]
+extent = "value"
 validation = "quote"
 severity = "high"
 amount_at_issue = "item"
 description = "Troca ou peça sem justificativa técnica"
 
 [default.rubric.finding_types.duplicate_item]
+extent = "value"
+returns = true  # cobra duas vezes: o orçamento precisa ser corrigido pelo fornecedor
 validation = "quote"
 severity = "high"
 amount_at_issue = "item"
 description = "Item cobrado em duplicidade"
 
 [default.rubric.finding_types.quantity_above_expected]
+extent = "value"
 validation = "quote"
 severity = "medium"
 amount_at_issue = "excess"
 description = "Quantidade acima do esperado"
 
 [default.rubric.finding_types.unverifiable_quantity]
+extent = "value"
 validation = "quote"
 severity = "medium"
 reduces_confidence = true
@@ -95,15 +109,17 @@ severity = "medium"
 description = "Valor potencial divergente relevante no orçamento"
 
 [default.rubric.finding_types.price_above_reference]
+extent = "value"
 validation = "quote"
 severity = "medium"
 amount_at_issue = "excess"
 description = "Preço acima da referência"
 
 [default.rubric.finding_types.scope_not_quoted]
+extent = "services"
+returns = true  # o orçamento não trata o que foi pedido: o fornecedor precisa ajustar (não é incerteza da entrada)
 validation = "scope"
-severity = "high"
-reduces_confidence = true
+severity = "critical"
 description = "Serviço pedido no chamado sem item no orçamento"
 
 [default.rubric.finding_types.service_before_approval]
@@ -112,12 +128,14 @@ severity = "high"
 description = "Serviço executado antes da aprovação do orçamento"
 
 [default.rubric.finding_types.price_above_market]
+extent = "value"
 validation = "quote"
 severity = "medium"
 amount_at_issue = "excess"
 description = "Preço acima do valor de mercado apresentado em documento"
 
 [default.rubric.finding_types.quantity_above_photos]
+extent = "value"
 validation = "quote"
 severity = "medium"
 amount_at_issue = "excess"
@@ -129,6 +147,7 @@ severity = "medium"
 description = "Planilha divergente do chamado (categoria, sintoma, escopo ou valor)"
 
 [default.rubric.finding_types.photo_mismatch]
+extent = "photos"
 validation = "photos"
 severity = "high"
 description = "Foto não corresponde ao escopo"
@@ -146,6 +165,7 @@ reduces_confidence = true
 description = "Foto do depois sem local confirmado"
 
 [default.rubric.finding_types.item_without_photo]
+extent = "items"
 validation = "photos"
 severity = "medium"
 description = "Item cobrado sem evidência fotográfica"
@@ -157,6 +177,7 @@ phase = 2
 description = "Sem foto do \"antes\""
 
 [default.rubric.finding_types.unreadable_photo]
+extent = "photos"
 validation = "photos"
 severity = "low"
 phase = 2
@@ -164,6 +185,7 @@ reduces_confidence = true
 description = "Foto ilegível"
 
 [default.rubric.finding_types.photo_dated_before]
+extent = "photos"
 validation = "photos"
 severity = "medium"
 phase = 2
@@ -178,17 +200,20 @@ description = "Foto reaproveitada de outro chamado"
 
 # --- documentos (leitura por OCR de fotos de documentos e PDFs) ---
 [default.rubric.finding_types.unreadable_document]
+extent = "documents"
 validation = "photos"
 severity = "low"
 reduces_confidence = true
 description = "Documento ilegível"
 
 [default.rubric.finding_types.document_mismatch]
+extent = "documents"
 validation = "photos"
 severity = "high"
 description = "Documento não corresponde ao chamado"
 
 [default.rubric.finding_types.document_date_inconsistent]
+extent = "documents"
 validation = "photos"
 severity = "medium"
 phase = 2

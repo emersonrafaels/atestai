@@ -101,15 +101,16 @@
   "missing": [],
   "findings": [
     "price_above_reference",
+    "relevant_amount_at_issue",
     "unreadable_photo"
   ],
   "optional": [],
   "grades": {
     "scope": 100,
-    "quote": 85,
-    "photos": 95
+    "quote": 80,
+    "photos": 97
   },
-  "score": 92,
+  "score": 91,
   "recommendation": "approve_with_caveats",
   "confidence": "medium"
 }

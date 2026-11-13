@@ -131,8 +131,8 @@
   "optional": [],
   "grades": {
     "scope": 100,
-    "quote": 50,
-    "photos": 5
+    "quote": 35,
+    "photos": 19
   },
   "score": 42,
   "recommendation": "return_locked",

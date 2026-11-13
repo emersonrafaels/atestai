@@ -135,6 +135,10 @@ def humanize(name: str, f: dict[str, Any]) -> str:
         return f"Análise das {f.get('photos')} fotos falhou; tentando em {f.get('chunks')} lotes menores"
     if name == "photos_degraded":
         return f"Fotos não analisadas ({f.get('error')}): o chamado segue com confiança reduzida para conferência manual"
+    if name == "photos_quantity_unchecked":
+        return f"Análise das fotos: o modelo não contou os itens {f.get('items')}; registrado nas observações do parecer"
+    if name == "quote_coverage_incomplete":
+        return f"Conferência do orçamento: serviços pedidos sem conferência do modelo ({'; '.join(f.get('missing') or [])})"
     if name == "documents_retry":
         return f"Leitura dos documentos falhou ({f.get('error')}); tentando de novo"
     if name == "documents_degraded":

@@ -159,12 +159,11 @@ class DocumentStage(AnalysisStage):
                         f"Item {item.n} cobrado a {brl(item.unit_value)}; o documento {d.file} mostra {p.description} a {brl(p.value)} "
                         f"({pct:.0f}% acima, tolerância {self.rubric.market_price_tolerance_pct:g}%)"
                     )
-                    unsure = p.same_product != Match.YES  # sem especificação no orçamento, a comparação é indicativa
-                    if unsure:
+                    # sem especificação no orçamento, a comparação é indicativa: o fornecedor precisa especificar o produto
+                    # (falta dele, não incerteza da entrada: não reduz a confiança)
+                    if p.same_product != Match.YES:
                         evidence = "Produto não confirmado (o orçamento não traz especificação para comparar). " + evidence
                     f = self.scorer.finding("price_above_market", evidence, f"item {item.n}: {item.description}", excess)
-                    if unsure:
-                        f = f.model_copy(update={"reduces_confidence": True})
                     item.findings.append(f)
                     item.amount_at_issue = amount_at_issue(item, item.findings, self.rubric)
                     out.append(f)

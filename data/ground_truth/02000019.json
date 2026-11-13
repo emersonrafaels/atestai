@@ -110,6 +110,7 @@
   "findings": [
     "photo_mismatch",
     "price_above_reference",
+    "relevant_amount_at_issue",
     "vague_scope"
   ],
   "optional": [
@@ -119,10 +120,10 @@
   ],
   "grades": {
     "scope": 65,
-    "quote": 85,
-    "photos": 65
+    "quote": 89,
+    "photos": 78
   },
-  "score": 73,
+  "score": 80,
   "recommendation": "approve_with_caveats",
   "confidence": "medium"
 }

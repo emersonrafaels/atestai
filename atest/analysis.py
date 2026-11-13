@@ -12,7 +12,8 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, ClassVar
 
 from .domain import Attachment, ChecklistResult, ClassifiedAttachment, EvaluatedDocument, EvaluatedItem, Finding, Stage
-from .llm_schemas import AssessmentText, PhotoAnalysis, ScopeReading
+from .formatting import brl
+from .llm_schemas import AssessmentText, PhotoAnalysis, ScopeReading, ServiceCoverage
 from .score import ScoreCalculator, ScoreResult
 
 if TYPE_CHECKING:
@@ -36,6 +37,7 @@ class AnalysisContext:
     confidence_reducers: list[str] = field(default_factory=list)  # motivos extras de baixa confiança (ex.: orçamento ilegível)
     items: list[EvaluatedItem] = field(default_factory=list)
     quote_notes: list[str] = field(default_factory=list)
+    service_coverage: list[ServiceCoverage] = field(default_factory=list)
     photos: list[Attachment] = field(default_factory=list)
     photo_analysis: PhotoAnalysis | None = None
     documents: list[EvaluatedDocument] = field(default_factory=list)
@@ -59,8 +61,40 @@ class AnalysisContext:
             "amount_at_issue": self.amount_at_issue,
             "amount_at_issue_pct": self.amount_at_issue_pct,
             "observations": self.observations(),
+            "rationale": self.rationale(),
             "moment": self.ticket.data.moment.value,
         }
+
+    def rationale(self) -> list[str]:
+        """Racional técnico do engenheiro, montado por regra a partir das etapas: cobertura do pedido, contagem nas fotos,
+        preço e leitura do problema. Vai sempre para a redação do parecer, com ou sem apontamento."""
+        out: list[str] = []
+        mark = {"yes": "coberto", "partial": "coberto só em parte", "no": "SEM item no orçamento", "undetermined": "não conferido"}
+        for c in self.service_coverage:
+            items = ", ".join(str(i) for i in c.items)
+            out.append(f"Serviço pedido “{c.service}”: {mark.get(c.covered.value, c.covered.value)}"
+                       + (f" (itens {items})" if items else "") + (f". {c.note}" if c.note else ""))
+        by_n = {i.n: i for i in self.items}
+        for q in self.photo_analysis.quantity_checks if self.photo_analysis else []:
+            item = by_n.get(q.item)
+            if item is None:
+                continue
+            seen = (f"cerca de {q.estimated_quantity:g} {item.unit}" if q.estimated_quantity > 0 else "não dá para estimar")
+            out.append(f"Contagem nas fotos, item {item.n} ({item.description}): cobrado {item.quantity:g} {item.unit}; as fotos "
+                       f"somam {q.count_seen:g} ({q.what_was_counted}), {seen}. {q.reasoning}".strip())
+        priced = [i for i in self.items if i.reference_price]
+        for i in priced:
+            pct = 100 * (i.unit_value / i.reference_price - 1)
+            out.append(f"Preço do item {i.n}: {brl(i.unit_value)} × referência {brl(i.reference_price)} ({pct:+.0f}%)")
+        if self.items and not priced:
+            out.append("Nenhum item tem equivalente na tabela de referência: o preço não pôde ser comparado com a tabela")
+        for d in self.documents:
+            for p in d.prices:
+                if (item := by_n.get(p.quote_item)) and p.value > 0:
+                    out.append(f"Preço de mercado no documento {d.file}: {p.description} a {brl(p.value)} × item {item.n} a {brl(item.unit_value)}")
+        if self.photo_analysis and self.photo_analysis.problem_assessment.strip():
+            out.append(f"O que as fotos mostram do problema: {self.photo_analysis.problem_assessment.strip()}")
+        return out
 
     def observations(self, limit: int = 600) -> list[str]:
         """Observações das etapas que não viram apontamento (orçamento, fotos, documentos), resumidas para o parecer."""

@@ -133,9 +133,12 @@ class Orchestrator:
             "scope": ctx.scope.model_dump(mode="json"),
             "items": ctx.items,
             "quote_notes": ctx.quote_notes,
+            "service_coverage": [c.model_dump(mode="json") for c in ctx.service_coverage],
             "photos": PhotoStage.evaluated_photos(ctx.photo_analysis, ctx.photos, ctx.integrity),
             "photo_summary": ctx.photo_analysis.model_dump(
-                mode="json", include={"has_before_photo", "done_service", "done_justification", "items_without_photo", "quantity_checks", "notes"}
+                mode="json",
+                include={"has_before_photo", "problem_assessment", "done_service", "done_justification", "items_without_photo",
+                         "quantity_checks", "notes"},
             ),
             "documents": ctx.documents,
             "summary": ctx.text.summary,

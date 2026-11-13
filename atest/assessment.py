@@ -69,6 +69,8 @@ class AssessmentWriter:
             f"Score: {result['score']} | Notas: {grades} | Confiança: {Confidence(result['confidence']).label}\n"
             f"Valor potencial divergente: {brl(result['amount_at_issue'])} ({result['amount_at_issue_pct']:.0f}% do orçamento)\n"
             f"APONTAMENTOS:\n{findings}"
+            + ("\n\nRACIONAL TÉCNICO (conferências feitas nas etapas):\n" + "\n".join(f"- {r}" for r in result.get("rationale") or [])
+               if result.get("rationale") else "")
             + ("\n\nOBSERVAÇÕES DAS ETAPAS (não pontuadas):\n" + "\n".join(f"- {o}" for o in result.get("observations") or [])
                if result.get("observations") else "")
         )

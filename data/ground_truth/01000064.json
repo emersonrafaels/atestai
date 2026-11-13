@@ -112,16 +112,17 @@
   "findings": [
     "missing_before_photo",
     "out_of_scope_item",
+    "relevant_amount_at_issue",
     "reused_photo",
     "spreadsheet_mismatch"
   ],
   "optional": [],
   "grades": {
     "scope": 100,
-    "quote": 50,
+    "quote": 52,
     "photos": 25
   },
-  "score": 50,
+  "score": 51,
   "recommendation": "return_locked",
   "confidence": "high"
 }

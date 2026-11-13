@@ -532,7 +532,9 @@ export default function App() {
                         className={`-mb-px flex items-center gap-1.5 whitespace-nowrap border-b-2 px-3 py-2 text-[15px] transition-colors ${tab === a.id ? "border-blueprint font-semibold text-blueprint" : "border-transparent text-muted hover:text-ink"} disabled:pointer-events-none disabled:opacity-40`}>
                         <Icon size={16} aria-hidden />
                         {a.label}
-                        {a.id === "scope" && assessment && assessment.findings.some((f) => f.validation === "scope") && <span className="rounded-full bg-warn px-1.5 text-[11px] text-white" aria-label="apontamentos de escopo">{assessment.findings.filter((f) => f.validation === "scope").length}</span>}
+                        {(a.id === "scope" || a.id === "quote" || a.id === "photos") && assessment && assessment.findings.some((f) => f.validation === a.id) && (
+                          <span className="rounded-full bg-warn px-1.5 text-[11px] text-white" aria-label={`apontamentos: ${a.label}`}>{assessment.findings.filter((f) => f.validation === a.id).length}</span>
+                        )}
                         {a.id === "assessment" && assessment && assessment.findings.length > 0 && <span className="rounded-full bg-bad px-1.5 text-[11px] text-white" aria-label={`${assessment.findings.length} apontamentos`}>{assessment.findings.length}</span>}
                       </button>
                     </Tooltip>

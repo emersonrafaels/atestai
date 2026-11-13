@@ -4,6 +4,7 @@ import type { Assessment } from "../api";
 import { MOMENT_LABEL } from "../format";
 import type { LightboxItem } from "./ui/Lightbox";
 import { Tooltip } from "./ui/Tooltip";
+import { SentenceList } from "./ui/RichText";
 
 const MATCH = {
   yes: { label: "Corresponde ao escopo", cls: "text-ok" },
@@ -16,7 +17,7 @@ export function PhotosTab({ p, base, openPhoto, highlight = [] }: { p: Assessmen
   useScrollToHighlight(highlight.map((f) => `photo-${f}`));
   if (!p.photos.length) return <p className="text-muted">Nenhuma foto analisada neste chamado.</p>;
   // pareceres antigos gravaram has_done_service_photo (sim/não); os novos, done_service (yes/partial/no/undetermined)
-  const summary = p.photo_summary as { has_before_photo: boolean; done_service?: keyof typeof MATCH; has_done_service_photo?: boolean; done_justification: string } | null;
+  const summary = p.photo_summary as { has_before_photo: boolean; problem_assessment?: string; done_service?: keyof typeof MATCH; has_done_service_photo?: boolean; done_justification: string } | null;
   const done: keyof typeof MATCH = summary?.done_service ?? (summary?.has_done_service_photo ? "yes" : "no");
   const gallery = p.photos.map((f) => ({ url: `${base}/${encodeURIComponent(f.file)}`, caption: f.what_it_shows }));
   return (
@@ -30,6 +31,12 @@ export function PhotosTab({ p, base, openPhoto, highlight = [] }: { p: Assessmen
           {done !== "yes" && p.moment === "execution" && <span className="text-muted">{summary.done_justification}</span>}
           {p.moment === "quote" && <span className="text-muted">Aprovação do orçamento: o serviço ainda não foi feito, então não se espera foto do depois.</span>}
         </div>
+      )}
+      {summary?.problem_assessment && (
+        <section className="rounded-xl border border-line bg-sheet p-4 text-sm">
+          <h3 className="font-semibold">Leitura técnica do problema</h3>
+          <SentenceList text={summary.problem_assessment} topics={false} className="mt-2 text-ink/90" />
+        </section>
       )}
       <QuantityChecks p={p} />
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
