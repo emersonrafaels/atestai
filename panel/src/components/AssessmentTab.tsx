@@ -1,9 +1,11 @@
-import { ArrowDown, Check, ChevronDown, Copy, Lock, MapPin, ShieldAlert, ThumbsDown, Undo2, X } from "lucide-react";
+import { ArrowDown, Check, ChevronDown, ChevronRight, Copy, Lock, MapPin, MessageSquareText, ShieldAlert, ThumbsDown, ThumbsUp, Undo2, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { Assessment, RubricInfo, TicketDetail } from "../api";
-import { brl, brl4, REC, SEVERITY, discountText, findingLabel, CONFIDENCE_LABEL, VALIDATIONS, VALIDATION_LABEL, VALIDATION_SHORT, explainFindings, GLOSSARY, pts, STAGE_LABEL, MAINTENANCE_LABEL } from "../format";
-import { locate } from "../evidence";
-import { ScoreGauge } from "./ScoreBadge";
+import { api, type Assessment, type FindingFeedback, type RubricInfo, type TicketDetail } from "../api";
+import { FindingFeedbackDialog } from "./FindingFeedbackDialog";
+import { brl, brl4, REC, SEVERITY, discountText, findingLabel, CONFIDENCE_LABEL, CONFIDENCE_TEXT, VALIDATIONS, VALIDATION_LABEL, VALIDATION_SHORT, explainFindings, GLOSSARY, pts, STAGE_LABEL, MAINTENANCE_LABEL } from "../format";
+import { locate, underCurrentRule } from "../evidence";
+import { ScoreGauge, tint } from "./ScoreBadge";
+import { ExplainDialog, type ExplainKind } from "./ExplainDialog";
 import { DecisionPanel } from "./DecisionPanel";
 import { EngineerInsights, hasInsights } from "./EngineerInsights";
 import { ScoreBreakdown } from "./ScoreBreakdown";
@@ -32,8 +34,21 @@ export function AssessmentTab({ p, rubric, ticket, openPhoto, goTo, openTicket }
   const [open, setOpen] = useState<Set<number>>(new Set());
   const [unfounded, setUnfounded] = useState<Set<string>>(new Set());
   const [registered, setRegistered] = useState(true);
+  // feedback de cada apontamento (acertou/errou): o último registro de cada posição; fbOpen = apontamento com o modal aberto
+  const [findingFb, setFindingFb] = useState<Record<number, FindingFeedback>>({});
+  const [fbOpen, setFbOpen] = useState<number | null>(null);
+  useEffect(() => {
+    setFindingFb({});
+    if (!p.record_id) return;
+    api.findingFeedbacks(p.record_id)
+      .then((list) => setFindingFb(Object.fromEntries(list.map((x) => [x.finding_index, x]))))  // em ordem: o último de cada posição fica
+      .catch(() => setFindingFb({}));
+  }, [p.record_id]);
   const [decisionVisible, setDecisionVisible] = useState(false);
   const decisionRef = useRef<HTMLDivElement>(null);
+  // modal que explica a confiança ou a recomendação
+  const [explain, setExplain] = useState<ExplainKind | null>(null);
+  const goToDecision = useCallback(() => decisionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), []);
 
   const copy = async () => {
     await navigator.clipboard.writeText(p.supplier_message);
@@ -63,6 +78,8 @@ export function AssessmentTab({ p, rubric, ticket, openPhoto, goTo, openTicket }
   }, []);
 
   const impacts = explainFindings(p.findings, rubric);
+  // a régua de hoje sobre este parecer: pareceres antigos podem contar como redutor o que hoje é só apontamento
+  const cur = underCurrentRule(p, rubric);
   const withImpact = p.findings.map((f, idx) => ({ f, imp: impacts[idx], idx }));
   const byValidation = VALIDATIONS.map((v) => ({ v, items: withImpact.filter((x) => x.f.validation === v) })).filter((g) => g.items.length);
   const totalScorePts = impacts.reduce((s, i) => s + i.scorePts, 0);
@@ -108,23 +125,42 @@ export function AssessmentTab({ p, rubric, ticket, openPhoto, goTo, openTicket }
       {/* 2. recomendação */}
       <section data-tour="verdict" className="rounded-xl border border-line bg-sheet p-5">
         <StepTitle n={++n}>Parecer do Atest.AI</StepTitle>
-        <div className="mt-3 flex flex-col gap-6 md:flex-row md:items-center">
-          <Tooltip className="inline-flex self-center" content={p.score !== null
+        <div className="mt-3 flex flex-col gap-6 md:flex-row md:items-start">
+          <Tooltip className="inline-flex self-center md:self-start" content={p.score !== null
             ? `Score ${p.score} de 100 → ${REC[p.recommendation].label}. Veja abaixo como cada ponto foi calculado.`
             : `${REC[p.recommendation].label}: sem score, porque o chamado parou antes das validações.`}>
             <ScoreGauge score={p.score} recommendation={p.recommendation} rubric={rubric} size={196} locked={p.findings.some((f) => f.lock)} />
           </Tooltip>
-          <div className="min-w-0 flex-1 space-y-3">
-            <h2 className="largo text-2xl font-bold" style={{ color: REC[p.recommendation].color }}>{REC[p.recommendation].label}</h2>
-            <Reason text={p.recommendation_reason} />
-            <Summary text={p.summary} color={REC[p.recommendation].color} onItems={(items) => goTo("quote", { items })} />
-            <dl className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
-              {p.score !== null && (
-                <Fact label="Score" help={<InfoTip term="score" />}><b className="tabular-nums">{p.score}</b><span className="text-muted">/100</span></Fact>
-              )}
+          <div className="min-w-0 flex-1 space-y-4">
+            {/* 1º o veredito e o motivo; 2º os números que pesam na decisão; 3º o resumo, frase a frase */}
+            <div className="space-y-2">
+              <h2 className="largo text-2xl font-bold" style={{ color: REC[p.recommendation].color }}>
+                <button type="button" onClick={() => setExplain("recommendation")} aria-haspopup="dialog"
+                  className="group inline-flex flex-wrap items-center gap-x-2.5 gap-y-1 text-left">
+                  <span className="decoration-2 decoration-dotted underline-offset-4 group-hover:underline">{REC[p.recommendation].label}</span>
+                  <span className="inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 font-[inherit] text-[12px] font-semibold ring-1 ring-current/20 transition-colors group-hover:ring-current/50"
+                    style={{ background: tint(p.recommendation, 12) }}>
+                    Por quê? <ChevronRight size={13} />
+                  </span>
+                </button>
+              </h2>
+              <Reason text={p.recommendation_reason} onReasons={p.recommendation === "detailed_review" && p.confidence ? () => setExplain("confidence") : undefined} />
+            </div>
+            <dl className="flex flex-wrap gap-x-8 gap-y-3 border-y border-line py-3 text-sm">
               {p.confidence && (
                 <Fact label="Confiança" help={<InfoTip term="confidence" text={p.confidence_reducers.length ? `Redutores neste chamado: ${p.confidence_reducers.map((r) => findingLabel(r)).join(", ")}.` : "Nenhum redutor neste chamado."} />}>
-                  <b className={p.confidence === "high" ? "text-ok" : p.confidence === "medium" ? "text-warn" : "text-bad"}>{CONFIDENCE_LABEL[p.confidence] ?? p.confidence}</b>
+                  <button type="button" onClick={() => setExplain("confidence")} aria-haspopup="dialog"
+                    aria-label={`Confiança ${CONFIDENCE_LABEL[p.confidence] ?? p.confidence}: ver ${p.confidence_reducers.length ? "o que reduziu a confiança" : "como a confiança é calculada"}`}
+                    className={`group inline-flex items-center gap-0.5 font-bold ${CONFIDENCE_TEXT[p.confidence] ?? ""}`}>
+                    <span className="underline decoration-dotted underline-offset-2 group-hover:decoration-solid">{CONFIDENCE_LABEL[p.confidence] ?? p.confidence}</span>
+                    {p.confidence_reducers.length > 0 && <span className="font-medium text-muted"> · {p.confidence_reducers.length} redutor{p.confidence_reducers.length === 1 ? "" : "es"}</span>}
+                    <ChevronRight size={14} className="text-muted transition-transform group-hover:translate-x-0.5" />
+                  </button>
+                  {cur.outdated && cur.p.confidence && (
+                    <Tooltip content={<>Parecer gerado com a régua {p.rubric_version}.{cur.dropped.length > 0 && <> Pela régua atual, {cur.dropped.map((r) => findingLabel(r).toLowerCase()).join(", ")} não reduz{cur.dropped.length === 1 ? "" : "em"} mais a confiança.</>}<br />Pela régua atual: confiança <b>{CONFIDENCE_LABEL[cur.p.confidence]}</b>.</>}>
+                      <span className="ml-1.5 cursor-help rounded bg-[#fdf6e4] px-1.5 py-0.5 text-[11px] font-semibold text-warn">régua antiga</span>
+                    </Tooltip>
+                  )}
                 </Fact>
               )}
               {p.amount_at_issue > 0 && (
@@ -132,6 +168,7 @@ export function AssessmentTab({ p, rubric, ticket, openPhoto, goTo, openTicket }
               )}
               <Fact label="Custo da análise"><b>{p.mode === "api" ? brl4(p.cost_brl) : "simulado"}</b></Fact>
             </dl>
+            <Summary text={p.summary} color={REC[p.recommendation].color} label={REC[p.recommendation].label} onItems={(items) => goTo("quote", { items })} />
           </div>
         </div>
       </section>
@@ -147,7 +184,7 @@ export function AssessmentTab({ p, rubric, ticket, openPhoto, goTo, openTicket }
           Como o score foi calculado <InfoTip term="bands" />
         </StepTitle>
         <div className="mt-4">
-          {p.score !== null ? <ScoreBreakdown p={p} rubric={rubric} /> : (
+          {p.score !== null ? <ScoreBreakdown p={p} rubric={rubric} onExplain={setExplain} /> : (
             <InfoBox tone="tip">Sem score: o chamado voltou no checklist mínimo, antes das validações de escopo, orçamento e fotos.</InfoBox>
           )}
         </div>
@@ -172,9 +209,12 @@ export function AssessmentTab({ p, rubric, ticket, openPhoto, goTo, openTicket }
           </div>
           {byValidation.map((g) => (
             <div key={g.v} className="border-b border-line/70 px-5 py-4 last:border-0">
-              <h4 className="mb-3 flex flex-wrap items-baseline gap-x-2 text-sm">
-                <span className="font-semibold">{VALIDATION_LABEL[g.v]}</span>
-                {p.grades && <span className="text-muted">nota {p.grades[g.v]}/100 · peso {rubric.weights[g.v]}%</span>}
+              <h4 className="mb-3 flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
+                <span className="text-[15px] font-semibold">{VALIDATION_LABEL[g.v]}</span>
+                <span className="text-sm text-muted">
+                  {g.items.length} apontamento{g.items.length === 1 ? "" : "s"}
+                  {p.grades && <>, nota <b className="font-semibold text-ink tabular-nums">{p.grades[g.v]}</b> de 100, peso {rubric.weights[g.v]}%</>}
+                </span>
               </h4>
               <ul className="space-y-2.5">
                 {g.items.map(({ f, imp, idx }) => {
@@ -189,12 +229,17 @@ export function AssessmentTab({ p, rubric, ticket, openPhoto, goTo, openTicket }
                       <div className="grid gap-3 py-2.5 pl-3 pr-3 sm:grid-cols-[1fr_180px]">
                         <button type="button" onClick={() => toggleOpen(idx)} aria-expanded={isOpen} aria-controls={`finding-ev-${idx}`} className="min-w-0 text-left text-sm">
                           <div className="flex flex-wrap items-center gap-1.5">
-                            <span className="rounded px-1.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-white" style={{ background: off ? "var(--color-muted)" : SEVERITY[f.severity].color }}>
+                            <span className="rounded px-1.5 py-0.5 text-[12px] font-semibold text-white" style={{ background: off ? "var(--color-muted)" : SEVERITY[f.severity].color }}>
                               {SEVERITY[f.severity].label}
                             </span>
                             <span className={`font-medium ${off ? "line-through decoration-ink/40" : ""}`}>{f.description}</span>
                             {f.lock && <span className="flex items-center gap-1 rounded bg-[#ece6f6] px-1.5 py-0.5 text-[11px] font-semibold text-lock"><Lock size={11} /> Trava</span>}
-                            {f.reduces_confidence && <span className="flex items-center gap-1 rounded bg-paper px-1.5 py-0.5 text-[11px] font-semibold text-muted"><ShieldAlert size={11} /> Reduz confiança</span>}
+                            {cur.p.findings[idx].reduces_confidence && <span className="flex items-center gap-1 rounded bg-paper px-1.5 py-0.5 text-[11px] font-semibold text-muted"><ShieldAlert size={11} /> Reduz confiança</span>}
+                            {f.reduces_confidence && !cur.p.findings[idx].reduces_confidence && (
+                              <Tooltip content={`Este parecer (régua ${p.rubric_version}) contava este apontamento como redutor de confiança. Pela régua atual, ele é um problema que o modelo conseguiu ver, não uma dificuldade de leitura, e não reduz mais a confiança.`}>
+                                <span className="flex cursor-help items-center gap-1 rounded bg-paper px-1.5 py-0.5 text-[11px] font-semibold text-muted line-through decoration-muted/60"><ShieldAlert size={11} /> Reduzia confiança</span>
+                              </Tooltip>
+                            )}
                             {f.returns && !f.absorbed_by && (
                               <Tooltip content={GLOSSARY.supplier_gap.text}>
                                 <span className="flex cursor-help items-center gap-1 rounded bg-[#fbefed] px-1.5 py-0.5 text-[11px] font-semibold text-bad"><Undo2 size={11} /> Devolve</span>
@@ -202,7 +247,7 @@ export function AssessmentTab({ p, rubric, ticket, openPhoto, goTo, openTicket }
                             )}
                             {off && <span className="rounded bg-[#fbefed] px-1.5 py-0.5 text-[11px] font-semibold text-bad">Não procede</span>}
                           </div>
-                          <div className="mt-1 text-muted">{highlight(f.evidence)}</div>
+                          <div className="mt-1 max-w-[80ch] leading-relaxed text-muted">{highlight(f.evidence)}</div>
                           <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px]">
                             {where && <span className="flex items-center gap-1 font-medium text-blueprint"><MapPin size={12} /> {where}</span>}
                             {f.amount_at_issue > 0 && <span className="text-muted">Potencial divergente: <b className="text-bad">{brl(f.amount_at_issue)}</b></span>}
@@ -226,6 +271,7 @@ export function AssessmentTab({ p, rubric, ticket, openPhoto, goTo, openTicket }
                               {off ? <><Undo2 size={13} /> Desfazer</> : <><ThumbsDown size={13} /> Não procede{many ? ` (${countByKind[f.kind]})` : ""}</>}
                             </button>
                           </Tooltip>
+                          <FeedbackButton fb={findingFb[idx]} disabled={!p.record_id} onClick={() => setFbOpen(idx)} />
                         </div>
                       </div>
                       {isOpen && (
@@ -269,12 +315,23 @@ export function AssessmentTab({ p, rubric, ticket, openPhoto, goTo, openTicket }
 
       {/* 6. decisão da pessoa analista: por último, depois de ler o parecer inteiro */}
       <div ref={decisionRef}>
-        <DecisionPanel p={p} n={++n} rubric={rubric} unfounded={unfounded} toggleUnfounded={toggleUnfounded} focusFinding={focusFinding} onRegistered={setRegistered} />
+        <DecisionPanel p={p} n={++n} rubric={rubric} unfounded={unfounded} toggleUnfounded={toggleUnfounded} focusFinding={focusFinding} onRegistered={setRegistered} onExplain={setExplain} />
       </div>
+
+      {explain && (
+        <ExplainDialog kind={explain} p={p} rubric={rubric} unfounded={unfounded} toggleUnfounded={toggleUnfounded} focusFinding={focusFinding}
+          goToDecision={goToDecision} onSwitch={setExplain} onClose={() => setExplain(null)} />
+      )}
+
+      {fbOpen !== null && p.record_id && p.findings[fbOpen] && (
+        <FindingFeedbackDialog assessmentId={p.record_id} index={fbOpen} finding={p.findings[fbOpen]} previous={findingFb[fbOpen]}
+          unfounded={unfounded.has(p.findings[fbOpen].kind)} onClose={() => setFbOpen(null)}
+          onSaved={(fb) => { setFindingFb((m) => ({ ...m, [fb.finding_index]: fb })); setFbOpen(null); }} />
+      )}
 
       {p.record_id && !registered && !decisionVisible && (
         <div className="pointer-events-none sticky bottom-4 z-20 flex justify-center">
-          <button onClick={() => decisionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
+          <button onClick={goToDecision}
             className="surgir pointer-events-auto flex items-center gap-2 rounded-full bg-ink px-4 py-2 text-sm font-medium text-white shadow-lg hover:bg-[#1c3359]">
             <span className="size-2 rounded-full bg-warn pulso" /> Decisão pendente
             {unfounded.size > 0 && <span className="text-white/70">· {unfounded.size} não procede{unfounded.size === 1 ? "" : "m"}</span>}
@@ -286,8 +343,31 @@ export function AssessmentTab({ p, rubric, ticket, openPhoto, goTo, openTicket }
   );
 }
 
+/** Botão de feedback do apontamento: sem registro, convida a avaliar; com registro, mostra se acertou ou errou. */
+function FeedbackButton({ fb, disabled, onClick }: { fb?: FindingFeedback; disabled: boolean; onClick: () => void }) {
+  const hint = disabled
+    ? "Disponível para pareceres gravados no banco"
+    : fb
+      ? <>Você marcou que o apontamento <b>{fb.verdict === "correct" ? "acertou" : "errou"}</b>{fb.comment ? <>: “{fb.comment}”</> : "."}<br />Clique para rever.</>
+      : "Diga se este apontamento acertou ou errou e, se quiser, comente. Fica gravado no banco.";
+  const cls = !fb
+    ? "border-line text-muted hover:border-blueprint hover:bg-blueprint-soft hover:text-blueprint"
+    : fb.verdict === "correct"
+      ? "border-ok/40 bg-[#e3f2ea] text-ok hover:border-ok"
+      : "border-bad/40 bg-[#fbefed] text-bad hover:border-bad";
+  return (
+    <Tooltip className="flex" content={hint}>
+      <button type="button" onClick={onClick} disabled={disabled}
+        className={`flex w-full items-center justify-center gap-1.5 rounded-md border px-2 py-1 text-[12px] font-medium transition-colors disabled:pointer-events-none disabled:opacity-40 ${cls}`}>
+        {!fb ? <><MessageSquareText size={13} /> Feedback</>
+          : fb.verdict === "correct" ? <><ThumbsUp size={13} /> Acertou</> : <><ThumbsDown size={13} /> Errou</>}
+      </button>
+    </Tooltip>
+  );
+}
+
 /** "Confiança baixa (motivo 1; motivo 2): conclusão" → conclusão em destaque e cada motivo como etiqueta. */
-function Reason({ text }: { text: string }) {
+function Reason({ text, onReasons }: { text: string; onReasons?: () => void }) {
   const m = /^(.*?)\s*\(([^()]+)\)\s*:\s*(.*)$/s.exec(text);
   if (!m) return <p className="text-sm font-medium text-muted">Por quê: <span className="text-ink">{highlight(text)}</span></p>;
   const [, head, list, tail] = m;
@@ -296,20 +376,33 @@ function Reason({ text }: { text: string }) {
     <div className="text-sm">
       <p className="font-medium text-muted">Por quê: <span className="text-ink">{head}{tail ? `: ${tail}` : ""}</span></p>
       <ul className="mt-1.5 flex flex-wrap gap-1.5">
-        {reasons.map((r) => <li key={r} className="rounded-full border border-line bg-paper px-2.5 py-0.5 text-[13px] text-ink">{r.charAt(0).toUpperCase() + r.slice(1)}</li>)}
+        {reasons.map((r) => {
+          const label = r.charAt(0).toUpperCase() + r.slice(1);
+          return (
+            <li key={r}>
+              {onReasons
+                ? <button type="button" onClick={onReasons} aria-haspopup="dialog" title="Ver o que reduziu a confiança"
+                    className="rounded-full border border-line bg-paper px-2.5 py-0.5 text-[13px] text-ink transition-colors hover:border-blueprint hover:text-blueprint">{label}</button>
+                : <span className="block rounded-full border border-line bg-paper px-2.5 py-0.5 text-[13px] text-ink">{label}</span>}
+            </li>
+          );
+        })}
       </ul>
     </div>
   );
 }
 
 /** Resumo do parecer: a manchete ("Recomendo …") em destaque e cada frase numa linha, com o assunto e os números à vista. */
-function Summary({ text, color, onItems }: { text: string; color: string; onItems: (items: number[]) => void }) {
+function Summary({ text, color, label, onItems }: { text: string; color: string; label: string; onItems: (items: number[]) => void }) {
   if (!text.trim()) return null;
   const { lead, body } = splitLead(text);
+  // "Recomendo devolver ao fornecedor" só repete o título logo acima: some quando não acrescenta nada
+  const norm = (s: string) => s.toLowerCase().replace(/^recomendo\s+/, "").replace(/[.:!]+$/, "").trim();
+  const showLead = lead && norm(lead) !== norm(label);
   return (
     <div className="rounded-lg border border-line border-l-4 bg-paper/40 px-4 py-3" style={{ borderLeftColor: color }}>
-      {lead && <p className="mb-2 text-[15px] font-semibold" style={{ color }}>{lead}</p>}
-      <SentenceList text={body} onItems={onItems} className="text-[15px]" />
+      {showLead && <p className="mb-2 text-[15px] font-semibold" style={{ color }}>{lead}</p>}
+      <SentenceList text={body} onItems={onItems} className="max-w-[78ch] text-[15px] leading-relaxed" />
     </div>
   );
 }

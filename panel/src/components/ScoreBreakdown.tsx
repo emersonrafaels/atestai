@@ -1,7 +1,8 @@
-import { Lock, ShieldAlert, Undo2 } from "lucide-react";
+import { ChevronRight, Lock, ShieldAlert, Undo2 } from "lucide-react";
 import type { Assessment, RubricInfo } from "../api";
 import { discountText, findingLabel, GLOSSARY, REC, VALIDATIONS, VALIDATION_LABEL, explainFindings, pts } from "../format";
 import { InfoTip, Tooltip } from "./ui/Tooltip";
+import type { ExplainKind } from "./ExplainDialog";
 
 const gradeColor = (g: number) => (g >= 85 ? "var(--color-ok)" : g >= 70 ? "var(--color-warn)" : "var(--color-bad)");
 
@@ -9,7 +10,7 @@ const gradeColor = (g: number) => (g >= 85 ? "var(--color-ok)" : g >= 70 ? "var(
  * Mostra a conta inteira do score: cada validação começa em 100, perde os descontos dos apontamentos,
  * e entra no score com o seu peso. Embaixo, a régua de faixas com o score posicionado.
  */
-export function ScoreBreakdown({ p, rubric }: { p: Assessment; rubric: RubricInfo }) {
+export function ScoreBreakdown({ p, rubric, onExplain }: { p: Assessment; rubric: RubricInfo; onExplain?: (kind: ExplainKind) => void }) {
   if (p.score === null || !p.grades) return null;
   const totalWeight = VALIDATIONS.reduce((s, v) => s + rubric.weights[v], 0) || 100;
   const impacts = explainFindings(p.findings, rubric);
@@ -96,9 +97,17 @@ export function ScoreBreakdown({ p, rubric }: { p: Assessment; rubric: RubricInf
       {(locked || lowConfidence) && (
         <p className="flex items-start gap-2 rounded-lg bg-[#f1ecfa] px-3 py-2 text-sm text-lock">
           {locked ? <Lock size={16} className="mt-0.5 shrink-0" /> : <ShieldAlert size={16} className="mt-0.5 shrink-0" />}
-          {locked
-            ? "Há uma trava de integridade: o chamado é devolvido qualquer que seja o score. O score fica registrado apenas como referência."
-            : "Confiança baixa: a entrada não basta para concluir, então o chamado vai para análise detalhada independente da faixa do score."}
+          <span>
+            {locked
+              ? "Há uma trava de integridade: o chamado é devolvido qualquer que seja o score. O score fica registrado apenas como referência."
+              : "Confiança baixa: a entrada não basta para concluir, então o chamado vai para análise detalhada independente da faixa do score."}
+            {onExplain && (
+              <button type="button" onClick={() => onExplain(locked ? "recommendation" : "confidence")} aria-haspopup="dialog"
+                className="ml-1.5 inline-flex items-center gap-0.5 font-semibold underline decoration-dotted underline-offset-2 hover:decoration-solid">
+                {locked ? "Entenda a decisão" : "Ver o que reduziu a confiança"} <ChevronRight size={14} />
+              </button>
+            )}
+          </span>
         </p>
       )}
     </div>

@@ -177,7 +177,7 @@ const COLUMN_HELP: Record<string, React.ReactNode> = {
   effect: "Quanto sai do score final (0 a 100): o desconto da severidade multiplicado pelo peso da validação. Ex.: −35 numa validação com peso 40% tira 14 pontos.",
   phase: "Fase 1 vale desde já; Fase 2 só conta quando a análise roda na Fase 2.",
   lock: "Ligada, o apontamento devolve o chamado ao fornecedor qualquer que seja o score (ex.: foto reaproveitada de outro chamado).",
-  confidence: "O apontamento indica que faltou informação para concluir. Um redutor deixa a confiança média; dois mandam o chamado para análise detalhada.",
+  confidence: "O apontamento indica dificuldade do modelo em ler ou entender a entrada (escopo vago, foto ilegível…). Problemas do orçamento ou das fotos que o modelo enxergou não devem reduzir a confiança. Um redutor deixa a confiança média; dois mandam o chamado para análise detalhada.",
   returns: "Falta do fornecedor: o que ajustar já está claro (ex.: serviço pedido sem item no orçamento). Ligada, o chamado volta ao fornecedor qualquer que seja o score.",
   extent: "O desconto acompanha quanto do que foi enviado o apontamento atinge: valor em questão sobre o orçamento, fotos, itens ou documentos atingidos, ou serviços pedidos sem item. “Chamado inteiro” desconta sempre a severidade toda.",
   absorbs: <>Evita punir duas vezes o mesmo problema. Se esta regra e uma das marcadas aparecem juntas no mesmo chamado, só esta desconta; a outra continua no parecer como evidência.
@@ -335,7 +335,7 @@ export function ScoreRubricEditor({ data, base, onChange }: Props) {
 
         <section className="rounded-xl border border-line bg-sheet p-5">
           <h3 className="flex items-center gap-1.5 font-semibold">Confiança <InfoTip term="confidence" /></h3>
-          <p className="mb-3 text-[13px] text-muted">Quantos redutores (escopo vago, foto ilegível…) levam a confiança média ou baixa. Confiança baixa manda para análise detalhada.</p>
+          <p className="mb-3 text-[13px] text-muted">Quantos redutores levam a confiança média ou baixa. Redutor é dificuldade do modelo em ler ou entender a entrada (escopo vago, foto ilegível…), não problema que ele enxergou no orçamento ou nas fotos. Confiança baixa manda para análise detalhada.</p>
           <div className="space-y-2 text-sm">
             <label className="flex items-center justify-between"><span>Confiança média com</span>
               <span className="flex items-center gap-1"><input type="number" min={1} max={5} value={data.confidence.medium_with_n_reducers} onChange={(e) => onChange({ ...data, confidence: { ...data.confidence, medium_with_n_reducers: num(e.target.value) } })} className={field(data.confidence.medium_with_n_reducers !== base.confidence.medium_with_n_reducers)} /> redutor(es)</span></label>

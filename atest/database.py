@@ -46,6 +46,12 @@ CREATE TABLE IF NOT EXISTS feedbacks (
     created_at TEXT NOT NULL, action TEXT NOT NULL, final_decision TEXT, atest_recommendation TEXT,
     unfounded_findings TEXT, comment TEXT, author TEXT
 );
+CREATE TABLE IF NOT EXISTS finding_feedbacks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT, assessment_id INTEGER NOT NULL REFERENCES assessments(id), ticket_id TEXT NOT NULL,
+    finding_index INTEGER NOT NULL, finding_kind TEXT NOT NULL, validation TEXT NOT NULL, finding_description TEXT,
+    verdict TEXT NOT NULL, comment TEXT, author TEXT, created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS ix_finding_feedbacks_assessment ON finding_feedbacks(assessment_id);
 """
 
 # Colunas adicionadas depois da primeira versão do esquema: (tabela, coluna, tipo).
@@ -78,6 +84,34 @@ class Feedback(FeedbackInput):
     ticket_id: str
     created_at: datetime
     atest_recommendation: Recommendation
+
+
+class FindingVerdict(StrEnum):
+    """Avaliação da pessoa analista sobre um apontamento."""
+
+    CORRECT = "correct"  # o apontamento acertou
+    WRONG = "wrong"  # o apontamento errou
+
+
+class FindingFeedbackInput(BaseModel):
+    """Feedback de um apontamento, enviado pelo painel."""
+
+    verdict: FindingVerdict
+    comment: str = Field("", max_length=2000)
+    author: str = Field("analyst", max_length=80)
+
+
+class FindingFeedback(FindingFeedbackInput):
+    """Feedback de apontamento gravado. Guarda uma cópia do tipo, da validação e da descrição para a calibração."""
+
+    id: int
+    assessment_id: int
+    ticket_id: str
+    finding_index: int = Field(description="posição do apontamento na lista `findings` do parecer")
+    finding_kind: str
+    validation: str
+    finding_description: str
+    created_at: datetime
 
 
 class Database:
@@ -304,6 +338,7 @@ class Database:
             if ids is None:
                 touched = [r[0] for r in c.execute("SELECT id FROM runs WHERE status <> 'running'")]
                 n_fb = c.execute("DELETE FROM feedbacks").rowcount
+                c.execute("DELETE FROM finding_feedbacks")
                 c.execute("DELETE FROM llm_calls")
                 n = c.execute("DELETE FROM assessments").rowcount
                 c.execute("DELETE FROM runs WHERE status <> 'running'")
@@ -316,6 +351,7 @@ class Database:
                 marks = ",".join("?" * len(chunk))
                 touched_set |= {r[0] for r in c.execute(f"SELECT DISTINCT run_id FROM assessments WHERE id IN ({marks})", chunk) if r[0]}
                 n_fb += c.execute(f"DELETE FROM feedbacks WHERE assessment_id IN ({marks})", chunk).rowcount
+                c.execute(f"DELETE FROM finding_feedbacks WHERE assessment_id IN ({marks})", chunk)
                 c.execute(f"DELETE FROM llm_calls WHERE assessment_id IN ({marks})", chunk)
                 n += c.execute(f"DELETE FROM assessments WHERE id IN ({marks})", chunk).rowcount
             removed = []
@@ -364,6 +400,50 @@ class Database:
             r["unfounded_findings"] = json.loads(r["unfounded_findings"] or "[]")
             out.append(Feedback.model_validate(r))
         return out
+
+    def save_finding_feedback(self, assessment_id: int, index: int, fb: FindingFeedbackInput) -> FindingFeedback:
+        """Grava se um apontamento acertou ou errou. Levanta KeyError se o parecer não existir e
+        IndexError se o parecer não tiver apontamento nessa posição. Cada envio é um registro novo (histórico)."""
+        p = self.assessment(assessment_id)
+        if p is None:
+            raise KeyError(assessment_id)
+        if not 0 <= index < len(p.findings):
+            raise IndexError(index)
+        f = p.findings[index]
+        created = datetime.now()
+        with self._transaction() as c:
+            cur = c.execute(
+                """INSERT INTO finding_feedbacks (assessment_id, ticket_id, finding_index, finding_kind, validation,
+                   finding_description, verdict, comment, author, created_at) VALUES (?,?,?,?,?,?,?,?,?,?)""",
+                (
+                    assessment_id,
+                    p.ticket_id,
+                    index,
+                    f.kind,
+                    f.validation.value,
+                    f.description,
+                    fb.verdict.value,
+                    fb.comment,
+                    fb.author,
+                    created.isoformat(),
+                ),
+            )
+        return FindingFeedback(
+            **fb.model_dump(),
+            id=int(cur.lastrowid),
+            assessment_id=assessment_id,
+            ticket_id=p.ticket_id,
+            finding_index=index,
+            finding_kind=f.kind,
+            validation=f.validation.value,
+            finding_description=f.description,
+            created_at=created,
+        )
+
+    def finding_feedbacks(self, assessment_id: int) -> list[FindingFeedback]:
+        """Feedbacks dos apontamentos de um parecer, do mais antigo ao mais novo (o último de cada posição vale)."""
+        rows = self._rows("SELECT * FROM finding_feedbacks WHERE assessment_id=? ORDER BY id", (assessment_id,))
+        return [FindingFeedback.model_validate(r) for r in rows]
 
     # ------------------------------------------------------------------ métricas (observabilidade + calibração)
     def metrics(self) -> dict[str, Any]:

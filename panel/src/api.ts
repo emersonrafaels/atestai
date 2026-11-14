@@ -389,6 +389,8 @@ export interface RubricInfo {
   confidence: { medium_with_n_reducers: number; low_with_n_reducers: number };
   /** tipo de apontamento → tipos da mesma validação que ele absorve (deixam de descontar quando ele aparece) */
   absorbs?: Record<string, string[]>;
+  /** flags atuais de cada tipo de apontamento (pareceres antigos podem ter sido gravados com outros) */
+  finding_flags?: Record<string, { reduces_confidence: boolean; returns: boolean; lock: boolean }>;
   proportional_floor?: number;
   relevant_amount_at_issue_pct?: number;
   max_amount_at_issue_for_approve_pct?: number;
@@ -499,6 +501,27 @@ export interface ReuseComparison {
 }
 
 export type FeedbackAction = "accept" | "adjust" | "disagree";
+
+/** A pessoa analista diz se um apontamento acertou ou errou. */
+export type FindingVerdict = "correct" | "wrong";
+
+export interface FindingFeedbackInput {
+  verdict: FindingVerdict;
+  comment: string;
+  author?: string;
+}
+
+export interface FindingFeedback extends FindingFeedbackInput {
+  id: number;
+  assessment_id: number;
+  ticket_id: string;
+  /** posição do apontamento na lista `findings` do parecer */
+  finding_index: number;
+  finding_kind: string;
+  validation: string;
+  finding_description: string;
+  created_at: string;
+}
 
 export interface FeedbackInput {
   action: FeedbackAction;
@@ -648,6 +671,9 @@ export const api = {
   feedbacks: (id: number) => ask<Feedback[]>(`/api/assessments/${id}/feedback`),
   sendFeedback: (id: number, f: FeedbackInput) =>
     ask<Feedback>(`/api/assessments/${id}/feedback`, { method: "POST", body: JSON.stringify(f) }),
+  findingFeedbacks: (id: number) => ask<FindingFeedback[]>(`/api/assessments/${id}/findings/feedback`),
+  sendFindingFeedback: (id: number, index: number, f: FindingFeedbackInput) =>
+    ask<FindingFeedback>(`/api/assessments/${id}/findings/${index}/feedback`, { method: "POST", body: JSON.stringify(f) }),
   metrics: () => ask<OperationsView>("/api/metrics"),
   sendTicket: (data: FormData) => ask<TicketSummary>("/api/tickets", { method: "POST", body: data }),
   deleteTicket: (id: string) => ask<void>(`/api/tickets/${id}`, { method: "DELETE" }),

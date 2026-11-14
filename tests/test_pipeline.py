@@ -229,6 +229,18 @@ def test_api_run_feedback_upload_and_metrics(cfg):
     m = c2.get("/api/metrics").json()
     assert m["unfounded_findings"] == [{"kind": "missing_before_photo", "n": 1}]
 
+    # feedback de cada apontamento: acertou/errou + comentário; cada envio vira um registro (o último vale)
+    pid, findings = assessment["record_id"], assessment["findings"]
+    r = c2.post(f"/api/assessments/{pid}/findings/0/feedback", json={"verdict": "wrong", "comment": "foto do antes não é exigida", "author": "Ana"})
+    assert r.status_code == 201
+    assert (r.json()["finding_kind"], r.json()["validation"], r.json()["author"]) == (findings[0]["kind"], findings[0]["validation"], "Ana")
+    assert c2.post(f"/api/assessments/{pid}/findings/0/feedback", json={"verdict": "correct"}).status_code == 201
+    saved = c2.get(f"/api/assessments/{pid}/findings/feedback").json()
+    assert [(f["finding_index"], f["verdict"], f["comment"]) for f in saved] == [(0, "wrong", "foto do antes não é exigida"), (0, "correct", "")]
+    assert c2.post(f"/api/assessments/{pid}/findings/{len(findings)}/feedback", json={"verdict": "correct"}).status_code == 404
+    assert c2.post(f"/api/assessments/{pid}/findings/0/feedback", json={"verdict": "talvez"}).status_code == 422
+    assert c2.post("/api/assessments/999999/findings/0/feedback", json={"verdict": "correct"}).status_code == 404
+
     spreadsheet = load_ticket_spreadsheet(cfg)
     photo = next((cfg.tickets_dir / "00534519" / "attachments").glob("IMG_*.jpg")).read_bytes()
     form = {

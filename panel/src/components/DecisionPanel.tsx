@@ -2,10 +2,11 @@ import { ArrowRight, Check, CheckCircle2, ChevronRight, History, Lightbulb, Load
 import { useEffect, useMemo, useState } from "react";
 import { api, type Assessment, type Feedback, type FeedbackAction, type Recommendation, type RubricInfo } from "../api";
 import { REC, findingLabel, authorLabel, CONFIDENCE_LABEL, brl, pts } from "../format";
-import { REASONS_BY_DECISION, REASONS_BY_KIND, simulate } from "../evidence";
+import { REASONS_BY_DECISION, REASONS_BY_KIND, decisionPath, simulate, underCurrentRule } from "../evidence";
 import { BandScale } from "./ScoreBreakdown";
 import { StepTitle } from "./ui/StepTitle";
 import { Tooltip } from "./ui/Tooltip";
+import type { ExplainKind } from "./ExplainDialog";
 
 const DECISIONS: Recommendation[] = ["approve", "approve_with_caveats", "return_to_supplier", "return_locked", "detailed_review"];
 const ACTION = {
@@ -24,13 +25,15 @@ interface Props {
   /** abre e rola até o apontamento de índice i */
   focusFinding: (i: number) => void;
   onRegistered?: (registered: boolean) => void;
+  /** abre o modal que explica a confiança ou a recomendação */
+  onExplain?: (kind: ExplainKind) => void;
 }
 
 /**
  * Decisão da pessoa analista, no fim do parecer. Recebe as marcações de "não procede" feitas nos apontamentos,
  * reaplica a régua na hora, sugere a decisão, destaca os apontamentos decisivos e infere o tipo de registro.
  */
-export function DecisionPanel({ p, n, rubric, unfounded, toggleUnfounded, focusFinding, onRegistered }: Props) {
+export function DecisionPanel({ p, n, rubric, unfounded, toggleUnfounded, focusFinding, onRegistered, onExplain }: Props) {
   const [history, setHistory] = useState<Feedback[]>([]);
   const [editing, setEditing] = useState(true);
   const [manual, setManual] = useState<Recommendation | null>(null);
@@ -59,7 +62,7 @@ export function DecisionPanel({ p, n, rubric, unfounded, toggleUnfounded, focusF
   const needsComment = action === "disagree" && comment.trim().length < 5;
 
   // inteligência: o que merece atenção antes de decidir
-  const attention = useMemo(() => buildAttention(p, rubric), [p, rubric]);
+  const attention = useMemo(() => buildAttention(p, rubric, onExplain), [p, rubric, onExplain]);
 
   if (!p.record_id) return null;
 
@@ -180,7 +183,10 @@ export function DecisionPanel({ p, n, rubric, unfounded, toggleUnfounded, focusF
                 </div>
                 <div className="mt-2"><BandScale score={sim.score} rubric={rubric} compact /></div>
                 <div className="mt-1.5 text-[12px] text-muted">
-                  Confiança {CONFIDENCE_LABEL[sim.confidence]}{unfounded.size ? ` · ${sim.kept} de ${p.findings.length} apontamentos mantidos` : ""}
+                  {onExplain
+                    ? <button type="button" onClick={() => onExplain("confidence")} aria-haspopup="dialog" className="underline decoration-dotted underline-offset-2 hover:text-blueprint">Confiança {CONFIDENCE_LABEL[sim.confidence]}</button>
+                    : <>Confiança {CONFIDENCE_LABEL[sim.confidence]}</>}
+                  {unfounded.size ? ` · ${sim.kept} de ${p.findings.length} apontamentos mantidos` : ""}
                 </div>
               </div>
             )}
@@ -286,7 +292,7 @@ export function DecisionPanel({ p, n, rubric, unfounded, toggleUnfounded, focusF
 }
 
 /** Pontos de atenção: travas, confiança, valor potencial divergente, proximidade de faixa e apontamentos decisivos. */
-function buildAttention(p: Assessment, rubric: RubricInfo): { text: React.ReactNode; finding?: number }[] {
+function buildAttention(p: Assessment, rubric: RubricInfo, onExplain?: (kind: ExplainKind) => void): { text: React.ReactNode; finding?: number }[] {
   const out: { text: React.ReactNode; finding?: number }[] = [];
   const idx = (pred: (f: Assessment["findings"][number]) => boolean) => { const i = p.findings.findIndex(pred); return i >= 0 ? i : undefined; };
 
@@ -294,7 +300,19 @@ function buildAttention(p: Assessment, rubric: RubricInfo): { text: React.ReactN
   if (lock !== undefined) out.push({ text: <><b>Trava de integridade</b> ({p.findings[lock].description.toLowerCase()}): compare as fotos antes de confirmar.</>, finding: lock });
 
   if (p.confidence && p.confidence !== "high") {
-    out.push({ text: <>Confiança <b>{CONFIDENCE_LABEL[p.confidence]}</b>: {p.confidence_reducers.map((r) => findingLabel(r)).join(", ").toLowerCase()}.</>, finding: idx((f) => f.reduces_confidence) });
+    const level = onExplain
+      ? <button type="button" onClick={() => onExplain("confidence")} aria-haspopup="dialog" className="font-bold underline decoration-dotted underline-offset-2 hover:text-blueprint">{CONFIDENCE_LABEL[p.confidence]}</button>
+      : <b>{CONFIDENCE_LABEL[p.confidence]}</b>;
+    out.push({ text: <>Confiança {level}: {p.confidence_reducers.map((r) => findingLabel(r)).join(", ").toLowerCase()}.</>, finding: idx((f) => f.reduces_confidence) });
+  }
+
+  // parecer gravado com régua antiga: o que a régua de hoje conta diferente na confiança
+  const cur = underCurrentRule(p, rubric);
+  if (cur.outdated && cur.p.confidence) {
+    const now = decisionPath(p, rubric).recommendation;
+    out.push({
+      text: <>Parecer gerado com a régua {p.rubric_version}.{cur.dropped.length > 0 && <> Pela régua atual, {cur.dropped.map((r) => findingLabel(r).toLowerCase()).join(", ")} não reduz{cur.dropped.length === 1 ? "" : "em"} mais a confiança.</>} A confiança seria <b>{CONFIDENCE_LABEL[cur.p.confidence]}</b> e a recomendação <b style={{ color: REC[now].color }}>{REC[now].label}</b>.{onExplain && <> <button type="button" onClick={() => onExplain("confidence")} aria-haspopup="dialog" className="font-medium text-blueprint hover:underline">Entenda</button></>}</>,
+    });
   }
 
   // apontamentos decisivos: tirar só este tipo muda a recomendação

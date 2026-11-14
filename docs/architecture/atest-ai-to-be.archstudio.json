@@ -1,0 +1,2349 @@
+{
+  "format": "archstudio",
+  "version": 1,
+  "name": "Atest.AI • Validação de imagens (to be)",
+  "description": "Arquitetura alvo (to be) do Atest.AI na AWS, com a IARA GenAI do Itaú como SDK de LLM de todas as tarefas. O pipeline já implementado (Orchestrator com checklist, escopo, orçamento × escopo, fotos, documentos por OCR, score e parecer, com tempo limite por pedido, nova tentativa em resposta cortada e degradação controlada) roda sem mudança num worker em ECS Fargate que consome uma fila SQS. A entrada vem do Salesforce em dois modos com o mesmo contrato: de hora em hora, um workflow Step Functions consulta no Athena a OT e o orçamento (.xlsx) nos dados democratizados do Data Mesh e, num Map por OT com concorrência limitada, pede às APIs da Salesforce os IDs dos documentos e o conteúdo em base64 de cada um, salvando tudo no S3; na versão alvo, o envio dispara um callout para a API Gateway. O painel só recebe as análises e o feedback; não dispara análise. As chamadas ao modelo saem do adaptador IARA (iara_genai_sdk, JSON Schema estrito e reparo da saída) por conectividade privada até a rede do Itaú; nada vai direto a Anthropic, OpenAI ou Google. O SQLite vira Aurora PostgreSQL (pareceres, feedbacks, versões de configuração e tabela de hashes de fotos, preenchida na chegada). O parecer volta pelo outbox S3 (MVP) ou por writeback na REST API do Salesforce (alvo). O painel roda como serviço ECS atrás de ALB interno com SSO. O portão de qualidade (action = validate) bloqueia a publicação no CodePipeline. Modo sombra no MVP: o parecer não altera status.",
+  "settings": {
+    "grid": true,
+    "snap": true,
+    "gridSize": 10,
+    "wheel": "zoom",
+    "minimap": true,
+    "guides": true,
+    "legend": true,
+    "legendPos": "right",
+    "badgeShape": "square",
+    "badgeColor": "#147EBA",
+    "wmStyle": "tile",
+    "wmOpacity": 0.08
+  },
+  "nodes": [
+    {
+      "id": "title",
+      "type": "shape-text",
+      "x": 20,
+      "y": -350,
+      "label": "Atest.AI • Validação de chamados com evidências fotográficas (to be • AWS + IARA)",
+      "sub": "Arquitetura alvo • SETA e SISR • o pipeline do código (7 etapas, com documentos por OCR) roda num worker na AWS • todo LLM sai pela IARA • extração por hora (Step Functions + Athena no Data Mesh + APIs da Salesforce) e alvo via API",
+      "style": {
+        "fontSize": 26,
+        "align": "start"
+      },
+      "kind": "text",
+      "w": 2600,
+      "h": 64,
+      "meta": []
+    },
+    {
+      "id": "sf_in",
+      "type": "g-generic",
+      "x": 20,
+      "y": 145,
+      "label": "① Entrada • Salesforce",
+      "sub": "",
+      "style": {
+        "stroke": "#16a34a",
+        "fill": "#16a34a",
+        "fo": 0.03,
+        "dashed": false,
+        "glyph": "cloud"
+      },
+      "kind": "group",
+      "w": 260,
+      "h": 115,
+      "meta": []
+    },
+    {
+      "id": "dm",
+      "type": "g-generic",
+      "x": 20,
+      "y": 270,
+      "label": "① Data Mesh",
+      "sub": "",
+      "style": {
+        "stroke": "#0f766e",
+        "fill": "#0f766e",
+        "fo": 0.05,
+        "dashed": false,
+        "glyph": "hub"
+      },
+      "kind": "group",
+      "w": 260,
+      "h": 110,
+      "meta": []
+    },
+    {
+      "id": "sf_api",
+      "type": "g-generic",
+      "x": 20,
+      "y": 390,
+      "label": "① Entrada • APIs da Salesforce",
+      "sub": "",
+      "style": {
+        "stroke": "#00A1E0",
+        "fill": "#00A1E0",
+        "fo": 0.05,
+        "dashed": false,
+        "glyph": "cloud"
+      },
+      "kind": "group",
+      "w": 260,
+      "h": 370,
+      "meta": []
+    },
+    {
+      "id": "bo",
+      "type": "g-generic",
+      "x": 20,
+      "y": 870,
+      "label": "Back-office",
+      "sub": "",
+      "style": {
+        "glyph": "users"
+      },
+      "kind": "group",
+      "w": 260,
+      "h": 150,
+      "meta": []
+    },
+    {
+      "id": "cloud",
+      "type": "g-cloud",
+      "x": 320,
+      "y": 20,
+      "label": "AWS Cloud",
+      "sub": "conta do Atest.AI",
+      "style": {},
+      "kind": "group",
+      "w": 2730,
+      "h": 1270,
+      "meta": []
+    },
+    {
+      "id": "region",
+      "type": "g-region",
+      "x": 340,
+      "y": 50,
+      "label": "sa-east-1 (São Paulo)",
+      "sub": "",
+      "style": {},
+      "kind": "group",
+      "w": 2690,
+      "h": 1220,
+      "meta": [],
+      "parent": "cloud"
+    },
+    {
+      "id": "in_mvp",
+      "type": "g-offline",
+      "x": 360,
+      "y": 145,
+      "label": "② Extração • a cada hora",
+      "sub": "",
+      "style": {},
+      "kind": "group",
+      "w": 260,
+      "h": 460,
+      "meta": [],
+      "parent": "region"
+    },
+    {
+      "id": "in_api",
+      "type": "g-online",
+      "x": 360,
+      "y": 620,
+      "label": "② Entrada • alvo via API",
+      "sub": "",
+      "style": {},
+      "kind": "group",
+      "w": 260,
+      "h": 230,
+      "meta": [],
+      "parent": "region"
+    },
+    {
+      "id": "fila",
+      "type": "g-generic",
+      "x": 650,
+      "y": 145,
+      "label": "③ Fila e chegada",
+      "sub": "SQS • Lambda",
+      "style": {
+        "glyph": "queue"
+      },
+      "kind": "group",
+      "w": 260,
+      "h": 500,
+      "meta": [],
+      "parent": "region"
+    },
+    {
+      "id": "vpc",
+      "type": "g-vpc",
+      "x": 930,
+      "y": 80,
+      "label": "VPC",
+      "sub": "subnets privadas • sem saída para a internet",
+      "style": {},
+      "kind": "group",
+      "w": 1790,
+      "h": 960,
+      "meta": [],
+      "parent": "region"
+    },
+    {
+      "id": "worker",
+      "type": "g-ecs",
+      "x": 950,
+      "y": 105,
+      "label": "④ ECS Fargate • worker do Atest.AI",
+      "sub": "imagem do pacote atest • Orchestrator do código",
+      "style": {},
+      "kind": "group",
+      "w": 1750,
+      "h": 735,
+      "meta": [],
+      "parent": "vpc"
+    },
+    {
+      "id": "st_orq",
+      "type": "g-stage",
+      "x": 970,
+      "y": 145,
+      "label": "Orquestração",
+      "sub": "",
+      "style": {},
+      "kind": "group",
+      "w": 260,
+      "h": 500,
+      "meta": [],
+      "parent": "worker"
+    },
+    {
+      "id": "st_chk",
+      "type": "g-stage",
+      "x": 1260,
+      "y": 145,
+      "label": "Etapa 0 • Checklist mínimo",
+      "sub": "",
+      "style": {},
+      "kind": "group",
+      "w": 260,
+      "h": 500,
+      "meta": [],
+      "parent": "worker"
+    },
+    {
+      "id": "st_eo",
+      "type": "g-stage",
+      "x": 1550,
+      "y": 145,
+      "label": "Etapas 1–2 • Escopo e orçamento",
+      "sub": "",
+      "style": {},
+      "kind": "group",
+      "w": 260,
+      "h": 500,
+      "meta": [],
+      "parent": "worker"
+    },
+    {
+      "id": "st_fot",
+      "type": "g-stage",
+      "x": 1840,
+      "y": 145,
+      "label": "Etapa 3 • Evidências fotográficas",
+      "sub": "",
+      "style": {},
+      "kind": "group",
+      "w": 260,
+      "h": 500,
+      "meta": [],
+      "parent": "worker"
+    },
+    {
+      "id": "st_doc",
+      "type": "g-stage",
+      "x": 2130,
+      "y": 145,
+      "label": "Etapa 4 • Documentos (OCR)",
+      "sub": "",
+      "style": {},
+      "kind": "group",
+      "w": 260,
+      "h": 500,
+      "meta": [],
+      "parent": "worker"
+    },
+    {
+      "id": "st_par",
+      "type": "g-stage",
+      "x": 2420,
+      "y": 145,
+      "label": "Etapas 5–6 • Score e parecer",
+      "sub": "",
+      "style": {},
+      "kind": "group",
+      "w": 260,
+      "h": 500,
+      "meta": [],
+      "parent": "worker"
+    },
+    {
+      "id": "llm",
+      "type": "g-generic",
+      "x": 970,
+      "y": 680,
+      "label": "Camada de LLM",
+      "sub": "IARA como provedor de todas as tarefas",
+      "style": {
+        "glyph": "sparkle"
+      },
+      "kind": "group",
+      "w": 760,
+      "h": 140,
+      "meta": [],
+      "parent": "worker"
+    },
+    {
+      "id": "dados",
+      "type": "g-generic",
+      "x": 970,
+      "y": 870,
+      "label": "⑦ Painel e dados",
+      "sub": "subnets privadas",
+      "style": {
+        "glyph": "db",
+        "stroke": "#147EBA",
+        "fill": "#147EBA",
+        "fo": 0.03,
+        "dashed": false
+      },
+      "kind": "group",
+      "w": 1710,
+      "h": 150,
+      "meta": [],
+      "parent": "vpc"
+    },
+    {
+      "id": "out_mvp",
+      "type": "g-offline",
+      "x": 2750,
+      "y": 145,
+      "label": "⑤ Saída • lote",
+      "sub": "",
+      "style": {},
+      "kind": "group",
+      "w": 260,
+      "h": 240,
+      "meta": [],
+      "parent": "region"
+    },
+    {
+      "id": "out_api",
+      "type": "g-online",
+      "x": 2750,
+      "y": 405,
+      "label": "⑤ Saída • alvo via API",
+      "sub": "",
+      "style": {},
+      "kind": "group",
+      "w": 260,
+      "h": 240,
+      "meta": [],
+      "parent": "region"
+    },
+    {
+      "id": "gov",
+      "type": "g-generic",
+      "x": 360,
+      "y": 1070,
+      "label": "⑧ Segurança, observabilidade, entrega e feedback",
+      "sub": "",
+      "style": {
+        "glyph": "shield"
+      },
+      "kind": "group",
+      "w": 2650,
+      "h": 170,
+      "meta": [],
+      "parent": "region"
+    },
+    {
+      "id": "sf_out",
+      "type": "g-generic",
+      "x": 3090,
+      "y": 145,
+      "label": "⑥ Salesforce • saída",
+      "sub": "",
+      "style": {
+        "stroke": "#ED7100",
+        "fill": "#ED7100",
+        "fo": 0.03,
+        "dashed": false,
+        "glyph": "external"
+      },
+      "kind": "group",
+      "w": 260,
+      "h": 500,
+      "meta": []
+    },
+    {
+      "id": "iara_ext",
+      "type": "g-generic",
+      "x": 3090,
+      "y": 680,
+      "label": "IARA GenAI (Itaú)",
+      "sub": "",
+      "style": {
+        "stroke": "#EC7000",
+        "fill": "#EC7000",
+        "fo": 0.05,
+        "dashed": false,
+        "glyph": "sparkle"
+      },
+      "kind": "group",
+      "w": 260,
+      "h": 360,
+      "meta": []
+    },
+    {
+      "id": "forn",
+      "type": "users",
+      "x": 122,
+      "y": 20,
+      "label": "Fornecedor",
+      "sub": "envia orçamento e fotos",
+      "style": {},
+      "kind": "icon",
+      "w": 56,
+      "h": 56,
+      "meta": []
+    },
+    {
+      "id": "chamado",
+      "type": "extapi",
+      "x": 40,
+      "y": 180,
+      "label": "Chamado SETA / SISR (OT)",
+      "sub": "escopo • orçamento • fotos",
+      "style": {
+        "accent": "#00A1E0",
+        "glyph": "cloud",
+        "badge": "1"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "stepDesc": "O **fornecedor** envia orçamento, fotos e documentos no **chamado SETA/SISR** do Salesforce.",
+      "meta": [],
+      "parent": "sf_in"
+    },
+    {
+      "id": "dm_ot",
+      "type": "data-source",
+      "x": 40,
+      "y": 310,
+      "label": "Produto de dados do chamado",
+      "sub": "OT (ticket) + orçamento .xlsx",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [
+        {
+          "k": "Conteúdo",
+          "v": "dados do chamado (OT) + orçamento .xlsx"
+        },
+        {
+          "k": "Origem",
+          "v": "dados democratizados do Salesforce no Data Mesh"
+        }
+      ],
+      "notes": "Forma de leitura do produto de dados (consulta, compartilhamento ou exportação) e frequência de atualização: a confirmar.",
+      "parent": "dm"
+    },
+    {
+      "id": "api_ids",
+      "type": "extapi",
+      "x": 40,
+      "y": 420,
+      "label": "API • documentos da OT",
+      "sub": "devolve os IDs relacionados",
+      "style": {
+        "accent": "#00A1E0",
+        "glyph": "list"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [],
+      "parent": "sf_api"
+    },
+    {
+      "id": "api_doc",
+      "type": "extapi",
+      "x": 40,
+      "y": 530,
+      "label": "API • conteúdo do documento",
+      "sub": "ID → arquivo em base64",
+      "style": {
+        "accent": "#00A1E0",
+        "glyph": "doc"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [],
+      "parent": "sf_api"
+    },
+    {
+      "id": "trig",
+      "type": "extapi",
+      "x": 40,
+      "y": 680,
+      "label": "Gatilho no envio",
+      "sub": "alvo • Flow / Apex callout",
+      "style": {
+        "accent": "#00A1E0",
+        "glyph": "bolt"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [],
+      "parent": "sf_api"
+    },
+    {
+      "id": "analistas",
+      "type": "users",
+      "x": 40,
+      "y": 920,
+      "label": "Analistas e admins",
+      "sub": "painel • feedback • regras • catálogo",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [],
+      "parent": "bo"
+    },
+    {
+      "id": "sfn_ext",
+      "type": "stepfunctions",
+      "x": 380,
+      "y": 190,
+      "label": "Workflow de extração",
+      "sub": "Step Functions • 1 execução por vez",
+      "style": {
+        "badge": "2"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "stepDesc": "**A cada hora**, o EventBridge Scheduler dispara o **workflow de extração** (Step Functions), com **uma execução por vez**, novas tentativas e rastreio de cada passo; o **Athena** traz **só as OTs novas ou alteradas** desde a última marca d'água, com o orçamento (.xlsx), dos **dados democratizados no Data Mesh**.",
+      "meta": [
+        {
+          "k": "Agenda",
+          "v": "EventBridge Scheduler • a cada hora"
+        },
+        {
+          "k": "Passos",
+          "v": "Athena → Map por OT → S3 → mensagem por OT na SQS"
+        },
+        {
+          "k": "Controle",
+          "v": "1 execução por vez • marca d'água e chave de idempotência (OT + versão) numa tabela DynamoDB"
+        },
+        {
+          "k": "Falhas",
+          "v": "novas tentativas por passo • OT com erro vai para revisão"
+        }
+      ],
+      "parent": "in_mvp"
+    },
+    {
+      "id": "athena",
+      "type": "athena",
+      "x": 380,
+      "y": 310,
+      "label": "Athena",
+      "sub": "só OTs novas ou alteradas (marca d'água)",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [],
+      "parent": "in_mvp"
+    },
+    {
+      "id": "xlam",
+      "type": "lambda",
+      "x": 380,
+      "y": 420,
+      "label": "Coleta por OT",
+      "sub": "Map • ticket.json, .xlsx e anexos",
+      "style": {
+        "badge": "3"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "stepDesc": "Num **Map por OT** (concorrência limitada), uma Lambda monta o `ticket.json` e busca fotos e documentos em **duas APIs da Salesforce**: **IDs dos documentos da OT** e, para **cada ID**, o arquivo em **base64**.",
+      "meta": [
+        {
+          "k": "API 1",
+          "v": "documentos relacionados à OT → lista de IDs"
+        },
+        {
+          "k": "API 2",
+          "v": "ID do documento → conteúdo em base64"
+        },
+        {
+          "k": "Credenciais",
+          "v": "OAuth da Salesforce no Secrets Manager"
+        },
+        {
+          "k": "Concorrência",
+          "v": "MaxConcurrency do Map"
+        }
+      ],
+      "notes": "Limite de taxa da API da Salesforce e tamanho máximo do base64 (define a concorrência do Map): a confirmar.",
+      "parent": "in_mvp"
+    },
+    {
+      "id": "inbox",
+      "type": "s3",
+      "x": 380,
+      "y": 530,
+      "label": "Repositório de chamados",
+      "sub": "S3 tickets/<id>/ • SSE-KMS",
+      "style": {
+        "badge": "4"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "stepDesc": "Tudo é salvo no **S3** em `tickets/<id>/` (SSE-KMS): `ticket.json`, a planilha `.xlsx`, as fotos e os documentos. É o mesmo contrato que o worker já lê.",
+      "meta": [
+        {
+          "k": "Estrutura",
+          "v": "tickets/<id>/ · ticket.json · orçamento .xlsx · fotos · documentos"
+        }
+      ],
+      "parent": "in_mvp"
+    },
+    {
+      "id": "apigw",
+      "type": "apigw",
+      "x": 380,
+      "y": 680,
+      "label": "API Atest.AI",
+      "sub": "API Gateway • WAF • OAuth 2.0",
+      "style": {
+        "badge": "5"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "stepDesc": "**Alvo**: o envio do chamado dispara um callout para a **API Atest.AI** (API Gateway com WAF e OAuth); a Lambda valida o contrato `Ticket` e grava os anexos no mesmo bucket.",
+      "meta": [],
+      "parent": "in_api"
+    },
+    {
+      "id": "ingest",
+      "type": "lambda",
+      "x": 380,
+      "y": 780,
+      "label": "Ingest e contrato",
+      "sub": "valida Ticket • anexos pelas APIs",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [],
+      "parent": "in_api"
+    },
+    {
+      "id": "sqs",
+      "type": "sqs",
+      "x": 670,
+      "y": 195,
+      "label": "Fila de análises",
+      "sub": "SQS • 1 mensagem por chamado",
+      "style": {
+        "badge": "6"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "stepDesc": "Cada OT gravada vira **na hora uma mensagem** na fila SQS (as duas entradas usam a mesma fila): a análise **não espera a rodada inteira**; falha três vezes vai para a **DLQ** com alarme.",
+      "meta": [
+        {
+          "k": "Mensagem",
+          "v": "1 por chamado"
+        },
+        {
+          "k": "DLQ",
+          "v": "após 3 falhas, com alarme"
+        }
+      ],
+      "parent": "fila"
+    },
+    {
+      "id": "hashl",
+      "type": "lambda",
+      "x": 670,
+      "y": 315,
+      "label": "Hash na chegada",
+      "sub": "phash + dhash → tabela de hashes",
+      "style": {
+        "dashed": true,
+        "badge": "7"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "stepDesc": "Cada **foto nova** tem o hash perceptual calculado **na chegada** e gravado na tabela de hashes (Aurora), em vez de recalcular o histórico a cada execução.",
+      "notes": "Tabela de hashes no Aurora (como sugere o comentário do HashCache) ou chave-valor dedicada: a confirmar com o volume real.",
+      "meta": [],
+      "parent": "fila"
+    },
+    {
+      "id": "dlq",
+      "type": "sqs",
+      "x": 670,
+      "y": 435,
+      "label": "DLQ + alarme",
+      "sub": "chamado que falhou 3 vezes",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [],
+      "parent": "fila"
+    },
+    {
+      "id": "scale",
+      "type": "autoscaling",
+      "x": 670,
+      "y": 555,
+      "label": "Escala pela fila",
+      "sub": "ECS Service Auto Scaling",
+      "style": {
+        "badge": "D"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "stepDesc": "**Cota da IARA × escala**: o número de workers precisa respeitar o limite de taxa da IARA; senão a escala pela fila só gera erro transitório e contingência.",
+      "stepColor": "#DD344C",
+      "meta": [],
+      "parent": "fila"
+    },
+    {
+      "id": "wk",
+      "type": "fargate",
+      "x": 990,
+      "y": 195,
+      "label": "Worker do pipeline",
+      "sub": "consome SQS • BatchRunner",
+      "style": {
+        "badge": "8"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "stepDesc": "O **worker** em ECS Fargate consome a fila, **escala pela profundidade** e roda o mesmo pacote `atest` (BatchRunner + Orchestrator).",
+      "meta": [
+        {
+          "k": "Imagem",
+          "v": "pacote atest (ECR)"
+        },
+        {
+          "k": "Escala",
+          "v": "ECS Service Auto Scaling pela profundidade da fila"
+        }
+      ],
+      "parent": "st_orq"
+    },
+    {
+      "id": "orch",
+      "type": "py-agent",
+      "x": 990,
+      "y": 315,
+      "label": "Orchestrator",
+      "sub": "7 etapas em ordem • modo sombra",
+      "style": {
+        "badge": "9"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "stepDesc": "O **Orchestrator** roda as **7 etapas** do código em ordem, em **modo sombra** no MVP: o parecer não altera status.",
+      "meta": [
+        {
+          "k": "Etapas",
+          "v": "checklist · escopo · orçamento · fotos · documentos · score · parecer"
+        }
+      ],
+      "parent": "st_orq"
+    },
+    {
+      "id": "load",
+      "type": "py-boto3",
+      "x": 990,
+      "y": 435,
+      "label": "Carrega o chamado",
+      "sub": "tickets/<id>/ do S3 → LoadedTicket",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [],
+      "parent": "st_orq"
+    },
+    {
+      "id": "llms",
+      "type": "gen-gateway",
+      "x": 990,
+      "y": 555,
+      "label": "LlmSession",
+      "sub": "tempo limite por pedido • corte → 2× tokens",
+      "style": {
+        "badge": "I1"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "stepDesc": "Toda chamada sai da **LlmSession**: modelo da IARA por tarefa, preâmbulo do engenheiro, **tempo limite** pelo tamanho do pedido e nova tentativa se a resposta vier cortada.",
+      "stepColor": "#EC7000",
+      "meta": [
+        {
+          "k": "Tempo limite",
+          "v": "45 s + 6 s por foto + 20 s por PDF + 8 s por mil tokens (60–600 s)"
+        },
+        {
+          "k": "Resposta cortada",
+          "v": "nova tentativa com 2× max_tokens (até 16 mil)"
+        }
+      ],
+      "parent": "st_orq"
+    },
+    {
+      "id": "planilha",
+      "type": "data-validate",
+      "x": 1280,
+      "y": 195,
+      "label": "Lê a planilha de orçamento",
+      "sub": "openpyxl • tbChamado/tbItens • sem LLM",
+      "style": {
+        "badge": "10"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "stepDesc": "**Etapa 0 • checklist**: planilha lida por regra, anexos identificados pela IARA, checklist por **esteira × categoria × tipo × momento**; incompleto volta ao fornecedor sem score.",
+      "meta": [],
+      "parent": "st_chk"
+    },
+    {
+      "id": "anexos",
+      "type": "gen-llm",
+      "x": 1280,
+      "y": 315,
+      "label": "Identifica os anexos",
+      "sub": "IARA • foto, documento, laudo",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [],
+      "parent": "st_chk"
+    },
+    {
+      "id": "gate",
+      "type": "ml-gate",
+      "x": 1280,
+      "y": 435,
+      "label": "Checklist mínimo",
+      "sub": "esteira × categoria × tipo × momento",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [],
+      "parent": "st_chk"
+    },
+    {
+      "id": "devol",
+      "type": "shape-card",
+      "x": 1280,
+      "y": 555,
+      "label": "Devolução ao fornecedor",
+      "sub": "lista o que falta • sem score",
+      "style": {
+        "accent": "#6A3FD1",
+        "glyph": "mail"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [],
+      "parent": "st_chk"
+    },
+    {
+      "id": "escopo",
+      "type": "gen-llm",
+      "x": 1570,
+      "y": 195,
+      "label": "Leitura do escopo",
+      "sub": "IARA • serviços pedidos • vago",
+      "style": {
+        "badge": "11"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "stepDesc": "**Etapas 1–2 • escopo e orçamento**: a IARA lê o pedido e confere cada item contra o escopo e a **LPU**; regras calculam preço, quantidade, duplicidade e valor em questão.",
+      "meta": [],
+      "parent": "st_eo"
+    },
+    {
+      "id": "itens",
+      "type": "gen-llm",
+      "x": 1570,
+      "y": 315,
+      "label": "Confere itens × escopo",
+      "sub": "IARA • cobertura por serviço + LPU",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [],
+      "parent": "st_eo"
+    },
+    {
+      "id": "regras_orc",
+      "type": "data-validate",
+      "x": 1570,
+      "y": 435,
+      "label": "Regras do orçamento",
+      "sub": "preço × LPU • quantidade • duplicidade",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [],
+      "parent": "st_eo"
+    },
+    {
+      "id": "valor",
+      "type": "data-agg",
+      "x": 1570,
+      "y": 555,
+      "label": "Valor em questão",
+      "sub": "item inteiro ou só o excedente",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [],
+      "parent": "st_eo"
+    },
+    {
+      "id": "fotos_ag",
+      "type": "gen-llm",
+      "x": 1860,
+      "y": 195,
+      "label": "Agente de fotos",
+      "sub": "IARA • visão • contagem • lotes de 6",
+      "style": {
+        "badge": "12"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "stepDesc": "**Etapa 3 • fotos**: a IARA lê as fotos (momento, contagem por item); regras apontam falta do depois, item sem foto, data EXIF e **reaproveitamento** contra a tabela de hashes.",
+      "meta": [],
+      "parent": "st_fot"
+    },
+    {
+      "id": "regras_fot",
+      "type": "data-validate",
+      "x": 1860,
+      "y": 315,
+      "label": "Regras das fotos",
+      "sub": "sem depois • item sem foto • contagem",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [],
+      "parent": "st_fot"
+    },
+    {
+      "id": "exif",
+      "type": "data-validate",
+      "x": 1860,
+      "y": 435,
+      "label": "Data da foto (EXIF)",
+      "sub": "anterior à abertura do chamado",
+      "style": {
+        "dashed": true
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [],
+      "parent": "st_fot"
+    },
+    {
+      "id": "reuso",
+      "type": "gen-retriever",
+      "x": 1860,
+      "y": 555,
+      "label": "Reaproveitamento de foto",
+      "sub": "compara com a tabela de hashes",
+      "style": {
+        "dashed": true
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [],
+      "parent": "st_fot"
+    },
+    {
+      "id": "docs_ag",
+      "type": "gen-llm",
+      "x": 2150,
+      "y": 195,
+      "label": "Lê os documentos (OCR)",
+      "sub": "IARA • visão • foto ou PDF",
+      "style": {
+        "badge": "13"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "stepDesc": "**Etapa 4 • documentos**: **OCR** pela IARA de relatório, termo, laudo ou print de preço; regras conferem chamado, data, serviço antes da aprovação e preço de mercado.",
+      "meta": [],
+      "parent": "st_doc"
+    },
+    {
+      "id": "docs_conf",
+      "type": "data-validate",
+      "x": 2150,
+      "y": 315,
+      "label": "Confere com o chamado",
+      "sub": "outro chamado • data fora • ilegível",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [],
+      "parent": "st_doc"
+    },
+    {
+      "id": "docs_antes",
+      "type": "data-validate",
+      "x": 2150,
+      "y": 435,
+      "label": "Serviço antes da aprovação",
+      "sub": "prova de execução no documento",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [],
+      "parent": "st_doc"
+    },
+    {
+      "id": "docs_preco",
+      "type": "data-agg",
+      "x": 2150,
+      "y": 555,
+      "label": "Preço de mercado",
+      "sub": "print ou cotação abaixo do cobrado",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [],
+      "parent": "st_doc"
+    },
+    {
+      "id": "score",
+      "type": "ml-eval",
+      "x": 2440,
+      "y": 195,
+      "label": "Score pela régua",
+      "sub": "proporcional ao enviado • 20/40/40",
+      "style": {
+        "badge": "14"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "stepDesc": "**Etapa 5 • score**: a régua decide notas, **score proporcional**, confiança e recomendação, exatamente como no código.",
+      "meta": [],
+      "parent": "st_par"
+    },
+    {
+      "id": "recom",
+      "type": "ml-gate",
+      "x": 2440,
+      "y": 315,
+      "label": "Recomendação e confiança",
+      "sub": "faixas 85/70 • materialidade • absorção",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [],
+      "parent": "st_par"
+    },
+    {
+      "id": "redacao",
+      "type": "gen-llm",
+      "x": 2440,
+      "y": 435,
+      "label": "Redação do parecer",
+      "sub": "IARA • racional do engenheiro",
+      "style": {
+        "badge": "15"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "stepDesc": "**Etapa 6 • parecer**: a IARA redige o resumo e a mensagem ao fornecedor com o **racional do engenheiro**; se falhar, o texto sai por regra.",
+      "meta": [],
+      "parent": "st_par"
+    },
+    {
+      "id": "parecer",
+      "type": "py-pydantic",
+      "x": 2440,
+      "y": 555,
+      "label": "Parecer (Assessment)",
+      "sub": "score • apontamentos • racional",
+      "style": {
+        "badge": "16"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "stepDesc": "O parecer é gravado no **Aurora** e volta ao Salesforce: **outbox S3** importado em lote ou **writeback** na REST API com credenciais do Secrets Manager (alvo).",
+      "meta": [],
+      "parent": "st_par"
+    },
+    {
+      "id": "prov",
+      "type": "gen-cache",
+      "x": 990,
+      "y": 720,
+      "label": "ProviderClient",
+      "sub": "cache em S3 • contingência na IARA",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [],
+      "parent": "llm"
+    },
+    {
+      "id": "adapt",
+      "type": "py-lib",
+      "x": 1280,
+      "y": 720,
+      "label": "Adaptador IARA",
+      "sub": "iara_genai_sdk • schema + reparo do JSON",
+      "style": {
+        "glyph": "plug",
+        "badge": "I2"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "stepDesc": "O **adaptador IARA** (`iara_genai_sdk`) pede saída com **JSON Schema estrito** e **repara o JSON** antes de validar; respostas ficam em cache no S3.",
+      "stepColor": "#EC7000",
+      "meta": [
+        {
+          "k": "Pacote",
+          "v": "iara_genai_sdk (Artifactory)"
+        },
+        {
+          "k": "Autenticação",
+          "v": "client_id + client_secret (Secrets Manager)"
+        },
+        {
+          "k": "Saída",
+          "v": "json_schema · json_object · prompt"
+        }
+      ],
+      "parent": "llm"
+    },
+    {
+      "id": "alb",
+      "type": "alb",
+      "x": 990,
+      "y": 920,
+      "label": "ALB interno",
+      "sub": "HTTPS • ACM • login OIDC",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [],
+      "parent": "dados"
+    },
+    {
+      "id": "panel",
+      "type": "ecs",
+      "x": 1280,
+      "y": 920,
+      "label": "Painel (ECS service)",
+      "sub": "FastAPI + React • pareceres e feedback",
+      "style": {
+        "badge": "18"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "stepDesc": "Analistas e admins entram pelo **SSO** no **painel** (ECS atrás de ALB interno) para **receber as análises**, conferir, dar **feedback** e manter as regras; o painel não dispara análise.",
+      "meta": [],
+      "parent": "dados"
+    },
+    {
+      "id": "aurora",
+      "type": "aurora",
+      "x": 1570,
+      "y": 920,
+      "label": "Aurora PostgreSQL",
+      "sub": "Serverless v2 • pareceres • feedbacks • hashes",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [
+        {
+          "k": "Substitui",
+          "v": "SQLite (output/atest.db) • acesso pelo RDS Proxy"
+        },
+        {
+          "k": "Tabelas",
+          "v": "pareceres · chamadas · feedbacks · config_versions · hashes de fotos"
+        }
+      ],
+      "parent": "dados"
+    },
+    {
+      "id": "vpce",
+      "type": "privatelink",
+      "x": 2150,
+      "y": 920,
+      "label": "VPC endpoints",
+      "sub": "S3 • SQS • Secrets • ECR • Logs",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [],
+      "parent": "dados"
+    },
+    {
+      "id": "cognito",
+      "type": "cognito",
+      "x": 670,
+      "y": 920,
+      "label": "SSO corporativo",
+      "sub": "Cognito federado ao AD",
+      "style": {
+        "badge": "C"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "stepDesc": "**Login do painel**: Cognito federado ao AD é uma hipótese; usar o provedor de identidade padrão do banco, se houver.",
+      "stepColor": "#DD344C",
+      "notes": "Provedor de identidade do painel: a confirmar (Cognito federado ou IdP corporativo).",
+      "meta": [],
+      "parent": "region"
+    },
+    {
+      "id": "outbox",
+      "type": "s3",
+      "x": 2770,
+      "y": 195,
+      "label": "Outbox do parecer",
+      "sub": "S3 outbox/ • JSON por chamado",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [],
+      "parent": "out_mvp"
+    },
+    {
+      "id": "runs",
+      "type": "s3",
+      "x": 2770,
+      "y": 305,
+      "label": "Saídas das execuções",
+      "sub": "S3 runs/ • summary.csv • métricas",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [],
+      "parent": "out_mvp"
+    },
+    {
+      "id": "wb",
+      "type": "lambda",
+      "x": 2770,
+      "y": 455,
+      "label": "Writeback Salesforce",
+      "sub": "REST API • tempo real",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [],
+      "parent": "out_api"
+    },
+    {
+      "id": "sec",
+      "type": "secrets",
+      "x": 2770,
+      "y": 565,
+      "label": "Secrets Manager",
+      "sub": "OAuth Salesforce • credenciais IARA",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [],
+      "parent": "out_api"
+    },
+    {
+      "id": "tgw",
+      "type": "tgw",
+      "x": 2770,
+      "y": 720,
+      "label": "Conectividade privada",
+      "sub": "Transit Gateway → rede Itaú",
+      "style": {
+        "badge": "A"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "stepDesc": "**Rede até a IARA**: Transit Gateway até a rede do Itaú é uma hipótese; confirmar o acesso com a plataforma da IARA.",
+      "stepColor": "#DD344C",
+      "notes": "Forma de acesso à IARA a partir da conta AWS: a confirmar com a plataforma da IARA.",
+      "meta": [],
+      "parent": "region"
+    },
+    {
+      "id": "imp",
+      "type": "extapi",
+      "x": 3110,
+      "y": 195,
+      "label": "Importação do retorno",
+      "sub": "job do Salesforce lê outbox/",
+      "style": {
+        "accent": "#00A1E0",
+        "glyph": "ingest"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [],
+      "parent": "sf_out"
+    },
+    {
+      "id": "campos",
+      "type": "extapi",
+      "x": 3110,
+      "y": 455,
+      "label": "Campos do parecer",
+      "sub": "recomendação • score • fotos",
+      "style": {
+        "accent": "#00A1E0",
+        "glyph": "checklist",
+        "badge": "17"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "stepDesc": "No Salesforce, os **campos do parecer** (recomendação, score, fotos) ficam no chamado e a **pessoa analista decide**.",
+      "meta": [],
+      "parent": "sf_out"
+    },
+    {
+      "id": "decide",
+      "type": "user",
+      "x": 3110,
+      "y": 565,
+      "label": "Pessoa analista",
+      "sub": "decide no próprio chamado",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [],
+      "parent": "sf_out"
+    },
+    {
+      "id": "iara_gw",
+      "type": "gen-gateway",
+      "x": 3110,
+      "y": 720,
+      "label": "API da IARA",
+      "sub": "OAuth client credentials • polling",
+      "style": {
+        "accent": "#EC7000",
+        "badge": "I3"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "stepDesc": "A chamada sai por **conectividade privada** até a **API da IARA**, que roteia para o modelo (Claude Sonnet 5 pelo Bedrock, GPT-4.1 pelo Azure OpenAI).",
+      "stepColor": "#EC7000",
+      "meta": [
+        {
+          "k": "Ambientes",
+          "v": "dev · homol · prod"
+        },
+        {
+          "k": "Backends",
+          "v": "azure_openai · bedrock · vertex"
+        }
+      ],
+      "parent": "iara_ext"
+    },
+    {
+      "id": "iara_mod",
+      "type": "gen-llm",
+      "x": 3110,
+      "y": 830,
+      "label": "Modelos pela IARA",
+      "sub": "claude-sonnet-5 (bedrock) • gpt-4.1",
+      "style": {
+        "accent": "#EC7000"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [],
+      "parent": "iara_ext"
+    },
+    {
+      "id": "iara_batch",
+      "type": "mlops-batch",
+      "x": 3110,
+      "y": 940,
+      "label": "Batch API da IARA",
+      "sub": "a integrar • desconto de lote",
+      "style": {
+        "accent": "#EC7000",
+        "dashed": true,
+        "badge": "B"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "stepDesc": "**Batch API da IARA**: não integrada no código; o lote por hora roda síncrono, sem desconto.",
+      "stepColor": "#DD344C",
+      "notes": "Desconto e formato da Batch API da IARA: a confirmar quando for integrada.",
+      "meta": [],
+      "parent": "iara_ext"
+    },
+    {
+      "id": "iam",
+      "type": "iam",
+      "x": 422,
+      "y": 1115,
+      "label": "IAM",
+      "sub": "papel por serviço",
+      "style": {},
+      "kind": "icon",
+      "w": 56,
+      "h": 56,
+      "meta": [],
+      "parent": "gov"
+    },
+    {
+      "id": "kms",
+      "type": "kms",
+      "x": 668,
+      "y": 1115,
+      "label": "KMS",
+      "sub": "fotos, banco e filas",
+      "style": {},
+      "kind": "icon",
+      "w": 56,
+      "h": 56,
+      "meta": [],
+      "parent": "gov"
+    },
+    {
+      "id": "waf",
+      "type": "waf",
+      "x": 914,
+      "y": 1115,
+      "label": "WAF",
+      "sub": "protege a API",
+      "style": {},
+      "kind": "icon",
+      "w": 56,
+      "h": 56,
+      "meta": [],
+      "parent": "gov"
+    },
+    {
+      "id": "cw",
+      "type": "cloudwatch",
+      "x": 1160,
+      "y": 1115,
+      "label": "CloudWatch",
+      "sub": "logs JSON • métricas • alarmes",
+      "style": {},
+      "kind": "icon",
+      "w": 56,
+      "h": 56,
+      "meta": [],
+      "parent": "gov"
+    },
+    {
+      "id": "xray",
+      "type": "xray",
+      "x": 1406,
+      "y": 1115,
+      "label": "X-Ray / ADOT",
+      "sub": "tempo por etapa",
+      "style": {},
+      "kind": "icon",
+      "w": 56,
+      "h": 56,
+      "meta": [],
+      "parent": "gov"
+    },
+    {
+      "id": "bi",
+      "type": "quicksight",
+      "x": 1652,
+      "y": 1115,
+      "label": "Analítico",
+      "sub": "concordância • divergências",
+      "style": {},
+      "kind": "icon",
+      "w": 56,
+      "h": 56,
+      "meta": [],
+      "parent": "gov"
+    },
+    {
+      "id": "ct",
+      "type": "cloudtrail",
+      "x": 1898,
+      "y": 1115,
+      "label": "CloudTrail",
+      "sub": "trilha de auditoria",
+      "style": {},
+      "kind": "icon",
+      "w": 56,
+      "h": 56,
+      "meta": [],
+      "parent": "gov"
+    },
+    {
+      "id": "cicd",
+      "type": "codepipeline",
+      "x": 2144,
+      "y": 1115,
+      "label": "CodePipeline",
+      "sub": "portão de qualidade (validate)",
+      "style": {
+        "badge": "19"
+      },
+      "kind": "icon",
+      "w": 56,
+      "h": 56,
+      "stepDesc": "Feedback e pareceres alimentam o **analítico de concordância**; o **CodePipeline** roda `action = validate` e só publica prompt, régua ou modelo novo se o portão de qualidade aprovar.",
+      "meta": [
+        {
+          "k": "Portão",
+          "v": "acurácia ≥ 0,85 · kappa ≥ 0,75 · F1 ≥ 0,80 · erro do score ≤ 8"
+        }
+      ],
+      "parent": "gov"
+    },
+    {
+      "id": "ecr",
+      "type": "ecr",
+      "x": 2390,
+      "y": 1115,
+      "label": "ECR",
+      "sub": "imagens do worker e painel",
+      "style": {},
+      "kind": "icon",
+      "w": 56,
+      "h": 56,
+      "meta": [],
+      "parent": "gov"
+    },
+    {
+      "id": "bkp",
+      "type": "backup",
+      "x": 2636,
+      "y": 1115,
+      "label": "AWS Backup",
+      "sub": "Aurora e S3",
+      "style": {},
+      "kind": "icon",
+      "w": 56,
+      "h": 56,
+      "meta": [],
+      "parent": "gov"
+    },
+    {
+      "id": "gd",
+      "type": "guardduty",
+      "x": 2882,
+      "y": 1115,
+      "label": "GuardDuty",
+      "sub": "ameaças na conta",
+      "style": {},
+      "kind": "icon",
+      "w": 56,
+      "h": 56,
+      "meta": [],
+      "parent": "gov"
+    },
+    {
+      "id": "n_diff",
+      "type": "shape-note",
+      "x": 360,
+      "y": 1330,
+      "w": 2650,
+      "h": 190,
+      "label": "O que muda em relação ao as is (orquestração)",
+      "sub": "As is: um SageMaker Notebook Job por hora faz tudo em sequência (dispara o Glue, espera, analisa todas as OTs). Rodada longa se sobrepõe à seguinte, e uma falha adia tudo em uma hora.\nTo be • extração: o Step Functions orquestra só a extração, com passos rastreáveis, novas tentativas por passo e uma execução por vez (a seguinte não começa sobre a anterior).\nTo be • incremental: o Athena traz só as OTs novas ou alteradas desde a última marca d'água, e cada OT tem chave de idempotência (OT + versão): a mesma OT não é analisada duas vezes.\nTo be • análise desacoplada: cada OT gravada no S3 vira na hora uma mensagem na SQS; a análise começa sem esperar a rodada inteira, e o worker ECS escala pela fila.\nTo be • falhas isoladas: erro numa OT não para as outras; a mensagem volta à fila e, depois de 3 tentativas, vai para a DLQ com alarme.\nTo be • o mesmo pacote atest roda no worker; o Notebook Job sai de cena. O caminho via API (gatilho no envio) entra na mesma fila, sem esperar a hora cheia.",
+      "style": {
+        "fontSize": 13
+      },
+      "kind": "note",
+      "meta": []
+    },
+    {
+      "id": "start",
+      "type": "shape-text",
+      "x": 20,
+      "y": 30,
+      "w": 96,
+      "h": 40,
+      "label": "▶ Início",
+      "sub": "",
+      "kind": "text",
+      "style": {
+        "fill": "#16a34a",
+        "text": "#ffffff",
+        "fontSize": 16
+      },
+      "meta": []
+    },
+    {
+      "id": "n_ler",
+      "type": "shape-note",
+      "x": 20,
+      "y": -270,
+      "w": 1700,
+      "h": 245,
+      "label": "Como ler esta arquitetura",
+      "sub": "① Entrada: OT e orçamento .xlsx nos dados democratizados do Data Mesh; fotos e documentos nas APIs da Salesforce (IDs da OT → base64 por ID); no alvo, callout no envio.\n② Extração a cada hora: Step Functions consulta o Athena e roda um Map por OT nas APIs, gravando tudo no S3 tickets/<id>/; no alvo, API Gateway + Lambda de contrato. ③ Fila: SQS com DLQ; hash de cada foto calculado na chegada.\n④ Worker: o pipeline do código, sem mudança (7 etapas: checklist, escopo, orçamento, fotos, documentos, score, parecer), em ECS Fargate.\n⑤ Saída: outbox S3 (lote) ou writeback na REST API (alvo). ⑥ Salesforce: campos do parecer no chamado; a pessoa analista decide.\n⑦ Painel e dados: o painel (ECS atrás de ALB interno, com SSO) só recebe as análises e o feedback; Aurora PostgreSQL Serverless v2 no lugar do SQLite.\n⑧ Segurança e entrega: IAM, KMS, WAF, CloudWatch, X-Ray, CloudTrail, portão de qualidade no CodePipeline.\nPremissas: todo LLM sai pela IARA; nada vai direto a Anthropic, OpenAI ou Google; ECS Fargate em vez de EKS (sem cluster para operar); modo sombra no MVP.\n\nSelos azuis 1–19: fluxo do chamado · I1–I3 (laranja): chamadas à IARA · A–G (vermelho): decisões a confirmar.\nÍcone de brilho: chamada à IARA · borda tracejada: Fase 2 da régua ou a integrar · linhas: azul-petróleo lote por hora, magenta alvo, laranja IARA, roxo devolução, verde feedback.",
+      "kind": "note",
+      "style": {
+        "fontSize": 13
+      },
+      "meta": []
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "from": "forn",
+      "to": "chamado",
+      "label": "",
+      "style": {}
+    },
+    {
+      "id": "e2",
+      "from": "chamado",
+      "to": "dm_ot",
+      "label": "",
+      "style": {
+        "color": "#0891b2"
+      }
+    },
+    {
+      "id": "e3",
+      "from": "chamado",
+      "to": "trig",
+      "label": "",
+      "style": {
+        "color": "#a21caf"
+      },
+      "fromSide": "left",
+      "toSide": "left"
+    },
+    {
+      "id": "e4",
+      "from": "athena",
+      "to": "dm_ot",
+      "label": "SQL no Data Mesh",
+      "style": {
+        "color": "#0891b2",
+        "arrow": "both",
+        "badge": "G"
+      },
+      "fromSide": "left",
+      "toSide": "right",
+      "stepDesc": "**Atualização do Data Mesh**: confirmar com que frequência o produto de dados do chamado é atualizado e se o .xlsx vem junto da OT; com atualização diária, rodar de hora em hora não adianta.",
+      "stepColor": "#DD344C"
+    },
+    {
+      "id": "e5",
+      "from": "xlam",
+      "to": "api_ids",
+      "label": "① IDs da OT",
+      "style": {
+        "color": "#0891b2",
+        "arrow": "both"
+      },
+      "fromSide": "left",
+      "toSide": "right"
+    },
+    {
+      "id": "e6",
+      "from": "xlam",
+      "to": "api_doc",
+      "label": "② base64 por ID",
+      "style": {
+        "color": "#0891b2",
+        "arrow": "both",
+        "badge": "F"
+      },
+      "fromSide": "left",
+      "toSide": "right",
+      "wp": [
+        {
+          "x": 330,
+          "y": 450
+        },
+        {
+          "x": 330,
+          "y": 560
+        }
+      ],
+      "stepDesc": "**Volume das APIs de anexos**: uma chamada por documento, com o arquivo em base64 (cerca de 33% maior); confirmar limite de taxa e tamanho máximo da API da Salesforce para calibrar a concorrência do Map.",
+      "stepColor": "#DD344C"
+    },
+    {
+      "id": "e7",
+      "from": "sfn_ext",
+      "to": "athena",
+      "label": "consulta",
+      "style": {
+        "color": "#0891b2"
+      }
+    },
+    {
+      "id": "e8",
+      "from": "athena",
+      "to": "xlam",
+      "label": "Map por OT",
+      "style": {
+        "color": "#0891b2"
+      }
+    },
+    {
+      "id": "e9",
+      "from": "xlam",
+      "to": "inbox",
+      "label": "grava tudo no S3",
+      "style": {
+        "color": "#0891b2"
+      }
+    },
+    {
+      "id": "e10",
+      "from": "trig",
+      "to": "apigw",
+      "label": "no envio",
+      "style": {
+        "color": "#a21caf"
+      }
+    },
+    {
+      "id": "e11",
+      "from": "inbox",
+      "to": "sqs",
+      "label": "1 mensagem por OT, na hora",
+      "style": {
+        "color": "#0891b2"
+      },
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "e12",
+      "from": "inbox",
+      "to": "hashl",
+      "label": "foto nova",
+      "style": {
+        "dash": "dotted"
+      },
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "e13",
+      "from": "apigw",
+      "to": "ingest",
+      "label": "",
+      "style": {
+        "color": "#a21caf"
+      }
+    },
+    {
+      "id": "e14",
+      "from": "ingest",
+      "to": "inbox",
+      "label": "grava anexos",
+      "style": {
+        "color": "#a21caf",
+        "dash": "dotted"
+      },
+      "fromSide": "left",
+      "toSide": "left"
+    },
+    {
+      "id": "e15",
+      "from": "ingest",
+      "to": "sqs",
+      "label": "",
+      "style": {
+        "color": "#a21caf"
+      },
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "e16",
+      "from": "sqs",
+      "to": "dlq",
+      "label": "falhas",
+      "style": {
+        "dash": "dashed"
+      },
+      "fromSide": "right",
+      "toSide": "right",
+      "mid": 925
+    },
+    {
+      "id": "e17",
+      "from": "sqs",
+      "to": "wk",
+      "label": "consome",
+      "style": {}
+    },
+    {
+      "id": "e18",
+      "from": "wk",
+      "to": "orch",
+      "label": "1 chamado por vez",
+      "style": {}
+    },
+    {
+      "id": "e19",
+      "from": "orch",
+      "to": "load",
+      "label": "",
+      "style": {
+        "dash": "dotted"
+      }
+    },
+    {
+      "id": "e20",
+      "from": "load",
+      "to": "llms",
+      "label": "",
+      "style": {
+        "dash": "dotted"
+      }
+    },
+    {
+      "id": "e21",
+      "from": "orch",
+      "to": "planilha",
+      "label": "",
+      "style": {},
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "e22",
+      "from": "planilha",
+      "to": "anexos",
+      "label": "",
+      "style": {}
+    },
+    {
+      "id": "e23",
+      "from": "anexos",
+      "to": "gate",
+      "label": "",
+      "style": {}
+    },
+    {
+      "id": "e24",
+      "from": "gate",
+      "to": "devol",
+      "label": "incompleto",
+      "style": {
+        "color": "#6A3FD1",
+        "dash": "dashed",
+        "width": 2
+      }
+    },
+    {
+      "id": "e25",
+      "from": "gate",
+      "to": "escopo",
+      "label": "completo",
+      "style": {
+        "color": "#16a34a"
+      },
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "e26",
+      "from": "devol",
+      "to": "parecer",
+      "label": "encerra a análise sem score",
+      "style": {
+        "color": "#6A3FD1",
+        "dash": "dashed",
+        "width": 2
+      },
+      "fromSide": "bottom",
+      "toSide": "bottom",
+      "mid": 662
+    },
+    {
+      "id": "e27",
+      "from": "escopo",
+      "to": "itens",
+      "label": "",
+      "style": {}
+    },
+    {
+      "id": "e28",
+      "from": "itens",
+      "to": "regras_orc",
+      "label": "",
+      "style": {}
+    },
+    {
+      "id": "e29",
+      "from": "regras_orc",
+      "to": "valor",
+      "label": "",
+      "style": {}
+    },
+    {
+      "id": "e30",
+      "from": "valor",
+      "to": "fotos_ag",
+      "label": "",
+      "style": {},
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "e31",
+      "from": "fotos_ag",
+      "to": "regras_fot",
+      "label": "",
+      "style": {}
+    },
+    {
+      "id": "e32",
+      "from": "regras_fot",
+      "to": "exif",
+      "label": "",
+      "style": {}
+    },
+    {
+      "id": "e33",
+      "from": "exif",
+      "to": "reuso",
+      "label": "",
+      "style": {}
+    },
+    {
+      "id": "e34",
+      "from": "reuso",
+      "to": "docs_ag",
+      "label": "",
+      "style": {},
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "e35",
+      "from": "docs_ag",
+      "to": "docs_conf",
+      "label": "",
+      "style": {}
+    },
+    {
+      "id": "e36",
+      "from": "docs_conf",
+      "to": "docs_antes",
+      "label": "",
+      "style": {}
+    },
+    {
+      "id": "e37",
+      "from": "docs_antes",
+      "to": "docs_preco",
+      "label": "",
+      "style": {}
+    },
+    {
+      "id": "e38",
+      "from": "docs_preco",
+      "to": "score",
+      "label": "",
+      "style": {},
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "e39",
+      "from": "score",
+      "to": "recom",
+      "label": "",
+      "style": {}
+    },
+    {
+      "id": "e40",
+      "from": "recom",
+      "to": "redacao",
+      "label": "",
+      "style": {}
+    },
+    {
+      "id": "e41",
+      "from": "redacao",
+      "to": "parecer",
+      "label": "",
+      "style": {}
+    },
+    {
+      "id": "e42",
+      "from": "llms",
+      "to": "prov",
+      "label": "",
+      "style": {},
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "e43",
+      "from": "prov",
+      "to": "adapt",
+      "label": "",
+      "style": {},
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "e44",
+      "from": "adapt",
+      "to": "tgw",
+      "label": "HTTPS privado",
+      "style": {
+        "color": "#EC7000",
+        "width": 2
+      },
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "e45",
+      "from": "tgw",
+      "to": "iara_gw",
+      "label": "",
+      "style": {
+        "color": "#EC7000",
+        "width": 2
+      },
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "e46",
+      "from": "iara_gw",
+      "to": "iara_mod",
+      "label": "",
+      "style": {
+        "color": "#EC7000"
+      }
+    },
+    {
+      "id": "e47",
+      "from": "iara_gw",
+      "to": "iara_batch",
+      "label": "futuro",
+      "style": {
+        "color": "#EC7000",
+        "dash": "dashed"
+      },
+      "fromSide": "left",
+      "toSide": "left"
+    },
+    {
+      "id": "e48",
+      "from": "reuso",
+      "to": "aurora",
+      "label": "hashes do histórico",
+      "style": {
+        "arrow": "both",
+        "dash": "dashed",
+        "badge": "E"
+      },
+      "fromSide": "bottom",
+      "toSide": "right",
+      "wp": [
+        {
+          "x": 1970,
+          "y": 950
+        }
+      ],
+      "stepDesc": "**Busca de reaproveitamento**: o código compara cada foto com **todo o histórico**; com o volume real, a tabela de hashes precisa de índice ou de janela de tempo.",
+      "stepColor": "#DD344C"
+    },
+    {
+      "id": "e49",
+      "from": "parecer",
+      "to": "aurora",
+      "label": "grava",
+      "style": {
+        "dash": "dotted"
+      },
+      "fromSide": "right",
+      "toSide": "top",
+      "wp": [
+        {
+          "x": 2735,
+          "y": 585
+        },
+        {
+          "x": 2735,
+          "y": 855
+        },
+        {
+          "x": 1680,
+          "y": 855
+        }
+      ]
+    },
+    {
+      "id": "e50",
+      "from": "analistas",
+      "to": "cognito",
+      "label": "login",
+      "style": {
+        "color": "#16a34a"
+      }
+    },
+    {
+      "id": "e51",
+      "from": "cognito",
+      "to": "alb",
+      "label": "",
+      "style": {
+        "dash": "dotted"
+      }
+    },
+    {
+      "id": "e52",
+      "from": "alb",
+      "to": "panel",
+      "label": "",
+      "style": {}
+    },
+    {
+      "id": "e53",
+      "from": "panel",
+      "to": "aurora",
+      "label": "feedback",
+      "style": {
+        "color": "#16a34a"
+      }
+    },
+    {
+      "id": "e54",
+      "from": "aurora",
+      "to": "bi",
+      "label": "",
+      "style": {
+        "dash": "dotted"
+      },
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "e55",
+      "from": "parecer",
+      "to": "outbox",
+      "label": "",
+      "style": {
+        "color": "#0891b2"
+      },
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "e56",
+      "from": "parecer",
+      "to": "runs",
+      "label": "",
+      "style": {
+        "dash": "dotted"
+      },
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "e57",
+      "from": "parecer",
+      "to": "wb",
+      "label": "",
+      "style": {
+        "color": "#a21caf"
+      },
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "e58",
+      "from": "wb",
+      "to": "sec",
+      "label": "",
+      "style": {
+        "arrow": "both",
+        "dash": "dotted"
+      }
+    },
+    {
+      "id": "e59",
+      "from": "outbox",
+      "to": "imp",
+      "label": "lote",
+      "style": {
+        "color": "#0891b2"
+      }
+    },
+    {
+      "id": "e60",
+      "from": "wb",
+      "to": "campos",
+      "label": "API",
+      "style": {
+        "color": "#a21caf"
+      }
+    },
+    {
+      "id": "e61",
+      "from": "imp",
+      "to": "campos",
+      "label": "",
+      "style": {
+        "color": "#0891b2"
+      },
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "e62",
+      "from": "campos",
+      "to": "decide",
+      "label": "",
+      "style": {}
+    }
+  ],
+  "legend": {
+    "order": [
+      "x:s_flow",
+      "b:1",
+      "b:2",
+      "b:3",
+      "b:4",
+      "b:5",
+      "b:6",
+      "b:7",
+      "b:8",
+      "b:9",
+      "b:10",
+      "b:11",
+      "b:12",
+      "b:13",
+      "b:14",
+      "b:15",
+      "b:16",
+      "b:17",
+      "b:18",
+      "b:19",
+      "x:s_iara",
+      "b:I1",
+      "b:I2",
+      "b:I3",
+      "x:s_att",
+      "b:A",
+      "b:B",
+      "b:C",
+      "b:D",
+      "b:E",
+      "b:F",
+      "b:G"
+    ],
+    "extras": [
+      {
+        "id": "s_flow",
+        "kind": "section",
+        "title": "Fluxo do chamado"
+      },
+      {
+        "id": "s_iara",
+        "kind": "section",
+        "title": "Chamadas à IARA",
+        "color": "#EC7000"
+      },
+      {
+        "id": "s_att",
+        "kind": "section",
+        "title": "Decisões a confirmar",
+        "color": "#DD344C"
+      }
+    ]
+  },
+  "pageTitle": "Página 1",
+  "savedAt": "2026-11-14T13:23:08.000Z"
+}

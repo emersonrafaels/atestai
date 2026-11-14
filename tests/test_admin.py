@@ -114,6 +114,7 @@ def test_clear_analysis_history_selected_and_all(admin_cfg):
     first = _run(c, "00517706")
     second = _run(c, "00523310")
     c.post(f"/api/assessments/{first['record_id']}/feedback", json={"action": "accept"})
+    assert c.post(f"/api/assessments/{first['record_id']}/findings/0/feedback", json={"verdict": "correct"}).status_code == 201
     listed = c.get("/api/admin/assessments", headers=h).json()
     assert {a["id"] for a in listed} == {first["record_id"], second["record_id"]}
     assert next(a for a in listed if a["id"] == first["record_id"])["feedbacks"] == 1

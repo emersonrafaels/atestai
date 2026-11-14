@@ -62,6 +62,44 @@ export function locate(f: Finding, p: Assessment): Located {
   return out;
 }
 
+// ============================================================================ a régua de hoje sobre um parecer gravado
+export interface CurrentRule {
+  /** o parecer com os flags dos apontamentos (reduz confiança, devolve, trava) e a confiança da régua atual */
+  p: Assessment;
+  /** a confiança ou os redutores mudam pela régua atual (parecer gravado com régua antiga) */
+  outdated: boolean;
+  /** redutores gravados que a régua atual não conta mais */
+  dropped: string[];
+  /** redutores que a régua atual conta e o parecer gravado não contava */
+  added: string[];
+}
+
+/**
+ * Reaplica os flags atuais de cada tipo (rubric.finding_flags) aos apontamentos gravados e refaz a confiança.
+ * Os redutores que não são apontamento (falha de leitura) continuam valendo. Sem os flags da API, nada muda.
+ */
+export function underCurrentRule(p: Assessment, rubric: RubricInfo): CurrentRule {
+  const flags = rubric.finding_flags;
+  if (!flags || !p.confidence) return { p, outdated: false, dropped: [], added: [] };
+  const findings = p.findings.map((f) => {
+    const fl = flags[f.kind];
+    return fl ? { ...f, reduces_confidence: fl.reduces_confidence, returns: fl.returns, lock: fl.lock } : f;
+  });
+  const kinds = new Set(p.findings.map((f) => f.kind));
+  const reading = p.confidence_reducers.filter((r) => !kinds.has(r));
+  const reducers = [...new Set([...findings.filter((f) => f.reduces_confidence).map((f) => f.kind), ...reading])].sort();
+  const n = reducers.length;
+  const confidence = n >= rubric.confidence.low_with_n_reducers ? "low" : n >= rubric.confidence.medium_with_n_reducers ? "medium" : "high";
+  const dropped = p.confidence_reducers.filter((r) => !reducers.includes(r));
+  const added = reducers.filter((r) => !p.confidence_reducers.includes(r));
+  return {
+    p: { ...p, findings, confidence, confidence_reducers: reducers },
+    outdated: dropped.length > 0 || added.length > 0 || confidence !== p.confidence,
+    dropped,
+    added,
+  };
+}
+
 // ============================================================================ e se este apontamento não procedesse?
 export interface Simulation {
   grades: Record<ValidationKind, number>;
@@ -76,8 +114,9 @@ export interface Simulation {
  * Reaplica a régua (atest/score.py) sem os tipos de apontamento marcados como improcedentes.
  * Serve para a pessoa analista ver, antes de registrar, o que a régua decidiria com a revisão dela.
  */
-export function simulate(p: Assessment, rubric: RubricInfo, removed: Set<string>): Simulation | null {
-  if (p.score === null || !p.grades) return null;
+export function simulate(stored: Assessment, rubric: RubricInfo, removed: Set<string>): Simulation | null {
+  if (stored.score === null || !stored.grades) return null;
+  const p = underCurrentRule(stored, rubric).p;
   // o teto do valor em questão é refeito abaixo, com o valor que sobra
   const kept = p.findings.filter((f) => !removed.has(f.kind) && f.kind !== "relevant_amount_at_issue");
   const impacts = explainFindings(kept, rubric);
@@ -110,6 +149,66 @@ export function simulate(p: Assessment, rubric: RubricInfo, removed: Set<string>
     if (recommendation === "approve" && approveCap && pct > approveCap) recommendation = "approve_with_caveats";
   }
   return { grades, score, confidence, recommendation, kept: kept.length };
+}
+
+// ============================================================================ por que esta recomendação?
+export type DecisionStepId = "checklist" | "lock" | "gap" | "confidence" | "amount" | "band";
+
+export interface DecisionStep {
+  id: DecisionStepId;
+  /** "fired": esta regra definiu a recomendação; "passed": avaliada e não se aplicou; "unreached": uma regra anterior já decidiu */
+  state: "fired" | "passed" | "unreached";
+  /** índices dos apontamentos que pesam nesta regra */
+  findings: number[];
+}
+
+export interface DecisionPath {
+  steps: DecisionStep[];
+  /** recomendação a que a régua atual chega com este parecer */
+  recommendation: Recommendation;
+  /** a régua atual chega à mesma recomendação gravada no parecer (pareceres antigos podem ter usado outra régua) */
+  consistent: boolean;
+  /** faixa do score (quando chegou nela) e se o teto do valor em questão rebaixou "aprovar" para "com ressalvas" */
+  band: { score_min: number; end: number; recommendation: Recommendation; capped: boolean } | null;
+}
+
+/**
+ * A ordem em que a régua decide (atest/score.py, _recommendation), passo a passo, com a regra que decidiu este parecer:
+ * checklist → trava → falta do fornecedor → confiança baixa → valor em questão → faixa do score.
+ */
+export function decisionPath(stored: Assessment, rubric: RubricInfo): DecisionPath {
+  const p = underCurrentRule(stored, rubric).p;
+  const all = p.findings.map((_, i) => i);
+  const impacts = explainFindings(p.findings, rubric);
+  const checks: { id: DecisionStepId; hit: boolean; findings: number[]; rec: Recommendation }[] = [];
+  const noScore = p.score === null || p.recommendation === "checklist_returned";
+  checks.push({ id: "checklist", hit: noScore, findings: [], rec: "checklist_returned" });
+  const locks = all.filter((i) => p.findings[i].lock);
+  checks.push({ id: "lock", hit: locks.length > 0, findings: locks, rec: "return_locked" });
+  const gaps = all.filter((i) => p.findings[i].returns && !impacts[i].absorbedBy);
+  checks.push({ id: "gap", hit: gaps.length > 0, findings: gaps, rec: "return_to_supplier" });
+  checks.push({ id: "confidence", hit: p.confidence === "low", findings: all.filter((i) => p.findings[i].reduces_confidence), rec: "detailed_review" });
+  const cap = rubric.max_amount_at_issue_for_caveats_pct ?? 30;
+  checks.push({ id: "amount", hit: !!cap && p.amount_at_issue_pct >= cap, findings: all.filter((i) => p.findings[i].amount_at_issue > 0), rec: "return_to_supplier" });
+
+  let band: DecisionPath["band"] = null;
+  let bandRec: Recommendation = "return_to_supplier";
+  if (p.score !== null && rubric.bands.length) {
+    const sorted = [...rubric.bands].sort((a, b) => a.score_min - b.score_min);
+    let k = 0;
+    sorted.forEach((b, i) => { if (p.score! >= b.score_min) k = i; });
+    const b = sorted[k];
+    const approveCap = rubric.max_amount_at_issue_for_approve_pct ?? 10;
+    const capped = b.recommendation === "approve" && !!approveCap && p.amount_at_issue_pct > approveCap;
+    bandRec = capped ? "approve_with_caveats" : b.recommendation;
+    band = { score_min: b.score_min, end: sorted[k + 1]?.score_min ?? 101, recommendation: b.recommendation, capped };
+  }
+  checks.push({ id: "band", hit: true, findings: [], rec: bandRec });
+
+  const first = checks.findIndex((c) => c.hit);
+  const steps = checks.map((c, k): DecisionStep => ({ id: c.id, state: k < first ? "passed" : k === first ? "fired" : "unreached", findings: c.findings }));
+  const recommendation = checks[first].rec;
+  return { steps, recommendation, consistent: recommendation === p.recommendation, band };
 }
 
 // ============================================================================ motivos rápidos para o comentário

@@ -5,6 +5,7 @@ Chamados      GET /api/tickets · GET /api/tickets/{id} · GET /api/tickets/{id}
               GET /api/tickets/{id}/history · GET /api/tickets/{id}/reuse · GET /api/spreadsheet-template
 Execuções     POST /api/runs · GET /api/runs · GET /api/runs/{id}
 Pareceres     GET /api/assessments/{id} · GET|POST /api/assessments/{id}/feedback
+              GET /api/assessments/{id}/findings/feedback · POST /api/assessments/{id}/findings/{posição}/feedback
 Operação      GET /api/config · GET /api/metrics
 Portal        POST /api/admin/login · GET /api/admin/overview · PUT /api/admin/config/{seção} · usuários, histórico e limpeza de análises (com token)
 """
@@ -30,7 +31,7 @@ from .admin import SECTIONS, AdminError, AdminStore, catalog_usage
 from .attachments import compute_hashes, detail_level, distance, exif_date, hashes_with_crops
 from .batch import BatchRunner, ComponentFactory, new_run_id
 from .config import KEY_ENV_VAR, ROOT, BatchMode, Mode, Settings, has_credentials, missing_keys, used_providers
-from .database import Database, Feedback, FeedbackInput
+from .database import Database, Feedback, FeedbackInput, FindingFeedback, FindingFeedbackInput
 from .domain import (
     Assessment,
     Attachment,
@@ -807,6 +808,11 @@ def create_app(cfg: Settings) -> FastAPI:
                     "max_amount_at_issue_for_approve_pct", "max_amount_at_issue_for_caveats_pct",
                 }),
                 "absorbs": {k: t.absorbs for k, t in manager.cfg_base.rubric.finding_types.items() if t.absorbs},
+                # flags atuais de cada tipo: o painel reaplica a régua de hoje a pareceres gravados com régua antiga
+                "finding_flags": {
+                    k: {"reduces_confidence": t.reduces_confidence, "returns": t.returns, "lock": t.lock}
+                    for k, t in manager.cfg_base.rubric.finding_types.items()
+                },
             },
             models=model_options(),
             keyed_providers=sorted(p for p in KEY_ENV_VAR if has_credentials(p)),
@@ -1108,6 +1114,21 @@ def create_app(cfg: Settings) -> FastAPI:
             final_decision=fb.final_decision.value if fb.final_decision else None,
             unfounded=fb.unfounded_findings,
         )
+        return saved
+
+    @app.get("/api/assessments/{pid}/findings/feedback")
+    def finding_feedbacks(pid: int) -> list[FindingFeedback]:
+        return database.finding_feedbacks(pid)
+
+    @app.post("/api/assessments/{pid}/findings/{index}/feedback", status_code=201)
+    def register_finding_feedback(pid: int, index: int, fb: FindingFeedbackInput) -> FindingFeedback:
+        try:
+            saved = database.save_finding_feedback(pid, index, fb)
+        except KeyError as e:
+            raise HTTPException(404, "parecer não encontrado") from e
+        except IndexError as e:
+            raise HTTPException(404, f"o parecer não tem o apontamento {index}") from e
+        event("finding_feedback", ticket=saved.ticket_id, assessment_id=pid, finding=saved.finding_kind, verdict=fb.verdict.value)
         return saved
 
     if DIST.exists():

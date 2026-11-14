@@ -87,6 +87,53 @@ export const SEVERITY: Record<string, { label: string; color: string }> = {
 
 /** Rótulos de exibição dos valores de enum que chegam da API (os valores são em inglês; a tela é em português). */
 export const CONFIDENCE_LABEL: Record<string, string> = { high: "alta", medium: "média", low: "baixa" };
+/** Classe de cor do texto de cada nível de confiança. */
+export const CONFIDENCE_TEXT: Record<string, string> = { high: "text-ok", medium: "text-warn", low: "text-bad" };
+
+/**
+ * O que cada redutor de confiança quer dizer e como resolver. Os tipos da régua marcados com "Reduz confiança"
+ * e os redutores extras das etapas (falha de leitura, que não viram apontamento).
+ */
+export const REDUCER_HELP: Record<string, { what: string; todo: string }> = {
+  vague_scope: {
+    what: "O escopo não diz com clareza o que fazer, onde ou quanto. Sem isso, não dá para conferir se o orçamento e as fotos batem com o pedido.",
+    todo: "Confirme o serviço e o ambiente com o gestor da agência ou peça o escopo detalhado.",
+  },
+  inconsistent_scope: {
+    what: "O escopo não combina com a categoria ou com o sintoma do chamado. Não fica claro qual serviço deveria ter sido feito.",
+    todo: "Confirme com quem abriu o chamado qual é o serviço e se a categoria está certa.",
+  },
+  unverifiable_quantity: {
+    what: "O escopo e as evidências não permitem conferir a quantidade orçada (m², metros, unidades).",
+    todo: "Peça a medição ou fotos que mostrem a extensão do serviço, ou confira na vistoria.",
+  },
+  after_photo_unconfirmed_location: {
+    what: "A foto do depois não permite confirmar que é o mesmo ambiente do chamado ou da foto do antes.",
+    todo: "Compare com a foto do antes e, se preciso, peça uma foto com referência do ambiente (placa, porta, mobiliário).",
+  },
+  unreadable_photo: {
+    what: "Há foto escura, borrada ou cortada: o modelo não consegue ver o serviço nela.",
+    todo: "Peça ao fornecedor uma nova foto legível do mesmo ponto.",
+  },
+  unreadable_document: {
+    what: "Há documento do checklist (termo, nota, laudo) que não dá para ler.",
+    todo: "Peça o documento de novo, em melhor qualidade.",
+  },
+  unreadable_quote: {
+    what: "A planilha do orçamento não pôde ser lida: os itens e os valores não foram conferidos.",
+    todo: "Confira se o arquivo segue a planilha padrão (não protegido, não corrompido) e peça o reenvio se preciso.",
+  },
+  photos_not_analyzed: {
+    what: "O modelo não devolveu uma leitura válida das fotos, nem em lotes menores. A validação das fotos ficou sem a leitura do modelo.",
+    todo: "Rode a análise de novo ou confira as fotos manualmente.",
+  },
+  documents_not_analyzed: {
+    what: "O modelo não devolveu uma leitura válida dos documentos. Eles não foram conferidos.",
+    todo: "Rode a análise de novo ou confira os documentos manualmente.",
+  },
+};
+/** Redutores que vêm de falha de leitura (não são apontamentos e não podem ser marcados como "não procede"). */
+export const READING_REDUCERS = new Set(["unreadable_quote", "photos_not_analyzed", "documents_not_analyzed"]);
 export const MOMENT_LABEL: Record<string, string> = { before: "antes", after: "depois", during: "durante", undetermined: "indeterminado" };
 
 // ============================================================================ score: de onde vem cada ponto
@@ -177,7 +224,8 @@ export const GLOSSARY: Record<string, { term: string; text: string }> = {
   absorbed: { term: "Apontamento absorvido", text: "Quando dois apontamentos descrevem o mesmo problema (ex.: a foto do depois é de outro ambiente e, por isso, falta a prova do serviço), a régua desconta só o mais amplo. O outro segue listado como evidência. Se o mais amplo for marcado como não procede, o absorvido volta a descontar." },
   once: { term: "Desconto único por tipo", text: "Se o mesmo tipo de apontamento aparece várias vezes na mesma validação, ele desconta uma vez só. As demais ocorrências ficam listadas como evidência. O desconto do tipo já considera todas as ocorrências juntas (ex.: 4 itens com quantidade acima das fotos = a soma do valor deles). Com boa parte do orçamento em questão, entra também o apontamento “Valor divergente relevante”." },
   lock: { term: "Trava de integridade", text: "Apontamento grave (ex.: foto reaproveitada de outro chamado). Devolve o chamado qualquer que seja o score." },
-  confidence: { term: "Confiança", text: "Quanto dá para confiar na análise com a entrada recebida. Escopo vago ou foto ilegível reduzem a confiança. Confiança baixa manda o chamado para análise detalhada." },
+  confidence: { term: "Confiança", text: "O quanto o modelo conseguiu ler e entender o que foi enviado. Reduzem a confiança: escopo vago ou incoerente, quantidade ou local que não dá para conferir, foto ou documento ilegível e orçamento, fotos ou documentos que não puderam ser lidos. Problemas que o modelo conseguiu ver (preço acima, item fora do escopo, serviço sem item no orçamento) viram apontamentos e não reduzem a confiança. Confiança baixa manda o chamado para análise detalhada." },
+  detailed_review: { term: "Análise detalhada", text: "Recomendação dada quando a confiança fica baixa: a entrada (escopo, orçamento, fotos, documentos) não basta para concluir. O Atest.AI não aprova nem devolve: uma pessoa revisa, com vistoria no local ou consulta ao gestor. Trava de integridade e falta do fornecedor vêm antes e devolvem o chamado mesmo com confiança baixa." },
   amount: { term: "Valor potencial divergente", text: "Quanto do orçamento pode estar divergente do escopo ou da referência. Item fora do escopo, sem justificativa, duplicado ou com quantidade não verificável conta inteiro; preço ou quantidade acima contam só o excedente. A nota de Orçamento não passa de 100 − % em questão (ex.: 50% em questão → nota no máximo 50). Com 30% ou mais em questão, o chamado volta ao fornecedor." },
   bands: { term: "Faixas de recomendação", text: "85 ou mais: aprovar. De 70 a 84: aprovar com ressalvas. Abaixo de 70: devolver ao fornecedor. Travas, faltas do fornecedor e confiança baixa vencem a faixa." },
   checklist: { term: "Checklist mínimo", text: "Documentos obrigatórios para a categoria (ex.: foto do depois, termo de conclusão). Se faltar algo, o chamado volta antes de qualquer análise e não recebe score." },

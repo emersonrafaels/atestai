@@ -1,0 +1,2008 @@
+{
+  "format": "archstudio",
+  "version": 1,
+  "name": "Atest.AI • Validação de imagens (as is)",
+  "description": "Arquitetura atual do Atest.AI para as esteiras SETA e SISR, em batch e no formato do Verificador. Um SageMaker Notebook Job agendado a cada hora, apartado do app, controla todo o fluxo. Primeiro ele dispara um job Glue, que chama o Athena para extrair do Data Mesh a OT e o orçamento (.xlsx) e pede às APIs da Salesforce os IDs dos documentos da OT e o conteúdo em base64 de cada um, salvando tudo no S3 (tickets/<id>/). Com a extração concluída, o mesmo Notebook Job lê as OTs novas e roda o pacote atest: o Orchestrator executa as 7 etapas (checklist, escopo, orçamento, fotos, documentos por OCR, score e parecer), com o LLM pela IARA GenAI. Os pareceres vão para o S3; o painel web recebe as análises, e a pessoa analista dá o feedback, gravado no banco do painel e usado no gabarito e no portão de qualidade. Rodar a análise pelo próprio painel é só demonstração. O retorno ao Salesforce ainda não está integrado. Modo copiloto: o parecer não altera status.",
+  "settings": {
+    "grid": true,
+    "snap": true,
+    "gridSize": 10,
+    "wheel": "zoom",
+    "minimap": true,
+    "guides": true,
+    "legend": true,
+    "legendPos": "right",
+    "badgeShape": "square",
+    "badgeColor": "#147EBA",
+    "wmStyle": "tile",
+    "wmOpacity": 0.08
+  },
+  "nodes": [
+    {
+      "id": "title",
+      "type": "shape-text",
+      "x": -660,
+      "y": -350,
+      "label": "Atest.AI • Validação de chamados com evidências fotográficas (as is)",
+      "sub": "Arquitetura atual • SETA e SISR • um SageMaker Notebook Job agendado a cada hora controla o fluxo: dispara o Glue (Athena no Data Mesh + APIs da Salesforce) e depois roda a análise • painel recebe as análises e o feedback",
+      "style": {
+        "fontSize": 26,
+        "align": "start"
+      },
+      "kind": "text",
+      "w": 2600,
+      "h": 64,
+      "meta": []
+    },
+    {
+      "id": "sf_in",
+      "type": "g-generic",
+      "x": -660,
+      "y": 110,
+      "label": "① Entrada • Salesforce",
+      "sub": "",
+      "style": {
+        "stroke": "#16a34a",
+        "fill": "#16a34a",
+        "fo": 0.03,
+        "dashed": false,
+        "glyph": "cloud"
+      },
+      "kind": "group",
+      "w": 260,
+      "h": 115,
+      "meta": []
+    },
+    {
+      "id": "dm",
+      "type": "g-generic",
+      "x": -660,
+      "y": 235,
+      "label": "① Data Mesh",
+      "sub": "",
+      "style": {
+        "stroke": "#0f766e",
+        "fill": "#0f766e",
+        "fo": 0.05,
+        "dashed": false,
+        "glyph": "hub"
+      },
+      "kind": "group",
+      "w": 260,
+      "h": 110,
+      "meta": []
+    },
+    {
+      "id": "sf_api",
+      "type": "g-generic",
+      "x": -660,
+      "y": 355,
+      "label": "① APIs da Salesforce",
+      "sub": "",
+      "style": {
+        "stroke": "#00A1E0",
+        "fill": "#00A1E0",
+        "fo": 0.05,
+        "dashed": false,
+        "glyph": "cloud"
+      },
+      "kind": "group",
+      "w": 260,
+      "h": 240,
+      "meta": []
+    },
+    {
+      "id": "cloud",
+      "type": "g-cloud",
+      "x": -380,
+      "y": 20,
+      "label": "AWS Cloud",
+      "sub": "conta do Atest.AI",
+      "style": {},
+      "kind": "group",
+      "w": 2990,
+      "h": 1040,
+      "meta": []
+    },
+    {
+      "id": "region",
+      "type": "g-region",
+      "x": -360,
+      "y": 50,
+      "label": "sa-east-1 (São Paulo)",
+      "sub": "",
+      "style": {},
+      "kind": "group",
+      "w": 2950,
+      "h": 990,
+      "meta": [],
+      "parent": "cloud"
+    },
+    {
+      "id": "nbg",
+      "type": "g-mlenv",
+      "x": -50,
+      "y": 110,
+      "label": "③ Notebook Job • a cada hora",
+      "sub": "",
+      "style": {},
+      "kind": "group",
+      "w": 260,
+      "h": 120,
+      "meta": [],
+      "parent": "region"
+    },
+    {
+      "id": "ext",
+      "type": "g-offline",
+      "x": -340,
+      "y": 240,
+      "label": "② Extração • Glue + Athena",
+      "sub": "",
+      "style": {},
+      "kind": "group",
+      "w": 550,
+      "h": 370,
+      "meta": [],
+      "parent": "region"
+    },
+    {
+      "id": "s3g",
+      "type": "g-generic",
+      "x": 240,
+      "y": 240,
+      "label": "② S3 • OTs disponíveis",
+      "sub": "",
+      "style": {
+        "stroke": "#16a34a",
+        "fill": "#16a34a",
+        "fo": 0.03,
+        "dashed": false,
+        "glyph": "bucket"
+      },
+      "kind": "group",
+      "w": 260,
+      "h": 370,
+      "meta": [],
+      "parent": "region"
+    },
+    {
+      "id": "sm",
+      "type": "g-mlenv",
+      "x": 530,
+      "y": 70,
+      "label": "④ SageMaker • pacote atest",
+      "sub": "executado pelo Notebook Job",
+      "style": {},
+      "kind": "group",
+      "w": 1750,
+      "h": 955,
+      "meta": [],
+      "parent": "region"
+    },
+    {
+      "id": "st_orq",
+      "type": "g-stage",
+      "x": 550,
+      "y": 110,
+      "label": "Orquestração",
+      "sub": "",
+      "style": {},
+      "kind": "group",
+      "w": 260,
+      "h": 500,
+      "meta": [],
+      "parent": "sm"
+    },
+    {
+      "id": "st_chk",
+      "type": "g-stage",
+      "x": 840,
+      "y": 110,
+      "label": "Etapa 0 • Checklist mínimo",
+      "sub": "",
+      "style": {},
+      "kind": "group",
+      "w": 260,
+      "h": 500,
+      "meta": [],
+      "parent": "sm"
+    },
+    {
+      "id": "st_eo",
+      "type": "g-stage",
+      "x": 1130,
+      "y": 110,
+      "label": "Etapas 1–2 • Escopo e orçamento",
+      "sub": "",
+      "style": {},
+      "kind": "group",
+      "w": 260,
+      "h": 500,
+      "meta": [],
+      "parent": "sm"
+    },
+    {
+      "id": "st_fot",
+      "type": "g-stage",
+      "x": 1420,
+      "y": 110,
+      "label": "Etapa 3 • Evidências fotográficas",
+      "sub": "",
+      "style": {},
+      "kind": "group",
+      "w": 260,
+      "h": 500,
+      "meta": [],
+      "parent": "sm"
+    },
+    {
+      "id": "st_doc",
+      "type": "g-stage",
+      "x": 1710,
+      "y": 110,
+      "label": "Etapa 4 • Documentos (OCR)",
+      "sub": "",
+      "style": {},
+      "kind": "group",
+      "w": 260,
+      "h": 500,
+      "meta": [],
+      "parent": "sm"
+    },
+    {
+      "id": "st_par",
+      "type": "g-stage",
+      "x": 2000,
+      "y": 110,
+      "label": "Etapas 5–6 • Score e parecer",
+      "sub": "",
+      "style": {},
+      "kind": "group",
+      "w": 260,
+      "h": 500,
+      "meta": [],
+      "parent": "sm"
+    },
+    {
+      "id": "llm",
+      "type": "g-generic",
+      "x": 550,
+      "y": 670,
+      "label": "Camada de LLM",
+      "sub": "atest/llm.py • atest/providers/",
+      "style": {
+        "glyph": "sparkle"
+      },
+      "kind": "group",
+      "w": 550,
+      "h": 150,
+      "meta": [],
+      "parent": "sm"
+    },
+    {
+      "id": "cfg",
+      "type": "g-generic",
+      "x": 550,
+      "y": 850,
+      "label": "Configuração e referências",
+      "sub": "config/ no pacote",
+      "style": {
+        "glyph": "gear"
+      },
+      "kind": "group",
+      "w": 1710,
+      "h": 150,
+      "meta": [],
+      "parent": "sm"
+    },
+    {
+      "id": "saidas",
+      "type": "g-generic",
+      "x": 2310,
+      "y": 110,
+      "label": "⑤ Pareceres e saídas",
+      "sub": "",
+      "style": {
+        "glyph": "db",
+        "stroke": "#147EBA",
+        "fill": "#147EBA",
+        "fo": 0.03,
+        "dashed": false
+      },
+      "kind": "group",
+      "w": 260,
+      "h": 500,
+      "meta": [],
+      "parent": "region"
+    },
+    {
+      "id": "sf_out",
+      "type": "g-generic",
+      "x": 2650,
+      "y": 230,
+      "label": "⑥ Salesforce • saída",
+      "sub": "a integrar",
+      "style": {
+        "stroke": "#ED7100",
+        "fill": "#ED7100",
+        "fo": 0.03,
+        "dashed": true,
+        "glyph": "external"
+      },
+      "kind": "group",
+      "w": 260,
+      "h": 260,
+      "meta": []
+    },
+    {
+      "id": "iara_ext",
+      "type": "g-generic",
+      "x": 2650,
+      "y": 670,
+      "label": "IARA GenAI (Itaú)",
+      "sub": "",
+      "style": {
+        "stroke": "#EC7000",
+        "fill": "#EC7000",
+        "fo": 0.05,
+        "dashed": false,
+        "glyph": "sparkle"
+      },
+      "kind": "group",
+      "w": 260,
+      "h": 340,
+      "meta": []
+    },
+    {
+      "id": "use",
+      "type": "g-generic",
+      "x": -340,
+      "y": 1100,
+      "label": "⑦ Consumo, feedback e qualidade",
+      "sub": "painel web • hospedagem a confirmar",
+      "style": {
+        "glyph": "browser",
+        "stroke": "#147EBA",
+        "fill": "#147EBA",
+        "fo": 0.03,
+        "dashed": false
+      },
+      "kind": "group",
+      "w": 2910,
+      "h": 180,
+      "meta": []
+    },
+    {
+      "id": "forn",
+      "type": "users",
+      "x": -558,
+      "y": -10,
+      "label": "Fornecedor",
+      "sub": "envia orçamento e fotos",
+      "style": {},
+      "kind": "icon",
+      "w": 56,
+      "h": 56,
+      "meta": []
+    },
+    {
+      "id": "chamado",
+      "type": "extapi",
+      "x": -640,
+      "y": 150,
+      "label": "Chamado SETA / SISR (OT)",
+      "sub": "escopo • orçamento • fotos",
+      "style": {
+        "accent": "#00A1E0",
+        "glyph": "cloud",
+        "badge": "1"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "stepDesc": "O **fornecedor** envia orçamento, fotos e documentos no **chamado SETA/SISR** (OT) do Salesforce.",
+      "meta": [],
+      "parent": "sf_in"
+    },
+    {
+      "id": "dm_ot",
+      "type": "data-source",
+      "x": -640,
+      "y": 280,
+      "label": "Produto de dados do chamado",
+      "sub": "OT (ticket) + orçamento .xlsx",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "notes": "Frequência de atualização do produto de dados no Data Mesh: a confirmar.",
+      "meta": [],
+      "parent": "dm"
+    },
+    {
+      "id": "api_ids",
+      "type": "extapi",
+      "x": -640,
+      "y": 390,
+      "label": "API • documentos da OT",
+      "sub": "devolve os IDs relacionados",
+      "style": {
+        "accent": "#00A1E0",
+        "glyph": "list"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [],
+      "parent": "sf_api"
+    },
+    {
+      "id": "api_doc",
+      "type": "extapi",
+      "x": -640,
+      "y": 500,
+      "label": "API • conteúdo do documento",
+      "sub": "ID → arquivo em base64",
+      "style": {
+        "accent": "#00A1E0",
+        "glyph": "doc"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [],
+      "parent": "sf_api"
+    },
+    {
+      "id": "athena",
+      "type": "athena",
+      "x": -320,
+      "y": 280,
+      "label": "Athena",
+      "sub": "lê o Data Mesh • OT + .xlsx",
+      "style": {
+        "badge": "3"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "stepDesc": "O Notebook Job dispara o **job Glue** e espera; o Glue chama o **Athena**, que lê nos **dados democratizados do Data Mesh** a OT (dados do chamado) e a **planilha de orçamento (.xlsx)**.",
+      "meta": [
+        {
+          "k": "Fonte",
+          "v": "produto de dados do chamado no Data Mesh"
+        },
+        {
+          "k": "Traz",
+          "v": "OT (ticket) + orçamento .xlsx"
+        }
+      ],
+      "parent": "ext"
+    },
+    {
+      "id": "glue",
+      "type": "glue",
+      "x": -30,
+      "y": 280,
+      "label": "Job Glue de extração",
+      "sub": "chama o Athena • baixa os anexos",
+      "style": {
+        "badge": "4"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "stepDesc": "O mesmo job busca fotos e documentos em **duas APIs da Salesforce**: a primeira devolve os **IDs dos documentos da OT**; a segunda recebe **cada ID** e devolve o arquivo em **base64**, que o job decodifica.",
+      "meta": [
+        {
+          "k": "Disparo",
+          "v": "pelo Notebook Job, a cada hora"
+        },
+        {
+          "k": "Etapas",
+          "v": "Athena (OT + .xlsx) → API 1 (IDs da OT) → API 2 (base64 por ID) → S3"
+        }
+      ],
+      "parent": "ext"
+    },
+    {
+      "id": "s3_ot",
+      "type": "s3",
+      "x": 260,
+      "y": 280,
+      "label": "OTs extraídas",
+      "sub": "tickets/<id>/ • ticket.json, .xlsx, anexos",
+      "style": {
+        "badge": "5"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "stepDesc": "Tudo vai para o **S3** em `tickets/<id>/`: `ticket.json`, a planilha `.xlsx`, as fotos e os documentos. É o contrato de entrada do pacote `atest`.",
+      "meta": [
+        {
+          "k": "Estrutura",
+          "v": "tickets/<id>/ · ticket.json · orçamento .xlsx · fotos · documentos"
+        }
+      ],
+      "parent": "s3g"
+    },
+    {
+      "id": "nb",
+      "type": "sm-notebook",
+      "x": -30,
+      "y": 160,
+      "label": "Notebook Job agendado",
+      "sub": "a cada hora • ① extração ② análise",
+      "style": {
+        "badge": "2"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "stepDesc": "**A cada hora**, apartado do app, o **Notebook Job agendado** do SageMaker inicia a rodada e **controla todo o fluxo**: extração e análise.",
+      "meta": [
+        {
+          "k": "Agenda",
+          "v": "a cada hora (Notebook Jobs do SageMaker)"
+        },
+        {
+          "k": "Fluxo",
+          "v": "① dispara o Glue e espera → ② roda o pacote atest nas OTs novas"
+        },
+        {
+          "k": "LLM",
+          "v": "IARA (settings.local.toml)"
+        }
+      ],
+      "notes": "Como o Notebook Job escolhe as OTs ainda não analisadas: a confirmar.",
+      "parent": "nbg"
+    },
+    {
+      "id": "pkg",
+      "type": "py-app",
+      "x": 570,
+      "y": 160,
+      "label": "Pacote atest",
+      "sub": "python main.py • action = batch",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [
+        {
+          "k": "Comando",
+          "v": "python main.py (action = batch, mode = api)"
+        },
+        {
+          "k": "Configuração",
+          "v": "config/*.toml + settings.local.toml (IARA)"
+        }
+      ],
+      "parent": "st_orq"
+    },
+    {
+      "id": "load",
+      "type": "py-script",
+      "x": 570,
+      "y": 280,
+      "label": "BatchRunner",
+      "sub": "lê as OTs novas do S3 • 3 em paralelo",
+      "style": {
+        "badge": "6"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "stepDesc": "Com a extração concluída, o **mesmo Notebook Job** lê as OTs novas no S3 e roda o pacote `atest` em lote (`BatchRunner`).",
+      "meta": [],
+      "parent": "st_orq"
+    },
+    {
+      "id": "orch",
+      "type": "py-agent",
+      "x": 570,
+      "y": 400,
+      "label": "Orchestrator",
+      "sub": "7 etapas em ordem • tempo por etapa",
+      "style": {
+        "badge": "7"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "stepDesc": "O **Orchestrator** roda as **7 etapas** em ordem sobre o **AnalysisContext**, mede o tempo de cada uma e monta o parecer.",
+      "meta": [
+        {
+          "k": "Etapas",
+          "v": "checklist · escopo · orçamento · fotos · documentos · score · parecer"
+        }
+      ],
+      "parent": "st_orq"
+    },
+    {
+      "id": "llms",
+      "type": "gen-gateway",
+      "x": 570,
+      "y": 520,
+      "label": "LlmSession",
+      "sub": "tempo limite por pedido • corte → 2× tokens",
+      "style": {
+        "badge": "I1"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "stepDesc": "Toda chamada ao modelo passa pela **LlmSession**: modelo por tarefa, **preâmbulo do engenheiro**, tempo limite pelo tamanho do pedido e **nova tentativa com o dobro de tokens** se a resposta vier cortada.",
+      "stepColor": "#EC7000",
+      "meta": [
+        {
+          "k": "Tempo limite",
+          "v": "45 s + 6 s por foto + 20 s por PDF + 8 s por mil tokens (60–600 s)"
+        },
+        {
+          "k": "Resposta cortada",
+          "v": "nova tentativa com 2× max_tokens (até 16 mil)"
+        }
+      ],
+      "parent": "st_orq"
+    },
+    {
+      "id": "planilha",
+      "type": "data-validate",
+      "x": 860,
+      "y": 160,
+      "label": "Lê a planilha de orçamento",
+      "sub": "openpyxl • tbChamado/tbItens • sem LLM",
+      "style": {
+        "badge": "8"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "stepDesc": "**Etapa 0 • checklist**: a planilha é lida **por regra**; a IARA identifica fotos e documentos; o checklist por **esteira × categoria × tipo × momento** decide se o chamado segue.",
+      "meta": [],
+      "parent": "st_chk"
+    },
+    {
+      "id": "anexos",
+      "type": "gen-llm",
+      "x": 860,
+      "y": 280,
+      "label": "Identifica os anexos",
+      "sub": "IARA • foto, documento, laudo",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [],
+      "parent": "st_chk"
+    },
+    {
+      "id": "gate",
+      "type": "ml-gate",
+      "x": 860,
+      "y": 400,
+      "label": "Checklist mínimo",
+      "sub": "esteira × categoria × tipo × momento",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [],
+      "parent": "st_chk"
+    },
+    {
+      "id": "devol",
+      "type": "shape-card",
+      "x": 860,
+      "y": 520,
+      "label": "Devolução ao fornecedor",
+      "sub": "lista o que falta • sem score",
+      "style": {
+        "accent": "#6A3FD1",
+        "glyph": "mail",
+        "badge": "9"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "stepDesc": "Checklist **incompleto** encerra a análise **sem score** e gera a mensagem ao fornecedor com o que falta.",
+      "meta": [],
+      "parent": "st_chk"
+    },
+    {
+      "id": "escopo",
+      "type": "gen-llm",
+      "x": 1150,
+      "y": 160,
+      "label": "Leitura do escopo",
+      "sub": "IARA • serviços pedidos • vago",
+      "style": {
+        "badge": "10"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "stepDesc": "**Etapas 1–2 • escopo e orçamento**: a IARA lê o pedido e confere cada item contra o escopo e a **LPU da esteira**; regras calculam preço × LPU, quantidade, duplicidade e **valor em questão**.",
+      "meta": [],
+      "parent": "st_eo"
+    },
+    {
+      "id": "itens",
+      "type": "gen-llm",
+      "x": 1150,
+      "y": 280,
+      "label": "Confere itens × escopo",
+      "sub": "IARA • cobertura por serviço + LPU",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [],
+      "parent": "st_eo"
+    },
+    {
+      "id": "regras_orc",
+      "type": "data-validate",
+      "x": 1150,
+      "y": 400,
+      "label": "Regras do orçamento",
+      "sub": "preço × LPU • quantidade • duplicidade",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [],
+      "parent": "st_eo"
+    },
+    {
+      "id": "valor",
+      "type": "data-agg",
+      "x": 1150,
+      "y": 520,
+      "label": "Valor em questão",
+      "sub": "item inteiro ou só o excedente",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [],
+      "parent": "st_eo"
+    },
+    {
+      "id": "fotos_ag",
+      "type": "gen-llm",
+      "x": 1440,
+      "y": 160,
+      "label": "Agente de fotos",
+      "sub": "IARA • visão • contagem • lotes de 6",
+      "style": {
+        "badge": "11"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "stepDesc": "**Etapa 3 • fotos**: a IARA diz o que cada foto mostra, o **momento** e a **contagem por item**; regras apontam falta do depois, item sem foto e, na Fase 2, data EXIF e **reaproveitamento** por hash.",
+      "meta": [],
+      "parent": "st_fot"
+    },
+    {
+      "id": "regras_fot",
+      "type": "data-validate",
+      "x": 1440,
+      "y": 280,
+      "label": "Regras das fotos",
+      "sub": "sem depois • item sem foto • contagem",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [],
+      "parent": "st_fot"
+    },
+    {
+      "id": "exif",
+      "type": "data-validate",
+      "x": 1440,
+      "y": 400,
+      "label": "Data da foto (EXIF)",
+      "sub": "anterior à abertura do chamado",
+      "style": {
+        "dashed": true
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [],
+      "parent": "st_fot"
+    },
+    {
+      "id": "reuso",
+      "type": "gen-retriever",
+      "x": 1440,
+      "y": 520,
+      "label": "Reaproveitamento de foto",
+      "sub": "phash + dhash com recortes",
+      "style": {
+        "dashed": true
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [],
+      "parent": "st_fot"
+    },
+    {
+      "id": "docs_ag",
+      "type": "gen-llm",
+      "x": 1730,
+      "y": 160,
+      "label": "Lê os documentos (OCR)",
+      "sub": "IARA • visão • foto ou PDF",
+      "style": {
+        "badge": "12"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "stepDesc": "**Etapa 4 • documentos**: **OCR** de relatório, termo, laudo ou print de preço; regras conferem chamado, data, **serviço antes da aprovação** e **preço de mercado**.",
+      "meta": [],
+      "parent": "st_doc"
+    },
+    {
+      "id": "docs_conf",
+      "type": "data-validate",
+      "x": 1730,
+      "y": 280,
+      "label": "Confere com o chamado",
+      "sub": "outro chamado • data fora • ilegível",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [],
+      "parent": "st_doc"
+    },
+    {
+      "id": "docs_antes",
+      "type": "data-validate",
+      "x": 1730,
+      "y": 400,
+      "label": "Serviço antes da aprovação",
+      "sub": "prova de execução no documento",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [],
+      "parent": "st_doc"
+    },
+    {
+      "id": "docs_preco",
+      "type": "data-agg",
+      "x": 1730,
+      "y": 520,
+      "label": "Preço de mercado",
+      "sub": "print ou cotação abaixo do cobrado",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [],
+      "parent": "st_doc"
+    },
+    {
+      "id": "score",
+      "type": "ml-eval",
+      "x": 2020,
+      "y": 160,
+      "label": "Score pela régua",
+      "sub": "proporcional ao enviado • 20/40/40",
+      "style": {
+        "badge": "13"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "stepDesc": "**Etapa 5 • score**: a régua converte os apontamentos em notas e **score proporcional**, com materialidade, absorção, confiança e recomendação (faixas **85/70**).",
+      "meta": [],
+      "parent": "st_par"
+    },
+    {
+      "id": "recom",
+      "type": "ml-gate",
+      "x": 2020,
+      "y": 280,
+      "label": "Recomendação e confiança",
+      "sub": "faixas 85/70 • materialidade • absorção",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [],
+      "parent": "st_par"
+    },
+    {
+      "id": "redacao",
+      "type": "gen-llm",
+      "x": 2020,
+      "y": 400,
+      "label": "Redação do parecer",
+      "sub": "IARA • racional do engenheiro",
+      "style": {
+        "badge": "14"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "stepDesc": "**Etapa 6 • parecer**: a IARA redige o resumo e a mensagem ao fornecedor com o **racional do engenheiro**; se falhar, o texto sai **por regra**.",
+      "meta": [],
+      "parent": "st_par"
+    },
+    {
+      "id": "parecer",
+      "type": "py-pydantic",
+      "x": 2020,
+      "y": 520,
+      "label": "Parecer (Assessment)",
+      "sub": "score • apontamentos • racional",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [],
+      "parent": "st_par"
+    },
+    {
+      "id": "prov",
+      "type": "gen-cache",
+      "x": 570,
+      "y": 720,
+      "label": "ProviderClient",
+      "sub": "cache em disco • contingência",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [],
+      "parent": "llm"
+    },
+    {
+      "id": "adapt",
+      "type": "py-lib",
+      "x": 860,
+      "y": 720,
+      "label": "Adaptador IARA",
+      "sub": "iara_genai_sdk • schema + reparo do JSON",
+      "style": {
+        "glyph": "plug",
+        "badge": "I2"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "stepDesc": "O **adaptador IARA** (`iara_genai_sdk`) pede saída com **JSON Schema estrito** e **repara o JSON** antes de validar; o ProviderClient guarda as respostas em cache e só troca de modelo em erro transitório.",
+      "stepColor": "#EC7000",
+      "meta": [
+        {
+          "k": "Pacote",
+          "v": "iara_genai_sdk (Artifactory)"
+        },
+        {
+          "k": "Autenticação",
+          "v": "client_id + client_secret"
+        },
+        {
+          "k": "Saída",
+          "v": "json_schema · json_object · prompt"
+        }
+      ],
+      "parent": "llm"
+    },
+    {
+      "id": "settings",
+      "type": "py-pydantic",
+      "x": 570,
+      "y": 900,
+      "label": "Configuração",
+      "sub": "settings.toml + settings.local (IARA)",
+      "style": {
+        "badge": "F"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "stepDesc": "**Configuração do portal**: as versões salvas no portal ficam no banco do painel; o Notebook Job precisa ler esse banco para aplicar a régua e o checklist atuais.",
+      "stepColor": "#DD344C",
+      "meta": [],
+      "parent": "cfg"
+    },
+    {
+      "id": "regua",
+      "type": "data-file",
+      "x": 860,
+      "y": 900,
+      "label": "Régua do score",
+      "sub": "rubric.toml • pesos • faixas • tipos",
+      "style": {
+        "glyph": "scale"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [
+        {
+          "k": "Pesos",
+          "v": "escopo 20 · orçamento 40 · fotos 40"
+        },
+        {
+          "k": "Faixas",
+          "v": "≥ 85 aprovar · ≥ 70 com ressalvas"
+        }
+      ],
+      "parent": "cfg"
+    },
+    {
+      "id": "checklists",
+      "type": "data-file",
+      "x": 1150,
+      "y": 900,
+      "label": "Checklists",
+      "sub": "checklists.toml • itens obrigatórios",
+      "style": {
+        "glyph": "checklist"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [],
+      "parent": "cfg"
+    },
+    {
+      "id": "catalogo",
+      "type": "data-catalog",
+      "x": 1440,
+      "y": 900,
+      "label": "Catálogo",
+      "sub": "catalog.toml • categorias • sintomas • locais",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [],
+      "parent": "cfg"
+    },
+    {
+      "id": "prompts",
+      "type": "gen-prompt",
+      "x": 1730,
+      "y": 900,
+      "label": "Prompts versionados",
+      "sub": "olhar de engenheiro • versão + hash",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [],
+      "parent": "cfg"
+    },
+    {
+      "id": "lpu",
+      "type": "data-file",
+      "x": 2020,
+      "y": 900,
+      "label": "LPU por esteira",
+      "sub": "preços de referência SETA e SISR",
+      "style": {
+        "glyph": "table"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [],
+      "parent": "cfg"
+    },
+    {
+      "id": "s3_par",
+      "type": "s3",
+      "x": 2330,
+      "y": 160,
+      "label": "Pareceres",
+      "sub": "S3 runs/<id>/ • JSON por OT • CSV",
+      "style": {
+        "badge": "15"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "stepDesc": "Os pareceres vão para o **S3** (`runs/<id>/`, JSON por OT e CSV), com custo, rastro das chamadas e assinatura da configuração.",
+      "meta": [
+        {
+          "k": "Conteúdo",
+          "v": "assessments.jsonl · JSON por OT · summary.csv · checklist_returns.csv"
+        }
+      ],
+      "parent": "saidas"
+    },
+    {
+      "id": "logs",
+      "type": "mlops-monitor",
+      "x": 2330,
+      "y": 280,
+      "label": "Logs da execução",
+      "sub": "atest.jsonl • logs do Notebook Job",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [],
+      "parent": "saidas"
+    },
+    {
+      "id": "custos",
+      "type": "data-agg",
+      "x": 2330,
+      "y": 400,
+      "label": "Custos por chamado",
+      "sub": "USD e BRL • tokens por tarefa",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [],
+      "parent": "saidas"
+    },
+    {
+      "id": "indice",
+      "type": "data-catalog",
+      "x": 2330,
+      "y": 520,
+      "label": "Índice de fotos",
+      "sub": "HashCache • hashes do histórico",
+      "style": {
+        "dashed": true,
+        "badge": "D"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "stepDesc": "**Índice de fotos em arquivo**: o `HashCache` guarda os hashes num arquivo no ambiente do Notebook Job e cada foto é comparada com **todo o histórico**; precisa persistir entre execuções.",
+      "stepColor": "#DD344C",
+      "notes": "Onde o HashCache persiste entre execuções do Notebook Job (S3 ou volume do SageMaker): a confirmar.",
+      "meta": [],
+      "parent": "saidas"
+    },
+    {
+      "id": "imp",
+      "type": "extapi",
+      "x": 2670,
+      "y": 280,
+      "label": "Importação do retorno",
+      "sub": "summary.csv / JSON por OT",
+      "style": {
+        "accent": "#00A1E0",
+        "glyph": "ingest",
+        "dashed": true
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [],
+      "parent": "sf_out"
+    },
+    {
+      "id": "campos",
+      "type": "extapi",
+      "x": 2670,
+      "y": 400,
+      "label": "Campos do parecer",
+      "sub": "recomendação • score • mensagem",
+      "style": {
+        "accent": "#00A1E0",
+        "glyph": "checklist",
+        "dashed": true
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [],
+      "parent": "sf_out"
+    },
+    {
+      "id": "iara_gw",
+      "type": "gen-gateway",
+      "x": 2670,
+      "y": 720,
+      "label": "API da IARA",
+      "sub": "OAuth client credentials • polling",
+      "style": {
+        "accent": "#EC7000",
+        "badge": "I3"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "stepDesc": "A **API da IARA** roteia para o modelo (Claude Sonnet 5 pelo Bedrock, GPT-4.1 pelo Azure OpenAI).",
+      "stepColor": "#EC7000",
+      "meta": [
+        {
+          "k": "Ambientes",
+          "v": "dev · homol · prod"
+        },
+        {
+          "k": "Backends",
+          "v": "azure_openai · bedrock · vertex"
+        }
+      ],
+      "parent": "iara_ext"
+    },
+    {
+      "id": "iara_mod",
+      "type": "gen-llm",
+      "x": 2670,
+      "y": 830,
+      "label": "Modelos pela IARA",
+      "sub": "claude-sonnet-5 (bedrock) • gpt-4.1",
+      "style": {
+        "accent": "#EC7000"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [],
+      "parent": "iara_ext"
+    },
+    {
+      "id": "iara_batch",
+      "type": "mlops-batch",
+      "x": 2670,
+      "y": 940,
+      "label": "Batch API da IARA",
+      "sub": "não integrada • lote sai síncrono",
+      "style": {
+        "accent": "#EC7000",
+        "dashed": true,
+        "badge": "E"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "stepDesc": "**IARA sem lote**: a Batch API da IARA não está integrada; as chamadas saem **síncronas e sem desconto**.",
+      "stepColor": "#DD344C",
+      "meta": [],
+      "parent": "iara_ext"
+    },
+    {
+      "id": "analistas",
+      "type": "users",
+      "x": -320,
+      "y": 1150,
+      "label": "Analistas e admins",
+      "sub": "recebem as análises • dão feedback",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [],
+      "parent": "use"
+    },
+    {
+      "id": "painel",
+      "type": "browser",
+      "x": -30,
+      "y": 1150,
+      "label": "Painel web",
+      "sub": "Análise • Documentos • Validação",
+      "style": {
+        "accent": "#334155",
+        "badge": "16"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "stepDesc": "O **painel web** recebe as análises do S3; a pessoa analista confere cada parecer. Rodar a análise pelo painel é **só demonstração**.",
+      "notes": "Onde o painel e o banco do painel estão hospedados: a confirmar.",
+      "meta": [],
+      "parent": "use"
+    },
+    {
+      "id": "api",
+      "type": "py-fastapi",
+      "x": 260,
+      "y": 1150,
+      "label": "API do painel",
+      "sub": "FastAPI • lê os pareceres do S3",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [],
+      "parent": "use"
+    },
+    {
+      "id": "banco",
+      "type": "database",
+      "x": 570,
+      "y": 1150,
+      "label": "Banco do painel",
+      "sub": "feedbacks • versões do portal • usuários",
+      "style": {
+        "badge": "17"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "stepDesc": "O **feedback** (aceitar, ajustar ou discordar) fica no **banco do painel**, junto das versões da configuração salvas no portal.",
+      "meta": [
+        {
+          "k": "Tabelas",
+          "v": "feedbacks · config_versions · usuários e sessões do portal"
+        }
+      ],
+      "parent": "use"
+    },
+    {
+      "id": "gabarito",
+      "type": "data-label",
+      "x": 860,
+      "y": 1150,
+      "label": "Gabarito",
+      "sub": "1 JSON por chamado • feedback vira rótulo",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [],
+      "parent": "use"
+    },
+    {
+      "id": "aval",
+      "type": "ml-confusion",
+      "x": 1150,
+      "y": 1150,
+      "label": "Avaliação contra o gabarito",
+      "sub": "acurácia • kappa • F1 • erro do score",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [],
+      "parent": "use"
+    },
+    {
+      "id": "portao",
+      "type": "ml-gate",
+      "x": 1440,
+      "y": 1150,
+      "label": "Portão de qualidade",
+      "sub": "action = validate • reprova a versão",
+      "style": {
+        "badge": "18"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "stepDesc": "O feedback vira **rótulo no gabarito**, que alimenta a avaliação e o **portão de qualidade** (`action = validate`) antes de publicar prompt, régua ou modelo novo.",
+      "meta": [
+        {
+          "k": "Limites",
+          "v": "acurácia ≥ 0,85 · kappa ≥ 0,75 · F1 ≥ 0,80 · erro do score ≤ 8"
+        }
+      ],
+      "parent": "use"
+    },
+    {
+      "id": "rescore",
+      "type": "py-script",
+      "x": 1730,
+      "y": 1150,
+      "label": "Rescore do gabarito",
+      "sub": "régua mudou → recalcula gabaritos",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [],
+      "parent": "use"
+    },
+    {
+      "id": "cenarios",
+      "type": "data-sample",
+      "x": 2020,
+      "y": 1150,
+      "label": "Cenários de teste",
+      "sub": "1 chamado por tipo de problema",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [],
+      "parent": "use"
+    },
+    {
+      "id": "start",
+      "type": "shape-text",
+      "x": -660,
+      "y": -10,
+      "w": 96,
+      "h": 40,
+      "label": "▶ Início",
+      "sub": "",
+      "kind": "text",
+      "style": {
+        "fill": "#16a34a",
+        "text": "#ffffff",
+        "fontSize": 16
+      },
+      "meta": []
+    },
+    {
+      "id": "n_ler",
+      "type": "shape-note",
+      "x": -660,
+      "y": -270,
+      "w": 2000,
+      "h": 245,
+      "label": "Como ler esta arquitetura",
+      "sub": "① Entrada: a OT e o orçamento .xlsx estão nos dados democratizados do Data Mesh; fotos e documentos ficam no Salesforce, acessíveis por duas APIs (IDs da OT → base64 por ID).\n③ Notebook Job do SageMaker, agendado a cada hora e apartado do app, controla todo o fluxo: ① dispara o Glue e espera; ② roda a análise.\n② Extração (passo ①): o Glue chama o Athena, que lê o Data Mesh, baixa os anexos pelas APIs e grava tudo no S3 (tickets/<id>/).\n④ Análise (passo ②): o pacote atest lê as OTs novas do S3 e roda as 7 etapas (LLM pela IARA). ⑤ Pareceres: JSON e CSV no S3. ⑥ Salesforce: retorno a integrar.\n⑦ Consumo: o painel web recebe as análises; a pessoa analista dá o feedback, que alimenta o gabarito, a avaliação e o portão de qualidade.\nRodar a análise pelo próprio painel (como o código permite hoje) é só demonstração e não faz parte deste fluxo.\n\nSelos azuis 1–18: fluxo · I1–I3 (laranja): chamadas à IARA · A–G (vermelho): pontos de atenção.\nÍcone de brilho: chama o modelo · borda tracejada: Fase 2 da régua ou a integrar · linhas: azul-petróleo batch, laranja IARA, roxo devolução, verde feedback.",
+      "kind": "note",
+      "style": {
+        "fontSize": 13
+      },
+      "meta": []
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "from": "forn",
+      "to": "chamado",
+      "label": "",
+      "style": {}
+    },
+    {
+      "id": "e2",
+      "from": "chamado",
+      "to": "dm_ot",
+      "label": "",
+      "style": {
+        "color": "#0891b2"
+      }
+    },
+    {
+      "id": "e3",
+      "from": "nb",
+      "to": "glue",
+      "label": "① dispara",
+      "style": {
+        "color": "#0891b2",
+        "width": 2,
+        "badge": "A"
+      },
+      "fromSide": "bottom",
+      "toSide": "top",
+      "stepDesc": "**Rodadas sobrepostas**: o Notebook Job espera o Glue terminar antes de analisar; se extração e análise passarem de uma hora, a rodada seguinte começa antes de a anterior acabar e pode pegar as mesmas OTs.",
+      "stepColor": "#DD344C"
+    },
+    {
+      "id": "e4",
+      "from": "nb",
+      "to": "pkg",
+      "label": "② roda a análise",
+      "style": {
+        "color": "#0891b2",
+        "width": 2,
+        "badge": "G"
+      },
+      "fromSide": "right",
+      "toSide": "left",
+      "stepDesc": "**Janela de uma hora**: a OT que chega logo depois da rodada espera até a próxima; uma falha adia a análise em mais uma hora.",
+      "stepColor": "#DD344C"
+    },
+    {
+      "id": "e5",
+      "from": "glue",
+      "to": "athena",
+      "label": "consulta",
+      "style": {
+        "color": "#0891b2",
+        "arrow": "both"
+      },
+      "fromSide": "left",
+      "toSide": "right"
+    },
+    {
+      "id": "e6",
+      "from": "athena",
+      "to": "dm_ot",
+      "label": "SQL",
+      "style": {
+        "color": "#0891b2",
+        "arrow": "both"
+      },
+      "fromSide": "left",
+      "toSide": "right"
+    },
+    {
+      "id": "e7",
+      "from": "glue",
+      "to": "api_ids",
+      "label": "IDs da OT",
+      "style": {
+        "color": "#0891b2",
+        "arrow": "both"
+      },
+      "fromSide": "bottom",
+      "toSide": "right",
+      "wp": [
+        {
+          "x": 80,
+          "y": 420
+        }
+      ]
+    },
+    {
+      "id": "e8",
+      "from": "glue",
+      "to": "api_doc",
+      "label": "base64 por ID",
+      "style": {
+        "color": "#0891b2",
+        "arrow": "both",
+        "badge": "B"
+      },
+      "fromSide": "bottom",
+      "toSide": "right",
+      "wp": [
+        {
+          "x": 80,
+          "y": 530
+        }
+      ],
+      "stepDesc": "**Volume das APIs de anexos**: uma chamada por documento, com o arquivo em base64 (cerca de 33% maior); o job precisa respeitar o limite de taxa e o tamanho máximo da API da Salesforce.",
+      "stepColor": "#DD344C"
+    },
+    {
+      "id": "e9",
+      "from": "glue",
+      "to": "s3_ot",
+      "label": "grava",
+      "style": {
+        "color": "#0891b2"
+      },
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "e10",
+      "from": "s3_ot",
+      "to": "load",
+      "label": "lê as OTs",
+      "style": {
+        "color": "#0891b2"
+      },
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "e11",
+      "from": "pkg",
+      "to": "load",
+      "label": "",
+      "style": {}
+    },
+    {
+      "id": "e12",
+      "from": "load",
+      "to": "orch",
+      "label": "1 chamado por pipeline",
+      "style": {}
+    },
+    {
+      "id": "e13",
+      "from": "orch",
+      "to": "llms",
+      "label": "",
+      "style": {
+        "dash": "dotted"
+      }
+    },
+    {
+      "id": "e14",
+      "from": "orch",
+      "to": "planilha",
+      "label": "",
+      "style": {},
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "e15",
+      "from": "planilha",
+      "to": "anexos",
+      "label": "",
+      "style": {}
+    },
+    {
+      "id": "e16",
+      "from": "anexos",
+      "to": "gate",
+      "label": "",
+      "style": {}
+    },
+    {
+      "id": "e17",
+      "from": "gate",
+      "to": "devol",
+      "label": "incompleto",
+      "style": {
+        "color": "#6A3FD1",
+        "dash": "dashed",
+        "width": 2
+      }
+    },
+    {
+      "id": "e18",
+      "from": "gate",
+      "to": "escopo",
+      "label": "completo",
+      "style": {
+        "color": "#16a34a"
+      },
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "e19",
+      "from": "devol",
+      "to": "parecer",
+      "label": "encerra a análise sem score",
+      "style": {
+        "color": "#6A3FD1",
+        "dash": "dashed",
+        "width": 2
+      },
+      "fromSide": "bottom",
+      "toSide": "bottom",
+      "mid": 628
+    },
+    {
+      "id": "e20",
+      "from": "escopo",
+      "to": "itens",
+      "label": "",
+      "style": {}
+    },
+    {
+      "id": "e21",
+      "from": "itens",
+      "to": "regras_orc",
+      "label": "",
+      "style": {}
+    },
+    {
+      "id": "e22",
+      "from": "regras_orc",
+      "to": "valor",
+      "label": "",
+      "style": {}
+    },
+    {
+      "id": "e23",
+      "from": "valor",
+      "to": "fotos_ag",
+      "label": "",
+      "style": {},
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "e24",
+      "from": "fotos_ag",
+      "to": "regras_fot",
+      "label": "",
+      "style": {}
+    },
+    {
+      "id": "e25",
+      "from": "regras_fot",
+      "to": "exif",
+      "label": "",
+      "style": {}
+    },
+    {
+      "id": "e26",
+      "from": "exif",
+      "to": "reuso",
+      "label": "",
+      "style": {}
+    },
+    {
+      "id": "e27",
+      "from": "reuso",
+      "to": "docs_ag",
+      "label": "",
+      "style": {},
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "e28",
+      "from": "reuso",
+      "to": "indice",
+      "label": "busca por hash",
+      "style": {
+        "arrow": "both",
+        "dash": "dashed"
+      },
+      "fromSide": "bottom",
+      "toSide": "bottom",
+      "mid": 650
+    },
+    {
+      "id": "e29",
+      "from": "docs_ag",
+      "to": "docs_conf",
+      "label": "",
+      "style": {}
+    },
+    {
+      "id": "e30",
+      "from": "docs_conf",
+      "to": "docs_antes",
+      "label": "",
+      "style": {}
+    },
+    {
+      "id": "e31",
+      "from": "docs_antes",
+      "to": "docs_preco",
+      "label": "",
+      "style": {}
+    },
+    {
+      "id": "e32",
+      "from": "docs_preco",
+      "to": "score",
+      "label": "",
+      "style": {},
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "e33",
+      "from": "score",
+      "to": "recom",
+      "label": "",
+      "style": {}
+    },
+    {
+      "id": "e34",
+      "from": "recom",
+      "to": "redacao",
+      "label": "",
+      "style": {}
+    },
+    {
+      "id": "e35",
+      "from": "redacao",
+      "to": "parecer",
+      "label": "",
+      "style": {}
+    },
+    {
+      "id": "e36",
+      "from": "parecer",
+      "to": "s3_par",
+      "label": "grava",
+      "style": {},
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "e37",
+      "from": "s3_par",
+      "to": "imp",
+      "label": "a integrar",
+      "style": {
+        "color": "#0891b2",
+        "dash": "dashed",
+        "badge": "C"
+      },
+      "stepDesc": "**Retorno não integrado**: o parecer fica no S3 e no painel; levar ao chamado no Salesforce ainda é manual.",
+      "stepColor": "#DD344C"
+    },
+    {
+      "id": "e38",
+      "from": "imp",
+      "to": "campos",
+      "label": "",
+      "style": {
+        "dash": "dashed"
+      }
+    },
+    {
+      "id": "e39",
+      "from": "llms",
+      "to": "prov",
+      "label": "",
+      "style": {},
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "e40",
+      "from": "prov",
+      "to": "adapt",
+      "label": "",
+      "style": {},
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "e41",
+      "from": "adapt",
+      "to": "iara_gw",
+      "label": "HTTPS",
+      "style": {
+        "color": "#EC7000",
+        "width": 2
+      },
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "e42",
+      "from": "iara_gw",
+      "to": "iara_mod",
+      "label": "",
+      "style": {
+        "color": "#EC7000"
+      }
+    },
+    {
+      "id": "e43",
+      "from": "iara_gw",
+      "to": "iara_batch",
+      "label": "futuro",
+      "style": {
+        "color": "#EC7000",
+        "dash": "dashed"
+      },
+      "fromSide": "left",
+      "toSide": "left"
+    },
+    {
+      "id": "e44",
+      "from": "s3_par",
+      "to": "api",
+      "label": "lê os pareceres",
+      "style": {
+        "color": "#0891b2"
+      },
+      "fromSide": "right",
+      "toSide": "top",
+      "wp": [
+        {
+          "x": 2590,
+          "y": 190
+        },
+        {
+          "x": 2590,
+          "y": 1080
+        },
+        {
+          "x": 370,
+          "y": 1080
+        }
+      ]
+    },
+    {
+      "id": "e45",
+      "from": "analistas",
+      "to": "painel",
+      "label": "confere e dá feedback",
+      "style": {
+        "color": "#16a34a"
+      }
+    },
+    {
+      "id": "e46",
+      "from": "painel",
+      "to": "api",
+      "label": "HTTP /api",
+      "style": {}
+    },
+    {
+      "id": "e47",
+      "from": "api",
+      "to": "banco",
+      "label": "feedback",
+      "style": {
+        "color": "#16a34a"
+      }
+    },
+    {
+      "id": "e48",
+      "from": "banco",
+      "to": "gabarito",
+      "label": "vira rótulo",
+      "style": {
+        "color": "#16a34a",
+        "dash": "dashed"
+      }
+    },
+    {
+      "id": "e49",
+      "from": "gabarito",
+      "to": "aval",
+      "label": "",
+      "style": {}
+    },
+    {
+      "id": "e50",
+      "from": "aval",
+      "to": "portao",
+      "label": "",
+      "style": {}
+    }
+  ],
+  "legend": {
+    "order": [
+      "x:s_flow",
+      "b:1",
+      "b:2",
+      "b:3",
+      "b:4",
+      "b:5",
+      "b:6",
+      "b:7",
+      "b:8",
+      "b:9",
+      "b:10",
+      "b:11",
+      "b:12",
+      "b:13",
+      "b:14",
+      "b:15",
+      "b:16",
+      "b:17",
+      "b:18",
+      "x:s_iara",
+      "b:I1",
+      "b:I2",
+      "b:I3",
+      "x:s_att",
+      "b:A",
+      "b:B",
+      "b:C",
+      "b:D",
+      "b:E",
+      "b:F",
+      "b:G"
+    ],
+    "extras": [
+      {
+        "id": "s_flow",
+        "kind": "section",
+        "title": "Fluxo do chamado"
+      },
+      {
+        "id": "s_iara",
+        "kind": "section",
+        "title": "Chamadas à IARA",
+        "color": "#EC7000"
+      },
+      {
+        "id": "s_att",
+        "kind": "section",
+        "title": "Pontos de atenção",
+        "color": "#DD344C"
+      }
+    ]
+  },
+  "pageTitle": "Página 1",
+  "savedAt": "2026-11-14T13:44:41.000Z"
+}
