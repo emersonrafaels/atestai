@@ -19,12 +19,20 @@ FONT_M = "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf"
 FONT_C = "/usr/share/fonts/truetype/dejavu/DejaVuSansCondensed.ttf"
 
 
-_WINDOWS_FONTS = {"r": "arial.ttf", "b": "arialbd.ttf", "m": "consola.ttf", "c": "ARIALN.TTF"}
+_WINDOWS_FONTS = {
+    "r": "arial.ttf",
+    "b": "arialbd.ttf",
+    "m": "consola.ttf",
+    "c": "ARIALN.TTF",
+}
 
 
 def font(size, kind="r"):
     """DejaVu (Linux); no Windows, Arial/Consolas equivalentes; em último caso, a fonte embutida do Pillow."""
-    for path in ({"r": FONT, "b": FONT_B, "m": FONT_M, "c": FONT_C}[kind], f"C:/Windows/Fonts/{_WINDOWS_FONTS[kind]}"):
+    for path in (
+        {"r": FONT, "b": FONT_B, "m": FONT_M, "c": FONT_C}[kind],
+        f"C:/Windows/Fonts/{_WINDOWS_FONTS[kind]}",
+    ):
         try:
             return ImageFont.truetype(path, size)
         except OSError:
@@ -46,9 +54,15 @@ def mix(a, b, t):
 
 # --------------------------------------------------------------------------- câmera
 class Cam:
-    def __init__(self, pos=(0.0, 0.0, 0.0), yaw=0.0, pitch=0.0, roll=0.0, f=760, w=W, h=H):
+    def __init__(
+        self, pos=(0.0, 0.0, 0.0), yaw=0.0, pitch=0.0, roll=0.0, f=760, w=W, h=H
+    ):
         self.pos = np.array(pos, float)
-        self.yaw, self.pitch, self.roll = math.radians(yaw), math.radians(pitch), math.radians(roll)
+        self.yaw, self.pitch, self.roll = (
+            math.radians(yaw),
+            math.radians(pitch),
+            math.radians(roll),
+        )
         self.f, self.w, self.h = f, w, h
 
     def to_cam(self, p):
@@ -94,7 +108,12 @@ class Canvas:
         self.rng = np.random.default_rng(seed)
         fine = self.rng.normal(0, 1, (h, w))
         coarse = np.array(
-            Image.fromarray(((self.rng.normal(0, 1, (h // 16, w // 16)) + 4) * 30).clip(0, 255).astype("uint8")).resize((w, h), Image.BICUBIC), float
+            Image.fromarray(
+                ((self.rng.normal(0, 1, (h // 16, w // 16)) + 4) * 30)
+                .clip(0, 255)
+                .astype("uint8")
+            ).resize((w, h), Image.BICUBIC),
+            float,
         )
         coarse = (coarse - coarse.mean()) / (coarse.std() + 1e-6)
         self.noise = 0.6 * fine + 0.8 * coarse
@@ -106,8 +125,12 @@ class Canvas:
             return
         xs = [p[0] for p in p2]
         ys = [p[1] for p in p2]
-        x0, y0 = max(0, int(min(xs)) - 2 - soft * 2), max(0, int(min(ys)) - 2 - soft * 2)
-        x1, y1 = min(self.w, int(max(xs)) + 3 + soft * 2), min(self.h, int(max(ys)) + 3 + soft * 2)
+        x0, y0 = max(0, int(min(xs)) - 2 - soft * 2), max(
+            0, int(min(ys)) - 2 - soft * 2
+        )
+        x1, y1 = min(self.w, int(max(xs)) + 3 + soft * 2), min(
+            self.h, int(max(ys)) + 3 + soft * 2
+        )
         if x1 <= x0 or y1 <= y0:
             return
         mask = Image.new("L", (x1 - x0, y1 - y0), 0)
@@ -117,7 +140,9 @@ class Canvas:
         layer = np.empty((y1 - y0, x1 - x0, 3), float)
         layer[:] = fill
         layer += self.noise[y0:y1, x0:x1, None] * tex
-        if grad:  # (gx, gy, amp): brilho varia linearmente na direção (gx, gy) em pixels de imagem
+        if (
+            grad
+        ):  # (gx, gy, amp): brilho varia linearmente na direção (gx, gy) em pixels de imagem
             gx, gy, amp = grad
             yy, xx = np.mgrid[y0:y1, x0:x1]
             t = ((xx - self.w / 2) * gx + (yy - self.h / 2) * gy) / max(self.w, self.h)
@@ -138,41 +163,81 @@ class Canvas:
         origin, U, V = (np.array(x, float) for x in plane)
         return [origin + u * U + v * V for u, v in uvs]
 
-    def rect_on(self, plane, u0, v0, u1, v1, fill, tex=4.0, grad=None, soft=0, alpha=255):
-        self.poly3(self.on_plane(plane, [(u0, v0), (u1, v0), (u1, v1), (u0, v1)]), fill, tex, grad, soft, alpha)
+    def rect_on(
+        self, plane, u0, v0, u1, v1, fill, tex=4.0, grad=None, soft=0, alpha=255
+    ):
+        self.poly3(
+            self.on_plane(plane, [(u0, v0), (u1, v0), (u1, v1), (u0, v1)]),
+            fill,
+            tex,
+            grad,
+            soft,
+            alpha,
+        )
 
-    def blob_on(self, plane, cu, cv, r, fill, n=28, jitter=0.35, soft=6, alpha=200, tex=8, stretch=(1, 1)):
+    def blob_on(
+        self,
+        plane,
+        cu,
+        cv,
+        r,
+        fill,
+        n=28,
+        jitter=0.35,
+        soft=6,
+        alpha=200,
+        tex=8,
+        stretch=(1, 1),
+    ):
         rnd = random.Random(int(cu * 1000 + cv * 77 + r * 13))
         uvs = []
         for i in range(n):
             a = 2 * math.pi * i / n
             rr = r * (1 + rnd.uniform(-jitter, jitter))
-            uvs.append((cu + stretch[0] * rr * math.cos(a), cv + stretch[1] * rr * math.sin(a)))
+            uvs.append(
+                (cu + stretch[0] * rr * math.cos(a), cv + stretch[1] * rr * math.sin(a))
+            )
         self.poly3(self.on_plane(plane, uvs), fill, tex=tex, soft=soft, alpha=alpha)
 
     # -- caixa 3D (faces visíveis)
-    def box(self, x0, x1, y0, y1, z0, z1, color, tex=4.0, light=(1.08, 0.92, 0.78, 0.7)):
+    def box(
+        self, x0, x1, y0, y1, z0, z1, color, tex=4.0, light=(1.08, 0.92, 0.78, 0.7)
+    ):
         top, front, side, bottom = light
         c = self.cam.pos
         faces = []
         if c[1] > y1:
-            faces.append(([(x0, y1, z0), (x1, y1, z0), (x1, y1, z1), (x0, y1, z1)], top))
+            faces.append(
+                ([(x0, y1, z0), (x1, y1, z0), (x1, y1, z1), (x0, y1, z1)], top)
+            )
         if c[1] < y0:
-            faces.append(([(x0, y0, z0), (x1, y0, z0), (x1, y0, z1), (x0, y0, z1)], bottom))
+            faces.append(
+                ([(x0, y0, z0), (x1, y0, z0), (x1, y0, z1), (x0, y0, z1)], bottom)
+            )
         if c[2] < z0:
-            faces.append(([(x0, y0, z0), (x1, y0, z0), (x1, y1, z0), (x0, y1, z0)], front))
+            faces.append(
+                ([(x0, y0, z0), (x1, y0, z0), (x1, y1, z0), (x0, y1, z0)], front)
+            )
         if c[2] > z1:
-            faces.append(([(x0, y0, z1), (x1, y0, z1), (x1, y1, z1), (x0, y1, z1)], front))
+            faces.append(
+                ([(x0, y0, z1), (x1, y0, z1), (x1, y1, z1), (x0, y1, z1)], front)
+            )
         if c[0] < x0:
-            faces.append(([(x0, y0, z0), (x0, y0, z1), (x0, y1, z1), (x0, y1, z0)], side))
+            faces.append(
+                ([(x0, y0, z0), (x0, y0, z1), (x0, y1, z1), (x0, y1, z0)], side)
+            )
         if c[0] > x1:
-            faces.append(([(x1, y0, z0), (x1, y0, z1), (x1, y1, z1), (x1, y1, z0)], side))
+            faces.append(
+                ([(x1, y0, z0), (x1, y0, z1), (x1, y1, z1), (x1, y1, z0)], side)
+            )
         for pts, k in faces:
             self.poly3(pts, mul(color, k), tex)
 
     # -- 2D helpers
     def rect(self, x0, y0, x1, y1, fill, tex=4.0, grad=None, soft=0, alpha=255):
-        self.poly2([(x0, y0), (x1, y0), (x1, y1), (x0, y1)], fill, tex, grad, soft, alpha)
+        self.poly2(
+            [(x0, y0), (x1, y0), (x1, y1), (x0, y1)], fill, tex, grad, soft, alpha
+        )
 
     def rrect(self, box, r, fill, outline=None, width=1):
         self.draw.rounded_rectangle(box, r, fill=fill, outline=outline, width=width)
@@ -197,7 +262,17 @@ class Canvas:
 
 
 # --------------------------------------------------------------------------- pós-processamento "de celular"
-def finish(img: Image.Image, seed=0, exposure=1.0, warm=0.0, vignette=0.35, blur=0.6, noise=3.5, desat=0.0, gamma=1.0):
+def finish(
+    img: Image.Image,
+    seed=0,
+    exposure=1.0,
+    warm=0.0,
+    vignette=0.35,
+    blur=0.6,
+    noise=3.5,
+    desat=0.0,
+    gamma=1.0,
+):
     rng = np.random.default_rng(seed)
     a = np.asarray(img, float) / 255.0
     a = a**gamma

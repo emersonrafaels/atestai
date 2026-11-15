@@ -52,7 +52,9 @@ def make_xlsx(path: Path, case: dict) -> None:
     ws.add_table(tab)
 
     wi = wb.create_sheet("Itens")
-    wi.append(["Item", "Descrição", "Unidade", "Quantidade", "Valor unitário", "Valor total"])
+    wi.append(
+        ["Item", "Descrição", "Unidade", "Quantidade", "Valor unitário", "Valor total"]
+    )
     for n, (desc, un, q, u, _) in enumerate(case["items"], 1):
         wi.append([n, desc, un, q, u, round(q * u, 2)])
     end = len(case["items"]) + 1

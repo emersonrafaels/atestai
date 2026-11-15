@@ -32,7 +32,16 @@ OnProgress = Callable[[str, Stage], None]
 
 
 class Orchestrator:
-    """Analisa um chamado de ponta a ponta e devolve o parecer."""
+    """Analisa um chamado de ponta a ponta e devolve o parecer.
+
+    Attributes:
+        cfg: configuração do ambiente.
+        references: LPU, régua e checklists usados pelas etapas.
+        client: cliente de LLM (provedor síncrono, lote ou simulado), compartilhado por todos os chamados.
+        scorer: régua aplicada (apontamentos → notas, score, confiança e recomendação).
+        costs: conversão de tokens em US$ e R$.
+        stages: etapas executadas em ordem sobre o `AnalysisContext` de cada chamado.
+    """
 
     def __init__(
         self,
@@ -42,16 +51,34 @@ class Orchestrator:
         photo_index: PhotoIndex | None = None,
         stages: Sequence[AnalysisStage] | None = None,
     ):
+        """
+        Args:
+            cfg: configuração do ambiente.
+            references: referências (LPU, régua, checklists) da configuração.
+            client: cliente de LLM usado pelas sessões de cada chamado.
+            photo_index: índice de fotos de outros chamados, para detectar reaproveitamento. Só é usado na Fase 2
+                da régua ([pipeline.phase] >= 2); na Fase 1 é ignorado.
+            stages: etapas a executar, em ordem; None usa `default_stages`.
+        """
         self.cfg = cfg
         self.references = references
         self.client = client
+        # Régua padrão: as etapas criam os apontamentos com ela; a etapa de score aplica a régua da esteira depois.
         self.scorer = ScoreCalculator(references.rubric)
         self.costs = CostCalculator(cfg)
+        # Reaproveitamento de fotos é da Fase 2 da régua: na Fase 1 o índice é descartado mesmo se vier pronto.
         index = photo_index if cfg.pipeline.phase >= 2 else None
         self.stages = list(stages) if stages is not None else self.default_stages(index)
 
     def default_stages(self, photo_index: PhotoIndex | None) -> list[AnalysisStage]:
-        """As etapas do deck, na ordem, com a leitura dos documentos depois das fotos."""
+        """As etapas do deck, na ordem, com a leitura dos documentos depois das fotos.
+
+        Args:
+            photo_index: índice de fotos repassado à etapa de fotos (None desliga a checagem de reaproveitamento).
+
+        Returns:
+            Checklist → escopo → orçamento → fotos → documentos → score → parecer.
+        """
         args = (self.cfg, self.references, self.scorer)
         return [
             ChecklistStage(*args),
@@ -63,19 +90,59 @@ class Orchestrator:
             AssessmentStage(*args),
         ]
 
-    def analyze(self, ticket: LoadedTicket, on_progress: OnProgress | None = None, run_id: str | None = None) -> Assessment:
-        """Roda todas as etapas sobre o chamado (ou até uma etapa encerrar a análise)."""
+    def analyze(
+        self,
+        ticket: LoadedTicket,
+        on_progress: OnProgress | None = None,
+        run_id: str | None = None,
+    ) -> Assessment:
+        """Roda todas as etapas sobre o chamado (ou até uma etapa encerrar a análise).
+
+        Cada etapa lê e completa o mesmo `AnalysisContext` (`ctx`); o tempo de cada uma fica em `ctx.durations`.
+        Se uma etapa preenche `ctx.halt` (ex.: checklist incompleto), as seguintes não rodam e o parecer sai com
+        os campos que ela deixou.
+
+        Args:
+            ticket: chamado carregado da pasta (dados, pasta e anexos numerados).
+            on_progress: chamado a cada etapa com (id do chamado, etapa) e, no fim, com `Stage.DONE`.
+            run_id: id da execução, gravado no parecer e no contexto do log.
+
+        Returns:
+            O parecer completo: cabeçalho de rastreabilidade, resultados das etapas, chamadas ao LLM, tempos e custo.
+
+        Os argumentos passados ao AnalysisContext:
+            ticket: o chamado analisado.
+            session: sessão de LLM própria do chamado (guarda o rastro e o custo só das chamadas dele).
+            run_id: id da execução, repassado ao parecer.
+        """
+        # Todo log emitido dentro deste bloco leva o id da execução e do chamado.
         with context(run=run_id, ticket=ticket.id):
             started = time.perf_counter()
-            ctx = AnalysisContext(ticket=ticket, session=LlmSession(self.client, self.cfg, ticket.id), run_id=run_id)
-            event("ticket_start", category=ticket.data.category.value, workstream=ticket.data.workstream.value, mode=self._mode)
+            # Estado compartilhado pelas etapas: cada uma lê o que as anteriores deixaram e acrescenta o seu resultado.
+            ctx = AnalysisContext(
+                ticket=ticket,
+                session=LlmSession(self.client, self.cfg, ticket.id),
+                run_id=run_id,
+            )
+            event(
+                "ticket_start",
+                category=ticket.data.category.value,
+                workstream=ticket.data.workstream.value,
+                mode=self._mode,
+            )
+
             for stage in self.stages:
+                # Avisa o painel/terminal de qual etapa começou.
                 if on_progress:
                     on_progress(ticket.id, stage.progress)
+                # Roda a etapa medindo o tempo (vai para ctx.durations e para o log).
                 with timed_stage(stage.name, ctx.durations):
                     stage.run(ctx)
+                # Uma etapa pode encerrar a análise (ex.: checklist incompleto): as seguintes não rodam.
                 if ctx.halted:
                     break
+
+            # Junta cabeçalho, resultados, rastro das chamadas e custo no parecer final.
             assessment = self._build(ctx, started)
             if on_progress:
                 on_progress(ticket.id, Stage.DONE)
@@ -120,9 +187,21 @@ class Orchestrator:
 
     def _results(self, ctx: AnalysisContext) -> dict[str, Any]:
         """Campos produzidos pelas etapas (ou pela etapa que encerrou a análise)."""
+        # Análise encerrada antes do fim: o parecer leva o checklist, os anexos e o que a etapa deixou em `halt`
+        # (recomendação, motivo, resumo e mensagem ao fornecedor), sem score.
         if ctx.halted:
-            return {"checklist": ctx.checklist, "attachments": ctx.attachments, **(ctx.halt or {})}
-        assert ctx.score is not None and ctx.photo_analysis is not None and ctx.text is not None and ctx.scope is not None
+            return {
+                "checklist": ctx.checklist,
+                "attachments": ctx.attachments,
+                **(ctx.halt or {}),
+            }
+        # Análise completa: todas as etapas precisam ter deixado o seu resultado.
+        assert (
+            ctx.score is not None
+            and ctx.photo_analysis is not None
+            and ctx.text is not None
+            and ctx.scope is not None
+        )
         return {
             "checklist": ctx.checklist,
             "attachments": ctx.attachments,
@@ -133,12 +212,23 @@ class Orchestrator:
             "scope": ctx.scope.model_dump(mode="json"),
             "items": ctx.items,
             "quote_notes": ctx.quote_notes,
-            "service_coverage": [c.model_dump(mode="json") for c in ctx.service_coverage],
-            "photos": PhotoStage.evaluated_photos(ctx.photo_analysis, ctx.photos, ctx.integrity),
+            "service_coverage": [
+                c.model_dump(mode="json") for c in ctx.service_coverage
+            ],
+            "photos": PhotoStage.evaluated_photos(
+                ctx.photo_analysis, ctx.photos, ctx.integrity
+            ),
             "photo_summary": ctx.photo_analysis.model_dump(
                 mode="json",
-                include={"has_before_photo", "problem_assessment", "done_service", "done_justification", "items_without_photo",
-                         "quantity_checks", "notes"},
+                include={
+                    "has_before_photo",
+                    "problem_assessment",
+                    "done_service",
+                    "done_justification",
+                    "items_without_photo",
+                    "quantity_checks",
+                    "notes",
+                },
             ),
             "documents": ctx.documents,
             "summary": ctx.text.summary,
@@ -146,6 +236,22 @@ class Orchestrator:
         }
 
     def _build(self, ctx: AnalysisContext, started: float) -> Assessment:
+        """Monta o parecer final a partir do contexto.
+
+        Args:
+            ctx: contexto do chamado depois das etapas.
+            started: instante do início da análise (`time.perf_counter()`), para a duração total.
+
+        Returns:
+            O `Assessment` com cabeçalho, resultados, rastro das chamadas e custo (US$ somado das chamadas e em R$).
+
+        Os argumentos passados ao Assessment (além dos de `_header` e `_results`):
+            llm_calls: rastro de cada chamada ao LLM (tarefa, modelo, tokens, custo, hashes de prompt e schema).
+            duration_s: tempo total da análise do chamado, em segundos.
+            stage_durations_s: tempo de cada etapa, em segundos.
+            cost_usd / cost_brl: custo somado das chamadas, em dólar e convertido pela cotação de [costs].
+        """
+        # Custo do chamado = soma do custo de cada chamada ao LLM (chamadas do cache e do simulado custam 0).
         usd = round(sum(c.cost_usd for c in ctx.session.calls), 6)
         return Assessment(
             **self._header(ctx.ticket, ctx.run_id),

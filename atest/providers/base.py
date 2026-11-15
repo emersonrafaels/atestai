@@ -79,12 +79,31 @@ class Request:
     max_tokens: int
     effort: str = ""
     extras: dict[str, Any] = field(default_factory=dict)
-    timeout_s: float | None = None  # limite de cada tentativa (llm.call_timeout); fora da chave de cache
+    timeout_s: float | None = (
+        None  # limite de cada tentativa (llm.call_timeout); fora da chave de cache
+    )
 
     def key(self, output: type[BaseModel], provider: str) -> str:
-        """Identifica a requisição para cache e auditoria: provedor, modelo, prompt, conteúdo e schema."""
+        """Identifica a requisição para cache e auditoria: provedor, modelo, prompt, conteúdo e schema.
+
+        Args:
+            output: modelo Pydantic esperado (o JSON Schema entra na chave).
+            provider: nome do provedor.
+
+        Returns:
+            Hash SHA-256 em hexadecimal. `timeout_s` e `extras` ficam de fora: não mudam a resposta.
+        """
         base = json.dumps(
-            [provider, self.model, self.system, self.max_tokens, self.effort, output.model_json_schema()], sort_keys=True, ensure_ascii=False
+            [
+                provider,
+                self.model,
+                self.system,
+                self.max_tokens,
+                self.effort,
+                output.model_json_schema(),
+            ],
+            sort_keys=True,
+            ensure_ascii=False,
         )
         return hashlib.sha256((base + signature_parts(self.parts)).encode()).hexdigest()
 
@@ -113,7 +132,8 @@ class ProviderResponse(Generic[T]):
 
 class ProviderError(RuntimeError):
     """Erro do provedor; `transient=True` indica que vale tentar o modelo de contingência e `truncated=True`, que a
-    resposta foi cortada no limite de tokens de saída (vale tentar de novo com um limite maior)."""
+    resposta foi cortada no limite de tokens de saída (vale tentar de novo com um limite maior).
+    """
 
     def __init__(self, msg: str, transient: bool = False, truncated: bool = False):
         super().__init__(msg)
@@ -130,17 +150,46 @@ class Provider(ABC):
 
     @abstractmethod
     def generate(self, req: Request, output: type[T]) -> ProviderResponse[T]:
-        """Uma chamada síncrona com saída estruturada validada pelo Pydantic."""
+        """Uma chamada síncrona com saída estruturada validada pelo Pydantic.
+
+        Args:
+            req: requisição neutra (tarefa, prompt de sistema, partes, modelo, limites).
+            output: modelo Pydantic que a resposta precisa seguir.
+
+        Returns:
+            Objeto validado, uso de tokens normalizado e id efetivo do modelo.
+
+        Raises:
+            ProviderError: falha da API ou resposta inválida; `transient=True` para erros em que vale a contingência
+                e `truncated=True` quando a resposta foi cortada no limite de tokens de saída.
+        """
 
     # API de lote (opcional): só provedores com batch nativo implementam
     def create_batch(self, items: list[tuple[str, Request, type[BaseModel]]]) -> str:
-        """Envia várias requisições como um lote assíncrono; devolve o id do lote."""
+        """Envia várias requisições como um lote assíncrono; devolve o id do lote.
+
+        Args:
+            items: (custom_id único no lote, requisição, modelo Pydantic da resposta) de cada chamada.
+
+        Returns:
+            O id do lote no provedor.
+        """
         raise NotImplementedError(f"{self.name} não implementa lote")
 
     def batch_finished(self, batch_id: str) -> bool:
         """True quando o lote terminou de processar."""
         raise NotImplementedError
 
-    def batch_results(self, batch_id: str, outputs: dict[str, type[BaseModel]]) -> dict[str, ProviderResponse | Exception]:
-        """Respostas do lote por chave da requisição (ou o erro de cada uma)."""
+    def batch_results(
+        self, batch_id: str, outputs: dict[str, type[BaseModel]]
+    ) -> dict[str, ProviderResponse | Exception]:
+        """Respostas do lote por chave da requisição (ou o erro de cada uma).
+
+        Args:
+            batch_id: id devolvido por `create_batch`.
+            outputs: custom_id → modelo Pydantic esperado, para validar cada resposta.
+
+        Returns:
+            custom_id → resposta validada ou a exceção daquela requisição.
+        """
         raise NotImplementedError

@@ -24,10 +24,18 @@ class IdentifiedAttachment(LlmOutput):
     """Identificação de um anexo pelo modelo rápido."""
 
     index: int = Field(description="Número do anexo, como no rótulo 'Anexo N'")
-    category: AttachmentCategory = Field(description="Uma única categoria, a mais específica")
-    moment: PhotoMoment = Field(description="before = problema/estado anterior; after = resultado/peça nova; during = durante o serviço")
-    readable: bool = Field(description="false se escura, tremida, sem foco ou cortada a ponto de não identificar o conteúdo")
-    short_description: str = Field(description="Até 12 palavras, em português, dizendo o que aparece")
+    category: AttachmentCategory = Field(
+        description="Uma única categoria, a mais específica"
+    )
+    moment: PhotoMoment = Field(
+        description="before = problema/estado anterior; after = resultado/peça nova; during = durante o serviço"
+    )
+    readable: bool = Field(
+        description="false se escura, tremida, sem foco ou cortada a ponto de não identificar o conteúdo"
+    )
+    short_description: str = Field(
+        description="Até 12 palavras, em português, dizendo o que aparece"
+    )
 
 
 class AttachmentIdentification(LlmOutput):
@@ -49,11 +57,19 @@ class ScopeReading(LlmOutput):
     """Saída da tarefa scope: o pedido traduzido em critérios de aceite."""
 
     local: str = Field(description="Local do serviço (agência, área)")
-    environment: str = Field(description="Ambiente ou equipamento-alvo, como escrito no chamado")
+    environment: str = Field(
+        description="Ambiente ou equipamento-alvo, como escrito no chamado"
+    )
     equipment: str = Field(description="Equipamento citado, ou vazio")
-    requested_services: list[str] = Field(description="Ações pedidas, ex.: 'repintar paredes', 'limpar e ajustar foco da câmera 04'")
-    mentioned_quantities: list[Quantity] = Field(description="Só quantidades explícitas no texto")
-    acceptance_criteria: list[str] = Field(description="Frases verificáveis para conferir orçamento e fotos")
+    requested_services: list[str] = Field(
+        description="Ações pedidas, ex.: 'repintar paredes', 'limpar e ajustar foco da câmera 04'"
+    )
+    mentioned_quantities: list[Quantity] = Field(
+        description="Só quantidades explícitas no texto"
+    )
+    acceptance_criteria: list[str] = Field(
+        description="Frases verificáveis para conferir orçamento e fotos"
+    )
     expected_evidence: list[str] = Field(
         description=(
             "Evidências esperadas NA ETAPA do chamado: na aprovação do orçamento, fotos do problema (local, dano, extensão); "
@@ -63,8 +79,12 @@ class ScopeReading(LlmOutput):
     before_evidence_applicable: bool = Field(
         description="true se o serviço altera o estado físico (reparo, troca, pintura, limpeza); false para testes/inspeções"
     )
-    consistent_with_category_symptom: bool = Field(description="O texto do escopo é coerente com a categoria e o sintoma informados?")
-    coherence_note: str = Field(description="Se incoerente, explique em uma frase; senão vazio")
+    consistent_with_category_symptom: bool = Field(
+        description="O texto do escopo é coerente com a categoria e o sintoma informados?"
+    )
+    coherence_note: str = Field(
+        description="Se incoerente, explique em uma frase; senão vazio"
+    )
     vague_scope: bool = Field(
         description="true se o texto não permite saber o que fazer, onde ou em quê, a ponto de impedir a conferência do orçamento"
     )
@@ -77,11 +97,19 @@ class ItemReview(LlmOutput):
 
     n: int
     classification: ItemClassification
-    reason: str = Field(description="Uma frase objetiva que a pessoa analista possa usar como justificativa")
-    expected_quantity_max: float = Field(description="Maior quantidade plausível segundo o escopo; -1 se não dá para estimar")
+    reason: str = Field(
+        description="Uma frase objetiva que a pessoa analista possa usar como justificativa"
+    )
+    expected_quantity_max: float = Field(
+        description="Maior quantidade plausível segundo o escopo; -1 se não dá para estimar"
+    )
     plausible_quantity: bool
-    duplicate_of: int = Field(description="n de um item ANTERIOR que cobra a mesma coisa; 0 se não há")
-    lpu_code: str = Field(description="Código equivalente na tabela de referência, ou NO_REFERENCE")
+    duplicate_of: int = Field(
+        description="n de um item ANTERIOR que cobra a mesma coisa; 0 se não há"
+    )
+    lpu_code: str = Field(
+        description="Código equivalente na tabela de referência, ou NO_REFERENCE"
+    )
 
 
 class ServiceCoverage(LlmOutput):
@@ -89,14 +117,18 @@ class ServiceCoverage(LlmOutput):
 
     n: int = Field(description="Número do serviço na lista SERVIÇOS PEDIDOS")
     service: str = Field(description="O serviço pedido, como na lista")
-    items: list[int] = Field(description="Itens do orçamento que executam este serviço; vazio se nenhum")
+    items: list[int] = Field(
+        description="Itens do orçamento que executam este serviço; vazio se nenhum"
+    )
     covered: Match = Field(
         description=(
             "yes = há item que executa o serviço por completo; partial = há item, mas ele não resolve todo o pedido (ex.: "
             "chapa de proteção sem organizar a fiação); no = nenhum item executa o serviço"
         )
     )
-    note: str = Field(description="Uma frase de engenheiro: o que falta ou por que o item cobre o pedido")
+    note: str = Field(
+        description="Uma frase de engenheiro: o que falta ou por que o item cobre o pedido"
+    )
 
 
 class QuoteReview(LlmOutput):
@@ -114,26 +146,40 @@ class AnalyzedPhoto(LlmOutput):
     """Leitura de uma foto pelo modelo de visão."""
 
     index: int
-    environment: str = Field(description="Onde a foto foi tirada, ex.: 'backoffice', 'fachada externa', 'imagem de câmera de corredor'")
+    environment: str = Field(
+        description="Onde a foto foi tirada, ex.: 'backoffice', 'fachada externa', 'imagem de câmera de corredor'"
+    )
     what_it_shows: str
     moment: PhotoMoment
-    readable: bool = Field(description="Uma foto nítida de uma tela que mostra imagem desfocada É legível")
+    readable: bool = Field(
+        description="Uma foto nítida de uma tela que mostra imagem desfocada É legível"
+    )
     matches_scope: Match
     reason: str
-    covered_items: list[int] = Field(description="Itens do orçamento que a foto evidencia")
+    covered_items: list[int] = Field(
+        description="Itens do orçamento que a foto evidencia"
+    )
 
 
 class QuantityCheck(LlmOutput):
     """Contagem, somando as fotos, do que um item físico do orçamento cobra (peças, área, unidades)."""
 
     item: int = Field(description="Número do item do orçamento")
-    what_was_counted: str = Field(description="O que foi contado, ex.: 'peças de piso quebradas', 'luminárias apagadas'")
-    per_photo: str = Field(description="Quanto aparece em cada foto, ex.: 'Anexo 2: 1; Anexo 3: 2'; mesmo ponto em duas fotos conta uma vez")
-    count_seen: float = Field(description="Total visto somando as fotos, na unidade contada (ex.: 7 peças)")
+    what_was_counted: str = Field(
+        description="O que foi contado, ex.: 'peças de piso quebradas', 'luminárias apagadas'"
+    )
+    per_photo: str = Field(
+        description="Quanto aparece em cada foto, ex.: 'Anexo 2: 1; Anexo 3: 2'; mesmo ponto em duas fotos conta uma vez"
+    )
+    count_seen: float = Field(
+        description="Total visto somando as fotos, na unidade contada (ex.: 7 peças)"
+    )
     estimated_quantity: float = Field(
         description="Quantidade estimada NA UNIDADE DO ITEM (ex.: 7 peças de 45x45 cm = 1,42 m²); -1 se não dá para estimar"
     )
-    reasoning: str = Field(description="Como chegou à estimativa (tamanho da peça assumido, margem de corte), em uma frase")
+    reasoning: str = Field(
+        description="Como chegou à estimativa (tamanho da peça assumido, margem de corte), em uma frase"
+    )
 
 
 class PhotoAnalysis(LlmOutput):
@@ -180,8 +226,12 @@ class ReadPrice(LlmOutput):
     """Preço que aparece num documento."""
 
     description: str = Field(description="Produto ou serviço como escrito no documento")
-    value: float = Field(description="Preço unitário em reais, como número (ex.: 303.25)")
-    quote_item: int = Field(description="Número do item do orçamento a que este preço se refere; 0 se não corresponde a nenhum")
+    value: float = Field(
+        description="Preço unitário em reais, como número (ex.: 303.25)"
+    )
+    quote_item: int = Field(
+        description="Número do item do orçamento a que este preço se refere; 0 se não corresponde a nenhum"
+    )
     same_product: Match = Field(
         description=(
             "yes = mesmo produto do item (especificação e medidas batem); partial = parece o mesmo, mas o orçamento não traz "
@@ -194,23 +244,44 @@ class ReadDocument(LlmOutput):
     """Leitura (OCR) de um documento anexado e conferência com o chamado."""
 
     index: int
-    kind: Literal["service_report", "completion_certificate", "technical_report", "price_reference", "invoice", "other"] = Field(
+    kind: Literal[
+        "service_report",
+        "completion_certificate",
+        "technical_report",
+        "price_reference",
+        "invoice",
+        "other",
+    ] = Field(
         description=(
             "service_report = relatório/ordem de atendimento do técnico; completion_certificate = termo de conclusão; "
             "technical_report = laudo ou relatório técnico; price_reference = anúncio, print de loja ou cotação de preço; "
             "invoice = nota fiscal ou recibo"
         )
     )
-    handwritten: bool = Field(description="true se o conteúdo principal foi preenchido à mão")
-    legible: Match = Field(description="yes = dá para ler tudo; partial = partes ilegíveis; no = não dá para ler o conteúdo")
-    transcription: str = Field(description="Transcrição fiel do texto, na ordem de leitura; trechos que não dá para ler como [ilegível]")
-    issuer: str = Field(description="Empresa, loja ou pessoa que emitiu o documento; vazio se não aparece")
-    service_date: str = Field(description="Data do atendimento ou do documento em dd/mm/aaaa; vazio se não aparece")
+    handwritten: bool = Field(
+        description="true se o conteúdo principal foi preenchido à mão"
+    )
+    legible: Match = Field(
+        description="yes = dá para ler tudo; partial = partes ilegíveis; no = não dá para ler o conteúdo"
+    )
+    transcription: str = Field(
+        description="Transcrição fiel do texto, na ordem de leitura; trechos que não dá para ler como [ilegível]"
+    )
+    issuer: str = Field(
+        description="Empresa, loja ou pessoa que emitiu o documento; vazio se não aparece"
+    )
+    service_date: str = Field(
+        description="Data do atendimento ou do documento em dd/mm/aaaa; vazio se não aparece"
+    )
     start_time: str = Field(description="Hora de início (hh:mm); vazio se não aparece")
     end_time: str = Field(description="Hora de término (hh:mm); vazio se não aparece")
-    branch: str = Field(description="Agência citada (código e/ou nome); vazio se não aparece")
+    branch: str = Field(
+        description="Agência citada (código e/ou nome); vazio se não aparece"
+    )
     problem: str = Field(description="Problema descrito no documento; vazio se não há")
-    solution: str = Field(description="Solução ou serviço descrito no documento; vazio se não há")
+    solution: str = Field(
+        description="Solução ou serviço descrito no documento; vazio se não há"
+    )
     has_signature: bool = Field(description="true se há assinatura ou carimbo")
     service_status: Match = Field(
         description=(
@@ -219,7 +290,9 @@ class ReadDocument(LlmOutput):
             "diagnóstico ou o que será feito. undetermined = só substantivo ('instalação de…', 'troca de…') ou não dá para saber"
         )
     )
-    prices: list[ReadPrice] = Field(description="Preços que aparecem no documento (anúncio, cotação, nota)")
+    prices: list[ReadPrice] = Field(
+        description="Preços que aparecem no documento (anúncio, cotação, nota)"
+    )
     matches_ticket: Match = Field(
         description=(
             "yes = o documento é deste chamado (agência, serviço) e confirma o que foi pedido/feito; no = algo ESCRITO contradiz o "
@@ -227,7 +300,9 @@ class ReadDocument(LlmOutput):
             "undetermined = ilegível"
         )
     )
-    divergences: list[str] = Field(description="Cada diferença concreta entre o documento e o chamado ou o orçamento; vazio se não há")
+    divergences: list[str] = Field(
+        description="Cada diferença concreta entre o documento e o chamado ou o orçamento; vazio se não há"
+    )
     reason: str = Field(description="Uma frase justificando matches_ticket")
 
 
@@ -242,5 +317,9 @@ class DocumentAnalysis(LlmOutput):
 class AssessmentText(LlmOutput):
     """Saída da tarefa assessment: resumo e mensagem ao fornecedor."""
 
-    summary: str = Field(description="2 a 3 frases; comece pela recomendação e pelo motivo principal")
-    supplier_message: str = Field(description="Ações ao fornecedor, uma por apontamento; vazio se aprovar sem apontamentos ou análise detalhada")
+    summary: str = Field(
+        description="2 a 3 frases; comece pela recomendação e pelo motivo principal"
+    )
+    supplier_message: str = Field(
+        description="Ações ao fornecedor, uma por apontamento; vazio se aprovar sem apontamentos ou análise detalhada"
+    )

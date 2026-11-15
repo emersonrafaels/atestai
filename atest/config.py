@@ -66,8 +66,14 @@ class ModelSettings(_Section):
 
     main: str
     fast: str
-    tasks: dict[str, str] = Field(default_factory=dict, description="Sobrescreve o modelo de uma tarefa específica")
-    fallback: dict[str, str] = Field(default_factory=dict, description="Modelo usado se o principal/rápido falhar por erro transitório")
+    tasks: dict[str, str] = Field(
+        default_factory=dict,
+        description="Sobrescreve o modelo de uma tarefa específica",
+    )
+    fallback: dict[str, str] = Field(
+        default_factory=dict,
+        description="Modelo usado se o principal/rápido falhar por erro transitório",
+    )
 
 
 class LlmSettings(_Section):
@@ -88,9 +94,13 @@ class LlmSettings(_Section):
     timeout_max_s: float = Field(600, ge=1)
     image_max_side: int = 1568
     use_disk_cache: bool = True
-    refresh_cache: bool = Field(False, description="Ignora as respostas já salvas no cache em disco (chama o modelo de novo), mas grava as novas")
+    refresh_cache: bool = Field(
+        False,
+        description="Ignora as respostas já salvas no cache em disco (chama o modelo de novo), mas grava as novas",
+    )
     provider_options: dict[str, dict[str, Any]] = Field(
-        default_factory=dict, description="Opções extras por provedor, repassadas à sua fábrica (ex.: [llm.provider_options.iara])"
+        default_factory=dict,
+        description="Opções extras por provedor, repassadas à sua fábrica (ex.: [llm.provider_options.iara])",
     )
 
 
@@ -125,7 +135,9 @@ class PanelProvider(_Section):
     """Provedor oferecido no seletor do painel, com os modelos que ele preenche ao ser escolhido."""
 
     label: str = ""
-    main: str = Field(description='Modelo principal ("provedor:modelo" ou só o id do modelo)')
+    main: str = Field(
+        description='Modelo principal ("provedor:modelo" ou só o id do modelo)'
+    )
     fast: str = Field(description="Modelo rápido")
     enabled: bool = True
 
@@ -136,11 +148,16 @@ class PanelSettings(_Section):
     host: str = "0.0.0.0"
     port: int = 8000
     simulated_delay_s: float = 0.45
-    providers: dict[str, PanelProvider] = Field(default_factory=dict, description="Provedores do seletor do painel, na ordem do arquivo")
+    providers: dict[str, PanelProvider] = Field(
+        default_factory=dict,
+        description="Provedores do seletor do painel, na ordem do arquivo",
+    )
 
     @field_validator("providers")
     @classmethod
-    def _models_belong_to_provider(cls, v: dict[str, PanelProvider]) -> dict[str, PanelProvider]:
+    def _models_belong_to_provider(
+        cls, v: dict[str, PanelProvider]
+    ) -> dict[str, PanelProvider]:
         """Completa o prefixo "provedor:" dos modelos e recusa modelo de outro provedor (erro de digitação no TOML)."""
         out = {}
         for name, p in v.items():
@@ -150,7 +167,9 @@ class PanelSettings(_Section):
                 if ":" not in model:
                     model = f"{name}:{model}"
                 elif model.split(":", 1)[0].strip().lower() != name:
-                    raise ValueError(f"panel.providers.{name}.{role} = {model!r} é de outro provedor (use {name}:<modelo>)")
+                    raise ValueError(
+                        f"panel.providers.{name}.{role} = {model!r} é de outro provedor (use {name}:<modelo>)"
+                    )
                 models[role] = model
             out[name] = p.model_copy(update=models)
         return out
@@ -190,8 +209,12 @@ class ObservabilitySettings(_Section):
     level: str = "INFO"
     log_json: bool = True
     log_console: bool = True
-    console_level: str = "INFO"  # INFO: acompanha a análise no terminal; WARNING: só avisos e erros
-    heartbeat_s: float = 30  # enquanto espera o modelo ou um lote, avisa a cada N segundos (0 desliga)
+    console_level: str = (
+        "INFO"  # INFO: acompanha a análise no terminal; WARNING: só avisos e erros
+    )
+    heartbeat_s: float = (
+        30  # enquanto espera o modelo ou um lote, avisa a cada N segundos (0 desliga)
+    )
 
 
 class Price(_Section):
@@ -230,10 +253,17 @@ class ChecklistRule(_Section):
     requirements: list[ChecklistRequirement]
     enabled: bool = True
 
-    def house(self, category: str, maintenance: str, moment: str, workstream: str = "*") -> int | None:
+    def house(
+        self, category: str, maintenance: str, moment: str, workstream: str = "*"
+    ) -> int | None:
         """Especificidade da regra (quanto maior, mais específica) ou None se não casa."""
         points = 0
-        pairs = ((self.category, category), (self.maintenance, maintenance), (self.moment, moment), (self.workstream, workstream))
+        pairs = (
+            (self.category, category),
+            (self.maintenance, maintenance),
+            (self.moment, moment),
+            (self.workstream, workstream),
+        )
         for rule_value, value in pairs:
             if rule_value == "*":
                 continue
@@ -249,7 +279,10 @@ AFTER_SERVICE_CATEGORIES = frozenset({"room_after_photo", "completion_certificat
 
 def after_service_only(requirement: ChecklistRequirement) -> bool:
     """A exigência só se cumpre com prova do serviço feito (foto do depois ou termo de conclusão)?"""
-    return bool(requirement.accepted) and set(requirement.accepted) <= AFTER_SERVICE_CATEGORIES
+    return (
+        bool(requirement.accepted)
+        and set(requirement.accepted) <= AFTER_SERVICE_CATEGORIES
+    )
 
 
 class Checklists(_Section):
@@ -258,7 +291,9 @@ class Checklists(_Section):
     attachment_categories: dict[str, str]
     rules: list[ChecklistRule]
 
-    def requirements(self, category: str, maintenance: str, moment: str, workstream: str = "*") -> list[ChecklistRequirement]:
+    def requirements(
+        self, category: str, maintenance: str, moment: str, workstream: str = "*"
+    ) -> list[ChecklistRequirement]:
         """Requisitos ativos da regra ativa mais específica que casa com categoria, manutenção, momento e esteira.
 
         Na aprovação do orçamento o serviço ainda não foi feito: exigência que só aceita prova do depois (regra de
@@ -266,11 +301,21 @@ class Checklists(_Section):
         """
         rule = self.rule_for(category, maintenance, moment, workstream)
         reqs = [r for r in rule.requirements if r.enabled] if rule else []
-        return [r for r in reqs if not after_service_only(r)] if moment == "quote" else reqs
+        return (
+            [r for r in reqs if not after_service_only(r)]
+            if moment == "quote"
+            else reqs
+        )
 
-    def rule_for(self, category: str, maintenance: str, moment: str, workstream: str = "*") -> ChecklistRule | None:
+    def rule_for(
+        self, category: str, maintenance: str, moment: str, workstream: str = "*"
+    ) -> ChecklistRule | None:
         """Regra ativa mais específica (em empate, a que vem por último no arquivo)."""
-        candidates = [(r.house(category, maintenance, moment, workstream), i, r) for i, r in enumerate(self.rules) if r.enabled]
+        candidates = [
+            (r.house(category, maintenance, moment, workstream), i, r)
+            for i, r in enumerate(self.rules)
+            if r.enabled
+        ]
         valid = [(p, i, r) for p, i, r in candidates if p is not None]
         return max(valid, key=lambda x: (x[0], x[1]))[2] if valid else None
 
@@ -279,7 +324,9 @@ class Prompts(_Section):
     """Prompts de sistema por tarefa (config/prompts.toml, em português) e sua versão."""
 
     version: str
-    engineer: str = ""  # preâmbulo comum a todas as tarefas: o olhar do engenheiro que aprova orçamentos e atesta serviços
+    engineer: str = (
+        ""  # preâmbulo comum a todas as tarefas: o olhar do engenheiro que aprova orçamentos e atesta serviços
+    )
     identify_attachments: str
     scope: str
     quote_review: str
@@ -352,30 +399,57 @@ class Settings(BaseModel):
         return self._abs(self.paths.logs)
 
     def signature(self) -> str:
-        """Impressão digital do que muda o resultado: régua, prompts, modelos, LLM e fase. Vai gravada em cada parecer."""
+        """Impressão digital do que muda o resultado: régua, prompts, modelos, LLM e fase. Vai gravada em cada parecer.
+
+        Returns:
+            Os 12 primeiros caracteres do SHA-256 de régua, checklists, cadastro, prompts, modelos, parte de [llm]
+            e fase. Mesma assinatura = mesma configuração de análise.
+        """
         import hashlib
         import json
 
+        # Só o que muda o resultado da análise entra; caminhos, painel, custos e log ficam de fora.
         target = {
             "rubric": self.rubric.model_dump(mode="json"),
             "checklists": self.checklists.model_dump(mode="json"),
-            "catalog": self.catalog.model_dump(mode="json"),  # os nomes vão no resumo do chamado enviado ao modelo
+            "catalog": self.catalog.model_dump(
+                mode="json"
+            ),  # os nomes vão no resumo do chamado enviado ao modelo
             "prompts": self.prompts.model_dump(),
             "models": self.models.model_dump(),
-            "llm": self.llm.model_dump(include={"default_provider", "effort", "max_tokens", "image_max_side"}),
+            "llm": self.llm.model_dump(
+                include={"default_provider", "effort", "max_tokens", "image_max_side"}
+            ),
             "phase": self.pipeline.phase,
         }
-        return hashlib.sha256(json.dumps(target, sort_keys=True, ensure_ascii=False).encode()).hexdigest()[:12]
+        # sort_keys=True: a mesma configuração gera sempre o mesmo texto, independentemente da ordem das chaves.
+        return hashlib.sha256(
+            json.dumps(target, sort_keys=True, ensure_ascii=False).encode()
+        ).hexdigest()[:12]
 
     def with_overrides(self, **changes: Any) -> Settings:
-        """Cópia com mudanças por caminho pontilhado, ex.: cfg.com(**{"execution.mode": "api", "pipeline.fase": 1})."""
+        """Cópia com mudanças por caminho pontilhado, ex.: cfg.with_overrides(**{"execution.mode": "api", "pipeline.phase": 1}).
+
+        Args:
+            **changes: caminho pontilhado → novo valor (o valor substitui a seção ou o campo inteiro).
+
+        Returns:
+            Nova configuração validada; a original não muda.
+
+        Raises:
+            KeyError: caminho intermediário inexistente.
+            pydantic.ValidationError: o valor novo não passa na validação.
+        """
+        # Trabalha sobre uma cópia em dicionário; a configuração original não é alterada.
         data = self.model_dump()
         for path, value in changes.items():
+            # "pipeline.phase" → desce até data["pipeline"] e troca a chave "phase".
             target = data
             *country, key = path.split(".")
             for p in country:
                 target = target[p]
             target[key] = value
+        # Valida de novo: um valor inválido falha aqui, não no meio da análise.
         return Settings.model_validate(data)
 
 
@@ -390,6 +464,7 @@ VALIDATORS = [
 
 
 def _lowercase(d: Any) -> Any:
+    """Chaves de dicionários (também os aninhados em listas) em minúsculas: o Dynaconf devolve algumas em maiúsculas."""
     if isinstance(d, dict):
         return {str(k).lower(): _lowercase(v) for k, v in d.items()}
     if isinstance(d, list):
@@ -398,10 +473,31 @@ def _lowercase(d: Any) -> Any:
 
 
 def build_dynaconf(environment: str | None = None) -> Dynaconf:
-    """Carrega os TOML de config/ no ambiente pedido (ou em ATEST_ENV) com Dynaconf."""
+    """Carrega os TOML de config/ no ambiente pedido (ou em ATEST_ENV) com Dynaconf.
+
+    Args:
+        environment: Ambiente a selecionar; se omitido, usa ATEST_ENV ou "development".
+
+    Os argumentos passados ao Dynaconf:
+        root_path: Diretório base usado para localizar os arquivos de configuração.
+        settings_files: Arquivos de configuração carregados, na ordem informada.
+        secrets: Arquivo separado para configurações secretas.
+        environments: Habilita configurações específicas por ambiente nos arquivos.
+        env_switcher: Nome da variável de ambiente que pode selecionar o ambiente.
+        env: Ambiente ativo nesta instância do Dynaconf.
+        envvar_prefix: Prefixo exigido em variáveis de ambiente que sobrescrevem configurações.
+        merge_enabled: Permite mesclar valores de configuração em vez de substituir estruturas inteiras.
+        validators: Validadores executados para verificar os valores carregados.
+    """
     return Dynaconf(
         root_path=str(DIR_CONFIG),
-        settings_files=["settings.toml", "rubric.toml", "checklists.toml", "catalog.toml", "prompts.toml"],
+        settings_files=[
+            "settings.toml",
+            "rubric.toml",
+            "checklists.toml",
+            "catalog.toml",
+            "prompts.toml",
+        ],
         secrets=".secrets.toml",
         environments=True,
         env_switcher="ATEST_ENV",
@@ -414,11 +510,31 @@ def build_dynaconf(environment: str | None = None) -> Dynaconf:
 
 @lru_cache(maxsize=4)
 def load_settings(environment: str | None = None) -> Settings:
-    """Configuração validada (Pydantic) do ambiente; resultado em cache por processo."""
+    """Configuração validada (Pydantic) do ambiente; resultado em cache por processo.
+
+    As chaves de config/.secrets.toml viram variáveis de ambiente (sem sobrescrever as que já existem) e saem
+    do objeto de configuração, para não irem parar em logs ou pareceres.
+
+    Args:
+        environment: ambiente do Dynaconf ("development", "production"...); None usa ATEST_ENV ou "development".
+
+    Returns:
+        A configuração validada, com `environment` preenchido.
+
+    Raises:
+        dynaconf.ValidationError: falha nos validadores (ex.: execution.mode fora de "api"/"simulated").
+        pydantic.ValidationError: TOML fora do formato dos modelos de configuração.
+    """
+
+    # Instanciando as configurações do dynaconf, o ambiente é selecionado e os validadores são aplicados. Se houver falha, uma ValidationError é lançada.
     settings = build_dynaconf(environment)
+
+    # As chaves de config/.secrets.toml viram variáveis de ambiente (sem sobrescrever as que já existem) e saem do objeto de configuração, para não irem parar em logs ou pareceres.
     for secret, variable in SECRETS.items():
         if (value := settings.get(secret)) and not os.getenv(variable):
             os.environ[variable] = value
+
+    # Converte a configuração do Dynaconf para o modelo Pydantic, com todos os campos em minúsculas e o ambiente atual.
     data = _lowercase(settings.as_dict())
     for secret in SECRETS:
         data.pop(secret, None)
@@ -450,12 +566,29 @@ def has_credentials(provider: str) -> bool:
 
 def used_providers(cfg: Settings) -> set[str]:
     """Provedores de LLM citados em models (principal, rápido, tarefas e contingência)."""
-    models = [cfg.models.main, cfg.models.fast, *cfg.models.tasks.values(), *cfg.models.fallback.values()]
-    return {m.split(":", 1)[0].lower() if ":" in m else cfg.llm.default_provider for m in models if m}
+    models = [
+        cfg.models.main,
+        cfg.models.fast,
+        *cfg.models.tasks.values(),
+        *cfg.models.fallback.values(),
+    ]
+    # O provedor é o prefixo antes de ":"; sem prefixo, vale [llm.default_provider].
+    return {
+        m.split(":", 1)[0].lower() if ":" in m else cfg.llm.default_provider
+        for m in models
+        if m
+    }
 
 
 def missing_keys(cfg: Settings) -> list[str]:
-    """Provedores configurados sem credencial (chave de API ou client_id/secret) no ambiente."""
+    """Provedores configurados sem credencial (chave de API ou client_id/secret) no ambiente.
+
+    Args:
+        cfg: configuração; os provedores vêm de [models] (principal, rápido, tarefas e contingência).
+
+    Returns:
+        Nomes dos provedores sem credencial, em ordem alfabética; vazia se todos têm.
+    """
     return sorted(p for p in used_providers(cfg) if not has_credentials(p))
 
 

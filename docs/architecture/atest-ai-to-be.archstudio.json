@@ -14,6 +14,7 @@
     "legendPos": "right",
     "badgeShape": "square",
     "badgeColor": "#147EBA",
+    "squad": "DataCraft",
     "wmStyle": "tile",
     "wmOpacity": 0.08
   },
@@ -116,7 +117,7 @@
       "style": {},
       "kind": "group",
       "w": 2730,
-      "h": 1270,
+      "h": 1770,
       "meta": []
     },
     {
@@ -129,7 +130,7 @@
       "style": {},
       "kind": "group",
       "w": 2690,
-      "h": 1220,
+      "h": 1720,
       "meta": [],
       "parent": "cloud"
     },
@@ -294,13 +295,13 @@
       "type": "g-generic",
       "x": 970,
       "y": 680,
-      "label": "Camada de LLM",
-      "sub": "IARA como provedor de todas as tarefas",
+      "label": "Camada de LLM + memória de feedback (RA-ICL)",
+      "sub": "IARA em todas as tarefas",
       "style": {
         "glyph": "sparkle"
       },
       "kind": "group",
-      "w": 760,
+      "w": 1110,
       "h": 140,
       "meta": [],
       "parent": "worker"
@@ -358,7 +359,7 @@
       "type": "g-generic",
       "x": 360,
       "y": 1070,
-      "label": "⑧ Segurança, observabilidade, entrega e feedback",
+      "label": "⑧ Segurança e observabilidade",
       "sub": "",
       "style": {
         "glyph": "shield"
@@ -366,6 +367,46 @@
       "kind": "group",
       "w": 2650,
       "h": 170,
+      "meta": [],
+      "parent": "region"
+    },
+    {
+      "id": "fbm",
+      "type": "g-generic",
+      "x": 360,
+      "y": 1270,
+      "label": "⑨ Feedback humano curado • Validated Match Memory",
+      "sub": "RA-ICL",
+      "style": {
+        "glyph": "users",
+        "stroke": "#0d9488",
+        "fill": "#0d9488",
+        "fo": 0.03,
+        "dashed": false
+      },
+      "kind": "group",
+      "w": 2650,
+      "h": 180,
+      "meta": [],
+      "parent": "region"
+    },
+    {
+      "id": "val",
+      "type": "g-generic",
+      "x": 360,
+      "y": 1480,
+      "label": "⑩ Validação de mudanças • Golden Dataset",
+      "sub": "prompt, régua, checklist ou modelo só sobem para produção depois daqui",
+      "style": {
+        "glyph": "target",
+        "stroke": "#7c3aed",
+        "fill": "#7c3aed",
+        "fo": 0.03,
+        "dashed": false
+      },
+      "kind": "group",
+      "w": 2650,
+      "h": 270,
       "meta": [],
       "parent": "region"
     },
@@ -1139,9 +1180,45 @@
       "parent": "st_par"
     },
     {
+      "id": "retr",
+      "type": "gen-retriever",
+      "x": 990,
+      "y": 720,
+      "label": "Feedback Retriever",
+      "sub": "busca casos validados parecidos",
+      "style": {
+        "badge": "H4"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "stepDesc": "Na análise, o **Feedback Retriever** busca na memória os **casos validados mais parecidos** com o item em análise.",
+      "stepColor": "#0d9488",
+      "meta": [],
+      "parent": "llm"
+    },
+    {
+      "id": "ctxe",
+      "type": "gen-prompt",
+      "x": 1280,
+      "y": 720,
+      "label": "Feedback-Augmented Context",
+      "sub": "prompt + casos validados",
+      "style": {
+        "badge": "H5"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "stepDesc": "O **Feedback-Augmented Context** coloca esses casos no prompt (**RA-ICL**) antes da chamada à IARA.",
+      "stepColor": "#0d9488",
+      "meta": [],
+      "parent": "llm"
+    },
+    {
       "id": "prov",
       "type": "gen-cache",
-      "x": 990,
+      "x": 1570,
       "y": 720,
       "label": "ProviderClient",
       "sub": "cache em S3 • contingência na IARA",
@@ -1155,7 +1232,7 @@
     {
       "id": "adapt",
       "type": "py-lib",
-      "x": 1280,
+      "x": 1860,
       "y": 720,
       "label": "Adaptador IARA",
       "sub": "iara_genai_sdk • schema + reparo do JSON",
@@ -1548,7 +1625,7 @@
     {
       "id": "ct",
       "type": "cloudtrail",
-      "x": 1898,
+      "x": 2144,
       "y": 1115,
       "label": "CloudTrail",
       "sub": "trilha de auditoria",
@@ -1557,28 +1634,6 @@
       "w": 56,
       "h": 56,
       "meta": [],
-      "parent": "gov"
-    },
-    {
-      "id": "cicd",
-      "type": "codepipeline",
-      "x": 2144,
-      "y": 1115,
-      "label": "CodePipeline",
-      "sub": "portão de qualidade (validate)",
-      "style": {
-        "badge": "19"
-      },
-      "kind": "icon",
-      "w": 56,
-      "h": 56,
-      "stepDesc": "Feedback e pareceres alimentam o **analítico de concordância**; o **CodePipeline** roda `action = validate` e só publica prompt, régua ou modelo novo se o portão de qualidade aprovar.",
-      "meta": [
-        {
-          "k": "Portão",
-          "v": "acurácia ≥ 0,85 · kappa ≥ 0,75 · F1 ≥ 0,80 · erro do score ≤ 8"
-        }
-      ],
       "parent": "gov"
     },
     {
@@ -1627,7 +1682,7 @@
       "id": "n_diff",
       "type": "shape-note",
       "x": 360,
-      "y": 1330,
+      "y": 1830,
       "w": 2650,
       "h": 190,
       "label": "O que muda em relação ao as is (orquestração)",
@@ -1637,6 +1692,302 @@
       },
       "kind": "note",
       "meta": []
+    },
+    {
+      "id": "fb_src",
+      "type": "aurora",
+      "x": 380,
+      "y": 1320,
+      "label": "Feedbacks dos analistas",
+      "sub": "tabela no Aurora • vários avaliadores",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [],
+      "parent": "fbm"
+    },
+    {
+      "id": "alpha",
+      "type": "sagemaker",
+      "x": 670,
+      "y": 1320,
+      "label": "Concordância entre avaliadores",
+      "sub": "Krippendorff's Alpha • SageMaker Processing semanal",
+      "style": {
+        "badge": "H1"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "stepDesc": "Toda semana, os feedbacks dos analistas passam pela **concordância entre avaliadores** com o **Krippendorff's Alpha** (SageMaker Processing), que aceita **vários avaliadores e avaliações ausentes**.",
+      "stepColor": "#0d9488",
+      "meta": [
+        {
+          "k": "Métrica",
+          "v": "Krippendorff's Alpha"
+        },
+        {
+          "k": "Por quê",
+          "v": "vários avaliadores, com avaliações ausentes"
+        },
+        {
+          "k": "Frequência",
+          "v": "semanal"
+        }
+      ],
+      "parent": "fbm"
+    },
+    {
+      "id": "consensus",
+      "type": "s3",
+      "x": 990,
+      "y": 1320,
+      "label": "Consensus Dataset",
+      "sub": "S3 versionado • só itens com consenso",
+      "style": {
+        "badge": "H2"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "stepDesc": "Só os itens com **concordância suficiente** entram no **Consensus Dataset** (S3 versionado), e o **filtro anti-vazamento** tira os casos do Golden Dataset.",
+      "stepColor": "#0d9488",
+      "meta": [],
+      "parent": "fbm"
+    },
+    {
+      "id": "leak",
+      "type": "data-validate",
+      "x": 1280,
+      "y": 1320,
+      "label": "Filtro anti-vazamento",
+      "sub": "remove casos do Golden Dataset",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [],
+      "parent": "fbm"
+    },
+    {
+      "id": "embed",
+      "type": "lambda",
+      "x": 1570,
+      "y": 1320,
+      "label": "Indexação dos casos",
+      "sub": "embeddings pela IARA",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [],
+      "parent": "fbm"
+    },
+    {
+      "id": "vmm",
+      "type": "aurora",
+      "x": 1860,
+      "y": 1320,
+      "label": "Validated Match Memory",
+      "sub": "Aurora pgvector • consultável pelos agentes",
+      "style": {
+        "badge": "H3"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "stepDesc": "Os casos são indexados (embeddings pela IARA) na **Validated Match Memory**, no Aurora com pgvector, **consultável pelos agentes**.",
+      "stepColor": "#0d9488",
+      "meta": [
+        {
+          "k": "Técnica",
+          "v": "Retrieval-Augmented In-Context Learning (RA-ICL)"
+        },
+        {
+          "k": "Origem",
+          "v": "Consensus Dataset"
+        },
+        {
+          "k": "Não contém",
+          "v": "casos do Golden Dataset"
+        }
+      ],
+      "parent": "fbm"
+    },
+    {
+      "id": "n_sep",
+      "type": "shape-note",
+      "x": 2150,
+      "y": 1300,
+      "w": 840,
+      "h": 140,
+      "label": "Separação fundamental",
+      "sub": "O Golden Dataset mede se o agente está melhorando: é congelado e só entra na avaliação offline de cada mudança.\nA Validated Match Memory fornece experiências para ajudar o agente a melhorar: é consultada em produção.\nTécnica: Retrieval-Augmented In-Context Learning (RA-ICL). Origem: Consensus Dataset. Recuperação: Feedback Retriever. Enriquecimento: Feedback-Augmented Context.\nCasos do Golden Dataset nunca entram na memória, para a avaliação não ser contaminada.",
+      "style": {
+        "fontSize": 12
+      },
+      "kind": "note",
+      "meta": [],
+      "parent": "fbm"
+    },
+    {
+      "id": "proposta",
+      "type": "github",
+      "x": 380,
+      "y": 1530,
+      "label": "Proposta de mudança",
+      "sub": "PR • prompt, régua, checklist ou modelo",
+      "style": {
+        "badge": "V1"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "stepDesc": "Toda **mudança de configuração dos agentes** (prompt, régua, checklist ou modelo) entra por **PR** e vira uma **versão candidata** no AppConfig.",
+      "stepColor": "#7c3aed",
+      "meta": [],
+      "parent": "val"
+    },
+    {
+      "id": "cfgv",
+      "type": "data-file",
+      "x": 670,
+      "y": 1530,
+      "label": "Configuração versionada",
+      "sub": "AppConfig • prompts • régua • checklists",
+      "style": {
+        "glyph": "layers"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [],
+      "parent": "val"
+    },
+    {
+      "id": "avalo",
+      "type": "codebuild",
+      "x": 990,
+      "y": 1530,
+      "label": "Avaliação offline",
+      "sub": "CodeBuild • action = validate × Golden",
+      "style": {
+        "badge": "V2"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "stepDesc": "O **CodeBuild** roda a versão candidata contra o **Golden Dataset** (S3 versionado, congelado): `action = validate`.",
+      "stepColor": "#7c3aed",
+      "meta": [],
+      "parent": "val"
+    },
+    {
+      "id": "comp",
+      "type": "ml-eval",
+      "x": 1280,
+      "y": 1530,
+      "label": "Comparação com produção",
+      "sub": "acurácia • kappa • F1 • erro do score",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [],
+      "parent": "val"
+    },
+    {
+      "id": "portao",
+      "type": "codepipeline",
+      "x": 1570,
+      "y": 1530,
+      "label": "Portão de qualidade",
+      "sub": "CodePipeline • aprova ou reprova",
+      "style": {
+        "badge": "V3"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "stepDesc": "O **portão de qualidade** (CodePipeline) compara com a versão em produção (acurácia, kappa, F1, erro do score): reprovada volta para ajuste.",
+      "stepColor": "#7c3aed",
+      "meta": [
+        {
+          "k": "Portão",
+          "v": "acurácia ≥ 0,85 · kappa ≥ 0,75 · F1 ≥ 0,80 · erro do score ≤ 8"
+        }
+      ],
+      "parent": "val"
+    },
+    {
+      "id": "pub",
+      "type": "ecr",
+      "x": 1860,
+      "y": 1530,
+      "label": "Publicação em produção",
+      "sub": "imagem no ECR + AppConfig • deploy gradual",
+      "style": {
+        "badge": "V4"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "stepDesc": "Só a versão **aprovada** é publicada: imagem no **ECR** e configuração no **AppConfig**, com **deploy gradual** no worker.",
+      "stepColor": "#7c3aed",
+      "meta": [],
+      "parent": "val"
+    },
+    {
+      "id": "cenarios",
+      "type": "data-sample",
+      "x": 670,
+      "y": 1650,
+      "label": "Cenários de teste",
+      "sub": "1 chamado por tipo de problema",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [],
+      "parent": "val"
+    },
+    {
+      "id": "golden",
+      "type": "s3",
+      "x": 990,
+      "y": 1650,
+      "label": "Golden Dataset",
+      "sub": "S3 versionado • congelado • mede a melhora",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [
+        {
+          "k": "Uso",
+          "v": "só avaliação offline de cada mudança"
+        },
+        {
+          "k": "Regra",
+          "v": "congelado e separado da memória"
+        }
+      ],
+      "parent": "val"
+    },
+    {
+      "id": "rescore",
+      "type": "py-script",
+      "x": 1280,
+      "y": 1650,
+      "label": "Rescore do gabarito",
+      "sub": "régua mudou → recalcula o gabarito",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [],
+      "parent": "val"
     },
     {
       "id": "start",
@@ -1663,7 +2014,7 @@
       "w": 1700,
       "h": 245,
       "label": "Como ler esta arquitetura",
-      "sub": "① Entrada: OT e orçamento .xlsx nos dados democratizados do Data Mesh; fotos e documentos nas APIs da Salesforce (IDs da OT → base64 por ID); no alvo, callout no envio.\n② Extração a cada hora: Step Functions consulta o Athena e roda um Map por OT nas APIs, gravando tudo no S3 tickets/<id>/; no alvo, API Gateway + Lambda de contrato. ③ Fila: SQS com DLQ; hash de cada foto calculado na chegada.\n④ Worker: o pipeline do código, sem mudança (7 etapas: checklist, escopo, orçamento, fotos, documentos, score, parecer), em ECS Fargate.\n⑤ Saída: outbox S3 (lote) ou writeback na REST API (alvo). ⑥ Salesforce: campos do parecer no chamado; a pessoa analista decide.\n⑦ Painel e dados: o painel (ECS atrás de ALB interno, com SSO) só recebe as análises e o feedback; Aurora PostgreSQL Serverless v2 no lugar do SQLite.\n⑧ Segurança e entrega: IAM, KMS, WAF, CloudWatch, X-Ray, CloudTrail, portão de qualidade no CodePipeline.\nPremissas: todo LLM sai pela IARA; nada vai direto a Anthropic, OpenAI ou Google; ECS Fargate em vez de EKS (sem cluster para operar); modo sombra no MVP.\n\nSelos azuis 1–19: fluxo do chamado · I1–I3 (laranja): chamadas à IARA · A–G (vermelho): decisões a confirmar.\nÍcone de brilho: chamada à IARA · borda tracejada: Fase 2 da régua ou a integrar · linhas: azul-petróleo lote por hora, magenta alvo, laranja IARA, roxo devolução, verde feedback.",
+      "sub": "① Entrada: OT e orçamento .xlsx nos dados democratizados do Data Mesh; fotos e documentos nas APIs da Salesforce (IDs da OT → base64 por ID); no alvo, callout no envio.\n② Extração a cada hora: Step Functions consulta o Athena e roda um Map por OT nas APIs, gravando tudo no S3 tickets/<id>/; no alvo, API Gateway + Lambda de contrato. ③ Fila: SQS com DLQ; hash de cada foto calculado na chegada.\n④ Worker: o pipeline do código, sem mudança (7 etapas: checklist, escopo, orçamento, fotos, documentos, score, parecer), em ECS Fargate.\n⑤ Saída: outbox S3 (lote) ou writeback na REST API (alvo). ⑥ Salesforce: campos do parecer no chamado; a pessoa analista decide.\n⑦ Painel e dados: o painel (ECS atrás de ALB interno, com SSO) só recebe as análises e o feedback; Aurora PostgreSQL Serverless v2 no lugar do SQLite.\n⑧ Segurança: IAM, KMS, WAF, CloudWatch, X-Ray, CloudTrail. ⑨ Feedbacks curados pelo Krippendorff's Alpha viram a Validated Match Memory (RA-ICL). ⑩ Toda mudança passa pelo Golden Dataset.\nPremissas: todo LLM sai pela IARA; nada vai direto a Anthropic, OpenAI ou Google; ECS Fargate em vez de EKS (sem cluster para operar); modo sombra no MVP.\n\nSelos azuis 1–18: fluxo · I1–I3 (laranja): IARA · H1–H5 (verde-azulado): feedback humano curado · V1–V4 (roxo): validação de mudanças · A–G: decisões a confirmar.\nÍcone de brilho: chamada à IARA · borda tracejada: Fase 2 da régua ou a integrar · linhas: azul-petróleo lote por hora, magenta alvo, laranja IARA, roxo devolução, verde feedback.",
       "kind": "note",
       "style": {
         "fontSize": 13
@@ -2058,7 +2409,7 @@
     {
       "id": "e42",
       "from": "llms",
-      "to": "prov",
+      "to": "retr",
       "label": "",
       "style": {},
       "fromSide": "bottom",
@@ -2066,6 +2417,24 @@
     },
     {
       "id": "e43",
+      "from": "retr",
+      "to": "ctxe",
+      "label": "",
+      "style": {},
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "e44",
+      "from": "ctxe",
+      "to": "prov",
+      "label": "",
+      "style": {},
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "e45",
       "from": "prov",
       "to": "adapt",
       "label": "",
@@ -2074,7 +2443,164 @@
       "toSide": "left"
     },
     {
-      "id": "e44",
+      "id": "e46",
+      "from": "retr",
+      "to": "vmm",
+      "label": "",
+      "style": {
+        "color": "#0d9488",
+        "arrow": "both"
+      },
+      "fromSide": "bottom",
+      "toSide": "top",
+      "wp": [
+        {
+          "x": 1100,
+          "y": 800
+        },
+        {
+          "x": 1970,
+          "y": 800
+        }
+      ]
+    },
+    {
+      "id": "e47",
+      "from": "fb_src",
+      "to": "alpha",
+      "label": "semana",
+      "style": {
+        "color": "#0d9488"
+      }
+    },
+    {
+      "id": "e48",
+      "from": "alpha",
+      "to": "consensus",
+      "label": "consenso",
+      "style": {
+        "color": "#0d9488"
+      }
+    },
+    {
+      "id": "e49",
+      "from": "consensus",
+      "to": "leak",
+      "label": "",
+      "style": {
+        "color": "#0d9488"
+      }
+    },
+    {
+      "id": "e50",
+      "from": "leak",
+      "to": "embed",
+      "label": "",
+      "style": {
+        "color": "#0d9488"
+      }
+    },
+    {
+      "id": "e51",
+      "from": "embed",
+      "to": "vmm",
+      "label": "indexa",
+      "style": {
+        "color": "#0d9488"
+      }
+    },
+    {
+      "id": "e52",
+      "from": "proposta",
+      "to": "cfgv",
+      "label": "nova versão",
+      "style": {
+        "color": "#7c3aed"
+      }
+    },
+    {
+      "id": "e53",
+      "from": "cfgv",
+      "to": "avalo",
+      "label": "candidata",
+      "style": {
+        "color": "#7c3aed"
+      }
+    },
+    {
+      "id": "e54",
+      "from": "golden",
+      "to": "avalo",
+      "label": "casos",
+      "style": {
+        "color": "#7c3aed"
+      },
+      "fromSide": "top",
+      "toSide": "bottom"
+    },
+    {
+      "id": "e55",
+      "from": "avalo",
+      "to": "comp",
+      "label": "",
+      "style": {
+        "color": "#7c3aed"
+      }
+    },
+    {
+      "id": "e56",
+      "from": "comp",
+      "to": "portao",
+      "label": "",
+      "style": {
+        "color": "#7c3aed"
+      }
+    },
+    {
+      "id": "e57",
+      "from": "portao",
+      "to": "pub",
+      "label": "aprovada",
+      "style": {
+        "color": "#16a34a",
+        "width": 2
+      }
+    },
+    {
+      "id": "e58",
+      "from": "portao",
+      "to": "proposta",
+      "label": "reprovada: ajusta e testa de novo",
+      "style": {
+        "color": "#DD344C",
+        "dash": "dashed"
+      },
+      "fromSide": "bottom",
+      "toSide": "bottom",
+      "mid": 1730
+    },
+    {
+      "id": "e59",
+      "from": "cenarios",
+      "to": "golden",
+      "label": "",
+      "style": {
+        "color": "#7c3aed"
+      }
+    },
+    {
+      "id": "e60",
+      "from": "rescore",
+      "to": "golden",
+      "label": "",
+      "style": {
+        "color": "#7c3aed"
+      },
+      "fromSide": "left",
+      "toSide": "right"
+    },
+    {
+      "id": "e61",
       "from": "adapt",
       "to": "tgw",
       "label": "HTTPS privado",
@@ -2086,7 +2612,7 @@
       "toSide": "left"
     },
     {
-      "id": "e45",
+      "id": "e62",
       "from": "tgw",
       "to": "iara_gw",
       "label": "",
@@ -2098,7 +2624,7 @@
       "toSide": "left"
     },
     {
-      "id": "e46",
+      "id": "e63",
       "from": "iara_gw",
       "to": "iara_mod",
       "label": "",
@@ -2107,7 +2633,7 @@
       }
     },
     {
-      "id": "e47",
+      "id": "e64",
       "from": "iara_gw",
       "to": "iara_batch",
       "label": "futuro",
@@ -2119,7 +2645,7 @@
       "toSide": "left"
     },
     {
-      "id": "e48",
+      "id": "e65",
       "from": "reuso",
       "to": "aurora",
       "label": "hashes do histórico",
@@ -2128,11 +2654,15 @@
         "dash": "dashed",
         "badge": "E"
       },
-      "fromSide": "bottom",
+      "fromSide": "left",
       "toSide": "right",
       "wp": [
         {
-          "x": 1970,
+          "x": 1845,
+          "y": 585
+        },
+        {
+          "x": 1845,
           "y": 950
         }
       ],
@@ -2140,7 +2670,7 @@
       "stepColor": "#DD344C"
     },
     {
-      "id": "e49",
+      "id": "e66",
       "from": "parecer",
       "to": "aurora",
       "label": "grava",
@@ -2165,7 +2695,7 @@
       ]
     },
     {
-      "id": "e50",
+      "id": "e67",
       "from": "analistas",
       "to": "cognito",
       "label": "login",
@@ -2174,7 +2704,7 @@
       }
     },
     {
-      "id": "e51",
+      "id": "e68",
       "from": "cognito",
       "to": "alb",
       "label": "",
@@ -2183,14 +2713,14 @@
       }
     },
     {
-      "id": "e52",
+      "id": "e69",
       "from": "alb",
       "to": "panel",
       "label": "",
       "style": {}
     },
     {
-      "id": "e53",
+      "id": "e70",
       "from": "panel",
       "to": "aurora",
       "label": "feedback",
@@ -2199,7 +2729,7 @@
       }
     },
     {
-      "id": "e54",
+      "id": "e71",
       "from": "aurora",
       "to": "bi",
       "label": "",
@@ -2210,7 +2740,7 @@
       "toSide": "top"
     },
     {
-      "id": "e55",
+      "id": "e72",
       "from": "parecer",
       "to": "outbox",
       "label": "",
@@ -2221,7 +2751,7 @@
       "toSide": "left"
     },
     {
-      "id": "e56",
+      "id": "e73",
       "from": "parecer",
       "to": "runs",
       "label": "",
@@ -2232,7 +2762,7 @@
       "toSide": "left"
     },
     {
-      "id": "e57",
+      "id": "e74",
       "from": "parecer",
       "to": "wb",
       "label": "",
@@ -2243,7 +2773,7 @@
       "toSide": "left"
     },
     {
-      "id": "e58",
+      "id": "e75",
       "from": "wb",
       "to": "sec",
       "label": "",
@@ -2253,7 +2783,7 @@
       }
     },
     {
-      "id": "e59",
+      "id": "e76",
       "from": "outbox",
       "to": "imp",
       "label": "lote",
@@ -2262,7 +2792,7 @@
       }
     },
     {
-      "id": "e60",
+      "id": "e77",
       "from": "wb",
       "to": "campos",
       "label": "API",
@@ -2271,7 +2801,7 @@
       }
     },
     {
-      "id": "e61",
+      "id": "e78",
       "from": "imp",
       "to": "campos",
       "label": "",
@@ -2282,7 +2812,7 @@
       "toSide": "top"
     },
     {
-      "id": "e62",
+      "id": "e79",
       "from": "campos",
       "to": "decide",
       "label": "",
@@ -2310,11 +2840,21 @@
       "b:16",
       "b:17",
       "b:18",
-      "b:19",
       "x:s_iara",
       "b:I1",
       "b:I2",
       "b:I3",
+      "x:s_hitl",
+      "b:H1",
+      "b:H2",
+      "b:H3",
+      "b:H4",
+      "b:H5",
+      "x:s_val",
+      "b:V1",
+      "b:V2",
+      "b:V3",
+      "b:V4",
       "x:s_att",
       "b:A",
       "b:B",
@@ -2337,6 +2877,18 @@
         "color": "#EC7000"
       },
       {
+        "id": "s_hitl",
+        "kind": "section",
+        "title": "Feedback humano curado",
+        "color": "#0d9488"
+      },
+      {
+        "id": "s_val",
+        "kind": "section",
+        "title": "Validação de mudanças",
+        "color": "#7c3aed"
+      },
+      {
         "id": "s_att",
         "kind": "section",
         "title": "Decisões a confirmar",
@@ -2345,5 +2897,5 @@
     ]
   },
   "pageTitle": "Página 1",
-  "savedAt": "2026-11-14T13:23:08.000Z"
+  "savedAt": "2026-11-15T10:36:33.000Z"
 }

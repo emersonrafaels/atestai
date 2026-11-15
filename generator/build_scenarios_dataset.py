@@ -24,7 +24,12 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from build_itau_dataset import _rmtree  # noqa: E402
-from build_validation_dataset import CFG, MODELS, ROOT, ValidationGenerator  # noqa: E402
+from build_validation_dataset import (
+    CFG,
+    MODELS,
+    ROOT,
+    ValidationGenerator,
+)  # noqa: E402
 
 from atest.repository import list_tickets, load_ground_truth, load_ticket  # noqa: E402
 from atest.scenarios import GROUPS, TAGS, tags_for  # noqa: E402
@@ -35,11 +40,41 @@ DOC = ROOT.parent / "docs" / "cenarios.md"
 # (id, título, o que o chamado testa, modelo de serviço, defeitos). A ordem importa: o chamado limpo de um modelo vem
 # antes do cenário que reaproveita foto dele.
 SCENARIOS: list[tuple[str, str, str, str, list[str]]] = [
-    ("clean_building", "Chamado limpo (predial)", "Pintura sem nenhum problema: deve ser aprovado.", "painting", []),
-    ("clean_security", "Chamado limpo (segurança)", "Câmera desfocada, serviço comprovado: deve ser aprovado.", "camera", []),
-    ("clean_quote_stage", "Aprovação de orçamento limpa", "Orçamento antes da execução, sem problemas.", "sink", []),
-    ("scope_vague", "Escopo vago", 'O texto não diz o que fazer nem onde ("Verificar ... Urgente.").', "hvac", ["vague"]),
-    ("scope_inconsistent", "Escopo incoerente", "O sintoma informado não combina com a categoria.", "outlets", ["inconsistent"]),
+    (
+        "clean_building",
+        "Chamado limpo (predial)",
+        "Pintura sem nenhum problema: deve ser aprovado.",
+        "painting",
+        [],
+    ),
+    (
+        "clean_security",
+        "Chamado limpo (segurança)",
+        "Câmera desfocada, serviço comprovado: deve ser aprovado.",
+        "camera",
+        [],
+    ),
+    (
+        "clean_quote_stage",
+        "Aprovação de orçamento limpa",
+        "Orçamento antes da execução, sem problemas.",
+        "sink",
+        [],
+    ),
+    (
+        "scope_vague",
+        "Escopo vago",
+        'O texto não diz o que fazer nem onde ("Verificar ... Urgente.").',
+        "hvac",
+        ["vague"],
+    ),
+    (
+        "scope_inconsistent",
+        "Escopo incoerente",
+        "O sintoma informado não combina com a categoria.",
+        "outlets",
+        ["inconsistent"],
+    ),
     (
         "scope_bad",
         "Escopo mal preenchido",
@@ -47,12 +82,48 @@ SCENARIOS: list[tuple[str, str, str, str, list[str]]] = [
         "painting",
         ["vague", "inconsistent"],
     ),
-    ("quote_out_of_scope", "Item fora do escopo", "Orçamento cobra serviço que não foi pedido.", "infiltration", ["out_of_scope"]),
-    ("quote_replacement", "Troca sem justificativa", "Pedido de limpeza e ajuste, orçamento cobra câmera nova.", "camera", ["replacement"]),
-    ("quote_price", "Preço acima da referência", "Um item acima da LPU + tolerância.", "door", ["price"]),
-    ("quote_quantity", "Quantidade acima do esperado", "Mais lâmpadas do que o escopo pede.", "lamps", ["quantity"]),
-    ("quote_duplicate", "Item duplicado", "O mesmo item cobrado em duas linhas.", "sensor", ["duplicate"]),
-    ("quote_spreadsheet", "Planilha divergente", "Valor ou sintoma da planilha diferente do chamado.", "preventive", ["spreadsheet"]),
+    (
+        "quote_out_of_scope",
+        "Item fora do escopo",
+        "Orçamento cobra serviço que não foi pedido.",
+        "infiltration",
+        ["out_of_scope"],
+    ),
+    (
+        "quote_replacement",
+        "Troca sem justificativa",
+        "Pedido de limpeza e ajuste, orçamento cobra câmera nova.",
+        "camera",
+        ["replacement"],
+    ),
+    (
+        "quote_price",
+        "Preço acima da referência",
+        "Um item acima da LPU + tolerância.",
+        "door",
+        ["price"],
+    ),
+    (
+        "quote_quantity",
+        "Quantidade acima do esperado",
+        "Mais lâmpadas do que o escopo pede.",
+        "lamps",
+        ["quantity"],
+    ),
+    (
+        "quote_duplicate",
+        "Item duplicado",
+        "O mesmo item cobrado em duas linhas.",
+        "sensor",
+        ["duplicate"],
+    ),
+    (
+        "quote_spreadsheet",
+        "Planilha divergente",
+        "Valor ou sintoma da planilha diferente do chamado.",
+        "preventive",
+        ["spreadsheet"],
+    ),
     (
         "quote_multiple",
         "Orçamento com vários erros",
@@ -67,8 +138,20 @@ SCENARIOS: list[tuple[str, str, str, str, list[str]]] = [
         "sink",
         ["out_of_scope", "price"],
     ),
-    ("photo_mismatch", "Foto de outro ambiente", "Uma foto mostra outro cômodo ou a fachada.", "painting", ["does_not_match"]),
-    ("photo_no_after", "Sem foto do depois", "Nenhuma foto prova o serviço concluído.", "camera", ["no_after"]),
+    (
+        "photo_mismatch",
+        "Foto de outro ambiente",
+        "Uma foto mostra outro cômodo ou a fachada.",
+        "painting",
+        ["does_not_match"],
+    ),
+    (
+        "photo_no_after",
+        "Sem foto do depois",
+        "Nenhuma foto prova o serviço concluído.",
+        "camera",
+        ["no_after"],
+    ),
     (
         "photo_no_after_mismatch",
         "Foto do depois de outro ambiente",
@@ -76,11 +159,41 @@ SCENARIOS: list[tuple[str, str, str, str, list[str]]] = [
         "camera",
         ["no_after", "does_not_match"],
     ),
-    ("photo_no_before", "Sem foto do antes", "Não há registro do estado anterior (Fase 2).", "hvac", ["no_before"]),
-    ("photo_unreadable", "Foto ilegível", "Foto escura e tremida (Fase 2).", "outlets", ["unreadable"]),
-    ("photo_reused", "Foto reaproveitada", "Foto de um chamado anterior: trava de integridade (Fase 2).", "painting", ["reused"]),
-    ("photo_dated_before", "Foto com data anterior", "EXIF anterior à abertura do chamado.", "door", ["date_before"]),
-    ("checklist_incomplete", "Checklist incompleto", "Falta documento obrigatório: volta antes da análise.", "sensor", ["checklist"]),
+    (
+        "photo_no_before",
+        "Sem foto do antes",
+        "Não há registro do estado anterior (Fase 2).",
+        "hvac",
+        ["no_before"],
+    ),
+    (
+        "photo_unreadable",
+        "Foto ilegível",
+        "Foto escura e tremida (Fase 2).",
+        "outlets",
+        ["unreadable"],
+    ),
+    (
+        "photo_reused",
+        "Foto reaproveitada",
+        "Foto de um chamado anterior: trava de integridade (Fase 2).",
+        "painting",
+        ["reused"],
+    ),
+    (
+        "photo_dated_before",
+        "Foto com data anterior",
+        "EXIF anterior à abertura do chamado.",
+        "door",
+        ["date_before"],
+    ),
+    (
+        "checklist_incomplete",
+        "Checklist incompleto",
+        "Falta documento obrigatório: volta antes da análise.",
+        "sensor",
+        ["checklist"],
+    ),
     (
         "everything",
         "Problemas em todas as validações",
@@ -98,7 +211,12 @@ REC_PT = {
     "detailed_review": "Análise detalhada",
     "checklist_returned": "Devolvido no checklist",
 }
-DATASET_PT = {"validation": "Validação", "itau": "Itaú", "scenarios": "Cenários", "uploaded": "Enviados"}
+DATASET_PT = {
+    "validation": "Validação",
+    "itau": "Itaú",
+    "scenarios": "Cenários",
+    "uploaded": "Enviados",
+}
 
 
 def clean() -> None:
@@ -111,13 +229,24 @@ def clean() -> None:
 def build() -> list[dict]:
     clean()
     templates = {m.name: m for m in MODELS}
-    g = ValidationGenerator(1, seed=3030, prefix=PREFIX, dataset=DATASET, day0=date(2026, 10, 20))
+    g = ValidationGenerator(
+        1, seed=3030, prefix=PREFIX, dataset=DATASET, day0=date(2026, 10, 20)
+    )
     g.index_existing()
     out = []
     for i, (sid, title, description, template, defects) in enumerate(SCENARIOS, 1):
         tid = f"{PREFIX}{i:04d}"
         scenario = {"id": sid, "title": title, "description": description}
-        out.append(g.one_ticket(tid, templates[template], 1, g.day0 + timedelta(days=i), defects=defects, scenario=scenario))
+        out.append(
+            g.one_ticket(
+                tid,
+                templates[template],
+                1,
+                g.day0 + timedelta(days=i),
+                defects=defects,
+                scenario=scenario,
+            )
+        )
         print(f"  {tid}  {title:40} → {out[-1]['recommendation']}")
     return out
 
@@ -157,11 +286,23 @@ def write_doc() -> Path:
         )
     lines += ["", "## Por tipo de cenário, em todos os conjuntos", ""]
     for group, group_label in GROUPS.items():
-        lines += [f"### {group_label}", "", "| Cenário | Qtd. | Chamados |", "|---|---|---|"]
+        lines += [
+            f"### {group_label}",
+            "",
+            "| Cenário | Qtd. | Chamados |",
+            "|---|---|---|",
+        ]
         for t in (t for t in TAGS if t.group == group):
             found = by_tag.get(t.id, {})
             n = sum(len(v) for v in found.values())
-            ids = "; ".join(f"{DATASET_PT.get(ds, ds)}: " + ", ".join(f"`{x}`" for x in sorted(v)) for ds, v in sorted(found.items())) or "—"
+            ids = (
+                "; ".join(
+                    f"{DATASET_PT.get(ds, ds)}: "
+                    + ", ".join(f"`{x}`" for x in sorted(v))
+                    for ds, v in sorted(found.items())
+                )
+                or "—"
+            )
             lines.append(f"| **{t.label}**<br>{t.description} | {n} | {ids} |")
         lines.append("")
     DOC.write_text("\n".join(lines), encoding="utf-8")

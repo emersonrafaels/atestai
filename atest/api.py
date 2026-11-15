@@ -28,10 +28,31 @@ from pydantic import BaseModel, Field, ValidationError
 
 from . import providers
 from .admin import SECTIONS, AdminError, AdminStore, catalog_usage
-from .attachments import compute_hashes, detail_level, distance, exif_date, hashes_with_crops
+from .attachments import (
+    compute_hashes,
+    detail_level,
+    distance,
+    exif_date,
+    hashes_with_crops,
+)
 from .batch import BatchRunner, ComponentFactory, new_run_id
-from .config import KEY_ENV_VAR, ROOT, BatchMode, Mode, Settings, has_credentials, missing_keys, used_providers
-from .database import Database, Feedback, FeedbackInput, FindingFeedback, FindingFeedbackInput
+from .config import (
+    KEY_ENV_VAR,
+    ROOT,
+    BatchMode,
+    Mode,
+    Settings,
+    has_credentials,
+    missing_keys,
+    used_providers,
+)
+from .database import (
+    Database,
+    Feedback,
+    FeedbackInput,
+    FindingFeedback,
+    FindingFeedbackInput,
+)
 from .domain import (
     Assessment,
     Attachment,
@@ -46,7 +67,15 @@ from .domain import (
 from .evaluation import Evaluation, GroundTruthEvaluator, TicketComparison
 from .formatting import error_message, pt_validation_error
 from .observability import configure_logging, event
-from .repository import QuoteError, References, list_tickets, load_ground_truth, load_ticket, read_quote, read_ticket_quote
+from .repository import (
+    QuoteError,
+    References,
+    list_tickets,
+    load_ground_truth,
+    load_ticket,
+    read_quote,
+    read_ticket_quote,
+)
 from .scenarios import catalog as scenario_catalog
 from .scenarios import tags_for
 from .spreadsheet import spreadsheet_template
@@ -54,7 +83,13 @@ from .validation import DatasetCatalog
 
 log = logging.getLogger(__name__)
 DIST = ROOT / "panel" / "dist"
-ATTACHMENT_TYPES = {".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png", ".webp": "image/webp", ".pdf": "application/pdf"}
+ATTACHMENT_TYPES = {
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".png": "image/png",
+    ".webp": "image/webp",
+    ".pdf": "application/pdf",
+}
 
 
 # ============================================================================ contratos
@@ -103,8 +138,12 @@ class TicketSummary(BaseModel):
     n_photos: int
     expected: Expected | None
     last: LastAssessment | None
-    tags: list[str] = []  # cenários de teste que o gabarito descreve (atest/scenarios.py)
-    scenario: dict[str, str] | None = None  # catálogo de cenários (0300…): id, título e o que testa
+    tags: list[str] = (
+        []
+    )  # cenários de teste que o gabarito descreve (atest/scenarios.py)
+    scenario: dict[str, str] | None = (
+        None  # catálogo de cenários (0300…): id, título e o que testa
+    )
 
 
 class AttachmentInfo(BaseModel):
@@ -131,7 +170,9 @@ class PhotoFacts(BaseModel):
 
     file: str
     url: str
-    taken_at: datetime | None = Field(None, description="data e hora do EXIF (DateTimeOriginal)")
+    taken_at: datetime | None = Field(
+        None, description="data e hora do EXIF (DateTimeOriginal)"
+    )
     uploaded_on: date | None = None
     size_bytes: int | None = None
     width: int | None = None
@@ -170,12 +211,19 @@ class ReuseComparison(BaseModel):
     current_photo: PhotoFacts
     origin: TicketFacts
     origin_photo: PhotoFacts
-    distance: int | None = Field(None, description="phash + dhash (0 = idênticas), comparando também com recortes da original")
+    distance: int | None = Field(
+        None,
+        description="phash + dhash (0 = idênticas), comparando também com recortes da original",
+    )
     limit: int
-    basis: Literal["exif", "mixed", "dates"] = Field(description="exif: data/hora das duas fotos; mixed: só uma tem EXIF; dates: só datas de envio")
+    basis: Literal["exif", "mixed", "dates"] = Field(
+        description="exif: data/hora das duas fotos; mixed: só uma tem EXIF; dates: só datas de envio"
+    )
     origin_moment: datetime
     current_moment: datetime
-    chronology_ok: bool = Field(description="a origem é anterior ou igual ao chamado atual")
+    chronology_ok: bool = Field(
+        description="a origem é anterior ou igual ao chamado atual"
+    )
     gap_hours: float
     same_branch: bool
     same_supplier: bool
@@ -184,9 +232,15 @@ class ReuseComparison(BaseModel):
 class RunRequest(BaseModel):
     """Pedido de execução vindo do painel (chamados escolhidos ou conjunto + amostra)."""
 
-    tickets: list[str] = Field(default_factory=list, description="ids; ou use conjunto (+ amostra)")
-    dataset: str | None = Field(None, description="scenarios | validation | itau | casos | uploaded | all")
-    sample: int | None = Field(None, ge=1, description="amostra aleatória (reprodutível) do conjunto")
+    tickets: list[str] = Field(
+        default_factory=list, description="ids; ou use conjunto (+ amostra)"
+    )
+    dataset: str | None = Field(
+        None, description="scenarios | validation | itau | casos | uploaded | all"
+    )
+    sample: int | None = Field(
+        None, ge=1, description="amostra aleatória (reprodutível) do conjunto"
+    )
     simulated_noise: float = Field(0.0, ge=0, le=0.6, description="só no modo simulado")
     label: str = ""
     mode: Mode = Mode.SIMULATED
@@ -194,8 +248,14 @@ class RunRequest(BaseModel):
     batch_mode: BatchMode = BatchMode.SYNC
     main_model: str | None = None
     fast_model: str | None = None
-    provider: str | None = Field(None, description="provedor escolhido no painel (um de panel.providers); sem ele, vale a configuração")
-    refresh: bool = Field(False, description="executa o agente de novo, sem reaproveitar respostas do modelo salvas no cache em disco")
+    provider: str | None = Field(
+        None,
+        description="provedor escolhido no painel (um de panel.providers); sem ele, vale a configuração",
+    )
+    refresh: bool = Field(
+        False,
+        description="executa o agente de novo, sem reaproveitar respostas do modelo salvas no cache em disco",
+    )
 
 
 class TicketState(BaseModel):
@@ -243,8 +303,14 @@ class Option(BaseModel):
     value: str
     label: str
     enabled: bool = True
-    workstreams: list[str] = Field(default_factory=list, description="categoria: esteiras em que vale (vazio = todas)")
-    categories: list[str] = Field(default_factory=list, description="sintoma: categorias em que vale (vazio = todas)")
+    workstreams: list[str] = Field(
+        default_factory=list,
+        description="categoria: esteiras em que vale (vazio = todas)",
+    )
+    categories: list[str] = Field(
+        default_factory=list,
+        description="sintoma: categorias em que vale (vazio = todas)",
+    )
 
 
 def catalog_options(catalog: Catalog, kind: str) -> list[Option]:
@@ -291,7 +357,10 @@ class ProviderChoice(BaseModel):
     main: str = Field(description='"provedor:modelo" principal')
     fast: str
     available: bool = Field(description="há credencial no ambiente")
-    credentials: list[str] = Field(default_factory=list, description="variáveis de ambiente que o provedor exige (só os nomes)")
+    credentials: list[str] = Field(
+        default_factory=list,
+        description="variáveis de ambiente que o provedor exige (só os nomes)",
+    )
 
 
 def provider_choices(cfg: Settings) -> list[ProviderChoice]:
@@ -303,14 +372,26 @@ def provider_choices(cfg: Settings) -> list[ProviderChoice]:
 
     def choice(name: str, label: str, main: str, fast: str) -> ProviderChoice:
         return ProviderChoice(
-            id=name, label=label or name, main=main, fast=fast, available=has_credentials(name), credentials=list(KEY_ENV_VAR.get(name, ()))
+            id=name,
+            label=label or name,
+            main=main,
+            fast=fast,
+            available=has_credentials(name),
+            credentials=list(KEY_ENV_VAR.get(name, ())),
         )
 
     main, fast = full(cfg.models.main), full(cfg.models.fast)
     current = providers.split_model(main, default)[0]
     p = cfg.panel.providers.get(current)
     fast_same = providers.split_model(fast, default)[0] == current
-    out = {current: choice(current, p.label if p else "", main, fast if fast_same else (p.fast if p else main))}
+    out = {
+        current: choice(
+            current,
+            p.label if p else "",
+            main,
+            fast if fast_same else (p.fast if p else main),
+        )
+    }
     for name, p in cfg.panel.providers.items():
         if p.enabled and name not in out:
             out[name] = choice(name, p.label, p.main, p.fast)
@@ -320,13 +401,21 @@ def provider_choices(cfg: Settings) -> list[ProviderChoice]:
 class ModelOption(BaseModel):
     """Modelo conhecido pela configuração: da tabela de preços ou já usado em models.*."""
 
-    id: str = Field(description='"provedor:modelo", como vai para models.main / models.fast')
+    id: str = Field(
+        description='"provedor:modelo", como vai para models.main / models.fast'
+    )
     provider: str
     name: str
-    input_price: float | None = Field(None, description="USD por milhão de tokens de entrada")
+    input_price: float | None = Field(
+        None, description="USD por milhão de tokens de entrada"
+    )
     output_price: float | None = None
-    detail: str = Field("", description="complemento mostrado no painel, ex.: o backend da IARA")
-    text_only: bool = Field(False, description="não lê imagens: falha nas tarefas com fotos e anexos")
+    detail: str = Field(
+        "", description="complemento mostrado no painel, ex.: o backend da IARA"
+    )
+    text_only: bool = Field(
+        False, description="não lê imagens: falha nas tarefas com fotos e anexos"
+    )
 
 
 class AppSettings(BaseModel):
@@ -349,11 +438,21 @@ class AppSettings(BaseModel):
     missing_keys: list[str]
     signature: str
     validation: dict
-    rubric: dict = {}  # pesos, descontos por severidade, faixas e confiança: o painel explica o score com eles
-    models: list[ModelOption] = []  # sugestões para os campos de modelo (a pessoa pode digitar outro)
-    keyed_providers: list[str] = []  # provedores com chave de API no ambiente (só os nomes, nunca a chave)
-    provider_choices: list[ProviderChoice] = []  # seletor de provedor do painel (o primeiro é o da configuração)
-    panel_api: int = PANEL_API  # revisão do contrato com o painel: front-end mais novo que o servidor avisa para reiniciar
+    rubric: dict = (
+        {}
+    )  # pesos, descontos por severidade, faixas e confiança: o painel explica o score com eles
+    models: list[ModelOption] = (
+        []
+    )  # sugestões para os campos de modelo (a pessoa pode digitar outro)
+    keyed_providers: list[str] = (
+        []
+    )  # provedores com chave de API no ambiente (só os nomes, nunca a chave)
+    provider_choices: list[ProviderChoice] = (
+        []
+    )  # seletor de provedor do painel (o primeiro é o da configuração)
+    panel_api: int = (
+        PANEL_API  # revisão do contrato com o painel: front-end mais novo que o servidor avisa para reiniciar
+    )
 
 
 class Dataset(BaseModel):
@@ -388,7 +487,9 @@ class RunManager:
         """Configuração da execução: a base com modo, fase, envio, provedor e modelos escolhidos no painel."""
         base = self.cfg_base
         overrides: dict = {
-            "validation.simulated_noise": request.simulated_noise if request.mode == Mode.SIMULATED else 0.0,
+            "validation.simulated_noise": (
+                request.simulated_noise if request.mode == Mode.SIMULATED else 0.0
+            ),
             "execution.mode": request.mode,
             "pipeline.phase": request.phase,
             "batch.kind": request.batch_mode,
@@ -397,22 +498,34 @@ class RunManager:
             "llm.refresh_cache": request.refresh,
         }
         if request.provider:
-            choice = next((c for c in provider_choices(base) if c.id == request.provider), None)
+            choice = next(
+                (c for c in provider_choices(base) if c.id == request.provider), None
+            )
             if choice is None:
-                raise HTTPException(422, f"Provedor '{request.provider}' não está em panel.providers (config/settings.toml).")
+                raise HTTPException(
+                    422,
+                    f"Provedor '{request.provider}' não está em panel.providers (config/settings.toml).",
+                )
             overrides["models.main"] = request.main_model or choice.main
             overrides["models.fast"] = request.fast_model or choice.fast
 
             # tarefas e contingência configuradas para outro provedor não valem quando a pessoa escolhe um provedor
             def same(m: str) -> bool:
-                return providers.split_model(m, base.llm.default_provider)[0] == choice.id
+                return (
+                    providers.split_model(m, base.llm.default_provider)[0] == choice.id
+                )
 
-            overrides["models.tasks"] = {k: m for k, m in base.models.tasks.items() if same(m)}
-            overrides["models.fallback"] = {k: m for k, m in base.models.fallback.items() if same(m)}
+            overrides["models.tasks"] = {
+                k: m for k, m in base.models.tasks.items() if same(m)
+            }
+            overrides["models.fallback"] = {
+                k: m for k, m in base.models.fallback.items() if same(m)
+            }
         cfg = base.with_overrides(**overrides)
         if cfg.execution.mode == Mode.API and (missing := missing_keys(cfg)):
             raise HTTPException(
-                400, f"Modo API sem credencial para: {', '.join(missing)}. Preencha config/.secrets.toml ou as variáveis de ambiente."
+                400,
+                f"Modo API sem credencial para: {', '.join(missing)}. Preencha config/.secrets.toml ou as variáveis de ambiente.",
             )
         return cfg
 
@@ -446,18 +559,27 @@ class RunManager:
                     st.completed_stages.append(st.stage)
                 st.status, st.stage = "running", stage
 
-        def on_complete(tid: str, assessment: Assessment | None, error: str | None) -> None:
+        def on_complete(
+            tid: str, assessment: Assessment | None, error: str | None
+        ) -> None:
             with self.lock:
                 st = ex.tickets[tid]
                 if assessment:
                     st.status, st.assessment, st.stage = "done", assessment, Stage.DONE
-                    st.recommendation, st.score = assessment.recommendation.value, assessment.score
-                    st.comparison = GroundTruthEvaluator(cfg.ground_truth_dir).compare(assessment)
+                    st.recommendation, st.score = (
+                        assessment.recommendation.value,
+                        assessment.score,
+                    )
+                    st.comparison = GroundTruthEvaluator(cfg.ground_truth_dir).compare(
+                        assessment
+                    )
                 else:
                     st.status, st.error = "error", error
 
         try:
-            res = BatchRunner(cfg, ComponentFactory(cfg).orchestrator(), self.database).run(
+            res = BatchRunner(
+                cfg, ComponentFactory(cfg).orchestrator(), self.database
+            ).run(
                 ids,
                 run_id=ex.id,
                 on_progress=on_progress,
@@ -471,7 +593,11 @@ class RunManager:
                 ex.cost_usd = res.cost_usd
                 ex.cost_brl = round(res.cost_usd * cfg.costs.usd_brl_rate, 4)
                 ex.api_batches = res.api_batches
-                ex.output_folder = str(res.output_folder.relative_to(ROOT)) if res.output_folder else None
+                ex.output_folder = (
+                    str(res.output_folder.relative_to(ROOT))
+                    if res.output_folder
+                    else None
+                )
         except Exception as e:
             log.exception("execução %s falhou", ex.id)
             with self.lock:
@@ -488,7 +614,14 @@ class RunManager:
             if ex_id in self.runs:
                 ex = self.runs[ex_id]
                 if light:  # progresso sem os pareceres completos (lotes grandes)
-                    return ex.model_copy(update={"tickets": {k: v.model_copy(update={"assessment": None}) for k, v in ex.tickets.items()}})
+                    return ex.model_copy(
+                        update={
+                            "tickets": {
+                                k: v.model_copy(update={"assessment": None})
+                                for k, v in ex.tickets.items()
+                            }
+                        }
+                    )
                 return ex.model_copy(deep=True)
         return self._from_db(ex_id, light)
 
@@ -505,7 +638,9 @@ class RunManager:
                 assessment=None if light else p,
                 recommendation=p.recommendation.value,
                 score=p.score,
-                comparison=GroundTruthEvaluator(self.cfg_base.ground_truth_dir).compare(p),
+                comparison=GroundTruthEvaluator(self.cfg_base.ground_truth_dir).compare(
+                    p
+                ),
             )
         for tid, error in (row["errors"] or {}).items():
             states[tid] = TicketState(ticket_id=tid, status="error", error=error)
@@ -534,11 +669,26 @@ class RunManager:
 
 # ============================================================================ app
 def create_app(cfg: Settings) -> FastAPI:
-    """Cria a aplicação FastAPI do painel: API em /api e front-end compilado na raiz."""
+    """Cria a aplicação FastAPI do painel: API em /api e front-end compilado na raiz.
+
+    Variáveis principais:
+        database: banco do painel (execuções, pareceres, feedbacks, versões do portal).
+        admin: portal de administração (usuários, sessões e versões salvas da configuração).
+        base_cfg: configuração pura dos TOML, base para "Restaurar padrão".
+        manager: execuções disparadas pelo painel, com a configuração efetiva (TOML + versões do portal).
+
+    Args:
+        cfg: configuração pura dos TOML (sem `apply_saved_config`).
+
+    Returns:
+        A aplicação pronta para o uvicorn.
+    """
     configure_logging(cfg)
     database = Database(cfg.database_file)
     admin = AdminStore(database, cfg.admin)
-    base_cfg = cfg  # o que está nos TOML; a configuração efetiva fica em manager.cfg_base
+    base_cfg = (
+        cfg  # o que está nos TOML; a configuração efetiva fica em manager.cfg_base
+    )
     manager = RunManager(admin.apply(base_cfg), database)
     app = FastAPI(title="Atest.AI", version=cfg.version)
 
@@ -580,21 +730,36 @@ def create_app(cfg: Settings) -> FastAPI:
             maintenance_type=d.maintenance_type.value,
             n_photos=sum(a.is_image for a in ch.attachments),
             last=last,
-            expected=Expected(recommendation=g.recommendation.value, score=g.score, findings=g.findings, optional=g.optional, missing=g.missing)
-            if g
-            else None,
+            expected=(
+                Expected(
+                    recommendation=g.recommendation.value,
+                    score=g.score,
+                    findings=g.findings,
+                    optional=g.optional,
+                    missing=g.missing,
+                )
+                if g
+                else None
+            ),
             tags=tags_for(g, manager.cfg_base.rubric),
             scenario=g.scenario if g else None,
         )
 
     def attachment_info(tid: str, a: Attachment) -> AttachmentInfo:
         return AttachmentInfo(
-            index=a.index, name=a.name, content_type=a.content_type, is_image=a.is_image, url=f"/api/tickets/{tid}/attachments/{a.name}"
+            index=a.index,
+            name=a.name,
+            content_type=a.content_type,
+            is_image=a.is_image,
+            url=f"/api/tickets/{tid}/attachments/{a.name}",
         )
 
     def folder_of(tid: str) -> Path:
         folder = (cfg.tickets_dir / tid).resolve()
-        if not folder.is_relative_to(cfg.tickets_dir.resolve()) or not (folder / "ticket.json").exists():
+        if (
+            not folder.is_relative_to(cfg.tickets_dir.resolve())
+            or not (folder / "ticket.json").exists()
+        ):
             raise HTTPException(404, "chamado não encontrado")
         return folder
 
@@ -606,7 +771,16 @@ def create_app(cfg: Settings) -> FastAPI:
             return m if ":" in m else f"{default}:{m}"
 
         ids = [full(m) for m in cfg.costs.prices]
-        ids += [full(m) for m in [cfg.models.main, cfg.models.fast, *cfg.models.tasks.values(), *cfg.models.fallback.values()] if m]
+        ids += [
+            full(m)
+            for m in [
+                cfg.models.main,
+                cfg.models.fast,
+                *cfg.models.tasks.values(),
+                *cfg.models.fallback.values(),
+            ]
+            if m
+        ]
         ids += [m for c in provider_choices(cfg) for m in (c.main, c.fast)]
         # catálogo de um provedor ([llm.provider_options.<p>.models] = {grupo: [modelos]}, ex.: backends da IARA)
         detail: dict[str, str] = {}
@@ -634,7 +808,6 @@ def create_app(cfg: Settings) -> FastAPI:
             )
         return out
 
-
     # ------------------------------------------------------------------ portal de configuração (com login)
     @app.exception_handler(AdminError)
     def admin_error(_: Request, e: AdminError) -> JSONResponse:
@@ -659,6 +832,7 @@ def create_app(cfg: Settings) -> FastAPI:
 
         def used(kind: str, code: str) -> dict[str, int]:
             return usage[kind].get(code, {"tickets": 0, "ground_truth": 0, "rules": 0})
+
         sections = {}
         for sec in SECTIONS:
             latest = admin.latest(sec)
@@ -672,21 +846,49 @@ def create_app(cfg: Settings) -> FastAPI:
         return {
             "sections": sections,
             "catalog": {  # cadastro em uso, com onde cada código aparece (o editável fica em sections.catalog)
-                "categories": [{**e.model_dump(mode="json"), "tickets": used("categories", e.value)["tickets"], "usage": used("categories", e.value),
-                                "symptoms_seen": sorted(pairs.get(e.value, set()))} for e in eff.catalog.categories],
-                "symptoms": [{**e.model_dump(mode="json"), "tickets": used("symptoms", e.value)["tickets"], "usage": used("symptoms", e.value)}
-                             for e in eff.catalog.symptoms],
-                "locations": [{**e.model_dump(mode="json"), "tickets": used("locations", e.value)["tickets"], "usage": used("locations", e.value)}
-                              for e in eff.catalog.locations],
+                "categories": [
+                    {
+                        **e.model_dump(mode="json"),
+                        "tickets": used("categories", e.value)["tickets"],
+                        "usage": used("categories", e.value),
+                        "symptoms_seen": sorted(pairs.get(e.value, set())),
+                    }
+                    for e in eff.catalog.categories
+                ],
+                "symptoms": [
+                    {
+                        **e.model_dump(mode="json"),
+                        "tickets": used("symptoms", e.value)["tickets"],
+                        "usage": used("symptoms", e.value),
+                    }
+                    for e in eff.catalog.symptoms
+                ],
+                "locations": [
+                    {
+                        **e.model_dump(mode="json"),
+                        "tickets": used("locations", e.value)["tickets"],
+                        "usage": used("locations", e.value),
+                    }
+                    for e in eff.catalog.locations
+                ],
                 "usage": usage,
                 "tickets": total,
             },
-            "lpu": {ws: [i.model_dump() for i in items.values()] for ws, items in lpu.items()},
+            "lpu": {
+                ws: [i.model_dump() for i in items.values()]
+                for ws, items in lpu.items()
+            },
             "system": {
-                "rubric_version": eff.rubric.version, "prompts_version": cfg.prompts.version,
-                "signature": eff.signature(), "base_signature": base_cfg.signature(),
-                "main_model": cfg.models.main, "fast_model": cfg.models.fast, "phase": cfg.pipeline.phase,
-                "validation": cfg.validation.model_dump(), "environment": cfg.environment, "version": cfg.version,
+                "rubric_version": eff.rubric.version,
+                "prompts_version": cfg.prompts.version,
+                "signature": eff.signature(),
+                "base_signature": base_cfg.signature(),
+                "main_model": cfg.models.main,
+                "fast_model": cfg.models.fast,
+                "phase": cfg.pipeline.phase,
+                "validation": cfg.validation.model_dump(),
+                "environment": cfg.environment,
+                "version": cfg.version,
             },
         }
 
@@ -694,7 +896,11 @@ def create_app(cfg: Settings) -> FastAPI:
     def admin_login(body: LoginInput) -> dict:
         token, expires = admin.login(body.username, body.password)
         event("admin_login", user=body.username.strip().lower())
-        return {"token": token, "username": body.username.strip().lower(), "expires_at": expires.isoformat(timespec="seconds")}
+        return {
+            "token": token,
+            "username": body.username.strip().lower(),
+            "expires_at": expires.isoformat(timespec="seconds"),
+        }
 
     @app.post("/api/admin/logout", status_code=204)
     def admin_logout(authorization: Annotated[str | None, Header()] = None) -> Response:
@@ -713,11 +919,21 @@ def create_app(cfg: Settings) -> FastAPI:
 
     def apply_and_overview(vid: int, user: str, section: str) -> dict:
         manager.cfg_base = admin.apply(base_cfg)
-        event("admin_config_saved", user=user, section=section, version_id=vid, signature=manager.cfg_base.signature())
+        event(
+            "admin_config_saved",
+            user=user,
+            section=section,
+            version_id=vid,
+            signature=manager.cfg_base.signature(),
+        )
         return overview()
 
     @app.put("/api/admin/config/{section}")
-    def admin_save(section: SectionName, body: SaveSectionInput, authorization: Annotated[str | None, Header()] = None) -> dict:
+    def admin_save(
+        section: SectionName,
+        body: SaveSectionInput,
+        authorization: Annotated[str | None, Header()] = None,
+    ) -> dict:
         user = admin_user(authorization)
         if body.data is None:
             raise HTTPException(422, "Envie a seção completa em 'data'.")
@@ -725,13 +941,21 @@ def create_app(cfg: Settings) -> FastAPI:
         return apply_and_overview(vid, user, section)
 
     @app.post("/api/admin/config/{section}/reset")
-    def admin_reset(section: SectionName, body: SaveSectionInput, authorization: Annotated[str | None, Header()] = None) -> dict:
+    def admin_reset(
+        section: SectionName,
+        body: SaveSectionInput,
+        authorization: Annotated[str | None, Header()] = None,
+    ) -> dict:
         user = admin_user(authorization)
         vid = admin.save(section, None, base_cfg, user, body.comment)
         return apply_and_overview(vid, user, section)
 
     @app.post("/api/admin/history/{vid}/restore")
-    def admin_restore(vid: int, body: SaveSectionInput, authorization: Annotated[str | None, Header()] = None) -> dict:
+    def admin_restore(
+        vid: int,
+        body: SaveSectionInput,
+        authorization: Annotated[str | None, Header()] = None,
+    ) -> dict:
         user = admin_user(authorization)
         old = admin.version(vid)
         comment = body.comment or f"Restaurou a versão #{vid}"
@@ -739,43 +963,64 @@ def create_app(cfg: Settings) -> FastAPI:
         return apply_and_overview(new, user, old["section"])
 
     @app.get("/api/admin/history")
-    def admin_history(authorization: Annotated[str | None, Header()] = None) -> list[dict]:
+    def admin_history(
+        authorization: Annotated[str | None, Header()] = None,
+    ) -> list[dict]:
         admin_user(authorization)
         return admin.history()
 
     @app.get("/api/admin/assessments")
-    def admin_assessments(authorization: Annotated[str | None, Header()] = None) -> list[dict]:
+    def admin_assessments(
+        authorization: Annotated[str | None, Header()] = None,
+    ) -> list[dict]:
         admin_user(authorization)
         return database.list_assessments()
 
     @app.post("/api/admin/assessments/delete")
-    def admin_delete_assessments(body: DeleteAssessmentsInput, authorization: Annotated[str | None, Header()] = None) -> dict:
+    def admin_delete_assessments(
+        body: DeleteAssessmentsInput,
+        authorization: Annotated[str | None, Header()] = None,
+    ) -> dict:
         """Limpa o histórico de análises: pareceres, feedbacks e chamadas ao modelo; execuções vazias saem junto."""
         user = admin_user(authorization)
         if not body.all and not body.ids:
             raise HTTPException(422, "Escolha ao menos uma análise para apagar.")
         result = database.delete_assessments(None if body.all else body.ids)
-        with manager.lock:  # execuções concluídas guardadas em memória passam a ser lidas do banco (já sem os pareceres)
+        with (
+            manager.lock
+        ):  # execuções concluídas guardadas em memória passam a ser lidas do banco (já sem os pareceres)
             for rid in result["runs_touched"]:
                 if (ex := manager.runs.get(rid)) and ex.status == "completed":
                     del manager.runs[rid]
-        event("admin_assessments_deleted", user=user, all=body.all, assessments=result["assessments"], runs=len(result["runs_removed"]))
+        event(
+            "admin_assessments_deleted",
+            user=user,
+            all=body.all,
+            assessments=result["assessments"],
+            runs=len(result["runs_removed"]),
+        )
         return result
 
     @app.get("/api/admin/users")
-    def admin_users(authorization: Annotated[str | None, Header()] = None) -> list[dict]:
+    def admin_users(
+        authorization: Annotated[str | None, Header()] = None,
+    ) -> list[dict]:
         admin_user(authorization)
         return admin.users()
 
     @app.post("/api/admin/users", status_code=201)
-    def admin_add_user(body: NewUserInput, authorization: Annotated[str | None, Header()] = None) -> list[dict]:
+    def admin_add_user(
+        body: NewUserInput, authorization: Annotated[str | None, Header()] = None
+    ) -> list[dict]:
         user = admin_user(authorization)
         admin.add_user(body.username, body.password, user)
         event("admin_user_created", user=user, new_user=body.username.strip().lower())
         return admin.users()
 
     @app.post("/api/admin/password", status_code=204)
-    def admin_password(body: PasswordInput, authorization: Annotated[str | None, Header()] = None) -> Response:
+    def admin_password(
+        body: PasswordInput, authorization: Annotated[str | None, Header()] = None
+    ) -> Response:
         user = admin_user(authorization)
         admin.change_password(user, body.current, body.new)
         event("admin_password_changed", user=user)
@@ -803,14 +1048,31 @@ def create_app(cfg: Settings) -> FastAPI:
             signature=manager.cfg_base.signature(),
             validation=cfg.validation.model_dump(),
             rubric={
-                **manager.cfg_base.rubric.model_dump(mode="json", include={
-                    "weights", "discount_by_severity", "bands", "confidence", "proportional_floor", "relevant_amount_at_issue_pct",
-                    "max_amount_at_issue_for_approve_pct", "max_amount_at_issue_for_caveats_pct",
-                }),
-                "absorbs": {k: t.absorbs for k, t in manager.cfg_base.rubric.finding_types.items() if t.absorbs},
+                **manager.cfg_base.rubric.model_dump(
+                    mode="json",
+                    include={
+                        "weights",
+                        "discount_by_severity",
+                        "bands",
+                        "confidence",
+                        "proportional_floor",
+                        "relevant_amount_at_issue_pct",
+                        "max_amount_at_issue_for_approve_pct",
+                        "max_amount_at_issue_for_caveats_pct",
+                    },
+                ),
+                "absorbs": {
+                    k: t.absorbs
+                    for k, t in manager.cfg_base.rubric.finding_types.items()
+                    if t.absorbs
+                },
                 # flags atuais de cada tipo: o painel reaplica a régua de hoje a pareceres gravados com régua antiga
                 "finding_flags": {
-                    k: {"reduces_confidence": t.reduces_confidence, "returns": t.returns, "lock": t.lock}
+                    k: {
+                        "reduces_confidence": t.reduces_confidence,
+                        "returns": t.returns,
+                        "lock": t.lock,
+                    }
                     for k, t in manager.cfg_base.rubric.finding_types.items()
                 },
             },
@@ -829,7 +1091,10 @@ def create_app(cfg: Settings) -> FastAPI:
             "uploaded": "Enviados pelo painel",
         }
         counts = DatasetCatalog(cfg).counts()
-        found = [Dataset(name=k, label=labels.get(k, k), n=v) for k, v in sorted(counts.items())]
+        found = [
+            Dataset(name=k, label=labels.get(k, k), n=v)
+            for k, v in sorted(counts.items())
+        ]
         return [*found, Dataset(name="all", label="Todos", n=sum(counts.values()))]
 
     @app.get("/api/scenarios")
@@ -858,9 +1123,16 @@ def create_app(cfg: Settings) -> FastAPI:
                 error = str(e)
         else:
             error = "sem planilha de orçamento"
-        dates = {k: (v.isoformat() if v else None) for k, v in ch.data.dates.model_dump().items()}
+        dates = {
+            k: (v.isoformat() if v else None)
+            for k, v in ch.data.dates.model_dump().items()
+        }
         return TicketDetail(
-            **summary(folder).model_dump(), dates=dates, quote=quote, quote_error=error, attachments=[attachment_info(tid, a) for a in ch.attachments]
+            **summary(folder).model_dump(),
+            dates=dates,
+            quote=quote,
+            quote_error=error,
+            attachments=[attachment_info(tid, a) for a in ch.attachments],
         )
 
     @app.get("/api/tickets/{tid}/history")
@@ -871,9 +1143,15 @@ def create_app(cfg: Settings) -> FastAPI:
         """Pasta do chamado entre os atuais e o histórico (onde ficam os chamados antigos usados na checagem de integridade)."""
         if not tid.isdigit() or len(tid) != 8:
             raise HTTPException(404, f"chamado {tid} não encontrado")
-        for base, source in ((cfg.tickets_dir, "tickets"), (cfg.history_dir, "history")):
+        for base, source in (
+            (cfg.tickets_dir, "tickets"),
+            (cfg.history_dir, "history"),
+        ):
             folder = (base / tid).resolve()
-            if folder.is_relative_to(base.resolve()) and (folder / "ticket.json").exists():
+            if (
+                folder.is_relative_to(base.resolve())
+                and (folder / "ticket.json").exists()
+            ):
                 return folder, source  # type: ignore[return-value]
         raise HTTPException(404, f"chamado {tid} não encontrado")
 
@@ -883,13 +1161,25 @@ def create_app(cfg: Settings) -> FastAPI:
         d = ch.data
         hist = database.ticket_history(tid)
         facts = TicketFacts(
-            ticket_id=d.ticket_id, source=source, workstream=d.workstream.value,
-            category_label=d.category.label, symptom_label=d.symptom.label, scope=d.requested_scope,
-            branch_code=d.branch.code, branch_name=d.branch.name, environment=d.branch.environment,
-            supplier_name=d.supplier.name, supplier_cnpj=d.supplier.cnpj, quoted_value=d.quoted_value,
-            opening=d.dates.opening, supplier_submission=d.dates.supplier_submission, manager_review=d.dates.manager_review,
-            status=d.status, n_photos=sum(a.is_image for a in ch.attachments),
-            last_recommendation=hist[0]["recommendation"] if hist else None, last_score=hist[0]["score"] if hist else None,
+            ticket_id=d.ticket_id,
+            source=source,
+            workstream=d.workstream.value,
+            category_label=d.category.label,
+            symptom_label=d.symptom.label,
+            scope=d.requested_scope,
+            branch_code=d.branch.code,
+            branch_name=d.branch.name,
+            environment=d.branch.environment,
+            supplier_name=d.supplier.name,
+            supplier_cnpj=d.supplier.cnpj,
+            quoted_value=d.quoted_value,
+            opening=d.dates.opening,
+            supplier_submission=d.dates.supplier_submission,
+            manager_review=d.dates.manager_review,
+            status=d.status,
+            n_photos=sum(a.is_image for a in ch.attachments),
+            last_recommendation=hist[0]["recommendation"] if hist else None,
+            last_score=hist[0]["score"] if hist else None,
         )
         return facts, folder
 
@@ -898,44 +1188,78 @@ def create_app(cfg: Settings) -> FastAPI:
         path = (base / name).resolve()
         if not path.is_relative_to(base) or not path.is_file():
             raise HTTPException(404, f"foto {name} não encontrada no chamado {tid}")
-        meta = next((a for a in load_ticket(folder).data.attachments if a.file_name == name), None)
+        meta = next(
+            (a for a in load_ticket(folder).data.attachments if a.file_name == name),
+            None,
+        )
         try:
             with Image.open(path) as img:
                 w, h = img.size
             detail = round(detail_level(path), 1)
         except OSError as e:  # inclui arquivo que não é imagem
             raise HTTPException(422, f"{name} não é uma imagem legível") from e
-        return PhotoFacts(
-            file=name, url=f"/api/tickets/{tid}/attachments/{name}", taken_at=exif_date(path),
-            uploaded_on=meta.data_upload if meta else None, size_bytes=path.stat().st_size,
-            width=w, height=h, detail=detail,
-        ), path
+        return (
+            PhotoFacts(
+                file=name,
+                url=f"/api/tickets/{tid}/attachments/{name}",
+                taken_at=exif_date(path),
+                uploaded_on=meta.data_upload if meta else None,
+                size_bytes=path.stat().st_size,
+                width=w,
+                height=h,
+                detail=detail,
+            ),
+            path,
+        )
 
     @app.get("/api/tickets/{tid}/reuse")
-    def photo_reuse(tid: str, file: str, origin: str, origin_file: str) -> ReuseComparison:
+    def photo_reuse(
+        tid: str, file: str, origin: str, origin_file: str
+    ) -> ReuseComparison:
         """Compara a foto `file` do chamado `tid` com a foto `origin_file` do chamado `origin`, de onde ela teria sido reaproveitada."""
         cur, cur_folder = ticket_facts(tid)
         org, org_folder = ticket_facts(origin)
         cur_photo, cur_path = photo_facts(tid, cur_folder, file)
         org_photo, org_path = photo_facts(origin, org_folder, origin_file)
         try:
-            dist = min(distance(compute_hashes(cur_path), h) for h in hashes_with_crops(org_path, manager.cfg_base.rubric.hash_crops))
+            dist = min(
+                distance(compute_hashes(cur_path), h)
+                for h in hashes_with_crops(org_path, manager.cfg_base.rubric.hash_crops)
+            )
         except OSError:
             dist = None
-        low = min(cur_photo.detail or 100, org_photo.detail or 100) < manager.cfg_base.rubric.hash_min_detail
+        low = (
+            min(cur_photo.detail or 100, org_photo.detail or 100)
+            < manager.cfg_base.rubric.hash_min_detail
+        )
+
         # momento de cada foto: data e hora do EXIF; sem EXIF (comum em foto reenviada por WhatsApp), o dia do envio
         def moment(ph: PhotoFacts, t: TicketFacts) -> datetime:
-            return ph.taken_at or datetime.combine(ph.uploaded_on or t.supplier_submission, datetime.min.time())
+            return ph.taken_at or datetime.combine(
+                ph.uploaded_on or t.supplier_submission, datetime.min.time()
+            )
 
         o_m, c_m = moment(org_photo, org), moment(cur_photo, cur)
         n_exif = bool(org_photo.taken_at) + bool(cur_photo.taken_at)
         basis = "exif" if n_exif == 2 else "mixed" if n_exif == 1 else "dates"
         return ReuseComparison(
-            current=cur, current_photo=cur_photo, origin=org, origin_photo=org_photo, distance=dist,
-            limit=manager.cfg_base.rubric.hash_max_distance_low_detail if low else manager.cfg_base.rubric.hash_max_distance,
-            basis=basis, origin_moment=o_m, current_moment=c_m, chronology_ok=o_m <= c_m,
+            current=cur,
+            current_photo=cur_photo,
+            origin=org,
+            origin_photo=org_photo,
+            distance=dist,
+            limit=(
+                manager.cfg_base.rubric.hash_max_distance_low_detail
+                if low
+                else manager.cfg_base.rubric.hash_max_distance
+            ),
+            basis=basis,
+            origin_moment=o_m,
+            current_moment=c_m,
+            chronology_ok=o_m <= c_m,
             gap_hours=round((c_m - o_m).total_seconds() / 3600, 1),
-            same_branch=cur.branch_code == org.branch_code, same_supplier=cur.supplier_cnpj == org.supplier_cnpj,
+            same_branch=cur.branch_code == org.branch_code,
+            same_supplier=cur.supplier_cnpj == org.supplier_cnpj,
         )
 
     @app.get("/api/tickets/{tid}/attachments/{name}")
@@ -952,7 +1276,9 @@ def create_app(cfg: Settings) -> FastAPI:
         return Response(
             spreadsheet_template(),
             media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            headers={"Content-Disposition": 'attachment; filename="modelo_orcamento_atest.xlsx"'},
+            headers={
+                "Content-Disposition": 'attachment; filename="modelo_orcamento_atest.xlsx"'
+            },
         )
 
     @app.post("/api/tickets", status_code=201)
@@ -966,7 +1292,9 @@ def create_app(cfg: Settings) -> FastAPI:
         branch_name: Annotated[str, Form(min_length=1)],
         branch_code: Annotated[str, Form()] = "0000",
         environment: Annotated[str, Form()] = "",  # local do chamado
-        supplier_name: Annotated[str, Form()] = "",  # em branco: usa o fornecedor da planilha
+        supplier_name: Annotated[
+            str, Form()
+        ] = "",  # em branco: usa o fornecedor da planilha
         supplier_cnpj: Annotated[str, Form()] = "",
         opened_on: Annotated[date | None, Form()] = None,
         blocks_opening: Annotated[bool, Form()] = False,
@@ -975,39 +1303,72 @@ def create_app(cfg: Settings) -> FastAPI:
         attachments: Annotated[list[UploadFile], File()] = [],  # noqa: B006
     ) -> TicketSummary:
         catalog = manager.cfg_base.catalog
-        cat = next((e for e in catalog.categories if e.value == category and e.enabled), None)
-        sym = next((e for e in catalog.symptoms if e.value == symptom and e.enabled), None)
+        cat = next(
+            (e for e in catalog.categories if e.value == category and e.enabled), None
+        )
+        sym = next(
+            (e for e in catalog.symptoms if e.value == symptom and e.enabled), None
+        )
         if cat is None:
-            raise HTTPException(422, f"Categoria '{category}' não está cadastrada (ou está desativada).")
+            raise HTTPException(
+                422, f"Categoria '{category}' não está cadastrada (ou está desativada)."
+            )
         if cat.workstreams and workstream not in cat.workstreams:
-            raise HTTPException(422, f"A categoria {cat.label} não é da esteira {workstream.value}.")
+            raise HTTPException(
+                422, f"A categoria {cat.label} não é da esteira {workstream.value}."
+            )
         if sym is None:
-            raise HTTPException(422, f"Sintoma '{symptom}' não está cadastrado (ou está desativado).")
+            raise HTTPException(
+                422, f"Sintoma '{symptom}' não está cadastrado (ou está desativado)."
+            )
         if sym.categories and category not in sym.categories:
-            raise HTTPException(422, f"O sintoma {sym.label} não vale para a categoria {cat.label}.")
-        loc = next((e for e in catalog.locations if e.value == environment and e.enabled), None)
+            raise HTTPException(
+                422, f"O sintoma {sym.label} não vale para a categoria {cat.label}."
+            )
+        loc = next(
+            (e for e in catalog.locations if e.value == environment and e.enabled), None
+        )
         if environment and loc is None:
-            raise HTTPException(422, f"Local '{environment}' não está cadastrado (ou está desativado).")
+            raise HTTPException(
+                422, f"Local '{environment}' não está cadastrado (ou está desativado)."
+            )
         if loc and loc.workstreams and workstream not in loc.workstreams:
-            raise HTTPException(422, f"O local {loc.label} não é da esteira {workstream.value}.")
+            raise HTTPException(
+                422, f"O local {loc.label} não é da esteira {workstream.value}."
+            )
         prefix = cfg.paths.upload_id_prefix
-        existing = [int(p.name) for p in cfg.tickets_dir.iterdir() if p.name.startswith(prefix) and p.name.isdigit()]
+        existing = [
+            int(p.name)
+            for p in cfg.tickets_dir.iterdir()
+            if p.name.startswith(prefix) and p.name.isdigit()
+        ]
         tid = str(max(existing, default=int(prefix + "0000000")) + 1).zfill(8)
         with tempfile.TemporaryDirectory() as tmp:
             tmp_dir = Path(tmp) / "attachments"
             tmp_dir.mkdir()
             spreadsheet_name = Path(spreadsheet.filename or "quote.xlsx").name
             if not spreadsheet_name.lower().endswith((".xlsx", ".xlsm")):
-                raise HTTPException(422, "O orçamento precisa ser a planilha Excel padrão (.xlsx).")
+                raise HTTPException(
+                    422, "O orçamento precisa ser a planilha Excel padrão (.xlsx)."
+                )
             spreadsheet_path = tmp_dir / spreadsheet_name
             spreadsheet_path.write_bytes(spreadsheet.file.read())
             # o que a planilha não trouxer (ou a aba Chamado inteira) vem deste formulário: basta cadastrar os itens
-            defaults = {"ticket_id": tid, "category": category, "symptom": symptom, "scope": scope, "number": "",
-                        "supplier": supplier_name.strip(), "supplier_cnpj": supplier_cnpj.strip()}
+            defaults = {
+                "ticket_id": tid,
+                "category": category,
+                "symptom": symptom,
+                "scope": scope,
+                "number": "",
+                "supplier": supplier_name.strip(),
+                "supplier_cnpj": supplier_cnpj.strip(),
+            }
             try:
                 quote = read_quote(spreadsheet_path, defaults)
             except QuoteError as e:
-                raise HTTPException(422, f"Planilha fora do padrão: {e}. Baixe o modelo no painel.") from e
+                raise HTTPException(
+                    422, f"Planilha fora do padrão: {e}. Baixe o modelo no painel."
+                ) from e
             goals = [
                 {
                     "file_name": spreadsheet_name,
@@ -1020,10 +1381,20 @@ def create_app(cfg: Settings) -> FastAPI:
                 name = Path(up.filename or "").name
                 kind = ATTACHMENT_TYPES.get(Path(name).suffix.lower())
                 if not name or kind is None:
-                    raise HTTPException(422, f"Anexo '{name}' não suportado: envie JPG, PNG, WEBP ou PDF.")
+                    raise HTTPException(
+                        422,
+                        f"Anexo '{name}' não suportado: envie JPG, PNG, WEBP ou PDF.",
+                    )
                 target = tmp_dir / name
                 target.write_bytes(up.file.read())
-                goals.append({"file_name": name, "content_type": kind, "size_bytes": target.stat().st_size, "data_upload": date.today()})
+                goals.append(
+                    {
+                        "file_name": name,
+                        "content_type": kind,
+                        "size_bytes": target.stat().st_size,
+                        "data_upload": date.today(),
+                    }
+                )
             try:
                 data = Ticket(
                     ticket_id=tid,
@@ -1033,24 +1404,39 @@ def create_app(cfg: Settings) -> FastAPI:
                     category=category,
                     symptom=symptom,
                     requested_scope=scope,
-                    branch={"code": branch_code, "name": branch_name, "environment": environment},
+                    branch={
+                        "code": branch_code,
+                        "name": branch_name,
+                        "environment": environment,
+                    },
                     supplier={
-                        "name": supplier_name.strip() or quote.supplier or "Fornecedor não informado",
-                        "cnpj": supplier_cnpj or quote.supplier_cnpj,  # o painel não pede CNPJ: vem da planilha
+                        "name": supplier_name.strip()
+                        or quote.supplier
+                        or "Fornecedor não informado",
+                        "cnpj": supplier_cnpj
+                        or quote.supplier_cnpj,  # o painel não pede CNPJ: vem da planilha
                     },
                     blocks_opening=blocks_opening,
                     solution_description=solution_description.strip(),
                     quoted_value=quote.total_value,
                     origin="upload",
                     dataset="uploaded",
-                    dates={"opening": opened_on or date.today(), "supplier_submission": date.today()},
+                    dates={
+                        "opening": opened_on or date.today(),
+                        "supplier_submission": date.today(),
+                    },
                     attachments=goals,
                 )
             except ValidationError as e:
-                raise HTTPException(422, f"Dados do chamado inválidos: {pt_validation_error(e.errors())}") from e
+                raise HTTPException(
+                    422,
+                    f"Dados do chamado inválidos: {pt_validation_error(e.errors())}",
+                ) from e
             final_target = cfg.tickets_dir / tid
             shutil.copytree(tmp_dir, final_target / "attachments")
-            (final_target / "ticket.json").write_text(data.model_dump_json(indent=2), encoding="utf-8")
+            (final_target / "ticket.json").write_text(
+                data.model_dump_json(indent=2), encoding="utf-8"
+            )
         event("ticket_uploaded", ticket=tid, category=category, attachments=len(goals))
         return summary(final_target)
 
@@ -1058,7 +1444,9 @@ def create_app(cfg: Settings) -> FastAPI:
     def delete_ticket(tid: str) -> Response:
         folder = folder_of(tid)
         if load_ticket(folder).data.origin != "upload":
-            raise HTTPException(403, "Só chamados enviados pelo painel podem ser apagados.")
+            raise HTTPException(
+                403, "Só chamados enviados pelo painel podem ser apagados."
+            )
         shutil.rmtree(folder)
         event("ticket_deleted", ticket=tid)
         return Response(status_code=204)
@@ -1081,7 +1469,10 @@ def create_app(cfg: Settings) -> FastAPI:
     def validation_report(ex_id: str) -> dict:
         rel = database.validation(ex_id)
         if rel is None:
-            raise HTTPException(404, "execução sem relatório de validação (ainda rodando ou sem gabarito)")
+            raise HTTPException(
+                404,
+                "execução sem relatório de validação (ainda rodando ou sem gabarito)",
+            )
         return rel
 
     @app.get("/api/validations")
@@ -1121,14 +1512,22 @@ def create_app(cfg: Settings) -> FastAPI:
         return database.finding_feedbacks(pid)
 
     @app.post("/api/assessments/{pid}/findings/{index}/feedback", status_code=201)
-    def register_finding_feedback(pid: int, index: int, fb: FindingFeedbackInput) -> FindingFeedback:
+    def register_finding_feedback(
+        pid: int, index: int, fb: FindingFeedbackInput
+    ) -> FindingFeedback:
         try:
             saved = database.save_finding_feedback(pid, index, fb)
         except KeyError as e:
             raise HTTPException(404, "parecer não encontrado") from e
         except IndexError as e:
             raise HTTPException(404, f"o parecer não tem o apontamento {index}") from e
-        event("finding_feedback", ticket=saved.ticket_id, assessment_id=pid, finding=saved.finding_kind, verdict=fb.verdict.value)
+        event(
+            "finding_feedback",
+            ticket=saved.ticket_id,
+            assessment_id=pid,
+            finding=saved.finding_kind,
+            verdict=fb.verdict.value,
+        )
         return saved
 
     if DIST.exists():

@@ -71,7 +71,9 @@ class FeedbackInput(BaseModel):
 
     action: FeedbackAction
     final_decision: Recommendation | None = None
-    unfounded_findings: list[str] = Field(default_factory=list, description="tipos de apontamento marcados como errados")
+    unfounded_findings: list[str] = Field(
+        default_factory=list, description="tipos de apontamento marcados como errados"
+    )
     comment: str = Field("", max_length=2000)
     author: str = Field("analyst", max_length=80)
 
@@ -107,7 +109,9 @@ class FindingFeedback(FindingFeedbackInput):
     id: int
     assessment_id: int
     ticket_id: str
-    finding_index: int = Field(description="posição do apontamento na lista `findings` do parecer")
+    finding_index: int = Field(
+        description="posição do apontamento na lista `findings` do parecer"
+    )
     finding_kind: str
     validation: str
     finding_description: str
@@ -215,7 +219,10 @@ class Database:
     def save_validation(self, run_id: str, report: dict) -> None:
         """Guarda o relatório de validação (métricas contra o gabarito) da execução."""
         with self._transaction() as c:
-            c.execute("UPDATE runs SET validation=? WHERE id=?", (json.dumps(report, ensure_ascii=False), run_id))
+            c.execute(
+                "UPDATE runs SET validation=? WHERE id=?",
+                (json.dumps(report, ensure_ascii=False), run_id),
+            )
 
     def validation(self, run_id: str) -> dict | None:
         r = self._rows("SELECT validation FROM runs WHERE id=?", (run_id,))
@@ -223,7 +230,9 @@ class Database:
 
     def list_runs(self, limit: int = 50) -> list[dict[str, Any]]:
         """Execuções mais recentes, com um resumo da validação (o relatório completo sai em /api/runs/{id}/validation)."""
-        rows = self._rows("SELECT * FROM runs ORDER BY created_at DESC LIMIT ?", (limit,))
+        rows = self._rows(
+            "SELECT * FROM runs ORDER BY created_at DESC LIMIT ?", (limit,)
+        )
         for r in rows:
             for k in ("models", "tickets", "evaluation", "errors", "batches"):
                 r[k] = json.loads(r[k]) if r[k] else None
@@ -273,7 +282,9 @@ class Database:
             )
             pid = int(cur.lastrowid)
             p.record_id = pid
-            c.execute("UPDATE assessments SET json=? WHERE id=?", (p.model_dump_json(), pid))
+            c.execute(
+                "UPDATE assessments SET json=? WHERE id=?", (p.model_dump_json(), pid)
+            )
             c.executemany(
                 """INSERT INTO llm_calls (assessment_id, run_id, ticket_id, task, model, started_at, duration_s, input_tokens,
                    output_tokens, cache_read_tokens, cache_write_tokens, cost_usd, from_cache, via_batch, batch_id, simulated)
@@ -307,7 +318,9 @@ class Database:
         return Assessment.model_validate_json(r[0]["json"]) if r else None
 
     def run_assessments(self, run_id: str) -> list[Assessment]:
-        rows = self._rows("SELECT json FROM assessments WHERE run_id=? ORDER BY ticket_id", (run_id,))
+        rows = self._rows(
+            "SELECT json FROM assessments WHERE run_id=? ORDER BY ticket_id", (run_id,)
+        )
         return [Assessment.model_validate_json(r["json"]) for r in rows]
 
     def ticket_history(self, ticket_id: str) -> list[dict[str, Any]]:
@@ -336,31 +349,67 @@ class Database:
         """
         with self._transaction() as c:
             if ids is None:
-                touched = [r[0] for r in c.execute("SELECT id FROM runs WHERE status <> 'running'")]
+                touched = [
+                    r[0]
+                    for r in c.execute("SELECT id FROM runs WHERE status <> 'running'")
+                ]
                 n_fb = c.execute("DELETE FROM feedbacks").rowcount
                 c.execute("DELETE FROM finding_feedbacks")
                 c.execute("DELETE FROM llm_calls")
                 n = c.execute("DELETE FROM assessments").rowcount
                 c.execute("DELETE FROM runs WHERE status <> 'running'")
-                return {"assessments": n, "feedbacks": n_fb, "runs_touched": touched, "runs_removed": touched}
+                return {
+                    "assessments": n,
+                    "feedbacks": n_fb,
+                    "runs_touched": touched,
+                    "runs_removed": touched,
+                }
             n = n_fb = 0
             touched_set: set[str] = set()
             unique = sorted(set(ids))
             for i in range(0, len(unique), 500):  # limite de parâmetros do SQLite
                 chunk = unique[i : i + 500]
                 marks = ",".join("?" * len(chunk))
-                touched_set |= {r[0] for r in c.execute(f"SELECT DISTINCT run_id FROM assessments WHERE id IN ({marks})", chunk) if r[0]}
-                n_fb += c.execute(f"DELETE FROM feedbacks WHERE assessment_id IN ({marks})", chunk).rowcount
-                c.execute(f"DELETE FROM finding_feedbacks WHERE assessment_id IN ({marks})", chunk)
-                c.execute(f"DELETE FROM llm_calls WHERE assessment_id IN ({marks})", chunk)
-                n += c.execute(f"DELETE FROM assessments WHERE id IN ({marks})", chunk).rowcount
+                touched_set |= {
+                    r[0]
+                    for r in c.execute(
+                        f"SELECT DISTINCT run_id FROM assessments WHERE id IN ({marks})",
+                        chunk,
+                    )
+                    if r[0]
+                }
+                n_fb += c.execute(
+                    f"DELETE FROM feedbacks WHERE assessment_id IN ({marks})", chunk
+                ).rowcount
+                c.execute(
+                    f"DELETE FROM finding_feedbacks WHERE assessment_id IN ({marks})",
+                    chunk,
+                )
+                c.execute(
+                    f"DELETE FROM llm_calls WHERE assessment_id IN ({marks})", chunk
+                )
+                n += c.execute(
+                    f"DELETE FROM assessments WHERE id IN ({marks})", chunk
+                ).rowcount
             removed = []
             for rid in sorted(touched_set):
-                left = c.execute("SELECT COUNT(*) FROM assessments WHERE run_id=?", (rid,)).fetchone()[0]
-                if not left and c.execute("DELETE FROM runs WHERE id=? AND status <> 'running'", (rid,)).rowcount:
+                left = c.execute(
+                    "SELECT COUNT(*) FROM assessments WHERE run_id=?", (rid,)
+                ).fetchone()[0]
+                if (
+                    not left
+                    and c.execute(
+                        "DELETE FROM runs WHERE id=? AND status <> 'running'", (rid,)
+                    ).rowcount
+                ):
                     c.execute("DELETE FROM llm_calls WHERE run_id=?", (rid,))
                     removed.append(rid)
-            return {"assessments": n, "feedbacks": n_fb, "runs_touched": sorted(touched_set), "runs_removed": removed}
+            return {
+                "assessments": n,
+                "feedbacks": n_fb,
+                "runs_touched": sorted(touched_set),
+                "runs_removed": removed,
+            }
 
     # ------------------------------------------------------------------ feedback
     def save_feedback(self, assessment_id: int, fb: FeedbackInput) -> Feedback:
@@ -396,14 +445,20 @@ class Database:
 
     def feedbacks(self, assessment_id: int) -> list[Feedback]:
         out = []
-        for r in self._rows("SELECT * FROM feedbacks WHERE assessment_id=? ORDER BY id", (assessment_id,)):
+        for r in self._rows(
+            "SELECT * FROM feedbacks WHERE assessment_id=? ORDER BY id",
+            (assessment_id,),
+        ):
             r["unfounded_findings"] = json.loads(r["unfounded_findings"] or "[]")
             out.append(Feedback.model_validate(r))
         return out
 
-    def save_finding_feedback(self, assessment_id: int, index: int, fb: FindingFeedbackInput) -> FindingFeedback:
+    def save_finding_feedback(
+        self, assessment_id: int, index: int, fb: FindingFeedbackInput
+    ) -> FindingFeedback:
         """Grava se um apontamento acertou ou errou. Levanta KeyError se o parecer não existir e
-        IndexError se o parecer não tiver apontamento nessa posição. Cada envio é um registro novo (histórico)."""
+        IndexError se o parecer não tiver apontamento nessa posição. Cada envio é um registro novo (histórico).
+        """
         p = self.assessment(assessment_id)
         if p is None:
             raise KeyError(assessment_id)
@@ -442,37 +497,58 @@ class Database:
 
     def finding_feedbacks(self, assessment_id: int) -> list[FindingFeedback]:
         """Feedbacks dos apontamentos de um parecer, do mais antigo ao mais novo (o último de cada posição vale)."""
-        rows = self._rows("SELECT * FROM finding_feedbacks WHERE assessment_id=? ORDER BY id", (assessment_id,))
+        rows = self._rows(
+            "SELECT * FROM finding_feedbacks WHERE assessment_id=? ORDER BY id",
+            (assessment_id,),
+        )
         return [FindingFeedback.model_validate(r) for r in rows]
 
     # ------------------------------------------------------------------ métricas (observabilidade + calibração)
     def metrics(self) -> dict[str, Any]:
         """Números da aba Operação: volume, custo, tempo, uso por tarefa e concordância do feedback."""
-        general = self._one("""SELECT COUNT(*) AS assessments, COUNT(DISTINCT ticket_id) AS tickets,
+        general = self._one(
+            """SELECT COUNT(*) AS assessments, COUNT(DISTINCT ticket_id) AS tickets,
                       COALESCE(SUM(CASE WHEN mode='api' THEN cost_usd END),0) AS cost_usd,
                       COALESCE(SUM(CASE WHEN mode='api' THEN cost_brl END),0) AS cost_brl,
                       AVG(CASE WHEN mode='api' THEN cost_brl END) AS avg_cost_brl,
                       AVG(duration_s) AS avg_duration_s,
-                      COALESCE(SUM(amount_at_issue),0) AS amount_at_issue FROM assessments""")
-        runs = self._one("""SELECT COUNT(*) AS runs,
-                          SUM(CASE WHEN errors IS NOT NULL AND errors <> '{}' THEN 1 ELSE 0 END) AS with_errors FROM runs""")
+                      COALESCE(SUM(amount_at_issue),0) AS amount_at_issue FROM assessments"""
+        )
+        runs = self._one(
+            """SELECT COUNT(*) AS runs,
+                          SUM(CASE WHEN errors IS NOT NULL AND errors <> '{}' THEN 1 ELSE 0 END) AS with_errors FROM runs"""
+        )
         return {
             **general,
             **runs,
-            "by_recommendation": self._rows("SELECT recommendation, COUNT(*) AS n FROM assessments GROUP BY recommendation ORDER BY n DESC"),
-            "cost_by_workstream": self._rows("""SELECT workstream, COUNT(*) AS n, SUM(cost_brl) AS cost_brl, AVG(cost_brl) AS avg_brl
-                                                 FROM assessments WHERE mode='api' GROUP BY workstream"""),
-            "by_task": self._rows("""SELECT task, model, COUNT(*) AS calls, AVG(duration_s) AS avg_duration_s,
+            "by_recommendation": self._rows(
+                "SELECT recommendation, COUNT(*) AS n FROM assessments GROUP BY recommendation ORDER BY n DESC"
+            ),
+            "cost_by_workstream": self._rows(
+                """SELECT workstream, COUNT(*) AS n, SUM(cost_brl) AS cost_brl, AVG(cost_brl) AS avg_brl
+                                                 FROM assessments WHERE mode='api' GROUP BY workstream"""
+            ),
+            "by_task": self._rows(
+                """SELECT task, model, COUNT(*) AS calls, AVG(duration_s) AS avg_duration_s,
                                           SUM(input_tokens) AS input_tokens, SUM(output_tokens) AS output_tokens,
                                           SUM(cache_read_tokens) AS cache_read_tokens, SUM(cost_usd) AS cost_usd,
                                           SUM(via_batch) AS via_batch, SUM(from_cache) AS from_cache
-                                          FROM llm_calls WHERE simulated=0 GROUP BY task, model ORDER BY cost_usd DESC"""),
-            "feedback": self._rows("SELECT action, COUNT(*) AS n FROM feedbacks GROUP BY action"),
-            "feedback_agreement": self._one("""SELECT COUNT(*) AS total, SUM(CASE WHEN action='accept' THEN 1 ELSE 0 END) AS accepted,
+                                          FROM llm_calls WHERE simulated=0 GROUP BY task, model ORDER BY cost_usd DESC"""
+            ),
+            "feedback": self._rows(
+                "SELECT action, COUNT(*) AS n FROM feedbacks GROUP BY action"
+            ),
+            "feedback_agreement": self._one(
+                """SELECT COUNT(*) AS total, SUM(CASE WHEN action='accept' THEN 1 ELSE 0 END) AS accepted,
                                           SUM(CASE WHEN final_decision IS NOT NULL AND final_decision <> atest_recommendation
-                                              THEN 1 ELSE 0 END) AS different_decision FROM feedbacks"""),
-            "unfounded_findings": self._rows("""SELECT j.value AS kind, COUNT(*) AS n FROM feedbacks f,
-                                                    json_each(f.unfounded_findings) j GROUP BY j.value ORDER BY n DESC"""),
-            "by_day": self._rows("""SELECT substr(generated_at,1,10) AS day, COUNT(*) AS n, SUM(cost_brl) AS cost_brl
-                                       FROM assessments GROUP BY day ORDER BY day"""),
+                                              THEN 1 ELSE 0 END) AS different_decision FROM feedbacks"""
+            ),
+            "unfounded_findings": self._rows(
+                """SELECT j.value AS kind, COUNT(*) AS n FROM feedbacks f,
+                                                    json_each(f.unfounded_findings) j GROUP BY j.value ORDER BY n DESC"""
+            ),
+            "by_day": self._rows(
+                """SELECT substr(generated_at,1,10) AS day, COUNT(*) AS n, SUM(cost_brl) AS cost_brl
+                                       FROM assessments GROUP BY day ORDER BY day"""
+            ),
         }

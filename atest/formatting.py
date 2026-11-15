@@ -14,7 +14,9 @@ def brl(value: float) -> str:
 
 def normalize_text(text: str) -> str:
     """Minúsculas, sem acentos nem pontuação, espaços simples (para comparar descrições)."""
-    text = unicodedata.normalize("NFKD", text.lower()).encode("ascii", "ignore").decode()
+    text = (
+        unicodedata.normalize("NFKD", text.lower()).encode("ascii", "ignore").decode()
+    )
     text = re.sub(r"\bc/\s*", "com ", text)
     return " ".join(re.sub(r"[^a-z0-9 ]+", " ", text).split())
 
@@ -25,7 +27,9 @@ _ASK = re.compile(
     r"\b(falta|faltam|faltando|nao ha|nao tem|nenhum|nenhuma|sem fotos?|sem imagens?|ausencia|enviar|envie|reenviar|anexar|anexe|"
     r"apresentar|apresente|incluir fotos?)\b"
 )
-_EVIDENCE = re.compile(r"\b(fotos?|imagens?|registros?|evidencia\w*|comprova\w*|prova|termo|mostra\w*|aparece\w*)\b")
+_EVIDENCE = re.compile(
+    r"\b(fotos?|imagens?|registros?|evidencia\w*|comprova\w*|prova|termo|mostra\w*|aparece\w*)\b"
+)
 _AFTER = re.compile(
     r"\b(depois|conclu\w*|finaliza\w*|instalad\w*|organizad\w*|executad\w*|servico pronto|resultado|"
     r"apos (o|a) (servico|execucao|reparo|troca|instalacao|conserto|obra))\b"
@@ -56,7 +60,23 @@ def normalize_unit(unit: str) -> str:
 
 
 # Unidades de valor global: com quantidade 1, "un", "vb" (verba), "cj" (conjunto) e "sv" (serviço) cobram a mesma coisa.
-LUMP_SUM_UNITS = {"un", "und", "unid", "unidade", "vb", "verba", "cj", "conj", "conjunto", "sv", "serv", "servico", "serviço", "gl", "global"}
+LUMP_SUM_UNITS = {
+    "un",
+    "und",
+    "unid",
+    "unidade",
+    "vb",
+    "verba",
+    "cj",
+    "conj",
+    "conjunto",
+    "sv",
+    "serv",
+    "servico",
+    "serviço",
+    "gl",
+    "global",
+}
 
 
 def same_unit(unit: str, reference: str, quantity: float) -> bool:
@@ -91,8 +111,14 @@ _INTERNAL_TERMS = {
     "consistent_with_category_symptom": "coerência com categoria e sintoma",
     "undetermined": "indeterminado",
 }
-_ASSIGNMENT = re.compile(r"\s*\(\s*[a-z]+(?:_[a-z]+)+\s*=\s*[^)]*\)")  # "(expected_quantity_max = -1)"
-_TERM = re.compile(r"\b(" + "|".join(sorted(map(re.escape, _INTERNAL_TERMS), key=len, reverse=True)) + r")\b")
+_ASSIGNMENT = re.compile(
+    r"\s*\(\s*[a-z]+(?:_[a-z]+)+\s*=\s*[^)]*\)"
+)  # "(expected_quantity_max = -1)"
+_TERM = re.compile(
+    r"\b("
+    + "|".join(sorted(map(re.escape, _INTERNAL_TERMS), key=len, reverse=True))
+    + r")\b"
+)
 KEEP_VERBATIM = {"transcription"}  # transcrição (OCR) fica como está no documento
 
 
@@ -106,8 +132,13 @@ def plain_text(text: str) -> str:
 
 # Marcação de chamada de ferramenta que o modelo às vezes deixa vazar para dentro de um campo de texto
 # (ex.: '... ajustar o valor.</parameter><parameter name="supplier_message">Enviar ...'). Nunca é conteúdo.
-_TOOL_TAG = re.compile(r"</?(?:antml:)?(?:parameter|invoke|function_calls|function_results|tool_use|tool_result)\b[^>]*>", re.I)
-_NAMED_PARAM = re.compile(r"</?(?:antml:)?parameter\b[^>]*?\bname=\"([A-Za-z_][\w]*)\"[^>]*>", re.I)
+_TOOL_TAG = re.compile(
+    r"</?(?:antml:)?(?:parameter|invoke|function_calls|function_results|tool_use|tool_result)\b[^>]*>",
+    re.I,
+)
+_NAMED_PARAM = re.compile(
+    r"</?(?:antml:)?parameter\b[^>]*?\bname=\"([A-Za-z_][\w]*)\"[^>]*>", re.I
+)
 
 
 def strip_tool_markup(text: str) -> str:
@@ -130,7 +161,11 @@ def rehome_leaked_fields(data: dict[str, Any]) -> dict[str, Any]:
         out[key] = parts[0]
         for name, text in zip(parts[1::2], parts[2::2], strict=True):
             target = out.get(name)
-            if name != key and isinstance(target, str) and not strip_tool_markup(target):
+            if (
+                name != key
+                and isinstance(target, str)
+                and not strip_tool_markup(target)
+            ):
                 out[name] = text
     return out
 
@@ -146,7 +181,10 @@ def plain_language(obj: Any) -> Any:
 
     if isinstance(obj, BaseModel):
         fields = rehome_leaked_fields(obj.__dict__)
-        updates = {k: plain_language(v) if k not in KEEP_VERBATIM else v for k, v in fields.items()}
+        updates = {
+            k: plain_language(v) if k not in KEEP_VERBATIM else v
+            for k, v in fields.items()
+        }
         return obj.model_copy(update=updates)
     if isinstance(obj, list):
         return [plain_language(v) for v in obj]
@@ -191,9 +229,13 @@ def pt_validation_error(errors: list[dict], limit: int = 3) -> str:
     """Erros de validação do Pydantic (`e.errors()`) em português: "campo › subcampo: motivo"."""
     parts = []
     for err in errors[:limit]:
-        loc = " › ".join(str(x) for x in err.get("loc", ()) if x not in ("body", "query", "path"))
+        loc = " › ".join(
+            str(x) for x in err.get("loc", ()) if x not in ("body", "query", "path")
+        )
         reason = VALIDATION_ERROR_PT.get(err.get("type", ""), "valor inválido")
-        if err.get("type") in ("enum", "literal_error") and (expected := (err.get("ctx") or {}).get("expected")):
+        if err.get("type") in ("enum", "literal_error") and (
+            expected := (err.get("ctx") or {}).get("expected")
+        ):
             reason += f" (use {expected})"
         parts.append(f"{loc}: {reason}" if loc else reason)
     more = len(errors) - limit
@@ -216,13 +258,18 @@ def error_message(e: BaseException) -> str:
     text = str(e).strip()
     if m := re.match(r"^\[(\w+)\]\s*(.*)$", text, re.S):
         task, rest = m.groups()
-        return f"Falha em {TASK_PT.get(task, task.replace('_', ' '))}: {_friendly(rest)}"
+        return (
+            f"Falha em {TASK_PT.get(task, task.replace('_', ' '))}: {_friendly(rest)}"
+        )
     return f"Falha na análise: {_friendly(text) or type(e).__name__}"
 
 
 def _friendly(text: str) -> str:
     """Erros de rede do SDK em português: conexão recusada, sem internet ou tempo esgotado."""
-    if re.search(r"APIConnectionError|ConnectError|Connection error|ConnectionError|getaddrinfo|Name or service not known", text):
+    if re.search(
+        r"APIConnectionError|ConnectError|Connection error|ConnectionError|getaddrinfo|Name or service not known",
+        text,
+    ):
         return "não foi possível conectar à API do modelo (sem internet, API fora do ar ou bloqueio de rede). Tente de novo em instantes"
     if re.search(r"APITimeoutError|ReadTimeout|timed out", text, re.I):
         return "a API do modelo não respondeu no tempo limite (fora do ar ou sobrecarregada). Tente de novo em instantes"

@@ -11,18 +11,32 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Any, ClassVar
 
-from pydantic import BaseModel, ConfigDict, Field, GetCoreSchemaHandler, computed_field, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    GetCoreSchemaHandler,
+    computed_field,
+    field_validator,
+    model_validator,
+)
 from pydantic_core import core_schema
 
 
 class DomainModel(BaseModel):
     """Base: rejeita campos desconhecidos e aceita enums por valor."""
 
-    model_config = ConfigDict(extra="forbid", use_enum_values=False, populate_by_name=True)
+    model_config = ConfigDict(
+        extra="forbid", use_enum_values=False, populate_by_name=True
+    )
 
 
 # ============================================================================ rótulos em português (valores internos → tela)
-VALIDATION_PT = {"scope": "Escopo", "quote": "Orçamento", "photos": "Evidências fotográficas"}
+VALIDATION_PT = {
+    "scope": "Escopo",
+    "quote": "Orçamento",
+    "photos": "Evidências fotográficas",
+}
 SEVERITY_PT = {"critical": "crítica", "high": "alta", "medium": "média", "low": "baixa"}
 CONFIDENCE_PT = {"high": "alta", "medium": "média", "low": "baixa"}
 MAINTENANCE_PT = {"corrective": "corretiva", "preventive": "preventiva"}
@@ -77,9 +91,18 @@ class CatalogEntry(DomainModel):
 
     value: str = Field(min_length=1, max_length=60)
     label: str = Field(min_length=1, max_length=80)
-    enabled: bool = Field(True, description="desativado: some das listas de escolha, mas chamados antigos seguem com o nome")
-    workstreams: list[Workstream] = Field(default_factory=list, description="categoria ou local: esteiras em que vale (vazio = SETA e SISR)")
-    categories: list[str] = Field(default_factory=list, description="sintoma: categorias em que vale (vazio = todas)")
+    enabled: bool = Field(
+        True,
+        description="desativado: some das listas de escolha, mas chamados antigos seguem com o nome",
+    )
+    workstreams: list[Workstream] = Field(
+        default_factory=list,
+        description="categoria ou local: esteiras em que vale (vazio = SETA e SISR)",
+    )
+    categories: list[str] = Field(
+        default_factory=list,
+        description="sintoma: categorias em que vale (vazio = todas)",
+    )
 
 
 CatalogKind = str  # "categories" | "symptoms" | "locations"
@@ -143,9 +166,13 @@ class CatalogCode(str):
         return current_catalog().label(self.kind, str(self))
 
     @classmethod
-    def __get_pydantic_core_schema__(cls, source: Any, handler: GetCoreSchemaHandler) -> core_schema.CoreSchema:
+    def __get_pydantic_core_schema__(
+        cls, source: Any, handler: GetCoreSchemaHandler
+    ) -> core_schema.CoreSchema:
         return core_schema.no_info_after_validator_function(
-            cls, core_schema.str_schema(min_length=1), serialization=core_schema.plain_serializer_function_ser_schema(str)
+            cls,
+            core_schema.str_schema(min_length=1),
+            serialization=core_schema.plain_serializer_function_ser_schema(str),
         )
 
 
@@ -292,7 +319,10 @@ class Branch(DomainModel):
 
     code: str
     name: str
-    environment: str = Field("", description="Local do chamado: ambiente da agência (backoffice, fachada, autoatendimento…)")
+    environment: str = Field(
+        "",
+        description="Local do chamado: ambiente da agência (backoffice, fachada, autoatendimento…)",
+    )
 
 
 class Supplier(DomainModel):
@@ -336,18 +366,29 @@ class Ticket(DomainModel):
     moment: Moment = Moment.EXECUTION
     category: Category
     symptom: Symptom
-    requested_scope: str = Field(min_length=3, description="Descrição detalhada do problema, escrita por quem abriu o chamado (o escopo)")
+    requested_scope: str = Field(
+        min_length=3,
+        description="Descrição detalhada do problema, escrita por quem abriu o chamado (o escopo)",
+    )
     solution_description: str = Field(
-        "", max_length=4000, description="Descrição da solução (opcional): o que será ou foi feito; pode vir já na aprovação do orçamento"
+        "",
+        max_length=4000,
+        description="Descrição da solução (opcional): o que será ou foi feito; pode vir já na aprovação do orçamento",
     )
     branch: Branch
     supplier: Supplier
-    blocks_opening: bool | None = Field(None, description="o problema está impedindo a abertura da agência? (None = não informado)")
+    blocks_opening: bool | None = Field(
+        None,
+        description="o problema está impedindo a abertura da agência? (None = não informado)",
+    )
     quoted_value: float | None = Field(default=None, ge=0)
     dates: Dates
     status: str = "forwarded_to_backoffice"
     origin: str = Field("dataset", description="dataset | upload (enviado pelo painel)")
-    dataset: str = Field("scenarios", description="scenarios (cenários de teste e casos do deck) | validation | itau | casos | uploaded")
+    dataset: str = Field(
+        "scenarios",
+        description="scenarios (cenários de teste e casos do deck) | validation | itau | casos | uploaded",
+    )
     manager: ManagerReview = Field(default_factory=ManagerReview)
     attachments: list[AttachmentMeta] = Field(default_factory=list)
 
@@ -366,11 +407,19 @@ class Ticket(DomainModel):
             f"{stage_expectations(self.moment)}\n"
             f"Agência: {self.branch.name} (cód. {self.branch.code})"
             f" | Local do chamado: {location_label(self.branch.environment) or 'não informado'}\n"
-            + (f"Impede a abertura da agência: {'sim' if self.blocks_opening else 'não'}\n" if self.blocks_opening is not None else "")
+            + (
+                f"Impede a abertura da agência: {'sim' if self.blocks_opening else 'não'}\n"
+                if self.blocks_opening is not None
+                else ""
+            )
             + f"Fornecedor: {self.supplier.name}\n"
             f"Abertura: {self.dates.opening:%d/%m/%Y} | Envio do fornecedor: {self.dates.supplier_submission:%d/%m/%Y}\n"
             f"ESCOPO SOLICITADO: {self.requested_scope}"
-            + (f"\nDESCRIÇÃO DA SOLUÇÃO (informada no chamado): {self.solution_description.strip()}" if self.solution_description.strip() else "")
+            + (
+                f"\nDESCRIÇÃO DA SOLUÇÃO (informada no chamado): {self.solution_description.strip()}"
+                if self.solution_description.strip()
+                else ""
+            )
         )
 
 
@@ -392,7 +441,10 @@ class Attachment(DomainModel):
 
     @property
     def is_spreadsheet(self) -> bool:
-        return "spreadsheet" in self.content_type or self.path.suffix.lower() in (".xlsx", ".xlsm")
+        return "spreadsheet" in self.content_type or self.path.suffix.lower() in (
+            ".xlsx",
+            ".xlsm",
+        )
 
 
 # ============================================================================ orçamento (Excel)
@@ -402,7 +454,10 @@ class QuoteItem(DomainModel):
     n: int = Field(ge=1)
     description: str = Field(min_length=1)
     unit: str
-    lpu: bool = Field(True, description="item da tabela de preços (LPU); False = fora da LPU. Planilha sem a coluna: True")
+    lpu: bool = Field(
+        True,
+        description="item da tabela de preços (LPU); False = fora da LPU. Planilha sem a coluna: True",
+    )
     quantity: float = Field(gt=0)
     unit_value: float = Field(ge=0)
     total_value: float = Field(ge=0)
@@ -410,7 +465,9 @@ class QuoteItem(DomainModel):
     @model_validator(mode="after")
     def _total_matches(self) -> QuoteItem:
         if abs(self.quantity * self.unit_value - self.total_value) > 0.51:
-            raise ValueError(f"item {self.n}: quantidade × valor unitário ≠ valor total")
+            raise ValueError(
+                f"item {self.n}: quantidade × valor unitário ≠ valor total"
+            )
         return self
 
 
@@ -480,20 +537,32 @@ class FindingType(DomainModel):
     reduces_confidence: bool = False
     lock: bool = False
     amount_at_issue: AmountAtIssue = AmountAtIssue.NONE
-    extent: Extent = Field(Extent.WHOLE, description="como medir a fração atingida: o desconto cresce com ela (proporcional ao que foi enviado)")
-    returns: bool = Field(False, description="falta do fornecedor: com este apontamento, a recomendação é no máximo devolver ao fornecedor")
-    enabled: bool = Field(True, description="desativado: o apontamento não é gerado nem desconta (portal de configuração)")
+    extent: Extent = Field(
+        Extent.WHOLE,
+        description="como medir a fração atingida: o desconto cresce com ela (proporcional ao que foi enviado)",
+    )
+    returns: bool = Field(
+        False,
+        description="falta do fornecedor: com este apontamento, a recomendação é no máximo devolver ao fornecedor",
+    )
+    enabled: bool = Field(
+        True,
+        description="desativado: o apontamento não é gerado nem desconta (portal de configuração)",
+    )
     absorbs: list[str] = Field(
         default_factory=list,
         description="tipos da mesma validação que deixam de descontar quando este aparece (o mesmo problema visto por outro ângulo)",
     )
     by_workstream: dict[Workstream, FindingOverride] = Field(
-        default_factory=dict, description="ajustes por esteira (SETA, SISR): ativar/desativar e severidade diferentes do padrão"
+        default_factory=dict,
+        description="ajustes por esteira (SETA, SISR): ativar/desativar e severidade diferentes do padrão",
     )
 
     def for_workstream(self, workstream: str) -> FindingType:
         """O tipo com o ajuste da esteira aplicado (sem ajuste, o próprio tipo)."""
-        o = next((v for k, v in self.by_workstream.items() if k.value == workstream), None)
+        o = next(
+            (v for k, v in self.by_workstream.items() if k.value == workstream), None
+        )
         if o is None:
             return self
         patch = {k: v for k, v in o.model_dump().items() if v is not None}
@@ -532,28 +601,51 @@ class Rubric(DomainModel):
     spreadsheet_value_tolerance: float = 1.0
     photo_date_tolerance_days: int = 1
     relevant_amount_at_issue_pct: float = Field(
-        10, ge=0, le=100, description="a partir deste % do orçamento em questão, a nota de Orçamento fica limitada a 100 − % em questão"
+        10,
+        ge=0,
+        le=100,
+        description="a partir deste % do orçamento em questão, a nota de Orçamento fica limitada a 100 − % em questão",
     )
     proportional_floor: float = Field(
-        0.5, ge=0, le=1, description="fração da severidade que o apontamento desconta mesmo atingindo pouco do que foi enviado"
+        0.5,
+        ge=0,
+        le=1,
+        description="fração da severidade que o apontamento desconta mesmo atingindo pouco do que foi enviado",
     )
     max_amount_at_issue_for_caveats_pct: float = Field(
-        30, ge=0, le=100, description="a partir deste % do orçamento em questão, o chamado volta ao fornecedor (0 desliga)"
+        30,
+        ge=0,
+        le=100,
+        description="a partir deste % do orçamento em questão, o chamado volta ao fornecedor (0 desliga)",
     )
     max_amount_at_issue_for_approve_pct: float = Field(
-        10, ge=0, le=100, description="acima deste % do orçamento em questão, 'Aprovar' vira 'Aprovar com ressalvas' (0 desliga)"
+        10,
+        ge=0,
+        le=100,
+        description="acima deste % do orçamento em questão, 'Aprovar' vira 'Aprovar com ressalvas' (0 desliga)",
     )
     market_price_tolerance_pct: float = Field(
-        25, ge=0, description="preço até N% acima do valor de mercado anexado não é apontado (margem do fornecedor sobre o varejo)"
+        25,
+        ge=0,
+        description="preço até N% acima do valor de mercado anexado não é apontado (margem do fornecedor sobre o varejo)",
     )
     photo_quantity_tolerance_pct: float = Field(
-        25, ge=0, description="quantidade cobrada até N% acima do que as fotos mostram não é apontada (margem de corte e perda)"
+        25,
+        ge=0,
+        description="quantidade cobrada até N% acima do que as fotos mostram não é apontada (margem de corte e perda)",
     )
     finding_types: dict[str, FindingType]
 
     def for_workstream(self, workstream: str) -> Rubric:
         """Régua com os ajustes da esteira aplicados a cada tipo de apontamento."""
-        return self.model_copy(update={"finding_types": {k: t.for_workstream(workstream) for k, t in self.finding_types.items()}})
+        return self.model_copy(
+            update={
+                "finding_types": {
+                    k: t.for_workstream(workstream)
+                    for k, t in self.finding_types.items()
+                }
+            }
+        )
 
 
 # ============================================================================ resultado
@@ -571,10 +663,24 @@ class Finding(DomainModel):
     reduces_confidence: bool = False
     phase: int = 1
     amount_at_issue: float = 0.0
-    absorbed_by: str = Field("", description="tipo que absorveu este apontamento: segue como evidência, mas não desconta")
-    returns: bool = Field(False, description="falta do fornecedor: leva a devolver ao fornecedor qualquer que seja a nota")
-    extent: float = Field(1.0, ge=0, le=1, description="fração do que foi enviado que o tipo atinge (1 = tudo)")
-    extent_label: str = Field("", description="a fração em palavras, ex.: '2 de 3 serviços pedidos', '25% do orçamento'")
+    absorbed_by: str = Field(
+        "",
+        description="tipo que absorveu este apontamento: segue como evidência, mas não desconta",
+    )
+    returns: bool = Field(
+        False,
+        description="falta do fornecedor: leva a devolver ao fornecedor qualquer que seja a nota",
+    )
+    extent: float = Field(
+        1.0,
+        ge=0,
+        le=1,
+        description="fração do que foi enviado que o tipo atinge (1 = tudo)",
+    )
+    extent_label: str = Field(
+        "",
+        description="a fração em palavras, ex.: '2 de 3 serviços pedidos', '25% do orçamento'",
+    )
 
 
 class EvaluatedRequirement(DomainModel):
@@ -684,10 +790,16 @@ class LlmCall(DomainModel):
     task: str
     provider: str = "anthropic"
     model: str
-    resolved_model: str = Field("", description="Snapshot que o provedor informou ter usado")
+    resolved_model: str = Field(
+        "", description="Snapshot que o provedor informou ter usado"
+    )
     prompt_version: str = ""
-    prompt_hash: str = Field("", description="sha256 do prompt de sistema (12 primeiros dígitos)")
-    schema_hash: str = Field("", description="sha256 do schema de saída (12 primeiros dígitos)")
+    prompt_hash: str = Field(
+        "", description="sha256 do prompt de sistema (12 primeiros dígitos)"
+    )
+    schema_hash: str = Field(
+        "", description="sha256 do schema de saída (12 primeiros dígitos)"
+    )
     start: datetime
     duration_s: float
     input_tokens: int = 0
@@ -718,13 +830,17 @@ class Assessment(DomainModel):
     generated_at: datetime
     rubric_version: str
     prompts_version: str
-    config_signature: str = Field("", description="Impressão digital de régua + prompts + modelos + fase")
+    config_signature: str = Field(
+        "", description="Impressão digital de régua + prompts + modelos + fase"
+    )
     phase: int
     mode: str
     batch_mode: str = "sync"
     models: dict[str, str]
     run_id: str | None = None
-    record_id: int | None = Field(None, description="Chave do parecer no banco (usada pelo feedback)")
+    record_id: int | None = Field(
+        None, description="Chave do parecer no banco (usada pelo feedback)"
+    )
 
     checklist: ChecklistResult
     attachments: list[ClassifiedAttachment]
@@ -742,11 +858,14 @@ class Assessment(DomainModel):
     items: list[EvaluatedItem] = Field(default_factory=list)
     quote_notes: list[str] = Field(default_factory=list)
     service_coverage: list[dict[str, Any]] = Field(
-        default_factory=list, description="serviços pedidos × itens do orçamento que os executam (racional do engenheiro)"
+        default_factory=list,
+        description="serviços pedidos × itens do orçamento que os executam (racional do engenheiro)",
     )
     photos: list[EvaluatedPhoto] = Field(default_factory=list)
     photo_summary: dict[str, Any] | None = None
-    documents: list[EvaluatedDocument] = Field(default_factory=list, description="documentos lidos por OCR (imagem ou PDF)")
+    documents: list[EvaluatedDocument] = Field(
+        default_factory=list, description="documentos lidos por OCR (imagem ou PDF)"
+    )
 
     summary: str = ""
     supplier_message: str = ""

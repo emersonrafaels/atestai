@@ -10,12 +10,96 @@
     "wheel": "zoom",
     "minimap": true,
     "guides": true,
+    "squad": "DataCraft",
+    "wmStyle": "tile",
+    "wmOpacity": 0.08,
     "legend": true,
     "legendPos": "right",
     "badgeShape": "square",
-    "badgeColor": "#147EBA",
-    "wmStyle": "tile",
-    "wmOpacity": 0.08
+    "badgeColor": "#147EBA"
+  },
+  "view": {
+    "x": 126.3970230793401,
+    "y": 213.19247580852726,
+    "k": 0.17196167423096248
+  },
+  "savedAt": "2026-11-15T11:18:21.370Z",
+  "pageTitle": "Página 1",
+  "legend": {
+    "order": [
+      "x:s_flow",
+      "b:1",
+      "b:2",
+      "b:3",
+      "b:4",
+      "b:5",
+      "b:6",
+      "b:7",
+      "b:8",
+      "b:9",
+      "b:10",
+      "b:11",
+      "b:12",
+      "b:13",
+      "b:14",
+      "b:15",
+      "b:16",
+      "b:17",
+      "x:s_iara",
+      "b:I1",
+      "b:I2",
+      "b:I3",
+      "x:s_hitl",
+      "b:H1",
+      "b:H2",
+      "b:H3",
+      "b:H4",
+      "b:H5",
+      "x:s_val",
+      "b:V1",
+      "b:V2",
+      "b:V3",
+      "b:V4",
+      "x:s_att",
+      "b:A",
+      "b:B",
+      "b:C",
+      "b:D",
+      "b:E",
+      "b:F",
+      "b:G"
+    ],
+    "extras": [
+      {
+        "id": "s_flow",
+        "kind": "section",
+        "title": "Fluxo do chamado"
+      },
+      {
+        "id": "s_iara",
+        "kind": "section",
+        "title": "Chamadas à IARA",
+        "color": "#EC7000"
+      },
+      {
+        "id": "s_hitl",
+        "kind": "section",
+        "title": "Feedback humano curado (planejado)",
+        "color": "#0d9488"
+      },
+      {
+        "id": "s_val",
+        "kind": "section",
+        "title": "Validação de mudanças",
+        "color": "#7c3aed"
+      },
+      {
+        "id": "s_att",
+        "kind": "section",
+        "title": "Pontos de atenção",
+        "color": "#DD344C"
+      }
+    ]
   },
   "nodes": [
     {
@@ -101,7 +185,7 @@
       "style": {},
       "kind": "group",
       "w": 2990,
-      "h": 1040,
+      "h": 980,
       "meta": []
     },
     {
@@ -114,7 +198,7 @@
       "style": {},
       "kind": "group",
       "w": 2950,
-      "h": 990,
+      "h": 930,
       "meta": [],
       "parent": "cloud"
     },
@@ -176,7 +260,7 @@
       "style": {},
       "kind": "group",
       "w": 1750,
-      "h": 955,
+      "h": 890,
       "meta": [],
       "parent": "region"
     },
@@ -270,29 +354,13 @@
       "x": 550,
       "y": 670,
       "label": "Camada de LLM",
-      "sub": "atest/llm.py • atest/providers/",
+      "sub": "atest/llm.py • atest/providers/ • memória de feedback planejada",
       "style": {
         "glyph": "sparkle"
       },
       "kind": "group",
-      "w": 550,
-      "h": 150,
-      "meta": [],
-      "parent": "sm"
-    },
-    {
-      "id": "cfg",
-      "type": "g-generic",
-      "x": 550,
-      "y": 850,
-      "label": "Configuração e referências",
-      "sub": "config/ no pacote",
-      "style": {
-        "glyph": "gear"
-      },
-      "kind": "group",
-      "w": 1710,
-      "h": 150,
+      "w": 840,
+      "h": 270,
       "meta": [],
       "parent": "sm"
     },
@@ -355,14 +423,14 @@
       "meta": []
     },
     {
-      "id": "use",
+      "id": "fb",
       "type": "g-generic",
       "x": -340,
-      "y": 1100,
-      "label": "⑦ Consumo, feedback e qualidade",
-      "sub": "painel web • hospedagem a confirmar",
+      "y": 1040,
+      "label": "⑦ Consumo e feedback humano curado",
+      "sub": "painel web • memória de feedback planejada",
       "style": {
-        "glyph": "browser",
+        "glyph": "users",
         "stroke": "#147EBA",
         "fill": "#147EBA",
         "fo": 0.03,
@@ -370,7 +438,26 @@
       },
       "kind": "group",
       "w": 2910,
-      "h": 180,
+      "h": 200,
+      "meta": []
+    },
+    {
+      "id": "val",
+      "type": "g-generic",
+      "x": -340,
+      "y": 1270,
+      "label": "⑧ Validação de mudanças • Golden Dataset",
+      "sub": "prompt, régua, checklist ou modelo só sobem para produção depois daqui",
+      "style": {
+        "glyph": "target",
+        "stroke": "#7c3aed",
+        "fill": "#7c3aed",
+        "fo": 0.03,
+        "dashed": false
+      },
+      "kind": "group",
+      "w": 2910,
+      "h": 270,
       "meta": []
     },
     {
@@ -512,7 +599,7 @@
       "x": 260,
       "y": 280,
       "label": "OTs extraídas",
-      "sub": "tickets/<id>/ • ticket.json, .xlsx, anexos",
+      "sub": "tickets/<id>/ • ticket.json, .xlsx, anexos (extensão original)",
       "style": {
         "badge": "5"
       },
@@ -605,7 +692,7 @@
       "x": 570,
       "y": 400,
       "label": "Orchestrator",
-      "sub": "7 etapas em ordem • tempo por etapa",
+      "sub": "7 etapas em ordem • calcula o tempo por etapa",
       "style": {
         "badge": "7"
       },
@@ -956,10 +1043,29 @@
       "parent": "st_par"
     },
     {
+      "id": "ctxe",
+      "type": "gen-prompt",
+      "x": 570,
+      "y": 700,
+      "label": "Feedback-Augmented Context",
+      "sub": "prompt + casos validados parecidos",
+      "style": {
+        "dashed": true,
+        "badge": "H5"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "stepDesc": "O **Feedback-Augmented Context** coloca esses casos no prompt (**RA-ICL**: Retrieval-Augmented In-Context Learning) antes da chamada à IARA.",
+      "stepColor": "#0d9488",
+      "meta": [],
+      "parent": "llm"
+    },
+    {
       "id": "prov",
       "type": "gen-cache",
-      "x": 570,
-      "y": 720,
+      "x": 860,
+      "y": 700,
       "label": "ProviderClient",
       "sub": "cache em disco • contingência",
       "style": {},
@@ -972,8 +1078,8 @@
     {
       "id": "adapt",
       "type": "py-lib",
-      "x": 860,
-      "y": 720,
+      "x": 1150,
+      "y": 700,
       "label": "Adaptador IARA",
       "sub": "iara_genai_sdk • schema + reparo do JSON",
       "style": {
@@ -1002,107 +1108,23 @@
       "parent": "llm"
     },
     {
-      "id": "settings",
-      "type": "py-pydantic",
+      "id": "retr",
+      "type": "gen-retriever",
       "x": 570,
-      "y": 900,
-      "label": "Configuração",
-      "sub": "settings.toml + settings.local (IARA)",
+      "y": 840,
+      "label": "Feedback Retriever",
+      "sub": "busca casos validados parecidos",
       "style": {
-        "badge": "F"
+        "dashed": true,
+        "badge": "H4"
       },
       "kind": "card",
       "w": 220,
       "h": 60,
-      "stepDesc": "**Configuração do portal**: as versões salvas no portal ficam no banco do painel; o Notebook Job precisa ler esse banco para aplicar a régua e o checklist atuais.",
-      "stepColor": "#DD344C",
+      "stepDesc": "Na análise, o **Feedback Retriever** busca na memória os **casos validados mais parecidos** com o item em análise.",
+      "stepColor": "#0d9488",
       "meta": [],
-      "parent": "cfg"
-    },
-    {
-      "id": "regua",
-      "type": "data-file",
-      "x": 860,
-      "y": 900,
-      "label": "Régua do score",
-      "sub": "rubric.toml • pesos • faixas • tipos",
-      "style": {
-        "glyph": "scale"
-      },
-      "kind": "card",
-      "w": 220,
-      "h": 60,
-      "meta": [
-        {
-          "k": "Pesos",
-          "v": "escopo 20 · orçamento 40 · fotos 40"
-        },
-        {
-          "k": "Faixas",
-          "v": "≥ 85 aprovar · ≥ 70 com ressalvas"
-        }
-      ],
-      "parent": "cfg"
-    },
-    {
-      "id": "checklists",
-      "type": "data-file",
-      "x": 1150,
-      "y": 900,
-      "label": "Checklists",
-      "sub": "checklists.toml • itens obrigatórios",
-      "style": {
-        "glyph": "checklist"
-      },
-      "kind": "card",
-      "w": 220,
-      "h": 60,
-      "meta": [],
-      "parent": "cfg"
-    },
-    {
-      "id": "catalogo",
-      "type": "data-catalog",
-      "x": 1440,
-      "y": 900,
-      "label": "Catálogo",
-      "sub": "catalog.toml • categorias • sintomas • locais",
-      "style": {},
-      "kind": "card",
-      "w": 220,
-      "h": 60,
-      "meta": [],
-      "parent": "cfg"
-    },
-    {
-      "id": "prompts",
-      "type": "gen-prompt",
-      "x": 1730,
-      "y": 900,
-      "label": "Prompts versionados",
-      "sub": "olhar de engenheiro • versão + hash",
-      "style": {},
-      "kind": "card",
-      "w": 220,
-      "h": 60,
-      "meta": [],
-      "parent": "cfg"
-    },
-    {
-      "id": "lpu",
-      "type": "data-file",
-      "x": 2020,
-      "y": 900,
-      "label": "LPU por esteira",
-      "sub": "preços de referência SETA e SISR",
-      "style": {
-        "glyph": "table"
-      },
-      "kind": "card",
-      "w": 220,
-      "h": 60,
-      "meta": [],
-      "parent": "cfg"
+      "parent": "llm"
     },
     {
       "id": "s3_par",
@@ -1277,8 +1299,8 @@
     {
       "id": "analistas",
       "type": "users",
-      "x": -320,
-      "y": 1150,
+      "x": 2330,
+      "y": 1090,
       "label": "Analistas e admins",
       "sub": "recebem as análises • dão feedback",
       "style": {},
@@ -1286,13 +1308,13 @@
       "w": 220,
       "h": 60,
       "meta": [],
-      "parent": "use"
+      "parent": "fb"
     },
     {
       "id": "painel",
       "type": "browser",
-      "x": -30,
-      "y": 1150,
+      "x": 2020,
+      "y": 1090,
       "label": "Painel web",
       "sub": "Análise • Documentos • Validação",
       "style": {
@@ -1305,13 +1327,13 @@
       "stepDesc": "O **painel web** recebe as análises do S3; a pessoa analista confere cada parecer. Rodar a análise pelo painel é **só demonstração**.",
       "notes": "Onde o painel e o banco do painel estão hospedados: a confirmar.",
       "meta": [],
-      "parent": "use"
+      "parent": "fb"
     },
     {
       "id": "api",
       "type": "py-fastapi",
-      "x": 260,
-      "y": 1150,
+      "x": 1730,
+      "y": 1090,
       "label": "API do painel",
       "sub": "FastAPI • lê os pareceres do S3",
       "style": {},
@@ -1319,15 +1341,15 @@
       "w": 220,
       "h": 60,
       "meta": [],
-      "parent": "use"
+      "parent": "fb"
     },
     {
       "id": "banco",
       "type": "database",
-      "x": 570,
-      "y": 1150,
+      "x": 1440,
+      "y": 1090,
       "label": "Banco do painel",
-      "sub": "feedbacks • versões do portal • usuários",
+      "sub": "feedbacks de vários avaliadores • versões do portal",
       "style": {
         "badge": "17"
       },
@@ -1341,77 +1363,234 @@
           "v": "feedbacks · config_versions · usuários e sessões do portal"
         }
       ],
-      "parent": "use"
+      "parent": "fb"
     },
     {
-      "id": "gabarito",
-      "type": "data-label",
-      "x": 860,
-      "y": 1150,
-      "label": "Gabarito",
-      "sub": "1 JSON por chamado • feedback vira rótulo",
-      "style": {},
+      "id": "alpha",
+      "type": "ml-eval",
+      "x": 1150,
+      "y": 1090,
+      "label": "Concordância entre avaliadores",
+      "sub": "Krippendorff's Alpha • aceita avaliações ausentes",
+      "style": {
+        "dashed": true,
+        "badge": "H1"
+      },
       "kind": "card",
       "w": 220,
       "h": 60,
-      "meta": [],
-      "parent": "use"
+      "stepDesc": "Toda semana, os feedbacks dos analistas passam pela **concordância entre avaliadores** com o **Krippendorff's Alpha**, que aceita **vários avaliadores e avaliações ausentes**.",
+      "stepColor": "#0d9488",
+      "meta": [
+        {
+          "k": "Métrica",
+          "v": "Krippendorff's Alpha"
+        },
+        {
+          "k": "Por quê",
+          "v": "vários avaliadores, com avaliações ausentes"
+        },
+        {
+          "k": "Frequência",
+          "v": "semanal"
+        }
+      ],
+      "parent": "fb"
     },
     {
-      "id": "aval",
+      "id": "consensus",
+      "type": "data-label",
+      "x": 860,
+      "y": 1090,
+      "label": "Consensus Dataset",
+      "sub": "só feedbacks com concordância suficiente",
+      "style": {
+        "dashed": true,
+        "badge": "H2"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "stepDesc": "Só os itens com **concordância suficiente** entram no **Consensus Dataset**: item analisado, candidato do agente, agente e se acertou ou errou.",
+      "stepColor": "#0d9488",
+      "meta": [],
+      "parent": "fb"
+    },
+    {
+      "id": "vmm",
+      "type": "gen-vectordb",
+      "x": 570,
+      "y": 1090,
+      "label": "Validated Match Memory",
+      "sub": "memória consultável pelos agentes",
+      "style": {
+        "dashed": true,
+        "badge": "H3"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "stepDesc": "O Consensus Dataset vira a **Validated Match Memory**, memória **consultável pelos agentes** com os feedbacks curados.",
+      "stepColor": "#0d9488",
+      "meta": [
+        {
+          "k": "Técnica",
+          "v": "Retrieval-Augmented In-Context Learning (RA-ICL)"
+        },
+        {
+          "k": "Origem",
+          "v": "Consensus Dataset"
+        },
+        {
+          "k": "Não contém",
+          "v": "casos do Golden Dataset"
+        }
+      ],
+      "notes": "Onde a memória fica hospedada e qual modelo de embeddings da IARA usar na busca: a confirmar.",
+      "parent": "fb"
+    },
+    {
+      "id": "n_sep",
+      "type": "shape-note",
+      "x": -320,
+      "y": 1075,
+      "w": 820,
+      "h": 150,
+      "label": "Separação fundamental",
+      "sub": "O Golden Dataset mede se o agente está melhorando: é congelado e só entra na avaliação offline de cada mudança.\nA Validated Match Memory fornece experiências para ajudar o agente a melhorar: é consultada em produção.\nTécnica: Retrieval-Augmented In-Context Learning (RA-ICL). Origem: Consensus Dataset. Recuperação: Feedback Retriever. Enriquecimento: Feedback-Augmented Context.\nCasos do Golden Dataset nunca entram na memória, para a avaliação não ser contaminada.",
+      "style": {
+        "fontSize": 12
+      },
+      "kind": "note",
+      "meta": [],
+      "parent": "fb"
+    },
+    {
+      "id": "proposta",
+      "type": "github",
+      "x": -320,
+      "y": 1320,
+      "label": "Proposta de mudança",
+      "sub": "prompt, régua, checklist ou modelo",
+      "style": {
+        "badge": "V1"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "stepDesc": "Toda **mudança de configuração dos agentes** (prompt, régua, checklist ou modelo) vira uma **nova versão candidata**.",
+      "stepColor": "#7c3aed",
+      "meta": [],
+      "parent": "val"
+    },
+    {
+      "id": "cfgv",
+      "type": "data-file",
+      "x": -30,
+      "y": 1320,
+      "label": "Configuração versionada",
+      "sub": "prompts • rubric • checklists • catálogo • LPU",
+      "style": {
+        "glyph": "layers",
+        "badge": "F"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "stepDesc": "**Configuração do portal**: as versões salvas no portal ficam no banco do painel; o Notebook Job precisa ler esse banco para aplicar a régua e o checklist atuais.",
+      "stepColor": "#DD344C",
+      "meta": [
+        {
+          "k": "Arquivos",
+          "v": "prompts.toml · rubric.toml · checklists.toml · catalog.toml · LPU"
+        },
+        {
+          "k": "Régua",
+          "v": "pesos 20/40/40 · faixas 85/70"
+        }
+      ],
+      "parent": "val"
+    },
+    {
+      "id": "avalo",
       "type": "ml-confusion",
-      "x": 1150,
-      "y": 1150,
-      "label": "Avaliação contra o gabarito",
+      "x": 260,
+      "y": 1320,
+      "label": "Avaliação offline",
+      "sub": "action = validate • versão nova × Golden",
+      "style": {
+        "badge": "V2"
+      },
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "stepDesc": "A versão candidata roda contra o **Golden Dataset** (gabarito congelado), na **avaliação offline** (`action = validate`).",
+      "stepColor": "#7c3aed",
+      "meta": [],
+      "parent": "val"
+    },
+    {
+      "id": "comp",
+      "type": "ml-eval",
+      "x": 570,
+      "y": 1320,
+      "label": "Comparação com produção",
       "sub": "acurácia • kappa • F1 • erro do score",
       "style": {},
       "kind": "card",
       "w": 220,
       "h": 60,
       "meta": [],
-      "parent": "use"
+      "parent": "val"
     },
     {
       "id": "portao",
       "type": "ml-gate",
-      "x": 1440,
-      "y": 1150,
+      "x": 860,
+      "y": 1320,
       "label": "Portão de qualidade",
-      "sub": "action = validate • reprova a versão",
+      "sub": "aprova ou reprova a versão",
       "style": {
-        "badge": "18"
+        "badge": "V3"
       },
       "kind": "card",
       "w": 220,
       "h": 60,
-      "stepDesc": "O feedback vira **rótulo no gabarito**, que alimenta a avaliação e o **portão de qualidade** (`action = validate`) antes de publicar prompt, régua ou modelo novo.",
+      "stepDesc": "O **portão de qualidade** compara com a versão em produção (acurácia, kappa, F1, erro do score): reprovada volta para ajuste.",
+      "stepColor": "#7c3aed",
       "meta": [
         {
           "k": "Limites",
           "v": "acurácia ≥ 0,85 · kappa ≥ 0,75 · F1 ≥ 0,80 · erro do score ≤ 8"
         }
       ],
-      "parent": "use"
+      "parent": "val"
     },
     {
-      "id": "rescore",
-      "type": "py-script",
-      "x": 1730,
-      "y": 1150,
-      "label": "Rescore do gabarito",
-      "sub": "régua mudou → recalcula gabaritos",
-      "style": {},
+      "id": "pub",
+      "type": "shape-card",
+      "x": 1150,
+      "y": 1320,
+      "label": "Publicação em produção",
+      "sub": "versão aprovada → pacote do Notebook Job",
+      "style": {
+        "glyph": "deploy",
+        "accent": "#16a34a",
+        "badge": "V4"
+      },
       "kind": "card",
       "w": 220,
       "h": 60,
+      "stepDesc": "Só a versão **aprovada** é publicada no pacote que o Notebook Job roda.",
+      "stepColor": "#7c3aed",
       "meta": [],
-      "parent": "use"
+      "parent": "val"
     },
     {
       "id": "cenarios",
       "type": "data-sample",
-      "x": 2020,
-      "y": 1150,
+      "x": -30,
+      "y": 1440,
       "label": "Cenários de teste",
       "sub": "1 chamado por tipo de problema",
       "style": {},
@@ -1419,7 +1598,44 @@
       "w": 220,
       "h": 60,
       "meta": [],
-      "parent": "use"
+      "parent": "val"
+    },
+    {
+      "id": "golden",
+      "type": "data-label",
+      "x": 260,
+      "y": 1440,
+      "label": "Golden Dataset",
+      "sub": "gabarito congelado • mede se o agente melhora",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [
+        {
+          "k": "Uso",
+          "v": "só avaliação offline de cada mudança"
+        },
+        {
+          "k": "Regra",
+          "v": "congelado e separado da memória"
+        }
+      ],
+      "parent": "val"
+    },
+    {
+      "id": "rescore",
+      "type": "py-script",
+      "x": 570,
+      "y": 1440,
+      "label": "Rescore do gabarito",
+      "sub": "régua mudou → recalcula o gabarito",
+      "style": {},
+      "kind": "card",
+      "w": 220,
+      "h": 60,
+      "meta": [],
+      "parent": "val"
     },
     {
       "id": "start",
@@ -1446,7 +1662,7 @@
       "w": 2000,
       "h": 245,
       "label": "Como ler esta arquitetura",
-      "sub": "① Entrada: a OT e o orçamento .xlsx estão nos dados democratizados do Data Mesh; fotos e documentos ficam no Salesforce, acessíveis por duas APIs (IDs da OT → base64 por ID).\n③ Notebook Job do SageMaker, agendado a cada hora e apartado do app, controla todo o fluxo: ① dispara o Glue e espera; ② roda a análise.\n② Extração (passo ①): o Glue chama o Athena, que lê o Data Mesh, baixa os anexos pelas APIs e grava tudo no S3 (tickets/<id>/).\n④ Análise (passo ②): o pacote atest lê as OTs novas do S3 e roda as 7 etapas (LLM pela IARA). ⑤ Pareceres: JSON e CSV no S3. ⑥ Salesforce: retorno a integrar.\n⑦ Consumo: o painel web recebe as análises; a pessoa analista dá o feedback, que alimenta o gabarito, a avaliação e o portão de qualidade.\nRodar a análise pelo próprio painel (como o código permite hoje) é só demonstração e não faz parte deste fluxo.\n\nSelos azuis 1–18: fluxo · I1–I3 (laranja): chamadas à IARA · A–G (vermelho): pontos de atenção.\nÍcone de brilho: chama o modelo · borda tracejada: Fase 2 da régua ou a integrar · linhas: azul-petróleo batch, laranja IARA, roxo devolução, verde feedback.",
+      "sub": "① Entrada: a OT e o orçamento .xlsx estão nos dados democratizados do Data Mesh; fotos e documentos ficam no Salesforce, acessíveis por duas APIs (IDs da OT → base64 por ID).\n③ Notebook Job do SageMaker, agendado a cada hora e apartado do app, controla todo o fluxo: ① dispara o Glue e espera; ② roda a análise.\n② Extração (passo ①): o Glue chama o Athena, que lê o Data Mesh, baixa os anexos pelas APIs e grava tudo no S3 (tickets/<id>/).\n④ Análise (passo ②): o pacote atest lê as OTs novas do S3 e roda as 7 etapas (LLM pela IARA). ⑤ Pareceres: JSON e CSV no S3. ⑥ Salesforce: retorno a integrar.\n⑦ Consumo e feedback: o painel recebe as análises; os feedbacks de vários avaliadores passam pelo Krippendorff's Alpha e viram a Validated Match Memory (planejado).\n⑧ Validação de mudanças: prompt, régua, checklist ou modelo novo roda contra o Golden Dataset e só sobe se passar no portão de qualidade.\nRodar a análise pelo próprio painel (como o código permite hoje) é só demonstração e não faz parte deste fluxo.\n\nSelos azuis 1–17: fluxo · I1–I3 (laranja): IARA · H1–H5 (verde-azulado, tracejado): feedback humano planejado · V1–V4 (roxo): validação · A–G: atenção.\nÍcone de brilho: chama o modelo · borda tracejada: Fase 2 da régua ou a integrar · linhas: azul-petróleo batch, laranja IARA, roxo devolução, verde feedback.",
       "kind": "note",
       "style": {
         "fontSize": 13
@@ -1826,7 +2042,7 @@
     {
       "id": "e39",
       "from": "llms",
-      "to": "prov",
+      "to": "ctxe",
       "label": "",
       "style": {},
       "fromSide": "bottom",
@@ -1834,6 +2050,27 @@
     },
     {
       "id": "e40",
+      "from": "retr",
+      "to": "ctxe",
+      "label": "exemplos validados",
+      "style": {
+        "color": "#0d9488",
+        "dash": "dashed"
+      },
+      "fromSide": "top",
+      "toSide": "bottom"
+    },
+    {
+      "id": "e41",
+      "from": "ctxe",
+      "to": "prov",
+      "label": "",
+      "style": {},
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "e42",
       "from": "prov",
       "to": "adapt",
       "label": "",
@@ -1842,7 +2079,7 @@
       "toSide": "left"
     },
     {
-      "id": "e41",
+      "id": "e43",
       "from": "adapt",
       "to": "iara_gw",
       "label": "HTTPS",
@@ -1854,7 +2091,7 @@
       "toSide": "left"
     },
     {
-      "id": "e42",
+      "id": "e44",
       "from": "iara_gw",
       "to": "iara_mod",
       "label": "",
@@ -1863,7 +2100,7 @@
       }
     },
     {
-      "id": "e43",
+      "id": "e45",
       "from": "iara_gw",
       "to": "iara_batch",
       "label": "futuro",
@@ -1875,7 +2112,7 @@
       "toSide": "left"
     },
     {
-      "id": "e44",
+      "id": "e46",
       "from": "s3_par",
       "to": "api",
       "label": "lê os pareceres",
@@ -1891,118 +2128,183 @@
         },
         {
           "x": 2590,
-          "y": 1080
+          "y": 1015
         },
         {
-          "x": 370,
-          "y": 1080
+          "x": 1840,
+          "y": 1015
         }
       ]
     },
     {
-      "id": "e45",
+      "id": "e47",
       "from": "analistas",
       "to": "painel",
-      "label": "confere e dá feedback",
-      "style": {
-        "color": "#16a34a"
-      }
-    },
-    {
-      "id": "e46",
-      "from": "painel",
-      "to": "api",
-      "label": "HTTP /api",
-      "style": {}
-    },
-    {
-      "id": "e47",
-      "from": "api",
-      "to": "banco",
       "label": "feedback",
       "style": {
         "color": "#16a34a"
-      }
+      },
+      "fromSide": "left",
+      "toSide": "right"
     },
     {
       "id": "e48",
-      "from": "banco",
-      "to": "gabarito",
-      "label": "vira rótulo",
-      "style": {
-        "color": "#16a34a",
-        "dash": "dashed"
-      }
+      "from": "painel",
+      "to": "api",
+      "label": "HTTP",
+      "style": {},
+      "fromSide": "left",
+      "toSide": "right"
     },
     {
       "id": "e49",
-      "from": "gabarito",
-      "to": "aval",
-      "label": "",
-      "style": {}
+      "from": "api",
+      "to": "banco",
+      "label": "grava",
+      "style": {
+        "color": "#16a34a"
+      },
+      "fromSide": "left",
+      "toSide": "right"
     },
     {
       "id": "e50",
-      "from": "aval",
+      "from": "banco",
+      "to": "alpha",
+      "label": "semana",
+      "style": {
+        "color": "#0d9488",
+        "dash": "dashed"
+      },
+      "fromSide": "left",
+      "toSide": "right"
+    },
+    {
+      "id": "e51",
+      "from": "alpha",
+      "to": "consensus",
+      "label": "consenso",
+      "style": {
+        "color": "#0d9488",
+        "dash": "dashed"
+      },
+      "fromSide": "left",
+      "toSide": "right"
+    },
+    {
+      "id": "e52",
+      "from": "consensus",
+      "to": "vmm",
+      "label": "constrói",
+      "style": {
+        "color": "#0d9488",
+        "dash": "dashed"
+      },
+      "fromSide": "left",
+      "toSide": "right"
+    },
+    {
+      "id": "e53",
+      "from": "vmm",
+      "to": "retr",
+      "label": "consulta",
+      "style": {
+        "color": "#0d9488",
+        "dash": "dashed",
+        "arrow": "both"
+      },
+      "fromSide": "top",
+      "toSide": "bottom"
+    },
+    {
+      "id": "e54",
+      "from": "proposta",
+      "to": "cfgv",
+      "label": "nova versão",
+      "style": {
+        "color": "#7c3aed"
+      }
+    },
+    {
+      "id": "e55",
+      "from": "cfgv",
+      "to": "avalo",
+      "label": "candidata",
+      "style": {
+        "color": "#7c3aed"
+      }
+    },
+    {
+      "id": "e56",
+      "from": "golden",
+      "to": "avalo",
+      "label": "casos",
+      "style": {
+        "color": "#7c3aed"
+      },
+      "fromSide": "top",
+      "toSide": "bottom"
+    },
+    {
+      "id": "e57",
+      "from": "avalo",
+      "to": "comp",
+      "label": "",
+      "style": {
+        "color": "#7c3aed"
+      }
+    },
+    {
+      "id": "e58",
+      "from": "comp",
       "to": "portao",
       "label": "",
-      "style": {}
-    }
-  ],
-  "legend": {
-    "order": [
-      "x:s_flow",
-      "b:1",
-      "b:2",
-      "b:3",
-      "b:4",
-      "b:5",
-      "b:6",
-      "b:7",
-      "b:8",
-      "b:9",
-      "b:10",
-      "b:11",
-      "b:12",
-      "b:13",
-      "b:14",
-      "b:15",
-      "b:16",
-      "b:17",
-      "b:18",
-      "x:s_iara",
-      "b:I1",
-      "b:I2",
-      "b:I3",
-      "x:s_att",
-      "b:A",
-      "b:B",
-      "b:C",
-      "b:D",
-      "b:E",
-      "b:F",
-      "b:G"
-    ],
-    "extras": [
-      {
-        "id": "s_flow",
-        "kind": "section",
-        "title": "Fluxo do chamado"
-      },
-      {
-        "id": "s_iara",
-        "kind": "section",
-        "title": "Chamadas à IARA",
-        "color": "#EC7000"
-      },
-      {
-        "id": "s_att",
-        "kind": "section",
-        "title": "Pontos de atenção",
-        "color": "#DD344C"
+      "style": {
+        "color": "#7c3aed"
       }
-    ]
-  },
-  "pageTitle": "Página 1",
-  "savedAt": "2026-11-14T13:44:41.000Z"
+    },
+    {
+      "id": "e59",
+      "from": "portao",
+      "to": "pub",
+      "label": "aprovada",
+      "style": {
+        "color": "#16a34a",
+        "width": 2
+      }
+    },
+    {
+      "id": "e60",
+      "from": "portao",
+      "to": "proposta",
+      "label": "reprovada: ajusta e testa de novo",
+      "style": {
+        "color": "#DD344C",
+        "dash": "dashed"
+      },
+      "fromSide": "bottom",
+      "toSide": "bottom",
+      "mid": 1520
+    },
+    {
+      "id": "e61",
+      "from": "cenarios",
+      "to": "golden",
+      "label": "",
+      "style": {
+        "color": "#7c3aed"
+      }
+    },
+    {
+      "id": "e62",
+      "from": "rescore",
+      "to": "golden",
+      "label": "",
+      "style": {
+        "color": "#7c3aed"
+      },
+      "fromSide": "left",
+      "toSide": "right"
+    }
+  ]
 }

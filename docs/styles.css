@@ -580,3 +580,44 @@ section.doc > p:not(.small), section.doc > ul, section.doc > ol { max-width: 76c
   details.tech { break-inside: avoid; }
   details.tech:not([open]) > *:not(summary) { display: block; }
 }
+
+/* ------------------------------------------------------------------ régua v9: simulador proporcional e etiquetas */
+.check-row { border-radius: 6px; }
+.check-row.disabled { opacity: .45; }
+.check-row .check { margin: 0; }
+.check .flags { display: block; margin-top: 2px; }
+.extent {
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 8px;
+  margin: -2px 8px 6px 32px; padding: 6px 10px; border-radius: 6px; background: var(--surface-2);
+}
+.extent[hidden] { display: none; }
+.extent input[type="range"] { width: 100%; accent-color: var(--accent); }
+.extent output { white-space: nowrap; }
+.flags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.check .flags { display: flex; margin-top: 4px; }
+.flag {
+  display: inline-block; font-size: .68rem; font-weight: 600; line-height: 1.4;
+  padding: 1px 7px; border-radius: 999px; background: var(--surface-2); color: var(--text-2); white-space: nowrap;
+}
+.flag.lock { background: var(--lock-soft); color: var(--lock); }
+.flag.ret { background: var(--bad-soft); color: var(--bad); }
+.flag.red { background: var(--warn-soft); color: var(--warn); }
+.flag.abs { background: var(--ai-soft); color: var(--ai); }
+.seg { display: inline-flex; border: 1px solid var(--border); border-radius: 999px; overflow: hidden; }
+.seg label { padding: 4px 12px; cursor: pointer; gap: 6px; }
+.seg label:has(input:checked) { background: var(--text); color: var(--bg); }
+.seg input { accent-color: var(--accent); }
+a.card.clickable { text-decoration: none; display: block; }
+a.card.clickable h4 { color: var(--text); }
+#sim-findings .sev { margin-left: auto; white-space: nowrap; }
+@media (max-width: 640px) {
+  .extent { margin-left: 8px; grid-template-columns: minmax(0, 1fr) auto; }
+  .extent > span { display: none; }
+  .seg { flex-wrap: wrap; border-radius: 12px; }
+}
+.stepper { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 640px) { .stepper { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+#findings-body td:nth-child(5) { min-width: 260px; }
+#findings-body td:nth-child(6) { min-width: 120px; }
+#findings-body code { white-space: normal; overflow-wrap: normal; }
+#findings-body td:first-child { min-width: 170px; }

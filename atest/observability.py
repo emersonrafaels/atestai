@@ -24,12 +24,21 @@ from typing import Any
 
 from .config import Settings
 
-current_run: contextvars.ContextVar[str | None] = contextvars.ContextVar("run", default=None)
-current_ticket: contextvars.ContextVar[str | None] = contextvars.ContextVar("ticket", default=None)
-current_stage: contextvars.ContextVar[str | None] = contextvars.ContextVar("stage", default=None)
+current_run: contextvars.ContextVar[str | None] = contextvars.ContextVar(
+    "run", default=None
+)
+current_ticket: contextvars.ContextVar[str | None] = contextvars.ContextVar(
+    "ticket", default=None
+)
+current_stage: contextvars.ContextVar[str | None] = contextvars.ContextVar(
+    "stage", default=None
+)
 
 log = logging.getLogger("atest")
-_DEFAULT_FIELDS = set(logging.LogRecord("", 0, "", 0, "", (), None).__dict__) | {"message", "asctime"}
+_DEFAULT_FIELDS = set(logging.LogRecord("", 0, "", 0, "", (), None).__dict__) | {
+    "message",
+    "asctime",
+}
 
 
 class JsonFormatter(logging.Formatter):
@@ -37,7 +46,9 @@ class JsonFormatter(logging.Formatter):
 
     def format(self, record: logging.LogRecord) -> str:
         event: dict[str, Any] = {
-            "ts": datetime.fromtimestamp(record.created).isoformat(timespec="milliseconds"),
+            "ts": datetime.fromtimestamp(record.created).isoformat(
+                timespec="milliseconds"
+            ),
             "level": record.levelname,
             "logger": record.name,
             "msg": record.getMessage(),
@@ -45,23 +56,44 @@ class JsonFormatter(logging.Formatter):
             "ticket": current_ticket.get(),
             "stage": current_stage.get(),
         }
-        event.update({k: v for k, v in record.__dict__.items() if k not in _DEFAULT_FIELDS})
+        event.update(
+            {k: v for k, v in record.__dict__.items() if k not in _DEFAULT_FIELDS}
+        )
         if record.exc_info:
             event["error"] = self.formatException(record.exc_info)
-        return json.dumps({k: v for k, v in event.items() if v is not None}, ensure_ascii=False, default=str)
+        return json.dumps(
+            {k: v for k, v in event.items() if v is not None},
+            ensure_ascii=False,
+            default=str,
+        )
 
 
 STAGE_PT = {
-    "checklist": "Checklist", "scope": "Escopo", "quote": "Orçamento", "photos": "Fotos", "documents": "Documentos",
-    "score": "Score", "assessment": "Parecer",
+    "checklist": "Checklist",
+    "scope": "Escopo",
+    "quote": "Orçamento",
+    "photos": "Fotos",
+    "documents": "Documentos",
+    "score": "Score",
+    "assessment": "Parecer",
 }
-LEVEL_PT = {"DEBUG": "DEBUG", "INFO": "INFO", "WARNING": "AVISO", "ERROR": "ERRO", "CRITICAL": "ERRO"}
+LEVEL_PT = {
+    "DEBUG": "DEBUG",
+    "INFO": "INFO",
+    "WARNING": "AVISO",
+    "ERROR": "ERRO",
+    "CRITICAL": "ERRO",
+}
 
 
 def _num(v: Any, digits: int = 1) -> str:
     """Número no formato brasileiro (1.234,5)."""
     try:
-        return f"{float(v):,.{digits}f}".replace(",", "X").replace(".", ",").replace("X", ".")
+        return (
+            f"{float(v):,.{digits}f}".replace(",", "X")
+            .replace(".", ",")
+            .replace("X", ".")
+        )
     except (TypeError, ValueError):
         return str(v)
 
@@ -88,8 +120,10 @@ def humanize(name: str, f: dict[str, Any]) -> str:
     if name == "run_start":
         return f"=== Execução iniciada: {f.get('tickets')} chamado(s), modo {f.get('mode')}, envio {f.get('batch_mode')}, fase {f.get('phase')}"
     if name == "run_end":
-        return (f"=== Execução concluída: {f.get('assessments')} parecer(es), {f.get('errors')} erro(s), "
-                f"{_num(f.get('input_tokens'), 0)} tokens de entrada, {_num(f.get('output_tokens'), 0)} de saída, US$ {_num(f.get('cost_usd'), 4)}")
+        return (
+            f"=== Execução concluída: {f.get('assessments')} parecer(es), {f.get('errors')} erro(s), "
+            f"{_num(f.get('input_tokens'), 0)} tokens de entrada, {_num(f.get('output_tokens'), 0)} de saída, US$ {_num(f.get('cost_usd'), 4)}"
+        )
     if name == "ticket_start":
         from .domain import current_catalog
 
@@ -107,31 +141,54 @@ def humanize(name: str, f: dict[str, Any]) -> str:
     if name == "stage_error":
         return f"Etapa {stage} FALHOU após {_num(f.get('duration_s'))} s"
     if name == "llm_request":
-        extra = ", ".join(x for x in (
-            f"{f['images']} imagem(ns)" if f.get("images") else "", f"{f['documents']} PDF(s)" if f.get("documents") else "",
-        ) if x)
-        limit = f"limite {_num(float(f['timeout_s']) / 60)} min" if f.get("timeout_s") else ""
+        extra = ", ".join(
+            x
+            for x in (
+                f"{f['images']} imagem(ns)" if f.get("images") else "",
+                f"{f['documents']} PDF(s)" if f.get("documents") else "",
+            )
+            if x
+        )
+        limit = (
+            f"limite {_num(float(f['timeout_s']) / 60)} min"
+            if f.get("timeout_s")
+            else ""
+        )
         extra = ", ".join(x for x in (extra, limit) if x)
         return f"{_task(f.get('task'))}: chamando {model}{f' ({extra})' if extra else ''}..."
     if name == "llm_waiting":
         msg = f"{_task(f.get('task'))}: ainda aguardando {model} há {_num(f.get('elapsed_s'), 0)} s"
-        return msg + (" (possível travamento: confira a conexão e o provedor)" if f.get("stalled") else "")
+        return msg + (
+            " (possível travamento: confira a conexão e o provedor)"
+            if f.get("stalled")
+            else ""
+        )
     if name == "llm_call":
         if f.get("simulated"):
             return f"{_task(f.get('task'))}: resposta simulada em {_num(f.get('duration_s'))} s"
-        origin = " (do cache)" if f.get("from_cache") else " (via lote)" if f.get("via_batch") else ""
-        return (f"{_task(f.get('task'))}: resposta de {model} em {_num(f.get('duration_s'))} s{origin} · "
-                f"{_num(f.get('input_tokens'), 0)} tokens de entrada, {_num(f.get('output_tokens'), 0)} de saída · US$ {_num(f.get('cost_usd'), 4)}")
+        origin = (
+            " (do cache)"
+            if f.get("from_cache")
+            else " (via lote)" if f.get("via_batch") else ""
+        )
+        return (
+            f"{_task(f.get('task'))}: resposta de {model} em {_num(f.get('duration_s'))} s{origin} · "
+            f"{_num(f.get('input_tokens'), 0)} tokens de entrada, {_num(f.get('output_tokens'), 0)} de saída · US$ {_num(f.get('cost_usd'), 4)}"
+        )
     if name == "llm_truncated_retry":
-        return (f"{_task(f.get('task'))}: resposta cortada no limite de {_num(f.get('max_tokens'), 0)} tokens; "
-                f"tentando de novo com {_num(f.get('retry_max_tokens'), 0)}")
+        return (
+            f"{_task(f.get('task'))}: resposta cortada no limite de {_num(f.get('max_tokens'), 0)} tokens; "
+            f"tentando de novo com {_num(f.get('retry_max_tokens'), 0)}"
+        )
     if name == "llm_fallback":
         return f"{_task(f.get('task'))}: {model} falhou ({f.get('error')}); tentando {str(f.get('fallback', '')).split(':')[-1]}"
     if name == "iara_json_mode_fallback":
         return f"{_task(f.get('task'))}: resposta da IARA fora do formato ({f.get('reason')}); repetindo em modo {f.get('to_mode')}"
     if name == "iara_bad_output":
-        return (f"{_task(f.get('task'))}: resposta da IARA ilegível ({f.get('detail')}, modo {f.get('mode')}); "
-                "a resposta bruta foi gravada em output/logs/atest.jsonl (evento iara_bad_output)")
+        return (
+            f"{_task(f.get('task'))}: resposta da IARA ilegível ({f.get('detail')}, modo {f.get('mode')}); "
+            "a resposta bruta foi gravada em output/logs/atest.jsonl (evento iara_bad_output)"
+        )
     if name == "photos_retry":
         return f"Análise das fotos falhou ({f.get('error')}); tentando de novo"
     if name == "photos_chunked":
@@ -154,7 +211,9 @@ def humanize(name: str, f: dict[str, Any]) -> str:
     if name == "batch_done":
         return f"Lote {f.get('batch_id')} concluído em {_num(f.get('duration_s'))} s"
     fields = {k: v for k, v in f.items() if not k.startswith("_") and k != "event"}
-    return f"{name} " + " ".join(f"{k}={v}" for k, v in fields.items()) if fields else name
+    return (
+        f"{name} " + " ".join(f"{k}={v}" for k, v in fields.items()) if fields else name
+    )
 
 
 class ConsoleFormatter(logging.Formatter):
@@ -168,7 +227,9 @@ class ConsoleFormatter(logging.Formatter):
         ticket = current_ticket.get()
         level = LEVEL_PT.get(record.levelname, record.levelname)
         base = f"{datetime.fromtimestamp(record.created):%H:%M:%S} {level:<5} {f'[{ticket}] ' if ticket else ''}{text}"
-        return base + ("\n" + self.formatException(record.exc_info) if record.exc_info else "")
+        return base + (
+            "\n" + self.formatException(record.exc_info) if record.exc_info else ""
+        )
 
 
 def configure_logging(cfg: Settings) -> Path | None:
@@ -187,7 +248,9 @@ def configure_logging(cfg: Settings) -> Path | None:
     if cfg.observability.log_console:
         c = logging.StreamHandler(sys.stderr)
         c.setFormatter(ConsoleFormatter())
-        c.setLevel(cfg.observability.console_level.upper())  # INFO: acompanha a análise ao vivo; WARNING: só avisos e erros
+        c.setLevel(
+            cfg.observability.console_level.upper()
+        )  # INFO: acompanha a análise ao vivo; WARNING: só avisos e erros
         root.addHandler(c)
     return target
 
@@ -213,7 +276,9 @@ def context(run: str | None = None, ticket: str | None = None) -> Iterator[None]
 
 
 @contextmanager
-def waiting(name: str, every_s: float, stalled_after: int = 3, **fields: Any) -> Iterator[None]:
+def waiting(
+    name: str, every_s: float, stalled_after: int = 3, **fields: Any
+) -> Iterator[None]:
     """Registra `<name>_request` e, enquanto o bloco não termina, `<name>_waiting` a cada `every_s` segundos.
 
     A partir de `stalled_after` avisos, o aviso sobe para WARNING com `stalled=True` (possível travamento). O aviso sai
@@ -233,9 +298,17 @@ def waiting(name: str, every_s: float, stalled_after: int = 3, **fields: Any) ->
             n += 1
             stalled = n >= stalled_after
             level = logging.WARNING if stalled else logging.INFO
-            event(f"{name}_waiting", level, elapsed_s=round(time.perf_counter() - t0), stalled=stalled, **fields)
+            event(
+                f"{name}_waiting",
+                level,
+                elapsed_s=round(time.perf_counter() - t0),
+                stalled=stalled,
+                **fields,
+            )
 
-    thread = threading.Thread(target=ctx.run, args=(beat,), daemon=True, name=f"atest-{name}-heartbeat")
+    thread = threading.Thread(
+        target=ctx.run, args=(beat,), daemon=True, name=f"atest-{name}-heartbeat"
+    )
     thread.start()
     try:
         yield
@@ -253,7 +326,9 @@ def timed_stage(name: str, durations: dict[str, float]) -> Iterator[None]:
     try:
         yield
     except Exception:
-        event("stage_error", logging.ERROR, duration_s=round(time.perf_counter() - t0, 3))
+        event(
+            "stage_error", logging.ERROR, duration_s=round(time.perf_counter() - t0, 3)
+        )
         raise
     finally:
         dur = round(time.perf_counter() - t0, 3)

@@ -6,7 +6,14 @@ import logging
 from typing import Any
 
 from .analysis import AnalysisContext, AnalysisStage
-from .domain import Confidence, Moment, Recommendation, Severity, Stage, ValidationResult
+from .domain import (
+    Confidence,
+    Moment,
+    Recommendation,
+    Severity,
+    Stage,
+    ValidationResult,
+)
 from .formatting import brl, drop_after_service_requests
 from .llm_schemas import AssessmentText
 from .providers import TextPart
@@ -54,7 +61,15 @@ class AssessmentWriter:
 
     @staticmethod
     def prompt(result: dict[str, Any]) -> str:
-        """Resultado da régua em texto, para o modelo redigir o parecer (em português)."""
+        """Resultado da régua em texto, para o modelo redigir o parecer (em português).
+
+        Args:
+            result: saída de `AnalysisContext.scoring_input`.
+
+        Returns:
+            Recomendação e motivo, score, notas, confiança, valor em questão, apontamentos e, quando houver,
+            o racional técnico e as observações das etapas.
+        """
         findings = (
             "\n".join(
                 f"- [{ValidationResult(f['validation']).label} / severidade {Severity(f['severity']).label}] {f['description']}: {f['evidence']}"
@@ -63,36 +78,70 @@ class AssessmentWriter:
             )
             or "- nenhum"
         )
-        grades = ", ".join(f"{ValidationResult(k).label} {v}" for k, v in (result["grades"] or {}).items())
+        grades = ", ".join(
+            f"{ValidationResult(k).label} {v}"
+            for k, v in (result["grades"] or {}).items()
+        )
         return (
             f"RECOMENDAÇÃO: {Recommendation(result['recommendation']).label}. {result['recommendation_reason']}\n"
             f"Score: {result['score']} | Notas: {grades} | Confiança: {Confidence(result['confidence']).label}\n"
             f"Valor potencial divergente: {brl(result['amount_at_issue'])} ({result['amount_at_issue_pct']:.0f}% do orçamento)\n"
             f"APONTAMENTOS:\n{findings}"
-            + ("\n\nRACIONAL TÉCNICO (conferências feitas nas etapas):\n" + "\n".join(f"- {r}" for r in result.get("rationale") or [])
-               if result.get("rationale") else "")
-            + ("\n\nOBSERVAÇÕES DAS ETAPAS (não pontuadas):\n" + "\n".join(f"- {o}" for o in result.get("observations") or [])
-               if result.get("observations") else "")
+            + (
+                "\n\nRACIONAL TÉCNICO (conferências feitas nas etapas):\n"
+                + "\n".join(f"- {r}" for r in result.get("rationale") or [])
+                if result.get("rationale")
+                else ""
+            )
+            + (
+                "\n\nOBSERVAÇÕES DAS ETAPAS (não pontuadas):\n"
+                + "\n".join(f"- {o}" for o in result.get("observations") or [])
+                if result.get("observations")
+                else ""
+            )
         )
 
     @staticmethod
     def from_template(result: dict[str, Any]) -> AssessmentText:
-        """Parecer por regra, sem modelo."""
+        """Parecer por regra, sem modelo.
+
+        Args:
+            result: saída de `AnalysisContext.scoring_input`.
+
+        Returns:
+            Resumo (recomendação, até 4 apontamentos, valor em questão, primeira observação) e, quando a
+            recomendação pede ação do fornecedor, a mensagem com as ações de `supplier_actions`.
+        """
         rec = Recommendation(result["recommendation"])
         findings = result["findings"]
+        # Resumo: recomendação e motivo, depois exemplos de apontamentos, valor em questão e a primeira observação.
         parts = [f"{rec.label}. {result['recommendation_reason']}."]
         if findings:
-            examples = "; ".join(f"{f['description'].lower()} ({f['reference'] or f['evidence']})" for f in findings[:4])
+            examples = "; ".join(
+                f"{f['description'].lower()} ({f['reference'] or f['evidence']})"
+                for f in findings[:4]
+            )
             parts.append(f"{len(findings)} apontamento(s): {examples}.")
         if result["amount_at_issue"]:
-            parts.append(f"Valor potencial divergente: {brl(result['amount_at_issue'])} ({result['amount_at_issue_pct']:.0f}% do orçamento).")
+            parts.append(
+                f"Valor potencial divergente: {brl(result['amount_at_issue'])} ({result['amount_at_issue_pct']:.0f}% do orçamento)."
+            )
         if obs := result.get("observations"):
             parts.append(f"Atenção: {obs[0]}")
+        # Mensagem ao fornecedor: só quando a recomendação pede ajuste, com uma ação por tipo de apontamento (sem repetir).
         message = ""
-        needs_action = rec in (Recommendation.RETURN_TO_SUPPLIER, Recommendation.RETURN_LOCKED, Recommendation.APPROVE_WITH_CAVEATS)
+        needs_action = rec in (
+            Recommendation.RETURN_TO_SUPPLIER,
+            Recommendation.RETURN_LOCKED,
+            Recommendation.APPROVE_WITH_CAVEATS,
+        )
         if needs_action and findings:
             table = supplier_actions(result.get("moment"))
-            actions = [table[f["kind"]].format(ref=f["reference"] or "item") for f in findings if f["kind"] in table]
+            actions = [
+                table[f["kind"]].format(ref=f["reference"] or "item")
+                for f in findings
+                if f["kind"] in table
+            ]
             message = "; ".join(dict.fromkeys(actions)) + "."
             message = message[0].upper() + message[1:]
         return AssessmentText(summary=" ".join(parts), supplier_message=message)
@@ -105,15 +154,42 @@ class AssessmentStage(AnalysisStage):
     progress = Stage.ASSESSMENT
 
     def run(self, ctx: AnalysisContext) -> None:
+        """Preenche `ctx.text` com o resumo e a mensagem ao fornecedor, pelo modelo rápido ou por regra se ele falhar.
+
+        Na aprovação do orçamento, remove dos textos qualquer pedido de foto do depois ou de termo de conclusão.
+
+        Os argumentos passados ao session.ask:
+            task: "assessment".
+            parts: resumo do chamado + resultado da régua em texto (`AssessmentWriter.prompt`).
+            output: `AssessmentText` (resumo para a pessoa analista e mensagem ao fornecedor).
+            fast: True, usa o modelo rápido (só redação: a decisão já foi tomada pela régua).
+            max_tokens: 1200.
+            meta: o resultado da régua, para o rastro.
+        """
+        # O modelo só redige: score, apontamentos e recomendação já vêm prontos da régua.
         result = ctx.scoring_input()
         text = f"{ctx.ticket.data.summary_text()}\n\n{AssessmentWriter.prompt(result)}"
         try:
-            ctx.text = ctx.session.ask("assessment", [TextPart(text)], AssessmentText, fast=True, max_tokens=1200, meta={"result": result})
+            ctx.text = ctx.session.ask(
+                "assessment",
+                [TextPart(text)],
+                AssessmentText,
+                fast=True,
+                max_tokens=1200,
+                meta={"result": result},
+            )
+        # Qualquer falha na redação cai para o texto por regra: o parecer sai de qualquer forma.
         except Exception:
             log.exception("falha ao redigir o parecer; usando o texto por regra")
             ctx.text = AssessmentWriter.from_template(result)
-        if ctx.ticket.data.moment == Moment.QUOTE:  # serviço ainda não feito: nada de cobrar foto do depois ou termo de conclusão
-            ctx.text = ctx.text.model_copy(update={
-                "summary": drop_after_service_requests(ctx.text.summary),
-                "supplier_message": drop_after_service_requests(ctx.text.supplier_message),
-            })
+        if (
+            ctx.ticket.data.moment == Moment.QUOTE
+        ):  # serviço ainda não feito: nada de cobrar foto do depois ou termo de conclusão
+            ctx.text = ctx.text.model_copy(
+                update={
+                    "summary": drop_after_service_requests(ctx.text.summary),
+                    "supplier_message": drop_after_service_requests(
+                        ctx.text.supplier_message
+                    ),
+                }
+            )

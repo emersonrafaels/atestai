@@ -31,7 +31,11 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 import real_photos  # noqa: E402
-from build_validation_dataset import QUOTE_STAGE_MODELS, ROOT, ValidationGenerator  # noqa: E402
+from build_validation_dataset import (
+    QUOTE_STAGE_MODELS,
+    ROOT,
+    ValidationGenerator,
+)  # noqa: E402
 
 PREFIX = "0200"
 DATASET = "itau"
@@ -83,7 +87,15 @@ def build(n: int, quote_n: int = QUOTE_PER_TEMPLATE) -> list[dict]:
     clean()
     # semente escolhida para que a 2ª rodada (a 1ª de cada modelo sai limpa) cubra defeitos variados: checklist,
     # reaproveitamento, foto de outro ambiente, falta do depois, troca sem justificativa, preço, quantidade...
-    g = ValidationGenerator(n, seed=2083, prefix=PREFIX, dataset=DATASET, branches=ITAU_BRANCHES, day0=date(2026, 10, 25), realistic=True)
+    g = ValidationGenerator(
+        n,
+        seed=2083,
+        prefix=PREFIX,
+        dataset=DATASET,
+        branches=ITAU_BRANCHES,
+        day0=date(2026, 10, 25),
+        realistic=True,
+    )
     g.index_existing()
     # os chamados de orçamento vêm depois: os 20 de execução saem iguais com ou sem eles
     return g.generate() + g.generate(models=QUOTE_STAGE_MODELS, n=quote_n)
@@ -91,9 +103,23 @@ def build(n: int, quote_n: int = QUOTE_PER_TEMPLATE) -> list[dict]:
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("--n", type=int, default=PER_TEMPLATE, help="chamados por modelo de serviço (10 modelos)")
-    ap.add_argument("--quote-n", type=int, default=QUOTE_PER_TEMPLATE, help="chamados por modelo na Aprovação de Orçamento (7 modelos)")
-    ap.add_argument("--needs", action="store_true", help="só calcula quantas fotos cada cena precisa e grava _needs.json")
+    ap.add_argument(
+        "--n",
+        type=int,
+        default=PER_TEMPLATE,
+        help="chamados por modelo de serviço (10 modelos)",
+    )
+    ap.add_argument(
+        "--quote-n",
+        type=int,
+        default=QUOTE_PER_TEMPLATE,
+        help="chamados por modelo na Aprovação de Orçamento (7 modelos)",
+    )
+    ap.add_argument(
+        "--needs",
+        action="store_true",
+        help="só calcula quantas fotos cada cena precisa e grava _needs.json",
+    )
     a = ap.parse_args()
 
     if a.needs:
@@ -113,8 +139,26 @@ if __name__ == "__main__":
         summary = build(a.n, a.quote_n)
     except real_photos.PhotoShortage as e:
         clean()
-        sys.exit(f"faltam fotos: {e}\nRode antes: python generator/build_itau_dataset.py --needs e python generator/ai_photos.py --profile itau --from-needs")
+        sys.exit(
+            f"faltam fotos: {e}\nRode antes: python generator/build_itau_dataset.py --needs e python generator/ai_photos.py --profile itau --from-needs"
+        )
     print(f"{len(summary)} chamados Itaú ({PREFIX}xxxx) em {ROOT / 'tickets'}")
-    print("recomendações esperadas:", dict(Counter(r["recommendation"] for r in summary)))
-    print("por etapa:", dict(Counter("orçamento" if r["model"].endswith("_quote") or r["model"] == "sink" else "execução" for r in summary)))
-    print("defeitos injetados:", dict(Counter(d for r in summary for d in r["defects"])))
+    print(
+        "recomendações esperadas:", dict(Counter(r["recommendation"] for r in summary))
+    )
+    print(
+        "por etapa:",
+        dict(
+            Counter(
+                (
+                    "orçamento"
+                    if r["model"].endswith("_quote") or r["model"] == "sink"
+                    else "execução"
+                )
+                for r in summary
+            )
+        ),
+    )
+    print(
+        "defeitos injetados:", dict(Counter(d for r in summary for d in r["defects"]))
+    )

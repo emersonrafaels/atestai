@@ -28,8 +28,13 @@ def spreadsheet_template() -> bytes:
     tab = Table(displayName="tbItens", ref="A1:E2")
     tab.tableStyleInfo = TableStyleInfo(name="TableStyleMedium2", showRowStripes=True)
     wi.add_table(tab)
-    lpu = DataValidation(type="list", formula1='"Sim,Não"', allow_blank=True, showDropDown=False)
-    lpu.prompt, lpu.promptTitle = "Sim: item da tabela de preços (LPU). Não: item fora da LPU.", "LPU"
+    lpu = DataValidation(
+        type="list", formula1='"Sim,Não"', allow_blank=True, showDropDown=False
+    )
+    lpu.prompt, lpu.promptTitle = (
+        "Sim: item da tabela de preços (LPU). Não: item fora da LPU.",
+        "LPU",
+    )
     wi.add_data_validation(lpu)
     lpu.add("C2:C500")
     for col, w in zip("ABCDE", WIDTHS, strict=True):

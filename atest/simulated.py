@@ -29,7 +29,11 @@ MATCH = {True: "yes", False: "no", None: "undetermined"}
 
 
 # Rótulo em português da classificação, para o texto do motivo simulado (aparece no painel).
-CLASSIFICATION_LABELS = {"compliant": "aderente", "out_of_scope": "fora do escopo", "to_justify": "a justificar"}
+CLASSIFICATION_LABELS = {
+    "compliant": "aderente",
+    "out_of_scope": "fora do escopo",
+    "to_justify": "a justificar",
+}
 
 
 class SimulatedClient:
@@ -40,7 +44,9 @@ class SimulatedClient:
 
     def __init__(self, cfg: Settings, delay_s: float = 0.0, noise: float = 0.0):
         self.cfg = cfg
-        self.delay_s = delay_s  # o painel usa um atraso pequeno para o progresso ficar visível
+        self.delay_s = (
+            delay_s  # o painel usa um atraso pequeno para o progresso ficar visível
+        )
         # ruído: probabilidade de o "modelo simulado" errar cada decisão. Serve para ver as métricas de validação
         # se comportarem como num modelo real (com erros). 0 = devolve exatamente o gabarito.
         self.noise = noise
@@ -68,7 +74,9 @@ class SimulatedClient:
             time.sleep(self.delay_s * random.uniform(0.6, 1.4))
         raw = getattr(self, f"_{task}")(gt, meta)
         if self.noise:
-            raw = self._perturb(task, raw, random.Random(f"{meta['ticket']}-{task}-{self.noise}"))
+            raw = self._perturb(
+                task, raw, random.Random(f"{meta['ticket']}-{task}-{self.noise}")
+            )
         obj = output.model_validate(raw)
         return obj, LlmCall(
             task=task,
@@ -87,17 +95,27 @@ class SimulatedClient:
             if rnd.random() < r:
                 d["vague_scope"] = not d["vague_scope"]
             if rnd.random() < r / 2:
-                d["consistent_with_category_symptom"] = not d["consistent_with_category_symptom"]
+                d["consistent_with_category_symptom"] = not d[
+                    "consistent_with_category_symptom"
+                ]
         elif task == "quote_review":
             for it in d["items"]:
                 if rnd.random() < r:
-                    it["classification"] = "compliant" if it["classification"] != "compliant" else rnd.choice(["out_of_scope", "to_justify"])
+                    it["classification"] = (
+                        "compliant"
+                        if it["classification"] != "compliant"
+                        else rnd.choice(["out_of_scope", "to_justify"])
+                    )
                 if rnd.random() < r / 2:
                     it["plausible_quantity"] = not it["plausible_quantity"]
         elif task == "photos":
             for f in d["photos"]:
                 if rnd.random() < r:
-                    f["matches_scope"] = "yes" if f["matches_scope"] == "no" else ("no" if rnd.random() < 0.5 else f["matches_scope"])
+                    f["matches_scope"] = (
+                        "yes"
+                        if f["matches_scope"] == "no"
+                        else ("no" if rnd.random() < 0.5 else f["matches_scope"])
+                    )
                 if rnd.random() < r / 3:
                     f["readable"] = not f["readable"]
             if rnd.random() < r:
@@ -116,7 +134,13 @@ class SimulatedClient:
         for index, name in zip(meta["indices"], meta["attachments"], strict=True):
             r = g.attachments[name]
             attachments.append(
-                {"index": index, "category": r["category"], "moment": r["moment"], "readable": r["readable"], "short_description": r["description"]}
+                {
+                    "index": index,
+                    "category": r["category"],
+                    "moment": r["moment"],
+                    "readable": r["readable"],
+                    "short_description": r["description"],
+                }
             )
         return AttachmentIdentification(attachments=attachments).model_dump()
 
@@ -132,9 +156,11 @@ class SimulatedClient:
             expected_evidence=[],
             before_evidence_applicable=g.before_applicable,
             consistent_with_category_symptom="inconsistent_scope" not in g.findings,
-            coherence_note="O escopo descreve troca de lâmpadas; categoria e sintoma indicam hidráulica/vazamento"
-            if "inconsistent_scope" in g.findings
-            else "",
+            coherence_note=(
+                "O escopo descreve troca de lâmpadas; categoria e sintoma indicam hidráulica/vazamento"
+                if "inconsistent_scope" in g.findings
+                else ""
+            ),
             vague_scope=vague,
             vague_reason="O texto não diz qual porta nem qual defeito" if vague else "",
         ).model_dump()
@@ -144,23 +170,43 @@ class SimulatedClient:
         for i in g.items:
             dup = 0
             if "duplicate_item" in i["findings"]:
-                dup = next(j["n"] for j in g.items if j["lpu_code"] == i["lpu_code"] and j["n"] < i["n"])
+                dup = next(
+                    j["n"]
+                    for j in g.items
+                    if j["lpu_code"] == i["lpu_code"] and j["n"] < i["n"]
+                )
             items.append(
                 {
                     "n": i["n"],
                     "classification": i["classification"],
                     "reason": f"(simulado) {CLASSIFICATION_LABELS.get(i['classification'], i['classification'])}",
-                    "expected_quantity_max": -1 if "unverifiable_quantity" in i["findings"] else i.get("expected_quantity_max") or -1,
-                    "plausible_quantity": not ({"quantity_above_expected", "unverifiable_quantity"} & set(i["findings"])),
+                    "expected_quantity_max": (
+                        -1
+                        if "unverifiable_quantity" in i["findings"]
+                        else i.get("expected_quantity_max") or -1
+                    ),
+                    "plausible_quantity": not (
+                        {"quantity_above_expected", "unverifiable_quantity"}
+                        & set(i["findings"])
+                    ),
                     "duplicate_of": dup,
                     "lpu_code": i["lpu_code"],
                 }
             )
         # o escopo simulado tem um serviço pedido: coberto por todos os itens, salvo quando o gabarito diz que falta item
         gap = "scope_not_quoted" in g.findings
-        coverage = [{"n": 1, "service": "(simulado a partir do gabarito)", "items": [] if gap else [i["n"] for i in g.items],
-                     "covered": "no" if gap else "yes", "note": "(simulado)"}]
-        return QuoteReview(items=items, service_coverage=coverage, notes="").model_dump()
+        coverage = [
+            {
+                "n": 1,
+                "service": "(simulado a partir do gabarito)",
+                "items": [] if gap else [i["n"] for i in g.items],
+                "covered": "no" if gap else "yes",
+                "note": "(simulado)",
+            }
+        ]
+        return QuoteReview(
+            items=items, service_coverage=coverage, notes=""
+        ).model_dump()
 
     def _photos(self, g: GroundTruth, meta: dict) -> dict:
         photos = []
@@ -178,15 +224,32 @@ class SimulatedClient:
                     "covered_items": [],
                 }
             )
-        done = Match.NO if "missing_after_photo" in g.findings else Match.PARTIAL if "after_photo_unconfirmed_location" in g.findings else Match.YES
-        before = any(g.attachments[n]["moment"] == "before" and g.attachments[n]["readable"] for n in meta["attachments"])
+        done = (
+            Match.NO
+            if "missing_after_photo" in g.findings
+            else (
+                Match.PARTIAL
+                if "after_photo_unconfirmed_location" in g.findings
+                else Match.YES
+            )
+        )
+        before = any(
+            g.attachments[n]["moment"] == "before" and g.attachments[n]["readable"]
+            for n in meta["attachments"]
+        )
         return PhotoAnalysis(
             photos=photos,
             has_before_photo=before,
             done_justification="(simulado)",
             done_service=done,
-            items_without_photo=[i["n"] for i in g.items if "item_without_photo" in i.get("findings", [])]
-            or ([g.items[-1]["n"]] if "item_without_photo" in g.findings and g.items else []),
+            items_without_photo=[
+                i["n"] for i in g.items if "item_without_photo" in i.get("findings", [])
+            ]
+            or (
+                [g.items[-1]["n"]]
+                if "item_without_photo" in g.findings and g.items
+                else []
+            ),
             quantity_checks=[],
             notes="",
         ).model_dump()
@@ -213,7 +276,9 @@ class SimulatedClient:
                     "has_signature": True,
                     "service_status": "undetermined",
                     "prices": [],
-                    "matches_ticket": "no" if "document_mismatch" in g.findings else "yes",
+                    "matches_ticket": (
+                        "no" if "document_mismatch" in g.findings else "yes"
+                    ),
                     "divergences": [],
                     "reason": "(simulado)",
                 }

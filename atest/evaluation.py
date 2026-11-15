@@ -62,18 +62,28 @@ class Evaluation(BaseModel):
         lines = [f"\n{'ticket':<10} {'esperado':<22} {'obtido':<22} {'score':>11}"]
         for c in self.by_ticket:
             score = f"{c.expected_score if c.expected_score is not None else '-':>3} → {c.obtained_score if c.obtained_score is not None else '-':>3}"
-            extra = (f" faltou {c.missed}" if c.missed else "") + (f" sobrou {c.extra}" if c.extra else "")
-            lines.append(f"{c.ticket_id:<10} {c.expected.value:<22} {c.obtained.value:<22} {score:>11}  {'✓' if c.recommendation_ok else '✗'}{extra}")
+            extra = (f" faltou {c.missed}" if c.missed else "") + (
+                f" sobrou {c.extra}" if c.extra else ""
+            )
+            lines.append(
+                f"{c.ticket_id:<10} {c.expected.value:<22} {c.obtained.value:<22} {score:>11}  {'✓' if c.recommendation_ok else '✗'}{extra}"
+            )
         n = self.n or 1
         lines.append(
             f"\nRecomendação exata {self.exact_recommendation}/{self.n} ({100 * self.exact_recommendation / n:.0f}%) · "
             f"direção {self.direction}/{self.n} · checklist {self.checklist}/{self.n}"
-            + (f" · erro médio do score {self.avg_score_error:.1f}" if self.avg_score_error is not None else "")
+            + (
+                f" · erro médio do score {self.avg_score_error:.1f}"
+                if self.avg_score_error is not None
+                else ""
+            )
         )
         for kind, c in self.by_kind.items():
             p = f"{c.precision:.0%}" if c.precision is not None else "  -"
             r = f"{c.recall:.0%}" if c.recall is not None else "  -"
-            lines.append(f"  {kind:<26} VP {c.tp:>2}  FP {c.fp:>2}  FN {c.fn:>2}   precisão {p:>4}  cobertura {r:>4}")
+            lines.append(
+                f"  {kind:<26} VP {c.tp:>2}  FP {c.fp:>2}  FN {c.fn:>2}   precisão {p:>4}  cobertura {r:>4}"
+            )
         return "\n".join(lines)
 
 
@@ -83,11 +93,23 @@ class GroundTruthEvaluator:
     def __init__(self, ground_truth_dir: Path):
         self.ground_truth_dir = Path(ground_truth_dir)
 
-    def compare(self, assessment: Assessment, gt: GroundTruth | None = None) -> TicketComparison | None:
-        """Compara um parecer com o gabarito do chamado; None se não houver gabarito."""
+    def compare(
+        self, assessment: Assessment, gt: GroundTruth | None = None
+    ) -> TicketComparison | None:
+        """Compara um parecer com o gabarito do chamado; None se não houver gabarito.
+
+        Args:
+            assessment: parecer gerado.
+            gt: gabarito já carregado; None lê da pasta de gabaritos.
+
+        Returns:
+            Recomendação esperada × obtida, score esperado × obtido, acerto exato e de direção (segue ou volta),
+            acerto do checklist, tipos esperados que faltaram (`missed`) e tipos a mais não opcionais (`extra`).
+        """
         g = gt or load_ground_truth(self.ground_truth_dir, assessment.ticket_id)
         if g is None:
             return None
+        # Tipos apontados pelo pipeline × tipos esperados; os opcionais não contam como erro se aparecerem.
         flagged = {f.kind for f in assessment.findings}
         wanted, optional = set(g.findings), set(g.optional)
         checklist = assessment.checklist
@@ -98,14 +120,30 @@ class GroundTruthEvaluator:
             expected_score=g.score,
             obtained_score=assessment.score,
             recommendation_ok=assessment.recommendation == g.recommendation,
-            direction_ok=assessment.recommendation.proceeds == g.recommendation.proceeds,
-            checklist_ok=checklist is not None and checklist.complete == g.checklist_ok and set(checklist.missing) == set(g.missing),
+            direction_ok=assessment.recommendation.proceeds
+            == g.recommendation.proceeds,
+            checklist_ok=checklist is not None
+            and checklist.complete == g.checklist_ok
+            and set(checklist.missing) == set(g.missing),
             missed=sorted(wanted - flagged),
             extra=sorted((flagged - wanted) - optional),
         )
 
     def evaluate(self, assessments: list[Assessment]) -> Evaluation:
-        """Compara todos os pareceres e agrega as métricas."""
+        """Compara todos os pareceres e agrega as métricas.
+
+        Variáveis principais:
+            by_kind: por tipo de apontamento, verdadeiros positivos, falsos positivos (fora os opcionais) e
+                falsos negativos.
+            errors: erro absoluto do score em cada chamado que tem score esperado e obtido.
+
+        Args:
+            assessments: pareceres da execução (os sem gabarito são ignorados).
+
+        Returns:
+            Totais de acerto (recomendação exata, direção, checklist), erro médio do score, contagens por tipo
+            e a comparação de cada chamado.
+        """
         by_kind: dict[str, KindCount] = defaultdict(KindCount)
         comparisons, errors = [], []
         for p in assessments:
@@ -115,6 +153,7 @@ class GroundTruthEvaluator:
                 continue
             comparisons.append(c)
             flagged = {f.kind for f in p.findings}
+            # Para cada tipo apontado ou esperado: acerto (VP), apontado sem estar no gabarito (FP) ou esquecido (FN).
             for kind in flagged | set(g.findings):
                 if kind in flagged and kind in g.findings:
                     by_kind[kind].tp += 1
@@ -122,6 +161,7 @@ class GroundTruthEvaluator:
                     by_kind[kind].fp += 1
                 elif kind not in flagged:
                     by_kind[kind].fn += 1
+            # Erro do score só quando há os dois (chamado devolvido no checklist não tem score).
             if c.expected_score is not None and c.obtained_score is not None:
                 errors.append(abs(c.expected_score - c.obtained_score))
         return Evaluation(

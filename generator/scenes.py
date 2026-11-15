@@ -35,11 +35,36 @@ def room(
     near = -3.0
     L, R = -w / 2, w / 2
     # teto, piso, paredes
-    cv.poly3([(L, hc, near), (R, hc, near), (R, hc, d), (L, hc, d)], ceil, tex=1.5, grad=(0, 1, 0.12))
-    cv.poly3([(L, -hf, near), (R, -hf, near), (R, -hf, d), (L, -hf, d)], floor, tex=6, grad=(0, -1, 0.25))
-    cv.poly3([(L, -hf, d), (R, -hf, d), (R, hc, d), (L, hc, d)], wall, tex=wall_tex, grad=(0, -1, 0.12))
-    cv.poly3([(L, -hf, near), (L, -hf, d), (L, hc, d), (L, hc, near)], mul(wall, side_k[0]), tex=wall_tex, grad=(1, 0, 0.15))
-    cv.poly3([(R, -hf, near), (R, -hf, d), (R, hc, d), (R, hc, near)], mul(wall, side_k[1]), tex=wall_tex, grad=(-1, 0, 0.15))
+    cv.poly3(
+        [(L, hc, near), (R, hc, near), (R, hc, d), (L, hc, d)],
+        ceil,
+        tex=1.5,
+        grad=(0, 1, 0.12),
+    )
+    cv.poly3(
+        [(L, -hf, near), (R, -hf, near), (R, -hf, d), (L, -hf, d)],
+        floor,
+        tex=6,
+        grad=(0, -1, 0.25),
+    )
+    cv.poly3(
+        [(L, -hf, d), (R, -hf, d), (R, hc, d), (L, hc, d)],
+        wall,
+        tex=wall_tex,
+        grad=(0, -1, 0.12),
+    )
+    cv.poly3(
+        [(L, -hf, near), (L, -hf, d), (L, hc, d), (L, hc, near)],
+        mul(wall, side_k[0]),
+        tex=wall_tex,
+        grad=(1, 0, 0.15),
+    )
+    cv.poly3(
+        [(R, -hf, near), (R, -hf, d), (R, hc, d), (R, hc, near)],
+        mul(wall, side_k[1]),
+        tex=wall_tex,
+        grad=(-1, 0, 0.15),
+    )
     # juntas do piso
     lc = tile_line or mul(floor, 0.82)
     if tile:
@@ -77,7 +102,15 @@ def room(
     return planes
 
 
-def ceiling_lights(cv: Canvas, planes, kind="fluor", rows=((-1.4,), (1.4,)), zs=(1.8, 3.8, 5.8), dead=(), dim=()):
+def ceiling_lights(
+    cv: Canvas,
+    planes,
+    kind="fluor",
+    rows=((-1.4,), (1.4,)),
+    zs=(1.8, 3.8, 5.8),
+    dead=(),
+    dim=(),
+):
     hc = planes["hc"] - 0.002
     idx = 0
     for xs in rows:
@@ -85,20 +118,47 @@ def ceiling_lights(cv: Canvas, planes, kind="fluor", rows=((-1.4,), (1.4,)), zs=
             for z in zs:
                 if kind == "led":
                     s = 0.31
-                    cv.poly3([(x - s, hc, z - s), (x + s, hc, z - s), (x + s, hc, z + s), (x - s, hc, z + s)], (205, 205, 205), tex=1)
+                    cv.poly3(
+                        [
+                            (x - s, hc, z - s),
+                            (x + s, hc, z - s),
+                            (x + s, hc, z + s),
+                            (x - s, hc, z + s),
+                        ],
+                        (205, 205, 205),
+                        tex=1,
+                    )
                     s2 = 0.28
                     cv.poly3(
-                        [(x - s2, hc - 0.001, z - s2), (x + s2, hc - 0.001, z - s2), (x + s2, hc - 0.001, z + s2), (x - s2, hc - 0.001, z + s2)],
+                        [
+                            (x - s2, hc - 0.001, z - s2),
+                            (x + s2, hc - 0.001, z - s2),
+                            (x + s2, hc - 0.001, z + s2),
+                            (x - s2, hc - 0.001, z + s2),
+                        ],
                         (252, 252, 250),
                         tex=0.5,
                     )
                 else:
                     sx, sz = 0.31, 0.62
-                    cv.poly3([(x - sx, hc, z - sz), (x + sx, hc, z - sz), (x + sx, hc, z + sz), (x - sx, hc, z + sz)], (196, 196, 190), tex=1.5)
+                    cv.poly3(
+                        [
+                            (x - sx, hc, z - sz),
+                            (x + sx, hc, z - sz),
+                            (x + sx, hc, z + sz),
+                            (x - sx, hc, z + sz),
+                        ],
+                        (196, 196, 190),
+                        tex=1.5,
+                    )
                     # aletas
                     for t in (-0.16, 0.16):
                         on = idx not in dead
-                        c = (250, 250, 240) if on and idx not in dim else ((105, 105, 100) if not on else (196, 206, 178))
+                        c = (
+                            (250, 250, 240)
+                            if on and idx not in dim
+                            else ((105, 105, 100) if not on else (196, 206, 178))
+                        )
                         cv.poly3(
                             [
                                 (x + t - 0.035, hc - 0.001, z - sz + 0.05),
@@ -111,20 +171,33 @@ def ceiling_lights(cv: Canvas, planes, kind="fluor", rows=((-1.4,), (1.4,)), zs=
                         )
                     for k in range(-5, 6):
                         zz = z + k * 0.1
-                        cv.line3((x - sx, hc - 0.002, zz), (x + sx, hc - 0.002, zz), (175, 175, 170), 1)
+                        cv.line3(
+                            (x - sx, hc - 0.002, zz),
+                            (x + sx, hc - 0.002, zz),
+                            (175, 175, 170),
+                            1,
+                        )
                 idx += 1
 
 
-def desk(cv: Canvas, x0, x1, z0, z1, top=(196, 172, 135), body=(90, 90, 96), monitor=True):
+def desk(
+    cv: Canvas, x0, x1, z0, z1, top=(196, 172, 135), body=(90, 90, 96), monitor=True
+):
     y = FLOOR_Y
-    cv.box(x0 + 0.05, x1 - 0.05, y, y + 0.72, z1 - 0.06, z1 - 0.02, body)  # painel frontal fundo
+    cv.box(
+        x0 + 0.05, x1 - 0.05, y, y + 0.72, z1 - 0.06, z1 - 0.02, body
+    )  # painel frontal fundo
     cv.box(x0, x0 + 0.05, y, y + 0.72, z0, z1, body)
     cv.box(x1 - 0.05, x1, y, y + 0.72, z0, z1, body)
     cv.box(x0, x1, y + 0.72, y + 0.76, z0, z1, top)
     if monitor:
         mx = (x0 + x1) / 2
-        cv.box(mx - 0.05, mx + 0.05, y + 0.76, y + 0.95, z1 - 0.25, z1 - 0.18, (40, 40, 44))
-        cv.box(mx - 0.30, mx + 0.30, y + 0.95, y + 1.30, z1 - 0.24, z1 - 0.20, (28, 28, 32))
+        cv.box(
+            mx - 0.05, mx + 0.05, y + 0.76, y + 0.95, z1 - 0.25, z1 - 0.18, (40, 40, 44)
+        )
+        cv.box(
+            mx - 0.30, mx + 0.30, y + 0.95, y + 1.30, z1 - 0.24, z1 - 0.20, (28, 28, 32)
+        )
         cv.poly3(
             [
                 (mx - 0.28, y + 0.97, z1 - 0.241),
@@ -135,7 +208,9 @@ def desk(cv: Canvas, x0, x1, z0, z1, top=(196, 172, 135), body=(90, 90, 96), mon
             (70, 95, 130),
             tex=3,
         )
-        cv.box(mx - 0.22, mx + 0.22, y + 0.76, y + 0.78, z0 + 0.12, z0 + 0.28, (55, 55, 60))
+        cv.box(
+            mx - 0.22, mx + 0.22, y + 0.76, y + 0.78, z0 + 0.12, z0 + 0.28, (55, 55, 60)
+        )
 
 
 def chair(cv: Canvas, x, z, color=(45, 45, 52)):
@@ -149,14 +224,26 @@ def cabinet(cv: Canvas, x0, x1, z0, z1, h=1.2, color=(150, 150, 155)):
     cv.box(x0, x1, FLOOR_Y, FLOOR_Y + h, z0, z1, color)
 
 
-def door_on(cv: Canvas, plane, u0, width=0.9, height=2.1, color=(150, 110, 70), frame=(235, 235, 230)):
+def door_on(
+    cv: Canvas,
+    plane,
+    u0,
+    width=0.9,
+    height=2.1,
+    color=(150, 110, 70),
+    frame=(235, 235, 230),
+):
     cv.rect_on(plane, u0 - 0.07, 0, u0 + width + 0.07, height + 0.07, frame, tex=2)
     cv.rect_on(plane, u0, 0, u0 + width, height, color, tex=7)
-    cv.rect_on(plane, u0 + width - 0.14, 1.0, u0 + width - 0.06, 1.04, (200, 200, 205), tex=1)
+    cv.rect_on(
+        plane, u0 + width - 0.14, 1.0, u0 + width - 0.06, 1.04, (200, 200, 205), tex=1
+    )
 
 
 def window_on(cv: Canvas, plane, u0, u1, v0, v1, blinds=True):
-    cv.rect_on(plane, u0 - 0.05, v0 - 0.05, u1 + 0.05, v1 + 0.05, (225, 225, 225), tex=1)
+    cv.rect_on(
+        plane, u0 - 0.05, v0 - 0.05, u1 + 0.05, v1 + 0.05, (225, 225, 225), tex=1
+    )
     cv.rect_on(plane, u0, v0, u1, v1, (205, 225, 240), tex=2)
     if blinds:
         v = v1
@@ -177,10 +264,14 @@ def board_on(cv: Canvas, plane, u0, u1, v0, v1):
 
 def split_on(cv: Canvas, plane, u0, v0, width=0.9):
     cv.rect_on(plane, u0, v0, u0 + width, v0 + 0.3, (240, 240, 238), tex=1.5)
-    cv.rect_on(plane, u0 + 0.05, v0 + 0.02, u0 + width - 0.05, v0 + 0.06, (90, 90, 95), tex=1)
+    cv.rect_on(
+        plane, u0 + 0.05, v0 + 0.02, u0 + width - 0.05, v0 + 0.06, (90, 90, 95), tex=1
+    )
 
 
-def paint_bucket(cv: Canvas, p, r=0.16, h=0.32, color=(235, 235, 240), label=(40, 110, 180)):
+def paint_bucket(
+    cv: Canvas, p, r=0.16, h=0.32, color=(235, 235, 240), label=(40, 110, 180)
+):
     a = cv.cam.project(p)
     b = cv.cam.project((p[0], p[1] + h, p[2]))
     e = cv.cam.project((p[0] + r, p[1], p[2]))
@@ -190,14 +281,33 @@ def paint_bucket(cv: Canvas, p, r=0.16, h=0.32, color=(235, 235, 240), label=(40
     ry = rx * 0.35
     cv.draw.rectangle([a[0] - rx, b[1], a[0] + rx, a[1]], fill=color)
     cv.draw.ellipse([a[0] - rx, a[1] - ry, a[0] + rx, a[1] + ry], fill=mul(color, 0.85))
-    cv.draw.rectangle([a[0] - rx, b[1] + (a[1] - b[1]) * 0.3, a[0] + rx, b[1] + (a[1] - b[1]) * 0.7], fill=label)
-    cv.draw.ellipse([a[0] - rx, b[1] - ry, a[0] + rx, b[1] + ry], fill=(220, 220, 225), outline=(150, 150, 155), width=2)
-    cv.draw.arc([a[0] - rx * 0.9, b[1] - ry * 4, a[0] + rx * 0.9, b[1] + ry], 180, 360, fill=(90, 90, 90), width=3)
+    cv.draw.rectangle(
+        [a[0] - rx, b[1] + (a[1] - b[1]) * 0.3, a[0] + rx, b[1] + (a[1] - b[1]) * 0.7],
+        fill=label,
+    )
+    cv.draw.ellipse(
+        [a[0] - rx, b[1] - ry, a[0] + rx, b[1] + ry],
+        fill=(220, 220, 225),
+        outline=(150, 150, 155),
+        width=2,
+    )
+    cv.draw.arc(
+        [a[0] - rx * 0.9, b[1] - ry * 4, a[0] + rx * 0.9, b[1] + ry],
+        180,
+        360,
+        fill=(90, 90, 90),
+        width=3,
+    )
 
 
 def ladder(cv: Canvas, x, z, h=1.6, color=(185, 185, 190)):
     y = FLOOR_Y
-    pts = [(x - 0.25, y, z), (x - 0.12, y + h, z + 0.25), (x + 0.12, y + h, z + 0.25), (x + 0.25, y, z)]
+    pts = [
+        (x - 0.25, y, z),
+        (x - 0.12, y + h, z + 0.25),
+        (x + 0.12, y + h, z + 0.25),
+        (x + 0.25, y, z),
+    ]
     back = [(x - 0.25, y, z + 0.6), (x + 0.25, y, z + 0.6)]
     cv.line3(back[0], pts[1], mul(color, 0.8), 6)
     cv.line3(back[1], pts[2], mul(color, 0.8), 6)
@@ -208,19 +318,40 @@ def ladder(cv: Canvas, x, z, h=1.6, color=(185, 185, 190)):
         a = (pts[0][0] + (pts[1][0] - pts[0][0]) * t, y + h * t, z + 0.25 * t)
         b = (pts[3][0] + (pts[2][0] - pts[3][0]) * t, y + h * t, z + 0.25 * t)
         cv.line3(a, b, color, 6)
-    cv.line3((x - 0.12, y + h, z + 0.25), (x + 0.12, y + h, z + 0.3), (120, 120, 125), 10)
+    cv.line3(
+        (x - 0.12, y + h, z + 0.25), (x + 0.12, y + h, z + 0.3), (120, 120, 125), 10
+    )
 
 
 def water_stain(cv: Canvas, plane, cu, cv_, r, mold=True):
     cv.blob_on(plane, cu, cv_, r * 1.25, (196, 170, 120), soft=10, alpha=120, tex=10)
     cv.blob_on(plane, cu, cv_, r, (170, 140, 90), soft=6, alpha=150, tex=12)
-    cv.blob_on(plane, cu + r * 0.15, cv_ - r * 0.1, r * 0.55, (140, 110, 70), soft=4, alpha=140, tex=14)
+    cv.blob_on(
+        plane,
+        cu + r * 0.15,
+        cv_ - r * 0.1,
+        r * 0.55,
+        (140, 110, 70),
+        soft=4,
+        alpha=140,
+        tex=14,
+    )
     if mold:
         rnd = random.Random(int(cu * 31 + cv_ * 17))
         for _ in range(40):
             a = rnd.uniform(0, 2 * math.pi)
             rr = rnd.uniform(0, r * 0.9)
-            cv.blob_on(plane, cu + rr * math.cos(a), cv_ + rr * math.sin(a), rnd.uniform(0.01, 0.035), (60, 62, 50), n=10, soft=1, alpha=180, tex=6)
+            cv.blob_on(
+                plane,
+                cu + rr * math.cos(a),
+                cv_ + rr * math.sin(a),
+                rnd.uniform(0.01, 0.035),
+                (60, 62, 50),
+                n=10,
+                soft=1,
+                alpha=180,
+                tex=6,
+            )
 
 
 def peeling(cv: Canvas, plane, cu, cv_, r):
@@ -230,14 +361,55 @@ def peeling(cv: Canvas, plane, cu, cv_, r):
         rr = rnd.uniform(0, r)
         cu2, cv2 = cu + rr * math.cos(a), cv_ + rr * math.sin(a)
         s = rnd.uniform(0.04, 0.12)
-        cv.blob_on(plane, cu2, cv2, s * 1.15, (120, 110, 95), n=14, jitter=0.5, soft=1, alpha=200, tex=6)
-        cv.blob_on(plane, cu2, cv2, s, (205, 200, 188), n=14, jitter=0.5, soft=0, alpha=255, tex=14)
+        cv.blob_on(
+            plane,
+            cu2,
+            cv2,
+            s * 1.15,
+            (120, 110, 95),
+            n=14,
+            jitter=0.5,
+            soft=1,
+            alpha=200,
+            tex=6,
+        )
+        cv.blob_on(
+            plane,
+            cu2,
+            cv2,
+            s,
+            (205, 200, 188),
+            n=14,
+            jitter=0.5,
+            soft=0,
+            alpha=255,
+            tex=14,
+        )
 
 
-def backoffice(seed=0, view="A", wall=None, lights="fluor", stains=False, painting_gear=False, dead=(), dim=(), clutter=True, layout=None):
+def backoffice(
+    seed=0,
+    view="A",
+    wall=None,
+    lights="fluor",
+    stains=False,
+    painting_gear=False,
+    dead=(),
+    dim=(),
+    clutter=True,
+    layout=None,
+):
     """Backoffice/escritório. `layout` fixa a geometria e o mobiliário (mesma sala em fotos de antes/depois)."""
     lay = random.Random(seed if layout is None else layout)
-    wall = wall or lay.choice([(228, 220, 202), (222, 226, 214), (232, 226, 218), (214, 222, 230), (236, 230, 206)])
+    wall = wall or lay.choice(
+        [
+            (228, 220, 202),
+            (222, 226, 214),
+            (232, 226, 218),
+            (214, 222, 230),
+            (236, 230, 206),
+        ]
+    )
     w = lay.uniform(5.6, 7.2)
     d = lay.uniform(6.2, 8.0)
     jy = lay.uniform(-7, 7)
@@ -248,13 +420,20 @@ def backoffice(seed=0, view="A", wall=None, lights="fluor", stains=False, painti
     else:  # C: do canto oposto
         cam = Cam(pos=(w / 2 - 0.6, 0.15, 0.4), yaw=-34 + jy * 0.5, pitch=-8, f=640)
     cv = Canvas(cam, seed=seed)
-    floor = lay.choice([(168, 158, 146), (150, 150, 150), (176, 166, 140), (120, 110, 100)])
+    floor = lay.choice(
+        [(168, 158, 146), (150, 150, 150), (176, 166, 140), (120, 110, 100)]
+    )
     pl = room(cv, w=w, d=d, wall=wall, floor=floor, tile=lay.choice([0.6, 0.45, 0.0]))
     rows = ((-w / 4.5,), (w / 4.5,))
     zs = tuple(z for z in (1.8, 3.8, 5.8, 7.6) if z < d - 0.5)
     ceiling_lights(cv, pl, kind=lights, dead=dead, dim=dim, rows=rows, zs=zs)
     du = lay.uniform(0.4, w - 1.6)
-    door_on(cv, pl["back"], du, color=lay.choice([(150, 110, 70), (120, 120, 125), (175, 140, 95)]))
+    door_on(
+        cv,
+        pl["back"],
+        du,
+        color=lay.choice([(150, 110, 70), (120, 120, 125), (175, 140, 95)]),
+    )
     bu = (du + 1.3) if du < w / 2 else max(0.3, du - 1.8)
     board_on(cv, pl["back"], bu, bu + 1.2, 1.15, 1.95)
     split_on(cv, pl["back"], w - 1.6, 2.3)
@@ -266,10 +445,20 @@ def backoffice(seed=0, view="A", wall=None, lights="fluor", stains=False, painti
         peeling(cv, pl["back"], w - 1.3, 1.75, 0.35)
     # mobiliário (fundo -> frente)
     if lay.random() < 0.6:
-        cabinet(cv, -w / 2 + 0.05, -w / 2 + 0.5, d - 2.6, d - 0.6, h=1.25, color=lay.choice([(150, 150, 155), (120, 95, 70)]))
+        cabinet(
+            cv,
+            -w / 2 + 0.05,
+            -w / 2 + 0.5,
+            d - 2.6,
+            d - 0.6,
+            h=1.25,
+            color=lay.choice([(150, 150, 155), (120, 95, 70)]),
+        )
     top = lay.choice([(196, 172, 135), (230, 230, 228), (150, 120, 90)])
     zb = d - 2.4
-    for x0 in sorted(lay.sample([-2.0, -0.4, 0.8, 1.9], k=lay.choice([2, 3])), reverse=True):
+    for x0 in sorted(
+        lay.sample([-2.0, -0.4, 0.8, 1.9], k=lay.choice([2, 3])), reverse=True
+    ):
         if x0 + 1.5 < w / 2:
             desk(cv, x0, x0 + 1.4, zb, zb + 0.8, top=top)
             chair(cv, x0 + 0.7, zb - 0.35)
@@ -287,13 +476,26 @@ def backoffice(seed=0, view="A", wall=None, lights="fluor", stains=False, painti
 
 def ceiling_view(seed=0, lights="fluor", stains=False, wall=None, layout=None):
     lay = random.Random(seed if layout is None else layout)
-    wall = wall or lay.choice([(228, 220, 202), (222, 226, 214), (232, 226, 218), (214, 222, 230)])
-    cam = Cam(pos=(lay.uniform(-0.6, 0.6), -0.2, 0.6), yaw=lay.uniform(-15, 15), pitch=lay.uniform(32, 44), f=640)
+    wall = wall or lay.choice(
+        [(228, 220, 202), (222, 226, 214), (232, 226, 218), (214, 222, 230)]
+    )
+    cam = Cam(
+        pos=(lay.uniform(-0.6, 0.6), -0.2, 0.6),
+        yaw=lay.uniform(-15, 15),
+        pitch=lay.uniform(32, 44),
+        f=640,
+    )
     cv = Canvas(cam, seed=seed)
     w = lay.uniform(5.6, 7.2)
     pl = room(cv, w=w, d=7.2, wall=wall, floor=(168, 158, 146), ceil=(236, 236, 232))
     zs = (2.0, 4.2, 6.2) if lay.random() < 0.5 else (1.6, 3.4, 5.2, 7.0)
-    ceiling_lights(cv, pl, kind=lights, zs=zs, rows=((-w / 4.5,), (w / 4.5,)) if lay.random() < 0.6 else ((0.0,),))
+    ceiling_lights(
+        cv,
+        pl,
+        kind=lights,
+        zs=zs,
+        rows=((-w / 4.5,), (w / 4.5,)) if lay.random() < 0.6 else ((0.0,),),
+    )
     split_on(cv, pl["back"], 4.6, 2.3)
     if stains:
         cplane = pl["ceil"]
@@ -308,7 +510,15 @@ def ceiling_view(seed=0, lights="fluor", stains=False, wall=None, layout=None):
 def bathroom(seed=0):
     cam = Cam(pos=(0.0, 0.1, 0.2), yaw=12, pitch=-8, f=640)
     cv = Canvas(cam, seed=seed)
-    pl = room(cv, w=3.4, d=4.2, wall=(236, 238, 238), floor=(120, 125, 130), tile=0.3, wall_tiles=(0.3, (200, 205, 208)))
+    pl = room(
+        cv,
+        w=3.4,
+        d=4.2,
+        wall=(236, 238, 238),
+        floor=(120, 125, 130),
+        tile=0.3,
+        wall_tiles=(0.3, (200, 205, 208)),
+    )
     ceiling_lights(cv, pl, kind="led", rows=((0.0,),), zs=(2.2,))
     # bancada com cubas e espelho
     cv.box(-1.7, 0.4, FLOOR_Y + 0.8, FLOOR_Y + 0.88, 3.65, 4.2, (40, 40, 42))
@@ -316,7 +526,12 @@ def bathroom(seed=0):
     for x in (-1.2, -0.3):
         p = cam.project((x, FLOOR_Y + 0.885, 3.95))
         if p:
-            cv.ellipse([p[0] - 55, p[1] - 14, p[0] + 55, p[1] + 14], fill=(245, 245, 245), outline=(180, 180, 180), width=2)
+            cv.ellipse(
+                [p[0] - 55, p[1] - 14, p[0] + 55, p[1] + 14],
+                fill=(245, 245, 245),
+                outline=(180, 180, 180),
+                width=2,
+            )
     cv.rect_on(pl["back"], 0.1, 1.15, 2.0, 2.3, (175, 195, 205), tex=3)
     # divisórias de box sanitário
     cv.box(0.55, 1.7, FLOOR_Y + 0.15, FLOOR_Y + 2.0, 1.2, 1.24, (95, 120, 150))
@@ -329,7 +544,15 @@ def bathroom(seed=0):
 def storage(seed=0):
     cam = Cam(pos=(0.0, 0.1, 0.0), yaw=-4, pitch=-5, f=650)
     cv = Canvas(cam, seed=seed)
-    pl = room(cv, w=5.0, d=9.0, wall=(178, 178, 172), floor=(128, 128, 124), tile=0, ceil=(190, 190, 186))
+    pl = room(
+        cv,
+        w=5.0,
+        d=9.0,
+        wall=(178, 178, 172),
+        floor=(128, 128, 124),
+        tile=0,
+        ceil=(190, 190, 186),
+    )
     ceiling_lights(cv, pl, kind="fluor", rows=((0.0,),), zs=(2.5, 5.0, 7.5))
     rnd = random.Random(seed)
     for side in (-1, 1):
@@ -337,10 +560,28 @@ def storage(seed=0):
         x1 = x0 + 0.9
         for z0 in (2.0, 4.5, 7.0):
             for xx in (x0, x1 - 0.05):
-                cv.box(xx, xx + 0.05, FLOOR_Y, FLOOR_Y + 2.2, z0, z0 + 0.05, (60, 90, 150))
-                cv.box(xx, xx + 0.05, FLOOR_Y, FLOOR_Y + 2.2, z0 + 2.0, z0 + 2.05, (60, 90, 150))
+                cv.box(
+                    xx, xx + 0.05, FLOOR_Y, FLOOR_Y + 2.2, z0, z0 + 0.05, (60, 90, 150)
+                )
+                cv.box(
+                    xx,
+                    xx + 0.05,
+                    FLOOR_Y,
+                    FLOOR_Y + 2.2,
+                    z0 + 2.0,
+                    z0 + 2.05,
+                    (60, 90, 150),
+                )
             for lvl in (0.1, 0.8, 1.5, 2.15):
-                cv.box(x0, x1, FLOOR_Y + lvl, FLOOR_Y + lvl + 0.05, z0, z0 + 2.05, (200, 120, 50))
+                cv.box(
+                    x0,
+                    x1,
+                    FLOOR_Y + lvl,
+                    FLOOR_Y + lvl + 0.05,
+                    z0,
+                    z0 + 2.05,
+                    (200, 120, 50),
+                )
                 zz = z0 + 0.1
                 while zz < z0 + 1.8 and lvl < 2.1:
                     bh = rnd.uniform(0.25, 0.55)
@@ -380,7 +621,12 @@ def facade(seed=0, color=(214, 208, 196)):
     cv.rect(60, 470, W - 60, 800, (190, 190, 195), tex=1)
     for x in range(70, W - 70, 190):
         cv.rect(x, 480, x + 180, 800, (60, 75, 90), tex=3, grad=(1, -1, 0.5))
-        cv.poly2([(x + 20, 490), (x + 70, 490), (x + 10, 640), (x + 5, 640)], (140, 160, 175), tex=1, alpha=90)
+        cv.poly2(
+            [(x + 20, 490), (x + 70, 490), (x + 10, 640), (x + 5, 640)],
+            (140, 160, 175),
+            tex=1,
+            alpha=90,
+        )
     cv.rect(W / 2 - 180, 480, W / 2 + 180, 800, (190, 190, 195), tex=1)
     cv.rect(W / 2 - 170, 490, W / 2 - 4, 800, (75, 92, 108), tex=3, grad=(1, -1, 0.4))
     cv.rect(W / 2 + 4, 490, W / 2 + 170, 800, (75, 92, 108), tex=3, grad=(1, -1, 0.4))
@@ -409,7 +655,15 @@ def atm_room(cv: Canvas):
         z1 = 7.48
         z0 = z1 - 0.75
         cv.box(x, x + 0.85, FLOOR_Y, FLOOR_Y + 1.65, z0, z1, (70, 74, 82))
-        cv.box(x + 0.02, x + 0.83, FLOOR_Y + 1.0, FLOOR_Y + 1.45, z0 - 0.12, z0, (55, 58, 64))
+        cv.box(
+            x + 0.02,
+            x + 0.83,
+            FLOOR_Y + 1.0,
+            FLOOR_Y + 1.45,
+            z0 - 0.12,
+            z0,
+            (55, 58, 64),
+        )
         cv.poly3(
             [
                 (x + 0.15, FLOOR_Y + 1.08, z0 - 0.121),
@@ -420,7 +674,15 @@ def atm_room(cv: Canvas):
             (90, 150, 190),
             tex=2,
         )
-        cv.box(x + 0.2, x + 0.65, FLOOR_Y + 0.85, FLOOR_Y + 0.95, z0 - 0.15, z0, (150, 150, 155))
+        cv.box(
+            x + 0.2,
+            x + 0.65,
+            FLOOR_Y + 0.85,
+            FLOOR_Y + 0.95,
+            z0 - 0.15,
+            z0,
+            (150, 150, 155),
+        )
     # pessoa usando terminal (silhueta simples)
     cv.box(-1.15, -0.85, FLOOR_Y, FLOOR_Y + 0.85, 6.1, 6.35, (40, 45, 70))
     cv.box(-1.2, -0.8, FLOOR_Y + 0.85, FLOOR_Y + 1.5, 6.05, 6.35, (150, 60, 50))
@@ -442,7 +704,16 @@ def corridor_room(cv: Canvas):
 
 
 def parking_room(cv: Canvas):
-    pl = room(cv, w=12.0, d=16.0, wall=(150, 150, 148), floor=(95, 95, 98), tile=0, ceil=(120, 120, 118), hc=1.6)
+    pl = room(
+        cv,
+        w=12.0,
+        d=16.0,
+        wall=(150, 150, 148),
+        floor=(95, 95, 98),
+        tile=0,
+        ceil=(120, 120, 118),
+        hc=1.6,
+    )
     for x in (-4.5, -1.5, 1.5, 4.5):
         cv.line3((x, FLOOR_Y, 6), (x, FLOOR_Y, 15), (230, 220, 120), 4)
     rnd = random.Random(3)
@@ -457,10 +728,26 @@ def parking_room(cv: Canvas):
 CCTV_BACKGROUND = None  # gancho: (scene, seed, (w, h), tile) → Image | None; o gerador aponta para as fotos reais
 
 
-def cctv_frame(scene="atm", seed=0, label="CAM 04", stamp="30/09/2026 14:22:10", blur=0.0, w=W, h=H, tint=(0.95, 1.0, 1.05), tile=False):
+def cctv_frame(
+    scene="atm",
+    seed=0,
+    label="CAM 04",
+    stamp="30/09/2026 14:22:10",
+    blur=0.0,
+    w=W,
+    h=H,
+    tint=(0.95, 1.0, 1.05),
+    tile=False,
+):
     """Imagem de câmera de CFTV. Se houver foto de fundo (gancho CCTV_BACKGROUND), ela substitui a cena 3D; o tratamento de
-    câmera (cor lavada, ruído, desfoque) e o texto (câmera, data/hora) são aplicados por cima nos dois casos."""
-    bg = CCTV_BACKGROUND(scene, seed, (w, h), tile) if CCTV_BACKGROUND is not None and scene in ("atm", "corridor", "parking", "office") else None
+    câmera (cor lavada, ruído, desfoque) e o texto (câmera, data/hora) são aplicados por cima nos dois casos.
+    """
+    bg = (
+        CCTV_BACKGROUND(scene, seed, (w, h), tile)
+        if CCTV_BACKGROUND is not None
+        and scene in ("atm", "corridor", "parking", "office")
+        else None
+    )
     if bg is not None:
         cv = Canvas(seed=seed, w=w, h=h)
         cv.img = bg.convert("RGB").resize((w, h))
@@ -496,7 +783,14 @@ def cctv_frame(scene="atm", seed=0, label="CAM 04", stamp="30/09/2026 14:22:10",
         img = img.filter(ImageFilter.GaussianBlur(blur))
     d = ImageDraw.Draw(img)
     fs = max(12, int(30 * w / W))
-    d.text((int(22 * w / W), int(18 * h / H)), label, font=font(fs, "m"), fill=(255, 255, 255), stroke_width=2, stroke_fill=(0, 0, 0))
+    d.text(
+        (int(22 * w / W), int(18 * h / H)),
+        label,
+        font=font(fs, "m"),
+        fill=(255, 255, 255),
+        stroke_width=2,
+        stroke_fill=(0, 0, 0),
+    )
     if stamp:
         d.text(
             (w - int(22 * w / W), h - int(18 * h / H)),
@@ -514,7 +808,12 @@ def dome_camera(seed=0):
     cam = Cam(pos=(0, 0, 0), yaw=5, pitch=62, f=700)
     cv = Canvas(cam, seed=seed)
     y = 1.0
-    cv.poly3([(-6, y, -2), (6, y, -2), (6, y, 8), (-6, y, 8)], (226, 226, 222), tex=3, grad=(0, 1, 0.2))
+    cv.poly3(
+        [(-6, y, -2), (6, y, -2), (6, y, 8), (-6, y, 8)],
+        (226, 226, 222),
+        tex=3,
+        grad=(0, 1, 0.2),
+    )
     x = -3.0
     while x < 3:
         cv.line3((x, y - 0.001, -0.5), (x, y - 0.001, 6), (170, 170, 168), 3)
@@ -525,11 +824,26 @@ def dome_camera(seed=0):
         z += 0.625
     p = cam.project((0.12, y, 0.75))
     r = 120
-    cv.ellipse([p[0] - r, p[1] - r * 0.8, p[0] + r, p[1] + r * 0.8], fill=(245, 245, 245), outline=(200, 200, 200), width=3)
+    cv.ellipse(
+        [p[0] - r, p[1] - r * 0.8, p[0] + r, p[1] + r * 0.8],
+        fill=(245, 245, 245),
+        outline=(200, 200, 200),
+        width=3,
+    )
     r2 = 88
-    cv.ellipse([p[0] - r2, p[1] - r2 * 0.8, p[0] + r2, p[1] + r2 * 0.8], fill=(35, 38, 45))
-    cv.ellipse([p[0] - r2 * 0.6, p[1] - r2 * 0.6, p[0] - r2 * 0.1, p[1] - r2 * 0.25], fill=(110, 115, 130))
-    cv.ellipse([p[0] - 18, p[1] - 10, p[0] + 18, p[1] + 22], fill=(10, 10, 12), outline=(80, 80, 90), width=3)
+    cv.ellipse(
+        [p[0] - r2, p[1] - r2 * 0.8, p[0] + r2, p[1] + r2 * 0.8], fill=(35, 38, 45)
+    )
+    cv.ellipse(
+        [p[0] - r2 * 0.6, p[1] - r2 * 0.6, p[0] - r2 * 0.1, p[1] - r2 * 0.25],
+        fill=(110, 115, 130),
+    )
+    cv.ellipse(
+        [p[0] - 18, p[1] - 10, p[0] + 18, p[1] + 22],
+        fill=(10, 10, 12),
+        outline=(80, 80, 90),
+        width=3,
+    )
     # ponto de luz no forro ao lado
     q = cam.project((1.3, y - 0.002, 1.6))
     cv.rect(q[0] - 90, q[1] - 60, q[0] + 90, q[1] + 60, (252, 252, 250), tex=0.5)
@@ -551,7 +865,9 @@ def bullet_camera_wall(seed=0):
     cv.ellipse([300, 200, 470, 370], fill=(45, 45, 50))
     cv.ellipse([335, 235, 435, 335], fill=(15, 15, 20), outline=(90, 90, 100), width=4)
     cv.ellipse([360, 255, 395, 290], fill=(90, 100, 130))
-    cv.draw.line([(900, 330), (1050, 360), (1080, 560), (1100, H)], fill=(30, 30, 30), width=8)
+    cv.draw.line(
+        [(900, 330), (1050, 360), (1080, 560), (1100, H)], fill=(30, 30, 30), width=8
+    )
     return cv.img
 
 
@@ -572,18 +888,29 @@ def rack(seed=0):
         px = 380 + i * 22
         cv.draw.rectangle([px, y + 25, px + 16, y + 45], fill=(15, 15, 15))
         ports.append((px + 8, y + 45))
-    colors = [(40, 90, 200), (220, 200, 40), (200, 60, 50), (40, 160, 70), (230, 230, 230)]
+    colors = [
+        (40, 90, 200),
+        (220, 200, 40),
+        (200, 60, 50),
+        (40, 160, 70),
+        (230, 230, 230),
+    ]
     for px, py in ports:
         c = rnd.choice(colors)
         end = (px + rnd.randint(-60, 60), 330)
-        cv.draw.line([(px, py), (px + rnd.randint(-10, 10), py + 60), end], fill=c, width=5)
+        cv.draw.line(
+            [(px, py), (px + rnd.randint(-10, 10), py + 60), end], fill=c, width=5
+        )
     # switch
     y = 340
     cv.rect(345, y, 935, y + 60, (150, 152, 158), tex=1)
     for i in range(24):
         px = 380 + i * 22
         cv.draw.rectangle([px, y + 18, px + 16, y + 38], fill=(30, 30, 30))
-        cv.draw.ellipse([px + 4, y + 44, px + 10, y + 50], fill=(60, 220, 90) if rnd.random() > 0.2 else (230, 160, 40))
+        cv.draw.ellipse(
+            [px + 4, y + 44, px + 10, y + 50],
+            fill=(60, 220, 90) if rnd.random() > 0.2 else (230, 160, 40),
+        )
     # NVR
     y = 440
     cv.rect(345, y, 935, y + 110, (22, 22, 24), tex=1)
@@ -606,14 +933,20 @@ def workbench_camera(seed=0):
     cv = Canvas(seed=seed)
     for y in range(0, H, 6):
         t = (math.sin(y * 0.05) + 1) / 2
-        cv.draw.line([(0, y), (W, y)], fill=mix((150, 110, 70), (175, 135, 90), t), width=6)
+        cv.draw.line(
+            [(0, y), (W, y)], fill=mix((150, 110, 70), (175, 135, 90), t), width=6
+        )
     cv.img = cv.img.filter(ImageFilter.GaussianBlur(1))
     cv.refresh()
     # câmera bullet deitada
-    cv.rrect([380, 360, 820, 520], 60, fill=(235, 235, 232), outline=(180, 180, 180), width=3)
+    cv.rrect(
+        [380, 360, 820, 520], 60, fill=(235, 235, 232), outline=(180, 180, 180), width=3
+    )
     cv.rrect([350, 350, 420, 530], 30, fill=(215, 215, 212))
     cv.ellipse([290, 375, 420, 505], fill=(40, 40, 45))
-    cv.ellipse([320, 405, 390, 475], fill=(15, 15, 18), outline=(100, 100, 110), width=3)
+    cv.ellipse(
+        [320, 405, 390, 475], fill=(15, 15, 18), outline=(100, 100, 110), width=3
+    )
     cv.rect(820, 420, 900, 460, (200, 200, 200), tex=1)
     cv.draw.line([(900, 440), (1000, 470), (1080, 600)], fill=(30, 30, 30), width=9)
     # tampa aberta e placa
@@ -648,18 +981,43 @@ def monitor_grid(seed=0, tiles=None, cols=3, rows=3, stamp="03/10/2026 10:41:07"
             if scene == "nosignal":
                 t = Image.new("RGB", (tw - 4, th - 4), (20, 40, 140))
                 d = ImageDraw.Draw(t)
-                d.text(((tw - 4) / 2, (th - 4) / 2), "SEM SINAL", font=font(26, "b"), fill=(255, 255, 255), anchor="mm")
+                d.text(
+                    ((tw - 4) / 2, (th - 4) / 2),
+                    "SEM SINAL",
+                    font=font(26, "b"),
+                    fill=(255, 255, 255),
+                    anchor="mm",
+                )
                 d.text((8, 6), label, font=font(16, "m"), fill=(255, 255, 255))
             elif scene == "black":
                 t = Image.new("RGB", (tw - 4, th - 4), (8, 8, 10))
             else:
-                t = cctv_frame(scene, seed=seed + i, label=label, stamp=None, w=tw - 4, h=th - 4, tile=True)
+                t = cctv_frame(
+                    scene,
+                    seed=seed + i,
+                    label=label,
+                    stamp=None,
+                    w=tw - 4,
+                    h=th - 4,
+                    tile=True,
+                )
             cv.img.paste(t, (x + 2, y + 2))
     cv.refresh()
-    cv.draw.text((sx1 - 10, sy1 - 8), stamp, font=font(18, "m"), fill=(240, 240, 240), anchor="rd")
+    cv.draw.text(
+        (sx1 - 10, sy1 - 8),
+        stamp,
+        font=font(18, "m"),
+        fill=(240, 240, 240),
+        anchor="rd",
+    )
     cv.rect(560, 760, 720, 820, (25, 25, 28), tex=1)
     # reflexo
-    cv.poly2([(160, 110), (520, 110), (300, 720), (160, 720)], (255, 255, 255), tex=0, alpha=18)
+    cv.poly2(
+        [(160, 110), (520, 110), (300, 720), (160, 720)],
+        (255, 255, 255),
+        tex=0,
+        alpha=18,
+    )
     return cv.img
 
 
@@ -667,7 +1025,13 @@ def monitor_grid(seed=0, tiles=None, cols=3, rows=3, stamp="03/10/2026 10:41:07"
 LABELS = {
     "panel": (
         "LUMINÁRIA LED DE EMBUTIR 60x60",
-        ["Modelo: PL-6060-40W", "Potência: 40 W   |   4000 K", "Fluxo luminoso: 4.000 lm", "Tensão: 100-240 V~  50/60 Hz", "FP > 0,92   IRC > 80"],
+        [
+            "Modelo: PL-6060-40W",
+            "Potência: 40 W   |   4000 K",
+            "Fluxo luminoso: 4.000 lm",
+            "Tensão: 100-240 V~  50/60 Hz",
+            "FP > 0,92   IRC > 80",
+        ],
     ),
     "tube": (
         "LÂMPADA LED TUBULAR T8 18W",
@@ -748,7 +1112,16 @@ def ac_filter(seed=0, dirty=False):
         cv.rect(x - 6, 190, x + 6, 770, frame, tex=1)
     if dirty:
         for _ in range(60):
-            cv.poly2([(random.randint(200, 1080), random.randint(190, 770)) for _ in range(6)], (95, 90, 80), tex=10, soft=8, alpha=120)
+            cv.poly2(
+                [
+                    (random.randint(200, 1080), random.randint(190, 770))
+                    for _ in range(6)
+                ],
+                (95, 90, 80),
+                tex=10,
+                soft=8,
+                alpha=120,
+            )
     return cv.img
 
 
@@ -764,9 +1137,21 @@ def condenser(seed=0):
     cx, cy, r = 520, 480, 190
     for k in range(10):
         rr = r - k * 18
-        cv.ellipse([cx - rr, cy - rr, cx + rr, cy + rr], outline=(150, 150, 150), width=4)
+        cv.ellipse(
+            [cx - rr, cy - rr, cx + rr, cy + rr], outline=(150, 150, 150), width=4
+        )
     for a in range(0, 360, 30):
-        cv.draw.line([(cx, cy), (cx + r * math.cos(math.radians(a)), cy + r * math.sin(math.radians(a)))], fill=(150, 150, 150), width=3)
+        cv.draw.line(
+            [
+                (cx, cy),
+                (
+                    cx + r * math.cos(math.radians(a)),
+                    cy + r * math.sin(math.radians(a)),
+                ),
+            ],
+            fill=(150, 150, 150),
+            width=3,
+        )
     cv.ellipse([cx - 30, cy - 30, cx + 30, cy + 30], fill=(60, 60, 60))
     for y in range(300, 680, 14):
         cv.draw.line([(800, y), (1010, y)], fill=(200, 198, 190), width=5)
@@ -782,18 +1167,37 @@ def door_closer(seed=0, close=False):
         cv.rect(390, 60, 890, H, (240, 240, 236), tex=1)
         cv.rect(420, 90, 860, H, (140, 102, 66), tex=9, grad=(1, 0, 0.15))
         cv.rect(800, 520, 830, 600, (200, 200, 205), tex=1)
-        cv.rrect([450, 110, 640, 160], 10, fill=(170, 172, 178), outline=(120, 120, 125), width=2)
+        cv.rrect(
+            [450, 110, 640, 160],
+            10,
+            fill=(170, 172, 178),
+            outline=(120, 120, 125),
+            width=2,
+        )
         cv.draw.line([(620, 135), (720, 95), (840, 82)], fill=(150, 152, 158), width=12)
         cv.rect(800, 66, 880, 90, (165, 165, 170), tex=1)
         cv.rect(0, 880, W, H, (150, 140, 128), tex=6)
     else:
         cv.rect(0, 0, W, 300, (240, 240, 236), tex=1)
         cv.rect(0, 300, W, H, (140, 102, 66), tex=9)
-        cv.rrect([150, 380, 840, 590], 30, fill=(178, 180, 186), outline=(110, 110, 115), width=4)
+        cv.rrect(
+            [150, 380, 840, 590],
+            30,
+            fill=(178, 180, 186),
+            outline=(110, 110, 115),
+            width=4,
+        )
         for x in (200, 790):
-            cv.ellipse([x - 18, 470, x + 18, 506], fill=(130, 130, 135), outline=(90, 90, 95), width=2)
+            cv.ellipse(
+                [x - 18, 470, x + 18, 506],
+                fill=(130, 130, 135),
+                outline=(90, 90, 95),
+                width=2,
+            )
         cv.text((495, 485), "MA-200", 34, (90, 90, 96), "b", anchor="mm")
-        cv.draw.line([(780, 450), (1000, 300), (1200, 260)], fill=(150, 152, 158), width=34)
+        cv.draw.line(
+            [(780, 450), (1000, 300), (1200, 260)], fill=(150, 152, 158), width=34
+        )
         cv.ellipse([760, 430, 810, 480], fill=(120, 120, 125))
         cv.ellipse([980, 280, 1020, 320], fill=(120, 120, 125))
         cv.rect(1120, 230, 1280, 290, (165, 165, 170), tex=1)
@@ -801,17 +1205,45 @@ def door_closer(seed=0, close=False):
 
 
 def outlet_plate(cv: Canvas, x, y, burned=False):
-    cv.rrect([x, y, x + 150, y + 230], 16, fill=(246, 246, 244), outline=(200, 200, 200), width=2)
+    cv.rrect(
+        [x, y, x + 150, y + 230],
+        16,
+        fill=(246, 246, 244),
+        outline=(200, 200, 200),
+        width=2,
+    )
     for k in (0, 1):
         cy = y + 62 + k * 104
         cx = x + 75
-        pts = [(cx + 46 * math.cos(math.radians(a)), cy + 40 * math.sin(math.radians(a))) for a in range(0, 360, 60)]
+        pts = [
+            (cx + 46 * math.cos(math.radians(a)), cy + 40 * math.sin(math.radians(a)))
+            for a in range(0, 360, 60)
+        ]
         cv.draw.polygon(pts, fill=(232, 232, 230), outline=(190, 190, 190))
         for dx, dy in ((-16, -6), (16, -6), (0, 16)):
-            cv.ellipse([cx + dx - 6, cy + dy - 6, cx + dx + 6, cy + dy + 6], fill=(40, 40, 40))
+            cv.ellipse(
+                [cx + dx - 6, cy + dy - 6, cx + dx + 6, cy + dy + 6], fill=(40, 40, 40)
+            )
     if burned:
-        cv.poly2([(x + 30, y + 10), (x + 140, y + 30), (x + 130, y + 140), (x + 40, y + 120)], (35, 25, 20), tex=12, soft=14, alpha=210)
-        cv.poly2([(x + 60, y - 40), (x + 120, y - 50), (x + 110, y + 40), (x + 70, y + 30)], (60, 50, 45), tex=12, soft=20, alpha=160)
+        cv.poly2(
+            [
+                (x + 30, y + 10),
+                (x + 140, y + 30),
+                (x + 130, y + 140),
+                (x + 40, y + 120),
+            ],
+            (35, 25, 20),
+            tex=12,
+            soft=14,
+            alpha=210,
+        )
+        cv.poly2(
+            [(x + 60, y - 40), (x + 120, y - 50), (x + 110, y + 40), (x + 70, y + 30)],
+            (60, 50, 45),
+            tex=12,
+            soft=20,
+            alpha=160,
+        )
 
 
 def outlets(seed=0, burned=False):
@@ -842,9 +1274,24 @@ def breaker_panel(seed=0):
             x = 365 + i * 40
             cv.rect(x, y, x + 34, y + 110, (245, 245, 243), tex=1)
             cv.rect(x + 10, y + 40, x + 24, y + 70, (30, 30, 30), tex=1)
-            cv.draw.line([(x + 17, y), (x + 17 + rnd.randint(-20, 20), y - 50)], fill=rnd.choice(wires), width=5)
-            cv.draw.line([(x + 17, y + 110), (x + 17 + rnd.randint(-20, 20), y + 160)], fill=rnd.choice(wires), width=5)
-            cv.text((x + 17, y + 95), str(row * 12 + i + 1), 13, (60, 60, 60), "c", anchor="mm")
+            cv.draw.line(
+                [(x + 17, y), (x + 17 + rnd.randint(-20, 20), y - 50)],
+                fill=rnd.choice(wires),
+                width=5,
+            )
+            cv.draw.line(
+                [(x + 17, y + 110), (x + 17 + rnd.randint(-20, 20), y + 160)],
+                fill=rnd.choice(wires),
+                width=5,
+            )
+            cv.text(
+                (x + 17, y + 95),
+                str(row * 12 + i + 1),
+                13,
+                (60, 60, 60),
+                "c",
+                anchor="mm",
+            )
     return cv.img
 
 
@@ -863,8 +1310,20 @@ def under_sink_leak(seed=0):
     # gotas e poça
     for dy in range(470, 690, 40):
         cv.ellipse([628, dy, 642, dy + 18], fill=(160, 190, 210))
-    cv.poly2([(470, 760), (760, 740), (900, 790), (700, 840), (480, 820)], (120, 140, 150), tex=4, soft=6, alpha=200)
-    cv.poly2([(560, 770), (700, 765), (720, 790), (590, 800)], (210, 225, 235), tex=2, soft=4, alpha=200)
+    cv.poly2(
+        [(470, 760), (760, 740), (900, 790), (700, 840), (480, 820)],
+        (120, 140, 150),
+        tex=4,
+        soft=6,
+        alpha=200,
+    )
+    cv.poly2(
+        [(560, 770), (700, 765), (720, 790), (590, 800)],
+        (210, 225, 235),
+        tex=2,
+        soft=4,
+        alpha=200,
+    )
     cv.rect(300, 720, 430, 860, (40, 90, 170), tex=3)  # balde
     return cv.img
 
@@ -876,7 +1335,9 @@ def valve(seed=0):
         cv.draw.line([(x, 0), (x, H)], fill=(205, 208, 210), width=4)
     for y in range(0, H, 200):
         cv.draw.line([(0, y), (W, y)], fill=(205, 208, 210), width=4)
-    cv.ellipse([470, 310, 810, 650], fill=(200, 202, 208), outline=(150, 152, 158), width=4)
+    cv.ellipse(
+        [470, 310, 810, 650], fill=(200, 202, 208), outline=(150, 152, 158), width=4
+    )
     cv.ellipse([560, 400, 720, 560], fill=(170, 172, 178))
     cv.rect(615, 340, 665, 620, (215, 217, 222), tex=1)
     cv.rect(500, 455, 780, 505, (215, 217, 222), tex=1)
@@ -900,17 +1361,39 @@ def alarm_panel(seed=0, lcd="SISTEMA PRONTO"):
 
 def keypad(cv: Canvas, x, y, lcd="SISTEMA PRONTO", scale=1.0):
     s = scale
-    cv.rrect([x, y, x + 330 * s, y + 440 * s], int(26 * s), fill=(246, 246, 244), outline=(190, 190, 190), width=3)
+    cv.rrect(
+        [x, y, x + 330 * s, y + 440 * s],
+        int(26 * s),
+        fill=(246, 246, 244),
+        outline=(190, 190, 190),
+        width=3,
+    )
     cv.rect(x + 30 * s, y + 40 * s, x + 300 * s, y + 130 * s, (150, 200, 120), tex=2)
-    cv.text((x + 165 * s, y + 70 * s), lcd[:16], int(24 * s), (20, 40, 20), "m", anchor="mm")
-    cv.text((x + 165 * s, y + 104 * s), "03/10 10:42", int(20 * s), (20, 40, 20), "m", anchor="mm")
+    cv.text(
+        (x + 165 * s, y + 70 * s), lcd[:16], int(24 * s), (20, 40, 20), "m", anchor="mm"
+    )
+    cv.text(
+        (x + 165 * s, y + 104 * s),
+        "03/10 10:42",
+        int(20 * s),
+        (20, 40, 20),
+        "m",
+        anchor="mm",
+    )
     keys = "123456789*0#"
     for i, k in enumerate(keys):
         r, c = divmod(i, 3)
         kx = x + 45 * s + c * 85 * s
         ky = y + 160 * s + r * 65 * s
-        cv.rrect([kx, ky, kx + 70 * s, ky + 50 * s], int(10 * s), fill=(225, 225, 222), outline=(180, 180, 180))
-        cv.text((kx + 35 * s, ky + 25 * s), k, int(24 * s), (50, 50, 50), "b", anchor="mm")
+        cv.rrect(
+            [kx, ky, kx + 70 * s, ky + 50 * s],
+            int(10 * s),
+            fill=(225, 225, 222),
+            outline=(180, 180, 180),
+        )
+        cv.text(
+            (kx + 35 * s, ky + 25 * s), k, int(24 * s), (50, 50, 50), "b", anchor="mm"
+        )
 
 
 def keypad_closeup(seed=0, lcd="SISTEMA OK"):
@@ -964,22 +1447,30 @@ def panic_button(seed=0):
     cv = Canvas(seed=seed)
     for y in range(0, H, 5):
         t = (math.sin(y * 0.07) + 1) / 2
-        cv.draw.line([(0, y), (W, y)], fill=mix((95, 70, 48), (120, 90, 62), t), width=5)
+        cv.draw.line(
+            [(0, y), (W, y)], fill=mix((95, 70, 48), (120, 90, 62), t), width=5
+        )
     cv.refresh()
     cv.rect(0, 700, W, H, (40, 35, 32), tex=4)
-    cv.rrect([480, 330, 800, 560], 20, fill=(235, 235, 232), outline=(180, 180, 180), width=3)
+    cv.rrect(
+        [480, 330, 800, 560], 20, fill=(235, 235, 232), outline=(180, 180, 180), width=3
+    )
     cv.ellipse([560, 370, 720, 530], fill=(200, 30, 30), outline=(140, 20, 20), width=6)
     cv.text((640, 450), "PÂNICO", 22, (255, 255, 255), "b", anchor="mm")
     return cv.img
 
 
 # ============================================================================ documentos fotografados
-def paper_photo(title, rows, seed=0, signed=True, footer="Assinatura do responsável pela agência"):
+def paper_photo(
+    title, rows, seed=0, signed=True, footer="Assinatura do responsável pela agência"
+):
     rnd = random.Random(seed)
     bg = Canvas(seed=seed)
     for y in range(0, H, 6):
         t = (math.sin(y * 0.04) + 1) / 2
-        bg.draw.line([(0, y), (W, y)], fill=mix((120, 90, 60), (140, 105, 72), t), width=6)
+        bg.draw.line(
+            [(0, y), (W, y)], fill=mix((120, 90, 60), (140, 105, 72), t), width=6
+        )
     sheet = Image.new("RGB", (820, 1080), (248, 247, 242))
     d = ImageDraw.Draw(sheet)
     d.text((410, 70), title, font=font(30, "b"), fill=(20, 20, 20), anchor="mm")
@@ -990,7 +1481,10 @@ def paper_photo(title, rows, seed=0, signed=True, footer="Assinatura do respons�
         d.text((300, y), str(v), font=font(22), fill=(30, 30, 30))
         y += 46
     y += 20
-    for s in ("Declaramos que o serviço acima foi executado e", "conferido no local, nas condições descritas."):
+    for s in (
+        "Declaramos que o serviço acima foi executado e",
+        "conferido no local, nas condições descritas.",
+    ):
         d.text((60, y), s, font=font(20), fill=(40, 40, 40))
         y += 32
     d.line([(100, 900), (720, 900)], fill=(30, 30, 30), width=2)
@@ -1026,7 +1520,9 @@ def removed_items(seed=0, kind="tubes"):
     for k in range(rnd.randint(5, 9)):
         y = 380 + k * 34 + rnd.randint(-8, 8)
         x0, x1 = 160 + rnd.randint(-30, 30), 1120 + rnd.randint(-30, 30)
-        cv.draw.line([(x0, y), (x1, y + rnd.randint(-25, 25))], fill=(238, 238, 232), width=26)
+        cv.draw.line(
+            [(x0, y), (x1, y + rnd.randint(-25, 25))], fill=(238, 238, 232), width=26
+        )
         cv.draw.line([(x0, y - 6), (x1, y - 6)], fill=(250, 250, 248), width=6)
         cv.rect(x0 - 18, y - 13, x0 + 6, y + 13, (90, 90, 95), tex=1)
         cv.rect(x1 - 6, y - 13, x1 + 18, y + 13, (90, 90, 95), tex=1)

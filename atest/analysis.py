@@ -11,7 +11,15 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, ClassVar
 
-from .domain import Attachment, ChecklistResult, ClassifiedAttachment, EvaluatedDocument, EvaluatedItem, Finding, Stage
+from .domain import (
+    Attachment,
+    ChecklistResult,
+    ClassifiedAttachment,
+    EvaluatedDocument,
+    EvaluatedItem,
+    Finding,
+    Stage,
+)
 from .formatting import brl
 from .llm_schemas import AssessmentText, PhotoAnalysis, ScopeReading, ServiceCoverage
 from .score import ScoreCalculator, ScoreResult
@@ -24,7 +32,31 @@ if TYPE_CHECKING:
 
 @dataclass
 class AnalysisContext:
-    """Estado de um chamado ao longo do pipeline."""
+    """Estado de um chamado ao longo do pipeline.
+
+    Attributes:
+        ticket: chamado carregado (dados, pasta e anexos).
+        session: sessão de LLM do chamado (modelo por tarefa, custo e rastro das chamadas).
+        run_id: id da execução.
+        durations: etapa → segundos gastos.
+        attachments: anexos classificados pelo checklist (categoria, momento, legibilidade).
+        checklist: resultado do checklist mínimo.
+        scope: leitura do escopo (serviços pedidos, local, quantidades, critérios de aceite).
+        findings: apontamentos acumulados pelas etapas (a etapa de score ajusta e filtra).
+        confidence_reducers: motivos extras de baixa confiança (ex.: orçamento ilegível, fotos não analisadas).
+        items: itens do orçamento avaliados (classificação, preço de referência, apontamentos, valor em questão).
+        quote_notes: observações do orçamento que não viram apontamento.
+        service_coverage: para cada serviço pedido, se o orçamento o cobre (sim, em parte, não).
+        photos: fotos do chamado (sem as fotos de documentos).
+        photo_analysis: leitura das fotos pelo modelo.
+        documents: documentos lidos (OCR) e conferidos.
+        integrity: nome da foto → data EXIF, origem de reaproveitamento e sinais de integridade.
+        score: notas, score, confiança e recomendação.
+        amount_at_issue: valor em questão somado dos itens, em R$.
+        amount_at_issue_pct: valor em questão em % do total do orçamento.
+        text: resumo para a pessoa analista e mensagem ao fornecedor.
+        halt: campos do parecer final quando uma etapa encerra a análise (None = segue).
+    """
 
     ticket: LoadedTicket
     session: LlmSession
@@ -34,7 +66,9 @@ class AnalysisContext:
     checklist: ChecklistResult | None = None
     scope: ScopeReading | None = None
     findings: list[Finding] = field(default_factory=list)
-    confidence_reducers: list[str] = field(default_factory=list)  # motivos extras de baixa confiança (ex.: orçamento ilegível)
+    confidence_reducers: list[str] = field(
+        default_factory=list
+    )  # motivos extras de baixa confiança (ex.: orçamento ilegível)
     items: list[EvaluatedItem] = field(default_factory=list)
     quote_notes: list[str] = field(default_factory=list)
     service_coverage: list[ServiceCoverage] = field(default_factory=list)
@@ -46,14 +80,21 @@ class AnalysisContext:
     amount_at_issue: float = 0.0
     amount_at_issue_pct: float = 0.0
     text: AssessmentText | None = None
-    halt: dict[str, Any] | None = None  # campos do parecer final quando uma etapa encerra a análise
+    halt: dict[str, Any] | None = (
+        None  # campos do parecer final quando uma etapa encerra a análise
+    )
 
     @property
     def halted(self) -> bool:
         return self.halt is not None
 
     def scoring_input(self) -> dict[str, Any]:
-        """Resultado consolidado (score + apontamentos + valor em questão + observações das etapas), para a redação do parecer."""
+        """Resultado consolidado (score + apontamentos + valor em questão + observações das etapas), para a redação do parecer.
+
+        Returns:
+            Dicionário serializável em JSON com os campos de `ScoreResult`, `findings`, `amount_at_issue`,
+            `amount_at_issue_pct`, `observations`, `rationale` e `moment` (etapa do chamado).
+        """
         assert self.score is not None
         return {
             **self.score.model_dump(mode="json"),
@@ -67,37 +108,71 @@ class AnalysisContext:
 
     def rationale(self) -> list[str]:
         """Racional técnico do engenheiro, montado por regra a partir das etapas: cobertura do pedido, contagem nas fotos,
-        preço e leitura do problema. Vai sempre para a redação do parecer, com ou sem apontamento."""
+        preço e leitura do problema. Vai sempre para a redação do parecer, com ou sem apontamento.
+
+        Returns:
+            Uma frase por conferência: cobertura de cada serviço pedido, contagem nas fotos por item, preço × LPU,
+            preço de mercado citado em documento e o que as fotos mostram do problema.
+        """
         out: list[str] = []
-        mark = {"yes": "coberto", "partial": "coberto só em parte", "no": "SEM item no orçamento", "undetermined": "não conferido"}
+        mark = {
+            "yes": "coberto",
+            "partial": "coberto só em parte",
+            "no": "SEM item no orçamento",
+            "undetermined": "não conferido",
+        }
         for c in self.service_coverage:
             items = ", ".join(str(i) for i in c.items)
-            out.append(f"Serviço pedido “{c.service}”: {mark.get(c.covered.value, c.covered.value)}"
-                       + (f" (itens {items})" if items else "") + (f". {c.note}" if c.note else ""))
+            out.append(
+                f"Serviço pedido “{c.service}”: {mark.get(c.covered.value, c.covered.value)}"
+                + (f" (itens {items})" if items else "")
+                + (f". {c.note}" if c.note else "")
+            )
         by_n = {i.n: i for i in self.items}
         for q in self.photo_analysis.quantity_checks if self.photo_analysis else []:
             item = by_n.get(q.item)
             if item is None:
                 continue
-            seen = (f"cerca de {q.estimated_quantity:g} {item.unit}" if q.estimated_quantity > 0 else "não dá para estimar")
-            out.append(f"Contagem nas fotos, item {item.n} ({item.description}): cobrado {item.quantity:g} {item.unit}; as fotos "
-                       f"somam {q.count_seen:g} ({q.what_was_counted}), {seen}. {q.reasoning}".strip())
+            seen = (
+                f"cerca de {q.estimated_quantity:g} {item.unit}"
+                if q.estimated_quantity > 0
+                else "não dá para estimar"
+            )
+            out.append(
+                f"Contagem nas fotos, item {item.n} ({item.description}): cobrado {item.quantity:g} {item.unit}; as fotos "
+                f"somam {q.count_seen:g} ({q.what_was_counted}), {seen}. {q.reasoning}".strip()
+            )
         priced = [i for i in self.items if i.reference_price]
         for i in priced:
             pct = 100 * (i.unit_value / i.reference_price - 1)
-            out.append(f"Preço do item {i.n}: {brl(i.unit_value)} × referência {brl(i.reference_price)} ({pct:+.0f}%)")
+            out.append(
+                f"Preço do item {i.n}: {brl(i.unit_value)} × referência {brl(i.reference_price)} ({pct:+.0f}%)"
+            )
         if self.items and not priced:
-            out.append("Nenhum item tem equivalente na tabela de referência: o preço não pôde ser comparado com a tabela")
+            out.append(
+                "Nenhum item tem equivalente na tabela de referência: o preço não pôde ser comparado com a tabela"
+            )
         for d in self.documents:
             for p in d.prices:
                 if (item := by_n.get(p.quote_item)) and p.value > 0:
-                    out.append(f"Preço de mercado no documento {d.file}: {p.description} a {brl(p.value)} × item {item.n} a {brl(item.unit_value)}")
+                    out.append(
+                        f"Preço de mercado no documento {d.file}: {p.description} a {brl(p.value)} × item {item.n} a {brl(item.unit_value)}"
+                    )
         if self.photo_analysis and self.photo_analysis.problem_assessment.strip():
-            out.append(f"O que as fotos mostram do problema: {self.photo_analysis.problem_assessment.strip()}")
+            out.append(
+                f"O que as fotos mostram do problema: {self.photo_analysis.problem_assessment.strip()}"
+            )
         return out
 
     def observations(self, limit: int = 600) -> list[str]:
-        """Observações das etapas que não viram apontamento (orçamento, fotos, documentos), resumidas para o parecer."""
+        """Observações das etapas que não viram apontamento (orçamento, fotos, documentos), resumidas para o parecer.
+
+        Args:
+            limit: tamanho máximo de cada observação, em caracteres (o excesso vira "…").
+
+        Returns:
+            Observações prefixadas pela origem ("Orçamento: …", "Fotos: …", "Documento x: …").
+        """
 
         def cut(text: str) -> str:
             text = " ".join(text.split())
@@ -119,6 +194,12 @@ class AnalysisStage(ABC):
     progress: ClassVar[Stage]
 
     def __init__(self, cfg: Settings, references: References, scorer: ScoreCalculator):
+        """
+        Args:
+            cfg: configuração do ambiente.
+            references: LPU, régua e checklists.
+            scorer: régua padrão, usada para criar os apontamentos (`scorer.finding`).
+        """
         self.cfg = cfg
         self.references = references
         self.scorer = scorer
@@ -129,4 +210,9 @@ class AnalysisStage(ABC):
 
     @abstractmethod
     def run(self, ctx: AnalysisContext) -> None:
-        """Executa a etapa, lendo e completando o contexto."""
+        """Executa a etapa, lendo e completando o contexto.
+
+        Args:
+            ctx: estado do chamado; a etapa lê o que as anteriores produziram e grava o seu resultado nele.
+                Para encerrar a análise, a etapa preenche `ctx.halt`.
+        """

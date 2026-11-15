@@ -143,7 +143,9 @@ class PhotoShortage(RuntimeError):
     """Modo strict: a pasta da cena não existe ou não tem mais foto livre."""
 
     def __init__(self, k: str):
-        super().__init__(f"sem foto livre em {ROOT / k} (gere com: python generator/ai_photos.py --profile {PROFILE} --only {k})")
+        super().__init__(
+            f"sem foto livre em {ROOT / k} (gere com: python generator/ai_photos.py --profile {PROFILE} --only {k})"
+        )
         self.key = k
 
 
@@ -172,7 +174,13 @@ def key(name: str, kw: dict) -> str:
     """Pasta de fotos de uma cena do gerador (a variante muda o que a foto precisa mostrar)."""
     v = ""
     if name == "backoffice":
-        v = "painting" if kw.get("painting_gear") else "stains" if kw.get("stains") else "lights_off" if kw.get("dead") else ""
+        v = (
+            "painting"
+            if kw.get("painting_gear")
+            else (
+                "stains" if kw.get("stains") else "lights_off" if kw.get("dead") else ""
+            )
+        )
     elif name == "ceiling_view":
         v = "stains" if kw.get("stains") else "led" if kw.get("lights") == "led" else ""
     elif name in ("split_evaporator", "ac_filter"):
@@ -195,7 +203,9 @@ class _UsageLedger:
 
     def __init__(self) -> None:
         self.file = ROOT / "_usage.json"
-        self.usage: dict[str, str] = json.loads(self.file.read_text()) if self.file.exists() else {}
+        self.usage: dict[str, str] = (
+            json.loads(self.file.read_text()) if self.file.exists() else {}
+        )
         self.shortfalls: Counter = Counter()
         self.changed = False
         atexit.register(self.save)
@@ -219,7 +229,11 @@ class _UsageLedger:
         if ident in self.usage and (folder / self.usage[ident]).exists():
             return folder / self.usage[ident]
         used = {v for i, v in self.usage.items() if i.startswith(f"{k}|")}
-        free = sorted(p.name for p in folder.iterdir() if p.suffix.lower() in EXTENSIONS and p.name not in used)
+        free = sorted(
+            p.name
+            for p in folder.iterdir()
+            if p.suffix.lower() in EXTENSIONS and p.name not in used
+        )
         if not free:
             if MODE == "strict":
                 raise PhotoShortage(k)
@@ -233,7 +247,9 @@ class _UsageLedger:
 _ledger: _UsageLedger | None = None
 
 
-def real_photo(name: str, kw: dict, seed: int, size: tuple[int, int]) -> Image.Image | None:
+def real_photo(
+    name: str, kw: dict, seed: int, size: tuple[int, int]
+) -> Image.Image | None:
     """Foto da pasta para esta cena, já no tamanho do conjunto (recorte central), ou None para usar o desenho."""
     global _ledger
     if name in ALWAYS_DRAWN:
@@ -253,7 +269,9 @@ def real_photo(name: str, kw: dict, seed: int, size: tuple[int, int]) -> Image.I
     return _load(path, size)
 
 
-def background(name: str, kw: dict, seed: int, size: tuple[int, int]) -> Image.Image | None:
+def background(
+    name: str, kw: dict, seed: int, size: tuple[int, int]
+) -> Image.Image | None:
     """Foto de fundo que PODE se repetir entre chamados (ex.: quadros pequenos do mosaico do CFTV): escolhe pela semente,
     sem registrar uso. None se não houver foto (no modo strict, erro)."""
     k = key(name, kw)
@@ -261,7 +279,11 @@ def background(name: str, kw: dict, seed: int, size: tuple[int, int]) -> Image.I
         _requests.setdefault(k, set()).add("any")
         return None
     folder = ROOT / k
-    files = sorted(p for p in folder.iterdir() if p.suffix.lower() in EXTENSIONS) if folder.is_dir() else []
+    files = (
+        sorted(p for p in folder.iterdir() if p.suffix.lower() in EXTENSIONS)
+        if folder.is_dir()
+        else []
+    )
     if not files:
         if MODE == "strict":
             raise PhotoShortage(k)
@@ -276,10 +298,18 @@ def _load(path: Path, size: tuple[int, int]) -> Image.Image:
 
 def status() -> dict[str, tuple[int, int]]:
     """chave → (fotos na pasta, já usadas)."""
-    usage = json.loads((ROOT / "_usage.json").read_text()) if (ROOT / "_usage.json").exists() else {}
+    usage = (
+        json.loads((ROOT / "_usage.json").read_text())
+        if (ROOT / "_usage.json").exists()
+        else {}
+    )
     out = {}
     for k in CATALOG:
         folder = ROOT / k
-        n = sum(p.suffix.lower() in EXTENSIONS for p in folder.iterdir()) if folder.is_dir() else 0
+        n = (
+            sum(p.suffix.lower() in EXTENSIONS for p in folder.iterdir())
+            if folder.is_dir()
+            else 0
+        )
         out[k] = (n, sum(i.startswith(f"{k}|") for i in usage))
     return out

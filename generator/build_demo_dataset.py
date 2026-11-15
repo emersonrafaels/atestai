@@ -72,11 +72,20 @@ def _cctv_background(scene, seed, size, tile):
     """Fundo da imagem de CFTV vindo das fotos reais: o quadro inteiro usa uma foto só dele; os quadros pequenos do
     mosaico podem repetir foto entre chamados."""
     kw = {"scene": scene}
-    return real_photos.background("cctv_view", kw, seed, size) if tile else real_photo("cctv_view", kw, seed, size)
+    return (
+        real_photos.background("cctv_view", kw, seed, size)
+        if tile
+        else real_photo("cctv_view", kw, seed, size)
+    )
 
 
 scenes.CCTV_BACKGROUND = _cctv_background
-PHONES = [("samsung", "SM-A546E"), ("motorola", "moto g54 5G"), ("Xiaomi", "Redmi Note 13"), ("samsung", "SM-A155M")]
+PHONES = [
+    ("samsung", "SM-A546E"),
+    ("motorola", "moto g54 5G"),
+    ("Xiaomi", "Redmi Note 13"),
+    ("samsung", "SM-A155M"),
+]
 
 
 def exif_bytes(data, seed):
@@ -89,7 +98,10 @@ def exif_bytes(data, seed):
         piexif.ImageIFD.DateTime: data.encode(),
         piexif.ImageIFD.Software: b"camera",
     }
-    e = {piexif.ExifIFD.DateTimeOriginal: data.encode(), piexif.ExifIFD.DateTimeDigitized: data.encode()}
+    e = {
+        piexif.ExifIFD.DateTimeOriginal: data.encode(),
+        piexif.ExifIFD.DateTimeDigitized: data.encode(),
+    }
     return piexif.dump({"0th": z, "Exif": e, "GPS": {}, "1st": {}, "thumbnail": None})
 
 
@@ -103,7 +115,8 @@ def save_jpg(img, path, data, seed, quality=85):
 
 def apply_framing(img, seed):
     """Variação de enquadramento do celular (zoom, deslocamento, inclinação): evita fotos sintéticas quase iguais
-    entre chamados diferentes, o que geraria falso 'reaproveitamento' no índice de hashes."""
+    entre chamados diferentes, o que geraria falso 'reaproveitamento' no índice de hashes.
+    """
     r = random.Random(seed * 7 + 3)
     z = r.uniform(1.0, 1.16)
     ang = r.uniform(-3.5, 3.5)
@@ -111,8 +124,14 @@ def apply_framing(img, seed):
     cw, ch = w / z, h / z
     x0 = r.uniform(0, w - cw)
     y0 = r.uniform(0, h - ch)
-    out = img.crop((int(x0), int(y0), int(x0 + cw), int(y0 + ch))).resize((w, h), Image.BICUBIC)
-    return out.rotate(ang, resample=Image.BICUBIC, expand=False, fillcolor=(40, 40, 40)).crop((24, 18, w - 24, h - 18)).resize((w, h))
+    out = img.crop((int(x0), int(y0), int(x0 + cw), int(y0 + ch))).resize(
+        (w, h), Image.BICUBIC
+    )
+    return (
+        out.rotate(ang, resample=Image.BICUBIC, expand=False, fillcolor=(40, 40, 40))
+        .crop((24, 18, w - 24, h - 18))
+        .resize((w, h))
+    )
 
 
 def render_scene(name, kwargs, seed):
@@ -122,14 +141,22 @@ def render_scene(name, kwargs, seed):
     kw = dict(kwargs)
     kw.setdefault("seed", seed)
     framing = kw.pop("framing", seed)
-    real = real_photo(name, kw, kw["seed"], (W, H))  # data/real_photos/<chave>/, se houver
+    real = real_photo(
+        name, kw, kw["seed"], (W, H)
+    )  # data/real_photos/<chave>/, se houver
     if real is not None:
         img = apply_framing(real, framing)
     else:
         img = SCENES[name](**kw)
         img = apply_framing(img, framing)
         rnd = random.Random(seed)
-        img = finish(img, seed=seed, exposure=rnd.uniform(0.94, 1.05), warm=rnd.uniform(-0.03, 0.05), vignette=rnd.uniform(0.25, 0.4))
+        img = finish(
+            img,
+            seed=seed,
+            exposure=rnd.uniform(0.94, 1.05),
+            warm=rnd.uniform(-0.03, 0.05),
+            vignette=rnd.uniform(0.25, 0.4),
+        )
         img = photograph(img, seed, screen=name in ("cctv_frame", "monitor_grid"))
     if illeg:
         img = illegible(img, seed=seed)
@@ -140,7 +167,13 @@ def attachment_meta(path: Path, data_upload: str, by="supplier"):
     ct = mimetypes.guess_type(path.name)[0] or "application/octet-stream"
     if path.suffix == ".xlsx":
         ct = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    return {"file_name": path.name, "content_type": ct, "size_bytes": path.stat().st_size, "sent_by": by, "data_upload": data_upload}
+    return {
+        "file_name": path.name,
+        "content_type": ct,
+        "size_bytes": path.stat().st_size,
+        "sent_by": by,
+        "data_upload": data_upload,
+    }
 
 
 def ticket_json(c, attachments, value=None, status="forwarded_to_backoffice"):
@@ -160,7 +193,9 @@ def ticket_json(c, attachments, value=None, status="forwarded_to_backoffice"):
         "dates": c["dates"],
         "status": status,
         "manager": {"first_check": "forwarded", "note": ""},
-        "dataset": c.get("dataset", "scenarios"),  # casos do deck ficam junto com os cenários de teste
+        "dataset": c.get(
+            "dataset", "scenarios"
+        ),  # casos do deck ficam junto com os cenários de teste
         "attachments": attachments,
     }
 
@@ -169,7 +204,9 @@ def build_references():
     ref = ROOT / "references"
     ref.mkdir(parents=True, exist_ok=True)
     for st, rows in LPU.items():
-        with open(ref / f"lpu_{st.lower()}.csv", "w", newline="", encoding="utf-8") as f:
+        with open(
+            ref / f"lpu_{st.lower()}.csv", "w", newline="", encoding="utf-8"
+        ) as f:
             w = csv.writer(f, delimiter=";")
             w.writerow(["code", "description", "unit", "reference_price"])
             for r in rows:
@@ -190,15 +227,21 @@ def build_history():
             paths[h["id"]].append(p)
             attachments.append(attachment_meta(p, h["dates"]["supplier_submission"]))
         cj = ticket_json(h, attachments, status=h["status_final"])
-        (d.parent / "ticket.json").write_text(json.dumps(cj, ensure_ascii=False, indent=2), encoding="utf-8")
+        (d.parent / "ticket.json").write_text(
+            json.dumps(cj, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
     return paths
 
 
 def reuse(src: Path, dst: Path, data, variant: int):
     img = Image.open(src).convert("RGB")
     w, h = img.size
-    if variant == 0:  # reenviada por WhatsApp: recompressão, redimensionamento, sem EXIF
-        img = img.crop((int(w * 0.02), int(h * 0.02), int(w * 0.98), int(h * 0.98))).resize((1200, 900))
+    if (
+        variant == 0
+    ):  # reenviada por WhatsApp: recompressão, redimensionamento, sem EXIF
+        img = img.crop(
+            (int(w * 0.02), int(h * 0.02), int(w * 0.98), int(h * 0.98))
+        ).resize((1200, 900))
         img.save(dst, quality=68)
     else:  # recorte leve + brilho, mantém a data original no EXIF
         img = img.crop((int(w * 0.04), 0, w, int(h * 0.97))).resize((1280, 960))
@@ -276,7 +319,9 @@ def build_cases(hist):
             attachment_labels[file] = rot
         value = total(c)
         cj = ticket_json(c, attachments, value=c.get("ticket_value", value))
-        (base / "ticket.json").write_text(json.dumps(cj, ensure_ascii=False, indent=2), encoding="utf-8")
+        (base / "ticket.json").write_text(
+            json.dumps(cj, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
         # gabarito
         lpu_idx = {r[0]: r for r in LPU[c["workstream"]]}
         items = []
@@ -313,7 +358,9 @@ def build_cases(hist):
         }
         gt.update(c["expected"])
         (ROOT / "ground_truth").mkdir(exist_ok=True)
-        (ROOT / "ground_truth" / f"{c['id']}.json").write_text(json.dumps(gt, ensure_ascii=False, indent=2), encoding="utf-8")
+        (ROOT / "ground_truth" / f"{c['id']}.json").write_text(
+            json.dumps(gt, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
         print(
             f"  {c['id']}  {c['workstream']}  {c['category']:<20} R$ {value:>9,.2f}  {len(attachments)} anexos  → {c['expected']['recommendation']}"
         )
@@ -330,7 +377,12 @@ def contact_sheet(dest: Path):
                 t = Image.open(a).convert("RGB").resize((320, 240))
                 d = ImageDraw.Draw(t)
                 d.rectangle([0, 0, 320, 22], fill=(0, 0, 0))
-                d.text((5, 3), f"{c['id']} · {a.name[:26]}", font=font(13), fill=(255, 255, 255))
+                d.text(
+                    (5, 3),
+                    f"{c['id']} · {a.name[:26]}",
+                    font=font(13),
+                    fill=(255, 255, 255),
+                )
                 thumbs.append(t)
     cols = 6
     rows = (len(thumbs) + cols - 1) // cols
@@ -342,7 +394,8 @@ def contact_sheet(dest: Path):
 
 def rmtree_retry(p: Path, tries: int = 10) -> None:
     """Apaga a pasta. No OneDrive (ou com o painel aberto) arquivos podem ficar somente leitura ou presos por um
-    instante: tira o atributo e tenta de novo. Se não conseguir, falha, em vez de deixar chamados pela metade."""
+    instante: tira o atributo e tenta de novo. Se não conseguir, falha, em vez de deixar chamados pela metade.
+    """
 
     def writable(func, path, _exc):
         os.chmod(path, stat.S_IWRITE)

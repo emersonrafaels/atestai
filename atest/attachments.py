@@ -29,15 +29,32 @@ def image(path: Path, max_side: int = 1568) -> ImagePart:
 
 def attachment_parts(attachment: Attachment, max_side: int = 1568) -> list[Part]:
     """Rótulo de texto + conteúdo, em formato neutro de provedor. O rótulo permite ao modelo citar 'Anexo N'."""
-    label = TextPart(f"--- Anexo {attachment.index}: {attachment.name} ({attachment.content_type}) ---")
+    label = TextPart(
+        f"--- Anexo {attachment.index}: {attachment.name} ({attachment.content_type}) ---"
+    )
     if attachment.is_image:
-        taken = exif_date(attachment.path)  # ajuda o modelo a separar antes e depois (a abertura vai no resumo do chamado)
+        taken = exif_date(
+            attachment.path
+        )  # ajuda o modelo a separar antes e depois (a abertura vai no resumo do chamado)
         if taken:
-            label = TextPart(f"--- Anexo {attachment.index}: {attachment.name} ({attachment.content_type}; tirada em {taken:%d/%m/%Y %H:%M}) ---")
+            label = TextPart(
+                f"--- Anexo {attachment.index}: {attachment.name} ({attachment.content_type}; tirada em {taken:%d/%m/%Y %H:%M}) ---"
+            )
         return [label, image(attachment.path, max_side)]
     if attachment.content_type == "application/pdf":
-        return [label, DocumentPart(data=attachment.path.read_bytes(), mime="application/pdf", title=attachment.name)]
-    return [TextPart(f"--- Anexo {attachment.index}: {attachment.name} ({attachment.content_type}) — formato não enviado ao modelo ---")]
+        return [
+            label,
+            DocumentPart(
+                data=attachment.path.read_bytes(),
+                mime="application/pdf",
+                title=attachment.name,
+            ),
+        ]
+    return [
+        TextPart(
+            f"--- Anexo {attachment.index}: {attachment.name} ({attachment.content_type}) — formato não enviado ao modelo ---"
+        )
+    ]
 
 
 def compute_hashes(path: Path) -> Hashes:
@@ -54,7 +71,11 @@ def hashes_with_crops(path: Path, crops: list[float]) -> list[Hashes]:
     w, h = img.size
     out = []
     for c in [0.0, *crops]:
-        r = img.crop((int(w * c), int(h * c), int(w * (1 - c)), int(h * (1 - c)))) if c else img
+        r = (
+            img.crop((int(w * c), int(h * c), int(w * (1 - c)), int(h * (1 - c))))
+            if c
+            else img
+        )
         out.append((imagehash.phash(r), imagehash.dhash(r)))
     return out
 
@@ -62,7 +83,8 @@ def hashes_with_crops(path: Path, crops: list[float]) -> list[Hashes]:
 class HashCache:
     """Hashes (com recortes) e detalhe de cada foto, calculados uma vez só: em memória e, se houver arquivo, em disco.
     A chave inclui tamanho e data de modificação do arquivo e os recortes usados, então foto alterada é recalculada.
-    Em produção, o mesmo papel é de uma tabela no banco preenchida quando a foto chega."""
+    Em produção, o mesmo papel é de uma tabela no banco preenchida quando a foto chega.
+    """
 
     def __init__(self, file: Path | None = None):
         self.file = file
@@ -84,7 +106,9 @@ class HashCache:
             item = {"h": [[str(a), str(b)] for a, b in hs], "d": detail_level(path)}
             self.data[key] = item
             self.changed = True
-        return [(imagehash.hex_to_hash(a), imagehash.hex_to_hash(b)) for a, b in item["h"]], item["d"]
+        return [
+            (imagehash.hex_to_hash(a), imagehash.hex_to_hash(b)) for a, b in item["h"]
+        ], item["d"]
 
     def save(self) -> None:
         """Grava o cache em disco, se houve mudança."""
@@ -101,7 +125,8 @@ class HashCache:
 def detail_level(path: Path) -> float:
     """Quantidade de detalhe (desvio das bordas numa miniatura em cinza). Foto escura ou tremida fica abaixo de ~8;
     foto normal de celular fica acima de ~12. Em foto sem detalhe o hash perceptual perde poder de distinção:
-    duas fotos borradas diferentes viram hashes parecidos, então a régua exige distância bem menor nesses casos."""
+    duas fotos borradas diferentes viram hashes parecidos, então a régua exige distância bem menor nesses casos.
+    """
     g = ImageOps.exif_transpose(Image.open(path)).convert("L")
     g.thumbnail((256, 256))
     return float(ImageStat.Stat(g.filter(ImageFilter.FIND_EDGES)).stddev[0])
@@ -116,7 +141,9 @@ def exif_date(path: Path) -> datetime | None:
     """Data e hora em que a foto foi tirada, pelo EXIF; None se não houver."""
     try:
         exif = Image.open(path).getexif()
-        text = exif.get_ifd(ExifTags.IFD.Exif).get(ExifTags.Base.DateTimeOriginal) or exif.get(ExifTags.Base.DateTime)
+        text = exif.get_ifd(ExifTags.IFD.Exif).get(
+            ExifTags.Base.DateTimeOriginal
+        ) or exif.get(ExifTags.Base.DateTime)
         return datetime.strptime(text, "%Y:%m:%d %H:%M:%S") if text else None
     except (OSError, ValueError, TypeError):
         return None

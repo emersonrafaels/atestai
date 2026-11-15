@@ -38,7 +38,9 @@ def _blur(a: np.ndarray, radius: float) -> np.ndarray:
     return np.asarray(img.filter(ImageFilter.GaussianBlur(radius)), float)
 
 
-def _perspective(img: Image.Image, rng: np.random.Generator, strength: float) -> Image.Image:
+def _perspective(
+    img: Image.Image, rng: np.random.Generator, strength: float
+) -> Image.Image:
     """Inclinação leve de quem fotografa de pé, com o celular um pouco fora do eixo."""
     w, h = img.size
     d = lambda: rng.uniform(-1, 1) * strength * w  # noqa: E731
@@ -50,12 +52,21 @@ def _perspective(img: Image.Image, rng: np.random.Generator, strength: float) ->
         A += [[x, y, 1, 0, 0, 0, -u * x, -u * y], [0, 0, 0, x, y, 1, -v * x, -v * y]]
         b += [u, v]
     coef = np.linalg.solve(np.array(A, float), np.array(b, float))
-    out = img.transform((w, h), Image.PERSPECTIVE, tuple(coef), Image.BICUBIC, fillcolor=(30, 30, 30))
+    out = img.transform(
+        (w, h), Image.PERSPECTIVE, tuple(coef), Image.BICUBIC, fillcolor=(30, 30, 30)
+    )
     m = int(strength * w * 1.6) + 2  # corta a borda preta da transformação
     return out.crop((m, m, w - m, h - m)).resize((w, h), Image.BICUBIC)
 
 
-def photograph(img: Image.Image, seed: int = 0, *, light: str | None = None, paper: bool = False, screen: bool = False) -> Image.Image:
+def photograph(
+    img: Image.Image,
+    seed: int = 0,
+    *,
+    light: str | None = None,
+    paper: bool = False,
+    screen: bool = False,
+) -> Image.Image:
     """Transforma um render em "foto de celular". `papel`: documento sobre a mesa; `tela`: foto do monitor do CFTV."""
     rng = np.random.default_rng(seed + 9001)
     img = img.convert("RGB")
@@ -66,12 +77,25 @@ def photograph(img: Image.Image, seed: int = 0, *, light: str | None = None, pap
     lum = a.mean(axis=2)
 
     # 1) textura de superfície (3 escalas) e sujeira de baixa frequência, mais forte nas áreas lisas
-    edges = np.asarray(Image.fromarray(lum.astype("uint8")).filter(ImageFilter.FIND_EDGES), float) / 255
-    smooth = 1 - np.clip(_blur(np.repeat(edges[..., None] * 255, 3, 2), 3)[..., 0] / 60, 0, 1)
-    texture = 0.55 * _value_noise(rng, h, w, 3) + 0.3 * _value_noise(rng, h, w, 14) + 0.15 * _value_noise(rng, h, w, 60)
+    edges = (
+        np.asarray(
+            Image.fromarray(lum.astype("uint8")).filter(ImageFilter.FIND_EDGES), float
+        )
+        / 255
+    )
+    smooth = 1 - np.clip(
+        _blur(np.repeat(edges[..., None] * 255, 3, 2), 3)[..., 0] / 60, 0, 1
+    )
+    texture = (
+        0.55 * _value_noise(rng, h, w, 3)
+        + 0.3 * _value_noise(rng, h, w, 14)
+        + 0.15 * _value_noise(rng, h, w, 60)
+    )
     dirt = _value_noise(rng, h, w, 180)
     k_tex = 0.022 if screen else 0.05
-    a *= (1 + k_tex * texture * (0.4 + 0.6 * smooth) - 0.035 * np.clip(dirt, 0, 1))[..., None]
+    a *= (1 + k_tex * texture * (0.4 + 0.6 * smooth) - 0.035 * np.clip(dirt, 0, 1))[
+        ..., None
+    ]
 
     # 2) sombra de contato: escurece em volta das bordas fortes (objetos apoiados, cantos, molduras)
     if not screen:
@@ -103,10 +127,14 @@ def photograph(img: Image.Image, seed: int = 0, *, light: str | None = None, pap
     out = Image.fromarray(a.astype("uint8"))
     r, gch, b = out.split()
     s = rng.uniform(0.0015, 0.004)
-    r = r.resize((int(w * (1 + s)), int(h * (1 + s))), Image.BICUBIC).crop((int(w * s / 2), int(h * s / 2), int(w * s / 2) + w, int(h * s / 2) + h))
+    r = r.resize((int(w * (1 + s)), int(h * (1 + s))), Image.BICUBIC).crop(
+        (int(w * s / 2), int(h * s / 2), int(w * s / 2) + w, int(h * s / 2) + h)
+    )
     out = Image.merge("RGB", (r, gch, b))
     a = np.asarray(out, float)
-    radius = np.sqrt(((xx - w / 2) / (w / 2)) ** 2 + ((yy - h / 2) / (h / 2)) ** 2) / 1.42
+    radius = (
+        np.sqrt(((xx - w / 2) / (w / 2)) ** 2 + ((yy - h / 2) / (h / 2)) ** 2) / 1.42
+    )
     a *= (1 - rng.uniform(0.18, 0.32) * radius**2.2)[..., None]
     blurred = _blur(a, rng.uniform(1.2, 2.4))
     t = np.clip((radius - 0.55) / 0.45, 0, 1)[..., None] * (0.5 if paper else 0.8)
@@ -115,17 +143,30 @@ def photograph(img: Image.Image, seed: int = 0, *, light: str | None = None, pap
     # 6) tremido ocasional de mão
     if rng.random() < 0.25 and not paper:
         shift = int(rng.uniform(2, 5))
-        a = sum(np.roll(a, k, axis=1 if rng.random() < 0.7 else 0) for k in range(shift)) / shift
+        a = (
+            sum(
+                np.roll(a, k, axis=1 if rng.random() < 0.7 else 0) for k in range(shift)
+            )
+            / shift
+        )
 
     # 7) sensor: ruído de disparo (mais nas sombras), ruído de cor em manchas; depois o celular "limpa" e aplica nitidez
     level = np.clip(a.mean(axis=2, keepdims=True) / 255, 0.05, 1)
     a += rng.normal(0, 1, a.shape) * (5.5 * np.sqrt(1 - level) + 1.5)
     chroma = np.stack([_value_noise(rng, h, w, 4) for _ in range(3)], axis=2)
     a += chroma * 3.0
-    out = Image.fromarray(a.clip(0, 255).astype("uint8")).filter(ImageFilter.GaussianBlur(0.7))
-    out = out.filter(ImageFilter.UnsharpMask(radius=2.2, percent=int(rng.uniform(70, 110)), threshold=2))
+    out = Image.fromarray(a.clip(0, 255).astype("uint8")).filter(
+        ImageFilter.GaussianBlur(0.7)
+    )
+    out = out.filter(
+        ImageFilter.UnsharpMask(
+            radius=2.2, percent=int(rng.uniform(70, 110)), threshold=2
+        )
+    )
     if screen:  # moiré leve da foto de monitor
         a = np.asarray(out, float)
-        a *= (1 + 0.035 * np.sin(xx * rng.uniform(0.9, 1.3) + yy * rng.uniform(0.3, 0.7)))[..., None]
+        a *= (
+            1 + 0.035 * np.sin(xx * rng.uniform(0.9, 1.3) + yy * rng.uniform(0.3, 0.7))
+        )[..., None]
         out = Image.fromarray(a.clip(0, 255).astype("uint8"))
     return out

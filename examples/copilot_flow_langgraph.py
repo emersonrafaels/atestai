@@ -30,7 +30,9 @@ from atest.repository import load_ticket  # noqa: E402
 
 TICKET = "00533402"  # "Verificar porta. Urgente." + foto ilegível → análise detalhada
 
-cfg = load_settings().with_overrides(**{"execution.mode": "simulated", "panel.simulated_delay_s": 0})
+cfg = load_settings().with_overrides(
+    **{"execution.mode": "simulated", "panel.simulated_delay_s": 0}
+)
 orchestrator = ComponentFactory(cfg).orchestrator()
 
 
@@ -51,11 +53,20 @@ def analyze(e: FlowState) -> FlowState:
     """O pipeline inteiro do Atest.AI vira UM nó: não há ganho em quebrá-lo em nós do grafo."""
     ch = load_ticket(cfg.tickets_dir / e["ticket_id"])
     p = orchestrator.analyze(ch)
-    print(f"  [análise #{e.get('iteration', 0) + 1}] {p.recommendation.label}, score {p.score}")
-    return {"iteration": e.get("iteration", 0) + 1, "recommendation": p.recommendation.value, "score": p.score, "summary": p.summary}
+    print(
+        f"  [análise #{e.get('iteration', 0) + 1}] {p.recommendation.label}, score {p.score}"
+    )
+    return {
+        "iteration": e.get("iteration", 0) + 1,
+        "recommendation": p.recommendation.value,
+        "score": p.score,
+        "summary": p.summary,
+    }
 
 
-def route(e: FlowState) -> Literal["proceed_automatically", "human_review", "send_back_to_supplier"]:
+def route(
+    e: FlowState,
+) -> Literal["proceed_automatically", "human_review", "send_back_to_supplier"]:
     r = Recommendation(e["recommendation"])
     if r is Recommendation.CHECKLIST_RETURNED:
         return "send_back_to_supplier"  # checklist incompleto volta direto, sem ocupar a pessoa analista
@@ -64,7 +75,11 @@ def route(e: FlowState) -> Literal["proceed_automatically", "human_review", "sen
     return "human_review"
 
 
-def human_review(e: FlowState) -> Command[Literal["proceed_automatically", "send_back_to_supplier", "wait_for_complement"]]:
+def human_review(
+    e: FlowState,
+) -> Command[
+    Literal["proceed_automatically", "send_back_to_supplier", "wait_for_complement"]
+]:
     """Pausa até a pessoa analista decidir. O estado fica no checkpointer; nenhum processo fica esperando."""
     response = interrupt(
         {
@@ -75,18 +90,32 @@ def human_review(e: FlowState) -> Command[Literal["proceed_automatically", "send
             "options": ["approve", "return_to_supplier", "request_complement"],
         }
     )
-    target = {"approve": "proceed_automatically", "return_to_supplier": "send_back_to_supplier", "request_complement": "wait_for_complement"}
-    return Command(goto=target[response["decision"]], update={"decision": response["decision"], "comment": response.get("comment", "")})
+    target = {
+        "approve": "proceed_automatically",
+        "return_to_supplier": "send_back_to_supplier",
+        "request_complement": "wait_for_complement",
+    }
+    return Command(
+        goto=target[response["decision"]],
+        update={
+            "decision": response["decision"],
+            "comment": response.get("comment", ""),
+        },
+    )
 
 
 def wait_for_complement(e: FlowState) -> FlowState:
     """Segunda pausa: espera o fornecedor reenviar fotos/documentos; depois o chamado volta para a análise (ciclo)."""
-    new = interrupt({"ticket": e["ticket_id"], "request": e.get("comment") or "Enviar complemento"})
+    new = interrupt(
+        {"ticket": e["ticket_id"], "request": e.get("comment") or "Enviar complemento"}
+    )
     return {"complement": new["description"]}
 
 
 def proceed_automatically(e: FlowState) -> FlowState:
-    return {"outcome": f"segue para pagamento (decisão: {e.get('decision') or 'automática'})"}
+    return {
+        "outcome": f"segue para pagamento (decisão: {e.get('decision') or 'automática'})"
+    }
 
 
 def send_back_to_supplier(e: FlowState) -> FlowState:
@@ -95,14 +124,22 @@ def send_back_to_supplier(e: FlowState) -> FlowState:
 
 # --------------------------------------------------------------------------- grafo
 g = StateGraph(FlowState)
-for no in (analyze, human_review, wait_for_complement, proceed_automatically, send_back_to_supplier):
+for no in (
+    analyze,
+    human_review,
+    wait_for_complement,
+    proceed_automatically,
+    send_back_to_supplier,
+):
     g.add_node(no.__name__, no)
 g.add_edge(START, "analyze")
 g.add_conditional_edges("analyze", route)
 g.add_edge("wait_for_complement", "analyze")
 g.add_edge("proceed_automatically", END)
 g.add_edge("send_back_to_supplier", END)
-flow = g.compile(checkpointer=InMemorySaver())  # produção: langgraph-checkpoint-postgres, thread_id = id do chamado
+flow = g.compile(
+    checkpointer=InMemorySaver()
+)  # produção: langgraph-checkpoint-postgres, thread_id = id do chamado
 
 
 if __name__ == "__main__":
@@ -116,13 +153,27 @@ if __name__ == "__main__":
     print("  ⏸ fila da pessoa analista:", pause(res))
 
     # ... horas depois, a pessoa analista decide pelo painel:
-    res = flow.invoke(Command(resume={"decision": "request_complement", "comment": "Enviar foto nítida da mola instalada"}), conf)
+    res = flow.invoke(
+        Command(
+            resume={
+                "decision": "request_complement",
+                "comment": "Enviar foto nítida da mola instalada",
+            }
+        ),
+        conf,
+    )
     print("  ⏸ aguardando o fornecedor:", pause(res))
 
     # ... o fornecedor reenvia; o chamado volta para a análise e de novo para a fila:
-    res = flow.invoke(Command(resume={"description": "Foto nítida da mola aérea MA-200 instalada"}), conf)
+    res = flow.invoke(
+        Command(resume={"description": "Foto nítida da mola aérea MA-200 instalada"}),
+        conf,
+    )
     print("  ⏸ fila da pessoa analista:", pause(res))
 
     res = flow.invoke(Command(resume={"decision": "approve"}), conf)
     print(f"  ✓ {res['outcome']} após {res['iteration']} análises")
-    print("  histórico de estados guardados:", sum(1 for _ in flow.get_state_history(conf)))
+    print(
+        "  histórico de estados guardados:",
+        sum(1 for _ in flow.get_state_history(conf)),
+    )

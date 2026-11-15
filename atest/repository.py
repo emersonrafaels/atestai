@@ -56,18 +56,49 @@ class LoadedTicket(BaseModel):
 
 
 def load_ticket(folder: Path) -> LoadedTicket:
-    """Lê ticket.json e lista os anexos da pasta do chamado."""
+    """Lê ticket.json e lista os anexos da pasta do chamado.
+
+    Args:
+        folder: pasta do chamado (com ticket.json e a subpasta attachments/).
+
+    Returns:
+        O chamado validado, a pasta e os anexos numerados a partir de 1 (na ordem de ticket.json).
+
+    Raises:
+        FileNotFoundError: a pasta não tem ticket.json.
+        pydantic.ValidationError: ticket.json fora do formato esperado.
+    """
     folder = Path(folder)
-    data = Ticket.model_validate_json((folder / "ticket.json").read_text(encoding="utf-8"))
+    # Dados do chamado (categoria, escopo, fornecedor, datas, lista de anexos), validados pelo modelo Ticket.
+    data = Ticket.model_validate_json(
+        (folder / "ticket.json").read_text(encoding="utf-8")
+    )
+    # Numera os anexos a partir de 1, na ordem de ticket.json: é o "Anexo N" que o modelo usa para citar cada um.
     attachments = [
-        Attachment(index=i, path=folder / "attachments" / a.file_name, content_type=a.content_type) for i, a in enumerate(data.attachments, 1)
+        Attachment(
+            index=i,
+            path=folder / "attachments" / a.file_name,
+            content_type=a.content_type,
+        )
+        for i, a in enumerate(data.attachments, 1)
     ]
     return LoadedTicket(data=data, folder=folder, attachments=attachments)
 
 
 def list_tickets(tickets_dir: Path, ids: list[str] | None = None) -> list[Path]:
-    """Pastas de chamados (opcionalmente só os ids pedidos), em ordem."""
-    folders = sorted(p for p in Path(tickets_dir).iterdir() if (p / "ticket.json").exists())
+    """Pastas de chamados (opcionalmente só os ids pedidos), em ordem.
+
+    Args:
+        tickets_dir: pasta com uma subpasta por chamado.
+        ids: ids a manter; None ou vazio mantém todos. Ids sem pasta são ignorados.
+
+    Returns:
+        As subpastas que têm ticket.json, em ordem alfabética.
+    """
+    # Só subpastas que são chamados (têm ticket.json), em ordem alfabética.
+    folders = sorted(
+        p for p in Path(tickets_dir).iterdir() if (p / "ticket.json").exists()
+    )
     return [p for p in folders if p.name in ids] if ids else folders
 
 
@@ -101,6 +132,8 @@ def _lpu_flag(value: Any, n: int) -> bool:
     if text in LPU_FALSE:
         return False
     raise QuoteError(f"item {n}: a coluna LPU aceita Sim ou Não (encontrado '{value}')")
+
+
 TICKET_FIELDS = {
     "chamado": "ticket_id",
     "nº orçamento": "number",
@@ -115,8 +148,16 @@ TICKET_FIELDS = {
     "descricao do problema": "scope",
     "descrição detalhada do problema": "scope",
 }
-ITEM_PLACEHOLDER = "descreva o item cobrado"  # linha de exemplo do modelo: não conta como item
-NOT_ITEMS = {"total", "subtotal", "total geral", "valor total", ITEM_PLACEHOLDER}  # linhas de soma ou de exemplo
+ITEM_PLACEHOLDER = (
+    "descreva o item cobrado"  # linha de exemplo do modelo: não conta como item
+)
+NOT_ITEMS = {
+    "total",
+    "subtotal",
+    "total geral",
+    "valor total",
+    ITEM_PLACEHOLDER,
+}  # linhas de soma ou de exemplo
 
 
 def _table_rows(ws, table_name: str) -> list[list[Any]] | None:
@@ -133,15 +174,23 @@ def _item_header(row: list[Any]) -> list[str | None]:
 
 def _items_rows(wb) -> list[list[Any]]:
     """Cabeçalho + linhas dos itens: a Tabela tbItens da aba 'Itens' ou, numa planilha simples, a primeira linha de
-    qualquer aba que tenha as colunas dos itens (Descrição, Quantidade e Valor unitário; Item e Valor total são opcionais)."""
-    sheets = [wb["Itens"]] if "Itens" in wb.sheetnames else [ws for ws in wb.worksheets if ws.title != "Chamado"]
+    qualquer aba que tenha as colunas dos itens (Descrição, Quantidade e Valor unitário; Item e Valor total são opcionais).
+    """
+    sheets = (
+        [wb["Itens"]]
+        if "Itens" in wb.sheetnames
+        else [ws for ws in wb.worksheets if ws.title != "Chamado"]
+    )
     for ws in sheets:
         if (rows := _table_rows(ws, "tbItens")) is not None:
             return rows
         values = [list(r) for r in ws.iter_rows(values_only=True)]
         for i, row in enumerate(values[:30]):
             cols = set(_item_header(row)) - {None}
-            if {"description", "quantity"} <= cols and cols & {"unit_value", "total_value"}:
+            if {"description", "quantity"} <= cols and cols & {
+                "unit_value",
+                "total_value",
+            }:
                 return values[i:]
     raise QuoteError(
         "não encontrei a lista de itens: use a aba 'Itens' do modelo ou uma planilha com as colunas "
@@ -155,7 +204,11 @@ def _ticket_rows(wb) -> list[list[Any]] | None:
         return None
     ws = wb["Chamado"]
     rows = _table_rows(ws, "tbChamado")
-    return rows[1:] if rows is not None else [list(r)[:2] for r in ws.iter_rows(values_only=True)]
+    return (
+        rows[1:]
+        if rows is not None
+        else [list(r)[:2] for r in ws.iter_rows(values_only=True)]
+    )
 
 
 def quote_defaults(ticket: Ticket) -> dict[str, Any]:
@@ -176,59 +229,118 @@ def read_quote(path: Path, defaults: dict[str, Any] | None = None) -> Quote:
 
     `defaults`: dados do chamado (quote_defaults) para o que a planilha não trouxer; com eles, a aba 'Chamado' é
     opcional e basta a lista de itens. Sem eles (dados de exemplo), a aba 'Chamado' é obrigatória.
+
+    Args:
+        path: arquivo Excel do orçamento.
+        defaults: dados do chamado que completam a planilha; None exige a aba 'Chamado'.
+
+    Returns:
+        O orçamento com os itens numerados; unidade padrão "un", e valor unitário ou total calculado quando só um
+        dos dois vem preenchido.
+
+    Raises:
+        QuoteError: arquivo que não abre, abas ou colunas fora do padrão, nenhum item ou valores inválidos.
     """
+    # data_only=True: lê o valor calculado das fórmulas, não a fórmula.
     try:
         wb = load_workbook(path, data_only=True)
     except Exception as e:  # arquivo corrompido ou não-Excel
-        raise QuoteError(f"não foi possível abrir {path.name}: o arquivo não é uma planilha Excel válida ou está corrompido") from e
+        raise QuoteError(
+            f"não foi possível abrir {path.name}: o arquivo não é uma planilha Excel válida ou está corrompido"
+        ) from e
 
+    # Aba 'Chamado' (Campo | Valor): obrigatória só quando não há dados do chamado para completar.
     ticket_rows = _ticket_rows(wb)
     if ticket_rows is None and defaults is None:
         raise QuoteError("a planilha precisa das abas 'Chamado' e 'Itens'")
+    # Converte os rótulos em português da aba (ex.: "Nº orçamento") para os campos do modelo Quote.
     ticket_fields: dict[str, Any] = {}
     for field, value, *_ in [r + [None] * (2 - len(r)) for r in ticket_rows or []]:
         key = TICKET_FIELDS.get(str(field or "").strip().lower())
         if key and value not in (None, ""):
             ticket_fields[key] = value
-    for key, value in (defaults or {}).items():  # o que a planilha não trouxe vem do chamado
+    for key, value in (
+        defaults or {}
+    ).items():  # o que a planilha não trouxe vem do chamado
         ticket_fields.setdefault(key, value)
     if isinstance(ticket_fields.get("issued_on"), datetime):
         ticket_fields["issued_on"] = ticket_fields["issued_on"].date()
 
+    # Itens: a primeira linha é o cabeçalho; colunas repetidas ou sem "descrição" deixam a planilha fora do padrão.
     rows = _items_rows(wb)
     header = _item_header(rows[0])
-    if len(set(header) - {None}) != len([c for c in header if c]) or "description" not in header:
+    if (
+        len(set(header) - {None}) != len([c for c in header if c])
+        or "description" not in header
+    ):
         found = ", ".join(str(c) for c in rows[0] if c is not None) or "nenhuma"
         raise QuoteError(f"colunas dos itens fora do padrão (encontradas: {found})")
     items = []
     for row in rows[1:]:
-        item = {col: v for col, v in zip(header, row, strict=False) if col and v not in (None, "")}
+        # Linha → dicionário campo: valor, ignorando células vazias e colunas sem cabeçalho reconhecido.
+        item = {
+            col: v
+            for col, v in zip(header, row, strict=False)
+            if col and v not in (None, "")
+        }
         desc = str(item.get("description", "")).strip().lower().rstrip(":")
-        if not desc or desc in NOT_ITEMS:  # sem descrição (linha de total, observação) ou linha de exemplo do modelo
+        if (
+            not desc or desc in NOT_ITEMS
+        ):  # sem descrição (linha de total, observação) ou linha de exemplo do modelo
             continue
+        # Completa o que falta: número sequencial, unidade "un" e o valor (unitário ou total) que não veio.
         item.setdefault("n", len(items) + 1)
         item.setdefault("unit", "un")
         if "lpu" in item:  # sem a coluna (planilhas antigas) ou em branco: item da LPU
             item["lpu"] = _lpu_flag(item["lpu"], item["n"])
         if "total_value" not in item and "unit_value" in item and "quantity" in item:
-            item["total_value"] = round(float(item["quantity"]) * float(item["unit_value"]), 2)
+            item["total_value"] = round(
+                float(item["quantity"]) * float(item["unit_value"]), 2
+            )
         if "unit_value" not in item and "total_value" in item and item.get("quantity"):
-            item["unit_value"] = round(float(item["total_value"]) / float(item["quantity"]), 2)
+            item["unit_value"] = round(
+                float(item["total_value"]) / float(item["quantity"]), 2
+            )
         items.append(item)
     if not items:
-        raise QuoteError("a planilha não tem itens: preencha ao menos uma linha com descrição, quantidade e valor")
+        raise QuoteError(
+            "a planilha não tem itens: preencha ao menos uma linha com descrição, quantidade e valor"
+        )
+    # Valida tudo no modelo Quote; erro de valor vira QuoteError com a mensagem em português.
     try:
         return Quote(
             file=path.name,
             items=[QuoteItem.model_validate(i) for i in items],
-            **{k: (str(v or "") if k in ("ticket_id", "number", "supplier_cnpj") else v) for k, v in ticket_fields.items()},
+            **{
+                k: (
+                    str(v or "") if k in ("ticket_id", "number", "supplier_cnpj") else v
+                )
+                for k, v in ticket_fields.items()
+            },
         )
     except ValidationError as e:
-        raise QuoteError(f"planilha com valores inválidos: {pt_validation_error(e.errors())}") from e
+        raise QuoteError(
+            f"planilha com valores inválidos: {pt_validation_error(e.errors())}"
+        ) from e
 
 
-def read_ticket_quote(ticket: LoadedTicket, attachment: Attachment | None = None) -> Quote:
-    """Orçamento do chamado, completado com os dados do próprio chamado (planilha só com itens também vale)."""
+def read_ticket_quote(
+    ticket: LoadedTicket, attachment: Attachment | None = None
+) -> Quote:
+    """Orçamento do chamado, completado com os dados do próprio chamado (planilha só com itens também vale).
+
+    Args:
+        ticket: chamado carregado.
+        attachment: planilha a ler; None usa a primeira planilha do chamado.
+
+    Returns:
+        O orçamento lido.
+
+    Raises:
+        QuoteError: planilha fora do padrão.
+        IndexError: o chamado não tem planilha e `attachment` não foi informado.
+    """
+    # Sem planilha indicada, usa a primeira do chamado (IndexError se não houver nenhuma).
     a = attachment or ticket.spreadsheets[0]
     return read_quote(a.path, quote_defaults(ticket.data))
 
@@ -248,11 +360,20 @@ class References:
 
     @cached_property
     def lpu(self) -> dict[str, dict[str, LpuItem]]:
+        """LPU por esteira: esteira → código → item de referência (lida uma vez e guardada).
+
+        Returns:
+            Um dicionário por arquivo data/references/lpu_<esteira>.csv (separador ";"), com a esteira em maiúsculas.
+        """
         out: dict[str, dict[str, LpuItem]] = {}
         for p in sorted(self.dir.glob("lpu_*.csv")):
+            # O nome do arquivo define a esteira: lpu_seta.csv → "SETA".
             workstream = p.stem.split("_", 1)[1].upper()
             with open(p, encoding="utf-8") as f:
-                out[workstream] = {r["code"]: LpuItem.model_validate(r) for r in csv.DictReader(f, delimiter=";")}
+                out[workstream] = {
+                    r["code"]: LpuItem.model_validate(r)
+                    for r in csv.DictReader(f, delimiter=";")
+                }
         return out
 
     @property
@@ -261,12 +382,20 @@ class References:
 
     def requirements(self, ticket: Ticket) -> list[ChecklistRequirement]:
         """Requisitos do checklist para o chamado."""
-        return self.cfg.checklists.requirements(ticket.category.value, ticket.maintenance_type.value, ticket.moment.value, ticket.workstream.value)
+        return self.cfg.checklists.requirements(
+            ticket.category.value,
+            ticket.maintenance_type.value,
+            ticket.moment.value,
+            ticket.workstream.value,
+        )
 
     def lpu_text(self, workstream: str) -> str:
         """Tabela de referência da esteira em texto, para o prompt de conferência do orçamento."""
         rows = ["codigo | descricao | unidade | preco_referencia (R$)"]
-        rows += [f"{r.code} | {r.description} | {r.unit} | {r.reference_price:.2f}" for r in self.lpu[workstream].values()]
+        rows += [
+            f"{r.code} | {r.description} | {r.unit} | {r.reference_price:.2f}"
+            for r in self.lpu[workstream].values()
+        ]
         return "\n".join(rows)
 
 
@@ -294,10 +423,16 @@ class GroundTruth(BaseModel):
     amount_at_issue: float | None = None
     items: list[dict[str, Any]]
     attachments: dict[str, dict[str, Any]]
-    scenario: dict[str, str] | None = None  # catálogo de cenários (0300…): id, título e o que o chamado testa
+    scenario: dict[str, str] | None = (
+        None  # catálogo de cenários (0300…): id, título e o que o chamado testa
+    )
 
 
 def load_ground_truth(ground_truth_dir: Path, ticket_id: str) -> GroundTruth | None:
     """Gabarito do chamado, se existir."""
     p = Path(ground_truth_dir) / f"{ticket_id}.json"
-    return GroundTruth.model_validate_json(p.read_text(encoding="utf-8")) if p.exists() else None
+    return (
+        GroundTruth.model_validate_json(p.read_text(encoding="utf-8"))
+        if p.exists()
+        else None
+    )

@@ -31,12 +31,30 @@ from typing import Any
 from pydantic import BaseModel, ValidationError
 
 from ..observability import event
-from .base import DocumentPart, ImagePart, Provider, ProviderError, ProviderResponse, Request, T, TextPart, Usage
+from .base import (
+    DocumentPart,
+    ImagePart,
+    Provider,
+    ProviderError,
+    ProviderResponse,
+    Request,
+    T,
+    TextPart,
+    Usage,
+)
 
 BACKENDS = ("azure_openai", "bedrock", "vertex")
 JSON_MODES = ("json_schema", "json_object", "prompt")
 PDF_MODES = ("file", "text")
-_TRANSIENT_NAMES = ("RateLimit", "Timeout", "Connection", "ServiceUnavailable", "InternalServer", "Overloaded", "Throttl")
+_TRANSIENT_NAMES = (
+    "RateLimit",
+    "Timeout",
+    "Connection",
+    "ServiceUnavailable",
+    "InternalServer",
+    "Overloaded",
+    "Throttl",
+)
 
 
 # --------------------------------------------------------------------------- utilitários
@@ -49,7 +67,9 @@ def _get(obj: Any, key: str, default: Any = None) -> Any:
     return getattr(obj, key, default)
 
 
-def split_backend(model: str, default: str, catalog: dict[str, str] | None = None) -> tuple[str, str]:
+def split_backend(
+    model: str, default: str, catalog: dict[str, str] | None = None
+) -> tuple[str, str]:
     """Backend e id do modelo: 'bedrock/modelo' → ('bedrock', 'modelo'); senão o backend do catálogo; senão o padrão."""
     if "/" in model:
         prefix, rest = model.split("/", 1)
@@ -63,7 +83,9 @@ def catalog_backends(models: dict[str, list[str]] | None) -> dict[str, str]:
     out: dict[str, str] = {}
     for backend, ids in (models or {}).items():
         if backend not in BACKENDS:
-            raise ValueError(f"iara.models: backend desconhecido {backend!r} (use {', '.join(BACKENDS)})")
+            raise ValueError(
+                f"iara.models: backend desconhecido {backend!r} (use {', '.join(BACKENDS)})"
+            )
         for mid in ids:
             out.setdefault(mid, backend)
     return out
@@ -82,8 +104,14 @@ def strict_schema(output: type) -> dict:
             if k == "default":
                 continue
             # "properties" e "$defs" são mapas nome → schema (não são schemas): percorre só os valores
-            out[k] = {name: walk(s) for name, s in v.items()} if k in ("properties", "$defs") and isinstance(v, dict) else walk(v)
-        if isinstance(out.get("properties"), dict) or (out.get("type") == "object" and "additionalProperties" not in out):
+            out[k] = (
+                {name: walk(s) for name, s in v.items()}
+                if k in ("properties", "$defs") and isinstance(v, dict)
+                else walk(v)
+            )
+        if isinstance(out.get("properties"), dict) or (
+            out.get("type") == "object" and "additionalProperties" not in out
+        ):
             out["additionalProperties"] = False
             out["required"] = list(out.get("properties", {}))
         return out
@@ -136,44 +164,89 @@ def extract_json(text: str) -> Any:
 
 # valores que o modelo escreve em português ou com outra grafia → valor do schema (enums de llm_schemas)
 _ENUM_SYNONYMS = {
-    "sim": "yes", "s": "yes", "true": "yes", "verdadeiro": "yes",
-    "não": "no", "nao": "no", "n": "no", "false": "no", "falso": "no",
-    "parcial": "partial", "parcialmente": "partial", "em parte": "partial",
-    "indeterminado": "undetermined", "indefinido": "undetermined", "não determinado": "undetermined", "unknown": "undetermined",
-    "n/a": "undetermined", "na": "undetermined",
-    "antes": "before", "depois": "after", "durante": "during",
-    "aderente": "compliant", "fora do escopo": "out_of_scope", "a justificar": "to_justify",
+    "sim": "yes",
+    "s": "yes",
+    "true": "yes",
+    "verdadeiro": "yes",
+    "não": "no",
+    "nao": "no",
+    "n": "no",
+    "false": "no",
+    "falso": "no",
+    "parcial": "partial",
+    "parcialmente": "partial",
+    "em parte": "partial",
+    "indeterminado": "undetermined",
+    "indefinido": "undetermined",
+    "não determinado": "undetermined",
+    "unknown": "undetermined",
+    "n/a": "undetermined",
+    "na": "undetermined",
+    "antes": "before",
+    "depois": "after",
+    "durante": "during",
+    "aderente": "compliant",
+    "fora do escopo": "out_of_scope",
+    "a justificar": "to_justify",
 }
-_BOOL_WORDS = {"sim": True, "yes": True, "true": True, "verdadeiro": True, "s": True,
-               "não": False, "nao": False, "no": False, "false": False, "falso": False, "n": False}
+_BOOL_WORDS = {
+    "sim": True,
+    "yes": True,
+    "true": True,
+    "verdadeiro": True,
+    "s": True,
+    "não": False,
+    "nao": False,
+    "no": False,
+    "false": False,
+    "falso": False,
+    "n": False,
+}
 
 
 def _coerce(err: dict, value: Any) -> tuple[bool, Any]:
     """Valor corrigido para um erro de tipo simples (enum, número, booleano, nulo), ou (False, None) se não souber."""
     kind = err["type"]
     if kind in ("enum", "literal_error") and isinstance(value, str):
-        expected = [str(x).strip("'\" ") for x in re.findall(r"'([^']*)'", str((err.get("ctx") or {}).get("expected", "")))]
+        expected = [
+            str(x).strip("'\" ")
+            for x in re.findall(
+                r"'([^']*)'", str((err.get("ctx") or {}).get("expected", ""))
+            )
+        ]
         low = value.strip().lower()
         for cand in (low, _ENUM_SYNONYMS.get(low, ""), low.replace(" ", "_")):
             if cand and (not expected or cand in expected):
                 return True, cand
         return False, None
-    if kind in ("int_parsing", "int_type", "int_from_float") and isinstance(value, str | float):
+    if kind in ("int_parsing", "int_type", "int_from_float") and isinstance(
+        value, str | float
+    ):
         if isinstance(value, float) and value.is_integer():
             return True, int(value)
         m = re.search(r"-?\d+", str(value))
         return (True, int(m.group(0))) if m else (False, None)
     if kind in ("float_parsing", "float_type") and isinstance(value, str):
-        m = re.search(r"-?\d+(?:[.,]\d+)?", value.replace(".", "") if re.search(r"\d\.\d{3},", value) else value)
+        m = re.search(
+            r"-?\d+(?:[.,]\d+)?",
+            value.replace(".", "") if re.search(r"\d\.\d{3},", value) else value,
+        )
         return (True, float(m.group(0).replace(",", "."))) if m else (False, None)
-    if kind in ("bool_parsing", "bool_type") and isinstance(value, str) and value.strip().lower() in _BOOL_WORDS:
+    if (
+        kind in ("bool_parsing", "bool_type")
+        and isinstance(value, str)
+        and value.strip().lower() in _BOOL_WORDS
+    ):
         return True, _BOOL_WORDS[value.strip().lower()]
     return False, None
 
 
-def _normalize(data: Any, error: ValidationError, output: type[BaseModel], repairs: list[str]) -> bool:
+def _normalize(
+    data: Any, error: ValidationError, output: type[BaseModel], repairs: list[str]
+) -> bool:
     """Corrige, no lugar, desvios comuns de backends que não aplicam o schema à risca: campo extra, nulo em texto ou
-    lista, enum em português ou com outra grafia, número como texto ("Anexo 3", "1,42") e booleano como "sim"/"não"."""
+    lista, enum em português ou com outra grafia, número como texto ("Anexo 3", "1,42") e booleano como "sim"/"não".
+    """
     fixed = False
     for err in error.errors():
         loc = err["loc"]
@@ -186,13 +259,19 @@ def _normalize(data: Any, error: ValidationError, output: type[BaseModel], repai
         except (KeyError, IndexError, TypeError):
             continue
         key = loc[-1]
-        if not isinstance(parent, dict | list) or (isinstance(parent, dict) and key not in parent):
+        if not isinstance(parent, dict | list) or (
+            isinstance(parent, dict) and key not in parent
+        ):
             continue
         where = ".".join(map(str, loc))
         if err["type"] == "extra_forbidden" and isinstance(parent, dict):
             # só descarta campo extra num objeto que já tem campos do schema (nunca reduz a resposta a {})
             model = _field_annotation(output, loc[:-1]) if loc[:-1] else output
-            fields = set(model.model_fields) if isinstance(model, type) and issubclass(model, BaseModel) else set()
+            fields = (
+                set(model.model_fields)
+                if isinstance(model, type) and issubclass(model, BaseModel)
+                else set()
+            )
             if not set(parent) & fields:
                 continue
             del parent[key]
@@ -203,19 +282,30 @@ def _normalize(data: Any, error: ValidationError, output: type[BaseModel], repai
             ok, value = _empty_value(_field_annotation(output, loc))
             if ok and value is not None:
                 parent[key] = value
-                repairs.append(f"'{where}' veio nulo; preenchido com {json.dumps(value)}")
+                repairs.append(
+                    f"'{where}' veio nulo; preenchido com {json.dumps(value)}"
+                )
                 fixed = True
             continue
         ok, value = _coerce(err, parent[key])
         if ok and value != parent[key]:
-            repairs.append(f"'{where}': {json.dumps(parent[key], ensure_ascii=False)} → {json.dumps(value)}")
+            repairs.append(
+                f"'{where}': {json.dumps(parent[key], ensure_ascii=False)} → {json.dumps(value)}"
+            )
             parent[key] = value
             fixed = True
     return fixed
 
 
 # erros do Pydantic de "esperava lista/objeto e veio outra coisa": candidatos a JSON que veio como string
-_CONTAINER_ERRORS = {"list_type", "dict_type", "model_type", "model_attributes_type", "tuple_type", "set_type"}
+_CONTAINER_ERRORS = {
+    "list_type",
+    "dict_type",
+    "model_type",
+    "model_attributes_type",
+    "tuple_type",
+    "set_type",
+}
 
 
 def _loads(value: str) -> Any:
@@ -229,10 +319,22 @@ def _loads(value: str) -> Any:
         return None
 
 
-_PAYLOAD_KEYS = ("properties", "data", "output", "result", "response", "json", "arguments", "content", "value")
+_PAYLOAD_KEYS = (
+    "properties",
+    "data",
+    "output",
+    "result",
+    "response",
+    "json",
+    "arguments",
+    "content",
+    "value",
+)
 
 
-def _find_payload(data: Any, output: type[BaseModel], depth: int = 3) -> tuple[dict, str] | None:
+def _find_payload(
+    data: Any, output: type[BaseModel], depth: int = 3
+) -> tuple[dict, str] | None:
     """Dados de verdade quando o topo da resposta não tem nenhum campo do schema.
 
     Claude via Bedrock às vezes imita o JSON Schema ({"type": "object", "properties": {...dados...}}) ou embrulha os
@@ -265,7 +367,9 @@ def _find_payload(data: Any, output: type[BaseModel], depth: int = 3) -> tuple[d
     return (best[1], best[2]) if best else None
 
 
-def parse_output(data: Any, output: type[T], max_rounds: int = 20) -> tuple[T, list[str]]:
+def parse_output(
+    data: Any, output: type[T], max_rounds: int = 20
+) -> tuple[T, list[str]]:
     """Valida a resposta no schema, corrigindo o JSON "duplamente codificado" que alguns modelos devolvem pela IARA.
 
     Claude via Bedrock (e outros) às vezes devolve um campo lista/objeto como string com JSON dentro, e às vezes essa
@@ -283,7 +387,9 @@ def parse_output(data: Any, output: type[T], max_rounds: int = 20) -> tuple[T, l
             data = inner
             repairs.append("resposta inteira como string")
             continue
-        if (found := _find_payload(data, output)) is not None:  # antes de qualquer descarte: nunca perde os dados
+        if (
+            found := _find_payload(data, output)
+        ) is not None:  # antes de qualquer descarte: nunca perde os dados
             data, where = found
             repairs.append(f"dados dentro de '{where}'")
             continue
@@ -300,9 +406,13 @@ def parse_output(data: Any, output: type[T], max_rounds: int = 20) -> tuple[T, l
                     data = inner
                     repairs.append(f"objeto embrulhado em '{key}'")
                     continue
-            if _normalize(data, e, output, repairs):  # enum em português, número como texto, nulo, campo extra
+            if _normalize(
+                data, e, output, repairs
+            ):  # enum em português, número como texto, nulo, campo extra
                 continue
-            if _fill_missing(data, e, output, repairs):  # último recurso: resposta parcial no formato certo
+            if _fill_missing(
+                data, e, output, repairs
+            ):  # último recurso: resposta parcial no formato certo
                 continue
             raise
     return output.model_validate(data), repairs
@@ -313,7 +423,11 @@ def _repair(data: Any, error: ValidationError, repairs: list[str]) -> bool:
     fixed = False
     for err in error.errors():
         loc = err["loc"]
-        if err["type"] not in _CONTAINER_ERRORS or not isinstance(err.get("input"), str) or not loc:
+        if (
+            err["type"] not in _CONTAINER_ERRORS
+            or not isinstance(err.get("input"), str)
+            or not loc
+        ):
             continue
         value = _loads(err["input"])
         if value is None:
@@ -325,12 +439,16 @@ def _repair(data: Any, error: ValidationError, repairs: list[str]) -> bool:
         except (KeyError, IndexError, TypeError):
             continue
         key = loc[-1]
-        if not isinstance(parent, dict | list) or (isinstance(parent, dict) and key not in parent):
+        if not isinstance(parent, dict | list) or (
+            isinstance(parent, dict) and key not in parent
+        ):
             continue
         if isinstance(parent, dict) and isinstance(value, dict) and key in value:
             # a string era o objeto pai inteiro de novo: traz o campo e os irmãos que vieram dentro dela
             parent.update(value)
-            repairs.append(f"'{'.'.join(map(str, loc))}' trazia o objeto inteiro como string")
+            repairs.append(
+                f"'{'.'.join(map(str, loc))}' trazia o objeto inteiro como string"
+            )
         else:
             parent[key] = value
             repairs.append(f"'{'.'.join(map(str, loc))}' veio como string com JSON")
@@ -359,13 +477,18 @@ def _field_annotation(model: type[BaseModel], loc: tuple) -> Any:
             args = typing.get_args(current)
             current = args[0] if args else Any
             continue
-        if not (isinstance(current, type) and issubclass(current, BaseModel)) or step not in current.model_fields:
+        if (
+            not (isinstance(current, type) and issubclass(current, BaseModel))
+            or step not in current.model_fields
+        ):
             return None
         current = current.model_fields[step].annotation
     return current
 
 
-def _fill_missing(data: Any, error: ValidationError, output: type[BaseModel], repairs: list[str]) -> bool:
+def _fill_missing(
+    data: Any, error: ValidationError, output: type[BaseModel], repairs: list[str]
+) -> bool:
     """Preenche, no lugar, os campos obrigatórios omitidos que têm valor neutro (ver parse_output)."""
     fixed = False
     for err in error.errors():
@@ -382,12 +505,22 @@ def _fill_missing(data: Any, error: ValidationError, output: type[BaseModel], re
         except (KeyError, IndexError, TypeError):
             continue
         model = _field_annotation(output, loc[:-1]) if loc[:-1] else output
-        fields = set(model.model_fields) if isinstance(model, type) and issubclass(model, BaseModel) else set()
+        fields = (
+            set(model.model_fields)
+            if isinstance(model, type) and issubclass(model, BaseModel)
+            else set()
+        )
         # só completa uma resposta parcial do formato certo: tem algum campo esperado e nenhum desconhecido
-        partial = isinstance(parent, dict) and bool(set(parent) & fields) and set(parent) <= fields
+        partial = (
+            isinstance(parent, dict)
+            and bool(set(parent) & fields)
+            and set(parent) <= fields
+        )
         if partial and loc[-1] not in parent:
             parent[loc[-1]] = value
-            repairs.append(f"'{'.'.join(map(str, loc))}' omitido; preenchido com {json.dumps(value)}")
+            repairs.append(
+                f"'{'.'.join(map(str, loc))}' omitido; preenchido com {json.dumps(value)}"
+            )
             fixed = True
     return fixed
 
@@ -397,7 +530,9 @@ def pdf_text(data: bytes) -> str:
     try:
         from pypdf import PdfReader
     except ImportError as e:  # pragma: no cover - depende do ambiente
-        raise ProviderError("pdf_mode = 'text' requer o pacote pypdf (pip install pypdf)") from e
+        raise ProviderError(
+            "pdf_mode = 'text' requer o pacote pypdf (pip install pypdf)"
+        ) from e
     reader = PdfReader(io.BytesIO(data))
     return "\n".join((page.extract_text() or "") for page in reader.pages).strip()
 
@@ -411,21 +546,45 @@ def schema_instructions(output: type) -> str:
     )
 
 
-def convert(req: Request, output: type, json_mode: str = "json_schema", pdf_mode: str = "file") -> list[dict]:
+def convert(
+    req: Request, output: type, json_mode: str = "json_schema", pdf_mode: str = "file"
+) -> list[dict]:
     """Converte as partes neutras em mensagens Chat Completions (texto, imagem e PDF)."""
     content: list[dict] = []
     for p in req.parts:
         if isinstance(p, TextPart):
             content.append({"type": "text", "text": p.text})
         elif isinstance(p, ImagePart):
-            content.append({"type": "image_url", "image_url": {"url": f"data:{p.mime};base64,{p.b64}"}})
+            content.append(
+                {
+                    "type": "image_url",
+                    "image_url": {"url": f"data:{p.mime};base64,{p.b64}"},
+                }
+            )
         elif isinstance(p, DocumentPart):
             title = p.title or "document.pdf"
             if pdf_mode == "text":
-                content.append({"type": "text", "text": f"[PDF: {title}]\n{pdf_text(p.data) or '(PDF sem texto extraível)'}"})
+                content.append(
+                    {
+                        "type": "text",
+                        "text": f"[PDF: {title}]\n{pdf_text(p.data) or '(PDF sem texto extraível)'}",
+                    }
+                )
             else:
-                content.append({"type": "file", "file": {"filename": title, "file_data": f"data:{p.mime};base64,{p.b64}"}})
-    system = req.system if json_mode == "json_schema" else req.system + schema_instructions(output)
+                content.append(
+                    {
+                        "type": "file",
+                        "file": {
+                            "filename": title,
+                            "file_data": f"data:{p.mime};base64,{p.b64}",
+                        },
+                    }
+                )
+    system = (
+        req.system
+        if json_mode == "json_schema"
+        else req.system + schema_instructions(output)
+    )
     return [{"role": "system", "content": system}, {"role": "user", "content": content}]
 
 
@@ -438,7 +597,9 @@ def is_transient(exc: Exception) -> bool:
         if isinstance(status, int):
             return status == 429 or status >= 500 or status == 408
     name = type(exc).__name__
-    return any(t in name for t in _TRANSIENT_NAMES) or isinstance(exc, TimeoutError | ConnectionError)
+    return any(t in name for t in _TRANSIENT_NAMES) or isinstance(
+        exc, TimeoutError | ConnectionError
+    )
 
 
 # --------------------------------------------------------------------------- provedor
@@ -462,9 +623,13 @@ class IaraProvider(Provider):
         text_only: list[str] | None = None,
     ):
         if json_mode not in JSON_MODES:
-            raise ValueError(f"iara.json_mode inválido: {json_mode!r} (use {', '.join(JSON_MODES)})")
+            raise ValueError(
+                f"iara.json_mode inválido: {json_mode!r} (use {', '.join(JSON_MODES)})"
+            )
         if pdf_mode not in PDF_MODES:
-            raise ValueError(f"iara.pdf_mode inválido: {pdf_mode!r} (use {', '.join(PDF_MODES)})")
+            raise ValueError(
+                f"iara.pdf_mode inválido: {pdf_mode!r} (use {', '.join(PDF_MODES)})"
+            )
         self.timeout_s = timeout_s
         self.max_retries = max_retries
         self.environment = environment
@@ -472,7 +637,9 @@ class IaraProvider(Provider):
         self.json_mode = json_mode
         self.pdf_mode = pdf_mode
         self.enable_polling = enable_polling
-        self.catalog = catalog_backends(models)  # modelo → backend (azure_openai, bedrock, vertex)
+        self.catalog = catalog_backends(
+            models
+        )  # modelo → backend (azure_openai, bedrock, vertex)
         self.text_only = set(text_only or ())  # modelos que não leem imagem
         self._injected = client
         self._clients: dict[str, Any] = {}
@@ -486,7 +653,9 @@ class IaraProvider(Provider):
             try:
                 from iaragenai import IaraGenAI
             except ImportError as e:
-                raise ProviderError("provedor 'iara' requer o pacote iara_genai_sdk (pip install iara_genai_sdk, Artifactory do Itaú)") from e
+                raise ProviderError(
+                    "provedor 'iara' requer o pacote iara_genai_sdk (pip install iara_genai_sdk, Artifactory do Itaú)"
+                ) from e
             kwargs: dict[str, Any] = {
                 "client_id": os.getenv("IARA_CLIENT_ID"),
                 "client_secret": os.getenv("IARA_CLIENT_SECRET"),
@@ -499,7 +668,9 @@ class IaraProvider(Provider):
         return self._clients[backend]
 
     # ------------------------------------------------------------------ chamada
-    def _kwargs(self, req: Request, model: str, output: type, json_mode: str | None = None) -> dict[str, Any]:
+    def _kwargs(
+        self, req: Request, model: str, output: type, json_mode: str | None = None
+    ) -> dict[str, Any]:
         json_mode = json_mode or self.json_mode
         kwargs: dict[str, Any] = {
             "model": model,
@@ -509,7 +680,11 @@ class IaraProvider(Provider):
         if json_mode == "json_schema":
             kwargs["response_format"] = {
                 "type": "json_schema",
-                "json_schema": {"name": output.__name__, "schema": strict_schema(output), "strict": True},
+                "json_schema": {
+                    "name": output.__name__,
+                    "schema": strict_schema(output),
+                    "strict": True,
+                },
             }
         elif json_mode == "json_object":
             kwargs["response_format"] = {"type": "json_object"}
@@ -531,39 +706,73 @@ class IaraProvider(Provider):
                 if not is_transient(e):
                     raise ProviderError(f"[{task}] {type(e).__name__}: {e}") from e
                 if attempt >= self.max_retries:
-                    raise ProviderError(f"[{task}] {type(e).__name__}: {e}", transient=True) from e
+                    raise ProviderError(
+                        f"[{task}] {type(e).__name__}: {e}", transient=True
+                    ) from e
                 time.sleep(min(30.0, 2**attempt) * (0.5 + random.random() / 2))
                 attempt += 1
 
     def generate(self, req: Request, output: type[T]) -> ProviderResponse[T]:
         backend, model = split_backend(req.model, self.backend, self.catalog)
-        if model in self.text_only and any(isinstance(p, ImagePart) or (isinstance(p, DocumentPart) and self.pdf_mode == "file") for p in req.parts):
+        if model in self.text_only and any(
+            isinstance(p, ImagePart)
+            or (isinstance(p, DocumentPart) and self.pdf_mode == "file")
+            for p in req.parts
+        ):
             raise ProviderError(
                 f"[{req.task}] o modelo {model} não lê imagens nem PDFs e esta tarefa envia anexos; "
                 "escolha um modelo com visão (ex.: gpt-4.1, claude-sonnet-5, gemini-2.5-flash) ou use-o só em tarefas de texto"
             )
         # json_schema que volta fora do formato (ex.: Claude via Bedrock com schema grande): tenta uma vez em json_object,
         # com o schema nas instruções; se o backend recusar json_object, em "prompt" (sem response_format)
-        modes = [self.json_mode] + (["json_object"] if self.json_mode == "json_schema" else [])
+        modes = [self.json_mode] + (
+            ["json_object"] if self.json_mode == "json_schema" else []
+        )
         bad: _BadOutput | None = None
         for i, mode in enumerate(modes):
             try:
-                resp = self._create(self.client(backend), self._kwargs(req, model, output, mode), req.task)
+                resp = self._create(
+                    self.client(backend),
+                    self._kwargs(req, model, output, mode),
+                    req.task,
+                )
             except ProviderError as e:
                 if i == 0 or e.transient or mode != "json_object":
                     raise
                 mode = "prompt"
-                resp = self._create(self.client(backend), self._kwargs(req, model, output, mode), req.task)
+                resp = self._create(
+                    self.client(backend),
+                    self._kwargs(req, model, output, mode),
+                    req.task,
+                )
             try:
                 return self._read(resp, req, output, model, backend)
             except _BadOutput as e:
                 bad = e
                 if i + 1 < len(modes):
-                    event("iara_json_mode_fallback", logging.WARNING, task=req.task, model=model, backend=backend,
-                          from_mode=mode, to_mode=modes[i + 1], reason=e.detail)
+                    event(
+                        "iara_json_mode_fallback",
+                        logging.WARNING,
+                        task=req.task,
+                        model=model,
+                        backend=backend,
+                        from_mode=mode,
+                        to_mode=modes[i + 1],
+                        reason=e.detail,
+                    )
                     continue
-                event("iara_bad_output", logging.WARNING, task=req.task, model=model, backend=backend, mode=mode,
-                      detail=e.detail, finish_reason=e.finish_reason, tool_calls=e.tool_calls, raw=e.raw[:3000])
+                event(
+                    "iara_bad_output",
+                    logging.WARNING,
+                    task=req.task,
+                    model=model,
+                    backend=backend,
+                    mode=mode,
+                    detail=e.detail,
+                    finish_reason=e.finish_reason,
+                    tool_calls=e.tool_calls,
+                    raw=e.raw[:3000],
+                )
         assert bad is not None
         raise bad
 
@@ -577,17 +786,26 @@ class IaraProvider(Provider):
             text = "".join(_get(b, "text", "") or "" for b in content)
             if text.strip():
                 out.append(("content", text))
-            out += [("tool_use", _get(b, "input")) for b in content if _get(b, "type") == "tool_use" and _get(b, "input")]
+            out += [
+                ("tool_use", _get(b, "input"))
+                for b in content
+                if _get(b, "type") == "tool_use" and _get(b, "input")
+            ]
         elif isinstance(content, str) and content.strip():
             out.append(("content", content))
         for call in _get(message, "tool_calls") or []:
             if (args := _get(_get(call, "function"), "arguments")) not in (None, ""):
                 out.append(("tool_calls", args))
-        if (args := _get(_get(message, "function_call"), "arguments")) not in (None, ""):
+        if (args := _get(_get(message, "function_call"), "arguments")) not in (
+            None,
+            "",
+        ):
             out.append(("function_call", args))
         return out
 
-    def _read(self, resp: Any, req: Request, output: type[T], model: str, backend: str) -> ProviderResponse[T]:
+    def _read(
+        self, resp: Any, req: Request, output: type[T], model: str, backend: str
+    ) -> ProviderResponse[T]:
         choices = _get(resp, "choices") or []
         if not choices:
             raise ProviderError(f"[{req.task}] resposta da IARA sem choices")
@@ -595,16 +813,29 @@ class IaraProvider(Provider):
         message = _get(choice, "message")
         finish = _get(choice, "finish_reason")
         if finish == "length":
-            raise ProviderError(f"[{req.task}] resposta cortada por max_tokens ({req.max_tokens})", truncated=True)
+            raise ProviderError(
+                f"[{req.task}] resposta cortada por max_tokens ({req.max_tokens})",
+                truncated=True,
+            )
         if refusal := _get(message, "refusal"):
             raise ProviderError(f"[{req.task}] recusa do modelo: {refusal}")
         candidates = self._candidates(message)
-        has_tools = any(src in ("tool_calls", "function_call", "tool_use") for src, _ in candidates)
-        raw = next((v if isinstance(v, str) else json.dumps(v, ensure_ascii=False) for _, v in candidates), "")
+        has_tools = any(
+            src in ("tool_calls", "function_call", "tool_use") for src, _ in candidates
+        )
+        raw = next(
+            (
+                v if isinstance(v, str) else json.dumps(v, ensure_ascii=False)
+                for _, v in candidates
+            ),
+            "",
+        )
         detail = "resposta vazia"
         for source, value in candidates:
             try:
-                data = extract_json(value) if isinstance(value, str) else value  # aceita texto antes/depois do JSON
+                data = (
+                    extract_json(value) if isinstance(value, str) else value
+                )  # aceita texto antes/depois do JSON
             except ValueError:
                 detail = "não é JSON"
                 continue
@@ -617,14 +848,24 @@ class IaraProvider(Provider):
                 repairs.insert(0, f"JSON lido de {source}")
             if repairs:
                 # comportamento esperado de alguns backends (ex.: Claude via Bedrock) e já corrigido: fica só no log JSON
-                event("iara_json_repaired", task=req.task, model=model, backend=backend, repairs=repairs)
+                event(
+                    "iara_json_repaired",
+                    task=req.task,
+                    model=model,
+                    backend=backend,
+                    repairs=repairs,
+                )
             u = _get(resp, "usage")
             cache = _get(_get(u, "prompt_tokens_details"), "cached_tokens", 0) or 0
             prompt = _get(u, "prompt_tokens", 0) or 0
             # prompt_tokens inclui os tokens lidos do cache; separamos para o cálculo de custo (mesma convenção dos outros)
             return ProviderResponse(
                 obj=obj,
-                usage=Usage(input=max(0, prompt - cache), output=_get(u, "completion_tokens", 0) or 0, cache_read_tokens=cache),
+                usage=Usage(
+                    input=max(0, prompt - cache),
+                    output=_get(u, "completion_tokens", 0) or 0,
+                    cache_read_tokens=cache,
+                ),
                 resolved_model=_get(resp, "model") or model,
                 response_id=_get(resp, "id") or "",
             )
@@ -634,17 +875,32 @@ class IaraProvider(Provider):
 class _BadOutput(ProviderError):
     """Resposta da IARA que não deu para ler no formato esperado (guarda o bruto para o log de diagnóstico)."""
 
-    def __init__(self, task: str, detail: str, raw: str, finish_reason: Any, tool_calls: bool):
+    def __init__(
+        self, task: str, detail: str, raw: str, finish_reason: Any, tool_calls: bool
+    ):
         preview = " ".join(raw.split())[:200]
-        super().__init__(f"[{task}] resposta da IARA fora do formato esperado ({detail}); início da resposta: {preview!r}")
-        self.detail, self.raw, self.finish_reason, self.tool_calls = detail, raw, finish_reason, tool_calls
+        super().__init__(
+            f"[{task}] resposta da IARA fora do formato esperado ({detail}); início da resposta: {preview!r}"
+        )
+        self.detail, self.raw, self.finish_reason, self.tool_calls = (
+            detail,
+            raw,
+            finish_reason,
+            tool_calls,
+        )
 
 
 def _schema_detail(error: ValidationError) -> str:
     """Resumo curto de um erro de schema: campos que faltaram ou o primeiro problema."""
     errors = error.errors()
-    missing = sorted({str(e["loc"][0]) for e in errors if e["type"] == "missing" and e["loc"]})
+    missing = sorted(
+        {str(e["loc"][0]) for e in errors if e["type"] == "missing" and e["loc"]}
+    )
     if missing:
         return "campos faltando: " + ", ".join(missing)
     first = errors[0]
-    return f"{'.'.join(map(str, first['loc']))}: {first['msg']}" if errors else "fora do schema"
+    return (
+        f"{'.'.join(map(str, first['loc']))}: {first['msg']}"
+        if errors
+        else "fora do schema"
+    )

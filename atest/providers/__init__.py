@@ -1,13 +1,24 @@
 """Registro de provedores de LLM (anthropic, openai, google, iara). Para incluir outro (modelo local...), implemente
 `Provider` e registre com `register("nome", fabrica)`; depois use "nome:modelo" no config/settings.toml.
-Opções específicas de um provedor vêm de [llm.provider_options.<nome>] e chegam como argumentos da fábrica."""
+Opções específicas de um provedor vêm de [llm.provider_options.<nome>] e chegam como argumentos da fábrica.
+"""
 
 from __future__ import annotations
 
 from collections.abc import Callable
 from threading import Lock
 
-from .base import DocumentPart, ImagePart, Part, Provider, ProviderError, ProviderResponse, Request, TextPart, Usage
+from .base import (
+    DocumentPart,
+    ImagePart,
+    Part,
+    Provider,
+    ProviderError,
+    ProviderResponse,
+    Request,
+    TextPart,
+    Usage,
+)
 
 __all__ = [
     "PROVIDERS",
@@ -52,7 +63,12 @@ def _iara(**kw) -> Provider:
     return IaraProvider(**kw)
 
 
-PROVIDERS: dict[str, Factory] = {"anthropic": _anthropic, "openai": _openai, "google": _google, "iara": _iara}
+PROVIDERS: dict[str, Factory] = {
+    "anthropic": _anthropic,
+    "openai": _openai,
+    "google": _google,
+    "iara": _iara,
+}
 _instances: dict[str, Provider] = {}
 _lock = Lock()
 
@@ -63,7 +79,15 @@ def register(name: str, factory: Factory) -> None:
 
 
 def split_model(model: str, default: str = "anthropic") -> tuple[str, str]:
-    """'openai:gpt-x' → ('openai', 'gpt-x'); 'claude-sonnet-5-5' → (padrao, 'claude-sonnet-5-5')."""
+    """'openai:gpt-x' → ('openai', 'gpt-x'); 'claude-sonnet-5-5' → (padrao, 'claude-sonnet-5-5').
+
+    Args:
+        model: "provedor:modelo" ou só o id do modelo.
+        default: provedor usado quando não há prefixo.
+
+    Returns:
+        (nome do provedor em minúsculas, id do modelo no provedor).
+    """
     if ":" in model:
         prov, mid = model.split(":", 1)
         return prov.strip().lower(), mid.strip()
@@ -71,11 +95,26 @@ def split_model(model: str, default: str = "anthropic") -> tuple[str, str]:
 
 
 def get(name: str, **kw) -> Provider:
-    """Instância única por provedor (os SDKs reaproveitam conexões)."""
+    """Instância única por provedor (os SDKs reaproveitam conexões).
+
+    Args:
+        name: nome registrado do provedor ("anthropic", "openai", "google", "iara"...).
+        **kw: argumentos da fábrica (timeout, tentativas, opções de [llm.provider_options.<nome>]); só valem na
+            primeira chamada, quando a instância é criada.
+
+    Returns:
+        A instância do provedor, criada na primeira chamada e reaproveitada nas seguintes.
+
+    Raises:
+        KeyError: provedor não registrado.
+    """
+    # Trava: várias threads (chamados em paralelo) podem pedir o mesmo provedor ao mesmo tempo.
     with _lock:
         if name not in _instances:
             if name not in PROVIDERS:
-                raise KeyError(f"provedor '{name}' não registrado; disponíveis: {', '.join(PROVIDERS)}")
+                raise KeyError(
+                    f"provedor '{name}' não registrado; disponíveis: {', '.join(PROVIDERS)}"
+                )
             _instances[name] = PROVIDERS[name](**kw)
         return _instances[name]
 

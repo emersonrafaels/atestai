@@ -66,7 +66,13 @@ OTHER_ROOMS = [
 LPU_IDX = {e: {r[0]: r for r in rows} for e, rows in LPU.items()}
 
 # ============================================================================ modelos de serviço
-F = lambda scene, kw, cat, mom, desc: {"scene": scene, "kw": kw, "category": cat, "moment": mom, "description": desc}  # noqa: E731
+F = lambda scene, kw, cat, mom, desc: {
+    "scene": scene,
+    "kw": kw,
+    "category": cat,
+    "moment": mom,
+    "description": desc,
+}  # noqa: E731
 
 
 @dataclass
@@ -92,18 +98,31 @@ class ServiceTemplate:
     vague: str = "Verificar {o_env}. Urgente."
 
 
-FEMININE_ENVIRONMENTS = {"copa", "cozinha dos funcionários", "tesouraria", "agência inteira"}
+FEMININE_ENVIRONMENTS = {
+    "copa",
+    "cozinha dos funcionários",
+    "tesouraria",
+    "agência inteira",
+}
 
 
 def env_words(env: str) -> dict[str, str]:
     """Formas do ambiente para os textos de escopo, com artigo e preposição concordando em gênero."""
     fem = env in FEMININE_ENVIRONMENTS
     de, em, o = ("da", "na", "a") if fem else ("do", "no", "o")
-    return {"env": env, "de_env": f"{de} {env}", "em_env": f"{em} {env}", "o_env": f"{o} {env}"}
+    return {
+        "env": env,
+        "de_env": f"{de} {env}",
+        "em_env": f"{em} {env}",
+        "o_env": f"{o} {env}",
+    }
 
 
 def _cctv(rnd):
-    return {"scene": rnd.choice(["atm", "corridor", "parking"]), "label": f"CAM {rnd.randint(1, 12):02d}"}
+    return {
+        "scene": rnd.choice(["atm", "corridor", "parking"]),
+        "label": f"CAM {rnd.randint(1, 12):02d}",
+    }
 
 
 MODELS: list[ServiceTemplate] = [
@@ -117,9 +136,28 @@ MODELS: list[ServiceTemplate] = [
         "Repintura das paredes {de_env} (aprox. {q} m²), cor padrão da agência.",
         ["backoffice", "salão de atendimento"],
         (40, 160),
-        [("Pintura látex acrílico em paredes, 2 demãos", "m²", "q", "PIN-001"), ("Massa corrida para correção de paredes", "m²", "q", "PIN-004")],
-        before=[F("backoffice", {"stains": True, "view": "C"}, "room_before_photo", "before", "Paredes manchadas e descascando")],
-        after=[F("backoffice", {"view": "A"}, "room_after_photo", "after", "Ambiente com paredes pintadas")],
+        [
+            ("Pintura látex acrílico em paredes, 2 demãos", "m²", "q", "PIN-001"),
+            ("Massa corrida para correção de paredes", "m²", "q", "PIN-004"),
+        ],
+        before=[
+            F(
+                "backoffice",
+                {"stains": True, "view": "C"},
+                "room_before_photo",
+                "before",
+                "Paredes manchadas e descascando",
+            )
+        ],
+        after=[
+            F(
+                "backoffice",
+                {"view": "A"},
+                "room_after_photo",
+                "after",
+                "Ambiente com paredes pintadas",
+            )
+        ],
         out=("Pintura de fachada com tinta acrílica externa", "m²", 60, "PIN-003"),
         material=1,
     ),
@@ -138,8 +176,24 @@ MODELS: list[ServiceTemplate] = [
             ("Recomposição de forro de gesso", "m²", "q", "IMP-002"),
             ("Pintura de forro em látex", "m²", "q", "PIN-002"),
         ],
-        before=[F("ceiling_view", {"stains": True}, "room_before_photo", "before", "Forro com mancha de infiltração e mofo")],
-        after=[F("ceiling_view", {}, "room_after_photo", "after", "Forro recomposto e pintado")],
+        before=[
+            F(
+                "ceiling_view",
+                {"stains": True},
+                "room_before_photo",
+                "before",
+                "Forro com mancha de infiltração e mofo",
+            )
+        ],
+        after=[
+            F(
+                "ceiling_view",
+                {},
+                "room_after_photo",
+                "after",
+                "Forro recomposto e pintado",
+            )
+        ],
         out=("Pintura de paredes do salão", "m²", 40, "PIN-001"),
         material=1,
     ),
@@ -153,7 +207,10 @@ MODELS: list[ServiceTemplate] = [
         "Trocar as {q} lâmpadas tubulares queimadas {de_env}.",
         ["corredor", "backoffice"],
         (4, 12),
-        [("Lâmpada LED tubular T8 18W", "un", "q", "ELE-008"), ("Mão de obra troca de lâmpada", "un", "q", "ELE-009")],
+        [
+            ("Lâmpada LED tubular T8 18W", "un", "q", "ELE-008"),
+            ("Mão de obra troca de lâmpada", "un", "q", "ELE-009"),
+        ],
         before=[
             F(
                 "backoffice",
@@ -164,9 +221,27 @@ MODELS: list[ServiceTemplate] = [
             )
         ],
         after=[
-            F("ceiling_view", {"lights": "led"}, "room_after_photo", "after", "Teto com lâmpadas acesas"),
-            F("luminaire_label", {"product": "tube"}, "label_photo", "after", "Etiqueta da lâmpada tubular instalada"),
-            F("removed_items", {}, "removed_items_photo", "after", "Lâmpadas antigas retiradas"),
+            F(
+                "ceiling_view",
+                {"lights": "led"},
+                "room_after_photo",
+                "after",
+                "Teto com lâmpadas acesas",
+            ),
+            F(
+                "luminaire_label",
+                {"product": "tube"},
+                "label_photo",
+                "after",
+                "Etiqueta da lâmpada tubular instalada",
+            ),
+            F(
+                "removed_items",
+                {},
+                "removed_items_photo",
+                "after",
+                "Lâmpadas antigas retiradas",
+            ),
         ],
         docs=["certificate"],
         out=("Luminária LED de embutir 60x60", "un", 4, "ELE-001"),
@@ -187,7 +262,15 @@ MODELS: list[ServiceTemplate] = [
             ("Higienização com bactericida", "un", "q", "HVAC-002"),
             ("Verificação de pressões", "un", "q", "HVAC-003"),
         ],
-        before=[F("ac_filter", {"dirty": True}, "equipment_photo", "before", "Filtro de ar sujo antes da limpeza")],
+        before=[
+            F(
+                "ac_filter",
+                {"dirty": True},
+                "equipment_photo",
+                "before",
+                "Filtro de ar sujo antes da limpeza",
+            )
+        ],
         after=[
             F("split_evaporator", {}, "equipment_photo", "after", "Evaporadora limpa"),
             F("ac_filter", {}, "equipment_photo", "after", "Filtro limpo"),
@@ -205,9 +288,22 @@ MODELS: list[ServiceTemplate] = [
         "Substituir {q} tomadas danificadas {em_env}, uma com sinais de queima.",
         ["salão de atendimento", "backoffice"],
         (2, 8),
-        [("Tomada 2P+T 10A com placa", "un", "q", "ELE-004"), ("Mão de obra substituição de tomada", "un", "q", "ELE-005")],
-        before=[F("outlets", {"burned": True}, "room_before_photo", "before", "Tomada com marcas de queima")],
-        after=[F("outlets", {}, "room_after_photo", "after", "Tomadas novas instaladas")],
+        [
+            ("Tomada 2P+T 10A com placa", "un", "q", "ELE-004"),
+            ("Mão de obra substituição de tomada", "un", "q", "ELE-005"),
+        ],
+        before=[
+            F(
+                "outlets",
+                {"burned": True},
+                "room_before_photo",
+                "before",
+                "Tomada com marcas de queima",
+            )
+        ],
+        after=[
+            F("outlets", {}, "room_after_photo", "after", "Tomadas novas instaladas")
+        ],
         out=("Disjuntor DIN 20A", "un", 2, "ELE-006"),
         material=0,
     ),
@@ -221,8 +317,20 @@ MODELS: list[ServiceTemplate] = [
         "Vazamento no sifão da pia {de_env}. Trocar o sifão.",
         ["copa", "cozinha dos funcionários"],
         (1, 3),
-        [("Visita técnica", "vb", 1, "GER-001"), ("Sifão PVC para pia", "un", 1, "HID-001"), ("Mão de obra hidráulica", "h", "q", "HID-003")],
-        before=[F("under_sink_leak", {}, "room_before_photo", "before", "Sifão vazando sob a pia")],
+        [
+            ("Visita técnica", "vb", 1, "GER-001"),
+            ("Sifão PVC para pia", "un", 1, "HID-001"),
+            ("Mão de obra hidráulica", "h", "q", "HID-003"),
+        ],
+        before=[
+            F(
+                "under_sink_leak",
+                {},
+                "room_before_photo",
+                "before",
+                "Sifão vazando sob a pia",
+            )
+        ],
         after=[],
         out=("Registro de pressão 3/4", "un", 2, "HID-002"),
         moment="quote",
@@ -238,11 +346,27 @@ MODELS: list[ServiceTemplate] = [
         "Porta {de_env} não fecha sozinha: trocar a mola aérea e regular.",
         ["backoffice", "tesouraria"],
         (1, 1),
-        [("Mola aérea nova", "un", 1, "SER-001"), ("Instalação de mola aérea", "un", 1, "SER-002"), ("Regulagem de porta", "un", 1, "SER-003")],
+        [
+            ("Mola aérea nova", "un", 1, "SER-001"),
+            ("Instalação de mola aérea", "un", 1, "SER-002"),
+            ("Regulagem de porta", "un", 1, "SER-003"),
+        ],
         before=[],
         after=[
-            F("door_closer", {}, "room_after_photo", "after", "Porta com mola aérea instalada"),
-            F("door_closer", {"close": True}, "equipment_photo", "after", "Mola aérea em detalhe"),
+            F(
+                "door_closer",
+                {},
+                "room_after_photo",
+                "after",
+                "Porta com mola aérea instalada",
+            ),
+            F(
+                "door_closer",
+                {"close": True},
+                "equipment_photo",
+                "after",
+                "Mola aérea em detalhe",
+            ),
         ],
         out=("Pintura da porta", "m²", 4, "PIN-001"),
         before_applicable=False,
@@ -257,11 +381,34 @@ MODELS: list[ServiceTemplate] = [
         "Câmera {de_env} com imagem desfocada: limpeza e ajuste de foco.",
         ["autoatendimento", "estacionamento", "corredor"],
         (1, 1),
-        [("Visita técnica e deslocamento", "vb", 1, "SIS-001"), ("Limpeza e ajuste de foco da câmera", "un", 1, "CFTV-001")],
-        before=[F("cctv_frame", {"blur": 9, "cctv": True}, "cctv_screen_photo", "before", "Imagem da câmera desfocada")],
+        [
+            ("Visita técnica e deslocamento", "vb", 1, "SIS-001"),
+            ("Limpeza e ajuste de foco da câmera", "un", 1, "CFTV-001"),
+        ],
+        before=[
+            F(
+                "cctv_frame",
+                {"blur": 9, "cctv": True},
+                "cctv_screen_photo",
+                "before",
+                "Imagem da câmera desfocada",
+            )
+        ],
         after=[
-            F("cctv_frame", {"cctv": True}, "cctv_screen_photo", "after", "Imagem da câmera nítida após o ajuste"),
-            F("bullet_camera_wall", {}, "equipment_photo", "after", "Câmera instalada na parede"),
+            F(
+                "cctv_frame",
+                {"cctv": True},
+                "cctv_screen_photo",
+                "after",
+                "Imagem da câmera nítida após o ajuste",
+            ),
+            F(
+                "bullet_camera_wall",
+                {},
+                "equipment_photo",
+                "after",
+                "Câmera instalada na parede",
+            ),
         ],
         out=("Cabo UTP cat6 novo", "m", 25, "CFTV-003"),
         replacement=("Câmera IP bullet nova 4MP", "un", 1, "CFTV-002"),
@@ -281,10 +428,24 @@ MODELS: list[ServiceTemplate] = [
             ("Sensor IVP com fio", "un", 1, "ALA-002"),
             ("Mão de obra substituição de sensor", "un", 1, "ALA-003"),
         ],
-        before=[F("motion_sensor", {"old": True}, "equipment_photo", "before", "Sensor antigo amarelado")],
+        before=[
+            F(
+                "motion_sensor",
+                {"old": True},
+                "equipment_photo",
+                "before",
+                "Sensor antigo amarelado",
+            )
+        ],
         after=[
             F("motion_sensor", {}, "equipment_photo", "after", "Sensor novo instalado"),
-            F("keypad_closeup", {"lcd": "ZONA OK"}, "alarm_panel_photo", "after", "Teclado indicando zona OK"),
+            F(
+                "keypad_closeup",
+                {"lcd": "ZONA OK"},
+                "alarm_panel_photo",
+                "after",
+                "Teclado indicando zona OK",
+            ),
         ],
         docs=["certificate"],
         out=("Botão de pânico sem fio", "un", 1, "ALA-004"),
@@ -306,8 +467,20 @@ MODELS: list[ServiceTemplate] = [
         ],
         before=[],
         after=[
-            F("monitor_grid", {"grid": True}, "cctv_screen_photo", "after", "Monitor do NVR com as câmeras funcionando"),
-            F("alarm_panel", {}, "alarm_panel_photo", "after", "Central de alarme pronta"),
+            F(
+                "monitor_grid",
+                {"grid": True},
+                "cctv_screen_photo",
+                "after",
+                "Monitor do NVR com as câmeras funcionando",
+            ),
+            F(
+                "alarm_panel",
+                {},
+                "alarm_panel_photo",
+                "after",
+                "Central de alarme pronta",
+            ),
         ],
         docs=["report"],
         out=("Câmera IP bullet nova 4MP", "un", 1, "CFTV-002"),
@@ -351,7 +524,10 @@ WEIGHTS = {
     "date_before": 4,
     "checklist": 6,
 }
-UNEXPECTED_SYMPTOM = {"SETA": ["false_alarm", "no_image", "device_inoperative"], "SISR": ["leak", "finish_wear", "moisture_infiltration"]}
+UNEXPECTED_SYMPTOM = {
+    "SETA": ["false_alarm", "no_image", "device_inoperative"],
+    "SISR": ["leak", "finish_wear", "moisture_infiltration"],
+}
 
 
 def quote_stage(m: ServiceTemplate) -> ServiceTemplate:
@@ -361,7 +537,9 @@ def quote_stage(m: ServiceTemplate) -> ServiceTemplate:
 
 
 # modelos de execução que têm foto do problema (o checklist do orçamento exige uma); porta e preventiva não têm
-QUOTE_STAGE_MODELS: list[ServiceTemplate] = [quote_stage(m) for m in MODELS if m.moment == "execution" and m.before]
+QUOTE_STAGE_MODELS: list[ServiceTemplate] = [
+    quote_stage(m) for m in MODELS if m.moment == "execution" and m.before
+]
 
 
 def requirements(m: ServiceTemplate) -> list:
@@ -369,20 +547,34 @@ def requirements(m: ServiceTemplate) -> list:
 
 
 def result_evidence(f: dict) -> bool:
-    return f["moment"] == "after" and f["category"] in ("room_after_photo", "cctv_screen_photo")
+    return f["moment"] == "after" and f["category"] in (
+        "room_after_photo",
+        "cctv_screen_photo",
+    )
 
 
-def complete_checklist(m: ServiceTemplate, photos: list[dict], docs: list[str] | None = None) -> bool:
+def complete_checklist(
+    m: ServiceTemplate, photos: list[dict], docs: list[str] | None = None
+) -> bool:
     docs = m.docs if docs is None else docs
     cats = (
         {f["category"] for f in photos}
         | {"quote_doc"}
-        | {"completion_certificate_doc" if d == "certificate" else "technical_report_doc" for d in docs}
+        | {
+            (
+                "completion_certificate_doc"
+                if d == "certificate"
+                else "technical_report_doc"
+            )
+            for d in docs
+        }
     )
     return all(any(c.value in cats for c in r.accepted) for r in requirements(m))
 
 
-def vary(img: Image.Image, rnd: random.Random, strength: float, mirror: bool = True) -> Image.Image:
+def vary(
+    img: Image.Image, rnd: random.Random, strength: float, mirror: bool = True
+) -> Image.Image:
     """Variação de "fotógrafo". mirror=False para fotos reais: espelhar inverteria logos e letreiros."""
     from PIL import ImageEnhance, ImageOps
 
@@ -392,9 +584,15 @@ def vary(img: Image.Image, rnd: random.Random, strength: float, mirror: bool = T
     z = 1 + rnd.uniform(0.05, 0.45) * strength
     cw, ch = w / z, h / z
     x0, y0 = rnd.uniform(0, w - cw), rnd.uniform(0, h - ch)
-    img = img.crop((int(x0), int(y0), int(x0 + cw), int(y0 + ch))).resize((w, h), Image.BICUBIC)
+    img = img.crop((int(x0), int(y0), int(x0 + cw), int(y0 + ch))).resize(
+        (w, h), Image.BICUBIC
+    )
     ang = rnd.uniform(-9, 9) * strength
-    img = img.rotate(ang, resample=Image.BICUBIC, fillcolor=(60, 60, 60)).crop((40, 30, w - 40, h - 30)).resize((w, h))
+    img = (
+        img.rotate(ang, resample=Image.BICUBIC, fillcolor=(60, 60, 60))
+        .crop((40, 30, w - 40, h - 30))
+        .resize((w, h))
+    )
     img = ImageEnhance.Brightness(img).enhance(rnd.uniform(0.85, 1.12))
     img = ImageEnhance.Contrast(img).enhance(rnd.uniform(0.85, 1.15))
     return ImageEnhance.Color(img).enhance(rnd.uniform(0.8, 1.2))
@@ -402,7 +600,8 @@ def vary(img: Image.Image, rnd: random.Random, strength: float, mirror: bool = T
 
 def context(img: Image.Image, rnd: random.Random) -> Image.Image:
     """Detalhes de ambiente que distinguem fotos reais do mesmo tipo de equipamento: etiqueta de patrimônio, cabo
-    aparente, mancha na parede, sombra. Usado quando só variar enquadramento não basta (cenas 2D muito parecidas)."""
+    aparente, mancha na parede, sombra. Usado quando só variar enquadramento não basta (cenas 2D muito parecidas).
+    """
     from PIL import ImageDraw, ImageFilter
 
     img = img.copy()
@@ -412,23 +611,48 @@ def context(img: Image.Image, rnd: random.Random) -> Image.Image:
     side = rnd.choice([0, 1])
     for i in range(60):
         x = int(i * w * 0.006) if side == 0 else w - int(i * w * 0.006)
-        d.line([(x, 0), (x, h)], fill=(0, 0, 0, max(0, 70 - i)), width=int(w * 0.006) + 1)
+        d.line(
+            [(x, 0), (x, h)], fill=(0, 0, 0, max(0, 70 - i)), width=int(w * 0.006) + 1
+        )
     # cabo aparente
     y = rnd.uniform(0.1, 0.9) * h
-    pts = [(0, y)] + [(w * k / 5, y + rnd.uniform(-0.12, 0.12) * h) for k in range(1, 6)]
-    d.line(pts, fill=rnd.choice([(245, 245, 240, 255), (40, 40, 40, 255), (30, 60, 150, 255)]), width=int(h * 0.012), joint="curve")
+    pts = [(0, y)] + [
+        (w * k / 5, y + rnd.uniform(-0.12, 0.12) * h) for k in range(1, 6)
+    ]
+    d.line(
+        pts,
+        fill=rnd.choice([(245, 245, 240, 255), (40, 40, 40, 255), (30, 60, 150, 255)]),
+        width=int(h * 0.012),
+        joint="curve",
+    )
     # manchas e marcas na parede
     for _ in range(rnd.randint(3, 7)):
         cx, cy, r = rnd.uniform(0, w), rnd.uniform(0, h), rnd.uniform(0.02, 0.08) * w
-        d.ellipse((cx - r, cy - r * 0.7, cx + r, cy + r * 0.7), fill=(90, 80, 60, rnd.randint(18, 45)))
+        d.ellipse(
+            (cx - r, cy - r * 0.7, cx + r, cy + r * 0.7),
+            fill=(90, 80, 60, rnd.randint(18, 45)),
+        )
     # etiqueta de patrimônio
     ex, ey = rnd.uniform(0.05, 0.75) * w, rnd.uniform(0.05, 0.8) * h
     ew, tag_h = 0.2 * w, 0.075 * h
-    d.rectangle((ex, ey, ex + ew, ey + tag_h), fill=(250, 250, 250, 255), outline=(30, 30, 30, 255), width=2)
+    d.rectangle(
+        (ex, ey, ex + ew, ey + tag_h),
+        fill=(250, 250, 250, 255),
+        outline=(30, 30, 30, 255),
+        width=2,
+    )
     d.rectangle((ex, ey, ex + ew * 0.28, ey + tag_h), fill=(20, 60, 140, 255))
     for k in range(14):
         bx = ex + ew * 0.33 + k * ew * 0.045
-        d.rectangle((bx, ey + tag_h * 0.2, bx + ew * rnd.choice([0.01, 0.02, 0.03]), ey + tag_h * 0.8), fill=(20, 20, 20, 255))
+        d.rectangle(
+            (
+                bx,
+                ey + tag_h * 0.2,
+                bx + ew * rnd.choice([0.01, 0.02, 0.03]),
+                ey + tag_h * 0.8,
+            ),
+            fill=(20, 20, 20, 255),
+        )
     return img.filter(ImageFilter.GaussianBlur(0.6))
 
 
@@ -438,7 +662,8 @@ class ValidationGenerator:
 
     prefix/dataset/branches/day0 permitem gerar outros conjuntos com a mesma mecânica (ex.: `itau`).
     realistic=True é para fotos reais/fotorrealistas: não espelha (logos e letreiros ficariam invertidos) e não desenha
-    os detalhes de `context()` por cima (cabo, manchas, etiqueta), que dariam cara de montagem à foto."""
+    os detalhes de `context()` por cima (cabo, manchas, etiqueta), que dariam cara de montagem à foto.
+    """
 
     def __init__(
         self,
@@ -452,20 +677,37 @@ class ValidationGenerator:
     ):
         self.n = n_per_template
         self.rnd = random.Random(seed)
-        self.prefix, self.dataset, self.branches, self.day0, self.realistic = prefix, dataset, branches or BRANCHES, day0, realistic
-        self.hashes: list[tuple[str, tuple]] = []  # (id, hash) de fotos de chamados já gerados
+        self.prefix, self.dataset, self.branches, self.day0, self.realistic = (
+            prefix,
+            dataset,
+            branches or BRANCHES,
+            day0,
+            realistic,
+        )
+        self.hashes: list[tuple[str, tuple]] = (
+            []
+        )  # (id, hash) de fotos de chamados já gerados
         self.photos_per_template: dict[str, list[tuple[str, Path, date]]] = {}
         self.seq = 0
 
     def index_existing(self) -> None:
         for base in (ROOT / "tickets", ROOT / "history"):
             for p in base.glob("*/attachments/*.jpg"):
-                self.hashes.append((p.parent.parent.name, hashes_with_crops(p, CFG.rubric.hash_crops)))
+                self.hashes.append(
+                    (p.parent.parent.name, hashes_with_crops(p, CFG.rubric.hash_crops))
+                )
 
     def _closest_distance(self, tid: str, hs: list) -> int:
         """Menor distância a qualquer foto de outro chamado, comparando como o produto compara (com recortes, nos dois sentidos)."""
         return min(
-            (min(min(distance(hs[0], y) for y in other), min(distance(other[0], y) for y in hs)) for c, other in self.hashes if c != tid),
+            (
+                min(
+                    min(distance(hs[0], y) for y in other),
+                    min(distance(other[0], y) for y in hs),
+                )
+                for c, other in self.hashes
+                if c != tid
+            ),
             default=128,
         )
 
@@ -485,7 +727,12 @@ class ValidationGenerator:
                 if best is None:
                     raise
                 break  # modo strict: acabaram as fotos para novas tentativas; fica a melhor até aqui
-            img = vary(base, r, strength=min(1.0, 0.35 + 0.1 * attempt), mirror=not self.realistic)
+            img = vary(
+                base,
+                r,
+                strength=min(1.0, 0.35 + 0.1 * attempt),
+                mirror=not self.realistic,
+            )
             if attempt >= 3 and not self.realistic:
                 img = context(img, r)
             tmp = Path(tempfile.gettempdir()) / "_val.jpg"
@@ -494,18 +741,28 @@ class ValidationGenerator:
             d = self._closest_distance(tid, hs)
             if best is None or d > best[0]:
                 best = (d, img, hs)
-            if d > margin or real_photos.MODE == "record":  # record: conta só a 1ª tentativa (o desenho repete mais que foto)
+            if (
+                d > margin or real_photos.MODE == "record"
+            ):  # record: conta só a 1ª tentativa (o desenho repete mais que foto)
                 break
         d, img, hs = best
         if d <= CFG.rubric.hash_max_distance:
-            print(f"  aviso: {tid} {scene} ficou a {d} de outra foto (limite {CFG.rubric.hash_max_distance})")
+            print(
+                f"  aviso: {tid} {scene} ficou a {d} de outra foto (limite {CFG.rubric.hash_max_distance})"
+            )
         self.hashes.append((tid, hs))
         return img
 
-    def generate(self, models: list[ServiceTemplate] | None = None, n: int | None = None) -> list[dict]:
+    def generate(
+        self, models: list[ServiceTemplate] | None = None, n: int | None = None
+    ) -> list[dict]:
         """`n` chamados por modelo de serviço. Pode ser chamado mais de uma vez: a numeração e as datas continuam."""
         summary = []
-        order = [(m, k) for k in range(self.n if n is None else n) for m in (models or MODELS)]
+        order = [
+            (m, k)
+            for k in range(self.n if n is None else n)
+            for m in (models or MODELS)
+        ]
         for m, k in order:
             self.seq += 1
             tid = f"{self.prefix}{self.seq:04d}"
@@ -514,7 +771,9 @@ class ValidationGenerator:
         return summary
 
     def draw_defects(self, m: ServiceTemplate, k: int) -> list[str]:
-        if k == 0:  # o primeiro de cada modelo sai limpo, para ter aprovações garantidas
+        if (
+            k == 0
+        ):  # o primeiro de cada modelo sai limpo, para ter aprovações garantidas
             return []
         n = self.rnd.choices([0, 1, 2, 3, 4], weights=[14, 30, 28, 18, 10])[0]
         possible = [d for d in DEFECTS if self._applicable(m, d)]
@@ -523,36 +782,62 @@ class ValidationGenerator:
             d = self.rnd.choices(possible, weights=[WEIGHTS[x] for x in possible])[0]
             chosen.append(d)
             possible.remove(d)
-            if d == "checklist":  # devolvido no checklist: o resto não chega a ser avaliado
+            if (
+                d == "checklist"
+            ):  # devolvido no checklist: o resto não chega a ser avaliado
                 return ["checklist"]
         return chosen
 
     def _applicable(self, m: ServiceTemplate, d: str) -> bool:
         if d == "replacement":
             return m.replacement is not None
-        if d == "no_before":  # só quando o checklist continua completo sem a foto do antes (senão vira caso de checklist)
-            return m.before_applicable and bool(m.before) and complete_checklist(m, m.after)
+        if (
+            d == "no_before"
+        ):  # só quando o checklist continua completo sem a foto do antes (senão vira caso de checklist)
+            return (
+                m.before_applicable
+                and bool(m.before)
+                and complete_checklist(m, m.after)
+            )
         if d == "no_after":  # idem, sem a foto que prova o resultado
             rest = [f for f in m.before + m.after if not result_evidence(f)]
-            return m.moment == "execution" and len(rest) < len(m.before + m.after) and complete_checklist(m, rest) and m.name == "camera"
+            return (
+                m.moment == "execution"
+                and len(rest) < len(m.before + m.after)
+                and complete_checklist(m, rest)
+                and m.name == "camera"
+            )
         if d == "quantity":
             return isinstance(m.items[m.material][2], str)
         if d == "vague":
-            return m.replacement is None  # escopo vago + troca deixaria o gabarito ambíguo
+            return (
+                m.replacement is None
+            )  # escopo vago + troca deixaria o gabarito ambíguo
         return True
 
     # ------------------------------------------------------------------ um chamado
     def one_ticket(
-        self, tid: str, m: ServiceTemplate, k: int, opening: date, defects: list[str] | None = None, scenario: dict | None = None
+        self,
+        tid: str,
+        m: ServiceTemplate,
+        k: int,
+        opening: date,
+        defects: list[str] | None = None,
+        scenario: dict | None = None,
     ) -> dict:
         """Gera um chamado. `defects` força os defeitos (catálogo de cenários) em vez de sorteá-los: um defeito que não
-        se aplica ao modelo de serviço, ou que não pôde ser aplicado (ex.: reaproveitamento sem foto de origem), é erro."""
+        se aplica ao modelo de serviço, ou que não pôde ser aplicado (ex.: reaproveitamento sem foto de origem), é erro.
+        """
         rnd = random.Random(int(tid))
         forced = defects is not None
         if forced:
-            invalid = [d for d in defects if d not in DEFECTS or not self._applicable(m, d)]
+            invalid = [
+                d for d in defects if d not in DEFECTS or not self._applicable(m, d)
+            ]
             if invalid or ("checklist" in defects and len(defects) > 1):
-                raise ValueError(f"{tid}: defeitos {invalid or defects} não se aplicam ao modelo {m.name}")
+                raise ValueError(
+                    f"{tid}: defeitos {invalid or defects} não se aplicam ao modelo {m.name}"
+                )
             defects = list(defects)
         else:
             defects = self.draw_defects(m, k)
@@ -570,7 +855,21 @@ class ValidationGenerator:
         for desc, un, qt, lpu in m.items:
             qty = q if qt == "q" else qt
             ref = LPU_IDX[m.workstream][lpu][3]
-            items.append([desc, un, qty, ref, {"classification": "compliant", "lpu": lpu, "findings": [], "optional": [], "qmax": None}])
+            items.append(
+                [
+                    desc,
+                    un,
+                    qty,
+                    ref,
+                    {
+                        "classification": "compliant",
+                        "lpu": lpu,
+                        "findings": [],
+                        "optional": [],
+                        "qmax": None,
+                    },
+                ]
+            )
         if "quantity" in defects:
             it = items[m.material]
             qmax = it[2]
@@ -589,7 +888,13 @@ class ValidationGenerator:
                     un,
                     qt,
                     LPU_IDX[m.workstream][lpu][3],
-                    {"classification": "out_of_scope", "lpu": lpu, "findings": ["out_of_scope_item"], "optional": [], "qmax": None},
+                    {
+                        "classification": "out_of_scope",
+                        "lpu": lpu,
+                        "findings": ["out_of_scope_item"],
+                        "optional": [],
+                        "qmax": None,
+                    },
                 ]
             )
         if "replacement" in defects and m.replacement:
@@ -600,7 +905,13 @@ class ValidationGenerator:
                     un,
                     qt,
                     LPU_IDX[m.workstream][lpu][3],
-                    {"classification": "to_justify", "lpu": lpu, "findings": ["unjustified_replacement"], "optional": [], "qmax": None},
+                    {
+                        "classification": "to_justify",
+                        "lpu": lpu,
+                        "findings": ["unjustified_replacement"],
+                        "optional": [],
+                        "qmax": None,
+                    },
                 ]
             )
         if "duplicate" in defects:
@@ -611,7 +922,13 @@ class ValidationGenerator:
                     base[1],
                     base[2],
                     base[3],
-                    {"classification": "compliant", "lpu": base[4]["lpu"], "findings": ["duplicate_item"], "optional": [], "qmax": None},
+                    {
+                        "classification": "compliant",
+                        "lpu": base[4]["lpu"],
+                        "findings": ["duplicate_item"],
+                        "optional": [],
+                        "qmax": None,
+                    },
                 ]
             )
         if "vague" in defects:
@@ -643,16 +960,33 @@ class ValidationGenerator:
             if rnd.random() < 0.5:
                 ticket_value = round(total * rnd.uniform(0.8, 0.92), 2)
             else:
-                case["spreadsheet"] = {"symptom": rnd.choice([s for s in UNEXPECTED_SYMPTOM["SETA"] + UNEXPECTED_SYMPTOM["SISR"] if s != symptom])}
+                case["spreadsheet"] = {
+                    "symptom": rnd.choice(
+                        [
+                            s
+                            for s in UNEXPECTED_SYMPTOM["SETA"]
+                            + UNEXPECTED_SYMPTOM["SISR"]
+                            if s != symptom
+                        ]
+                    )
+                }
 
         # ---- pasta e planilha
         folder = ROOT / "tickets" / tid / "attachments"
         folder.mkdir(parents=True, exist_ok=True)
         spreadsheet = folder / f"Orcamento_{case['quote_number']}.xlsx"
         make_xlsx(spreadsheet, case)
-        attachments_meta = [attachment_meta(spreadsheet, case["dates"]["supplier_submission"])]
+        attachments_meta = [
+            attachment_meta(spreadsheet, case["dates"]["supplier_submission"])
+        ]
         rot = {
-            spreadsheet.name: {"category": "quote_doc", "moment": "undetermined", "matches_scope": True, "readable": True, "description": "Orçamento"}
+            spreadsheet.name: {
+                "category": "quote_doc",
+                "moment": "undetermined",
+                "matches_scope": True,
+                "readable": True,
+                "description": "Orçamento",
+            }
         }
 
         # ---- fotos
@@ -668,7 +1002,16 @@ class ValidationGenerator:
             target = rnd.choice(req)
             accepted = {c.value for c in target.accepted}
             photos = [f for f in photos if f["category"] not in accepted]
-            docs = [d for d in docs if ("completion_certificate_doc" if d == "certificate" else "technical_report_doc") not in accepted]
+            docs = [
+                d
+                for d in docs
+                if (
+                    "completion_certificate_doc"
+                    if d == "certificate"
+                    else "technical_report_doc"
+                )
+                not in accepted
+            ]
             missing = [
                 r.id
                 for r in requirements(m)
@@ -676,19 +1019,39 @@ class ValidationGenerator:
                 and not any(
                     c.value
                     in {f["category"] for f in photos}
-                    | {"completion_certificate_doc" if d == "certificate" else "technical_report_doc" for d in docs}
+                    | {
+                        (
+                            "completion_certificate_doc"
+                            if d == "certificate"
+                            else "technical_report_doc"
+                        )
+                        for d in docs
+                    }
                     for c in r.accepted
                 )
             ]
         cctv = _cctv(rnd)
         hour = 8
-        photo_day = {"before": opening + timedelta(days=1), "after": submission - timedelta(days=1)}
+        photo_day = {
+            "before": opening + timedelta(days=1),
+            "after": submission - timedelta(days=1),
+        }
         for j, f in enumerate(photos):
             kw = dict(f["kw"])
             if kw.pop("cctv", False):
-                kw.update(scene=cctv["scene"], label=cctv["label"], stamp=f"{photo_day[f['moment']]:%d/%m/%Y} 1{j}:0{j}:00")
+                kw.update(
+                    scene=cctv["scene"],
+                    label=cctv["label"],
+                    stamp=f"{photo_day[f['moment']]:%d/%m/%Y} 1{j}:0{j}:00",
+                )
             if kw.pop("grid", False):
-                kw["tiles"] = [(rnd.choice(["atm", "corridor", "parking", "office"]), f"CAM {c + 1:02d}") for c in range(min(q, 9))]
+                kw["tiles"] = [
+                    (
+                        rnd.choice(["atm", "corridor", "parking", "office"]),
+                        f"CAM {c + 1:02d}",
+                    )
+                    for c in range(min(q, 9))
+                ]
                 kw["cols"] = kw["rows"] = 3 if q > 4 else 2
             if f["scene"] in ("backoffice", "ceiling_view"):
                 kw.setdefault("layout", int(tid))
@@ -698,14 +1061,29 @@ class ValidationGenerator:
             img = self.unique_photo(tid, f["scene"], kw, int(tid[-4:]) * 31 + j)
             exif_date = f"{photo_day[f['moment']]:%Y:%m:%d} {hour + j:02d}:15:00"
             save_jpg(img, folder / name, exif_date, j)
-            attachments_meta.append(attachment_meta(folder / name, case["dates"]["supplier_submission"]))
-            rot[name] = {"category": f["category"], "moment": f["moment"], "matches_scope": True, "readable": True, "description": f["description"]}
+            attachments_meta.append(
+                attachment_meta(folder / name, case["dates"]["supplier_submission"])
+            )
+            rot[name] = {
+                "category": f["category"],
+                "moment": f["moment"],
+                "matches_scope": True,
+                "readable": True,
+                "description": f["description"],
+            }
         # defeitos que acrescentam fotos
         if "does_not_match" in defects:
             scene, desc = rnd.choice(OTHER_ROOMS)
             name = f"IMG_{submission:%Y%m%d}_17{rnd.randint(10, 59)}00.jpg"
-            save_jpg(self.unique_photo(tid, scene, {}, int(tid) % 9973 + 501), folder / name, f"{submission:%Y:%m:%d} 17:20:00", 9)
-            attachments_meta.append(attachment_meta(folder / name, case["dates"]["supplier_submission"]))
+            save_jpg(
+                self.unique_photo(tid, scene, {}, int(tid) % 9973 + 501),
+                folder / name,
+                f"{submission:%Y:%m:%d} 17:20:00",
+                9,
+            )
+            attachments_meta.append(
+                attachment_meta(folder / name, case["dates"]["supplier_submission"])
+            )
             rot[name] = {
                 "category": "other" if scene != "facade" else "room_after_photo",
                 "moment": "after" if scene == "facade" else "undetermined",
@@ -715,9 +1093,20 @@ class ValidationGenerator:
             }
         if "unreadable" in defects:
             name = f"IMG_{submission:%Y%m%d}_18{rnd.randint(10, 59)}00.jpg"
-            base = render_scene(rnd.choice(["door_closer", "outlets", "rack"]), {"seed": int(tid)}, int(tid))
-            save_jpg(illegible(base, seed=int(tid)), folder / name, f"{submission:%Y:%m:%d} 18:00:00", 3)
-            attachments_meta.append(attachment_meta(folder / name, case["dates"]["supplier_submission"]))
+            base = render_scene(
+                rnd.choice(["door_closer", "outlets", "rack"]),
+                {"seed": int(tid)},
+                int(tid),
+            )
+            save_jpg(
+                illegible(base, seed=int(tid)),
+                folder / name,
+                f"{submission:%Y:%m:%d} 18:00:00",
+                3,
+            )
+            attachments_meta.append(
+                attachment_meta(folder / name, case["dates"]["supplier_submission"])
+            )
             rot[name] = {
                 "category": "other",
                 "moment": "undetermined",
@@ -726,31 +1115,54 @@ class ValidationGenerator:
                 "description": "Foto escura e tremida",
             }
         if "reused" in defects:
-            sources = [f for f in self.photos_per_template.get(m.name, []) if f[2] <= submission and f[0] != tid]
+            sources = [
+                f
+                for f in self.photos_per_template.get(m.name, [])
+                if f[2] <= submission and f[0] != tid
+            ]
             if sources:
                 origin_id, origin, _ = rnd.choice(sources)
                 name = f"WhatsApp Image {submission:%Y-%m-%d} at 15.{rnd.randint(10, 59)}.{rnd.randint(10, 59)}.jpeg"
                 img = Image.open(origin).convert("RGB")
                 w, h = img.size
-                img.crop((int(w * 0.02), int(h * 0.02), int(w * 0.98), int(h * 0.98))).resize((1200, 900)).save(folder / name, quality=70)
-                attachments_meta.append(attachment_meta(folder / name, case["dates"]["supplier_submission"]))
+                img.crop(
+                    (int(w * 0.02), int(h * 0.02), int(w * 0.98), int(h * 0.98))
+                ).resize((1200, 900)).save(folder / name, quality=70)
+                attachments_meta.append(
+                    attachment_meta(folder / name, case["dates"]["supplier_submission"])
+                )
                 r0 = origin_label(origin_id, origin.name)
                 rot[name] = {**r0, "reused_from": f"{origin_id}/{origin.name}"}
             elif forced:
-                raise ValueError(f"{tid}: sem foto anterior do modelo {m.name} para reaproveitar (gere antes um chamado limpo dele)")
+                raise ValueError(
+                    f"{tid}: sem foto anterior do modelo {m.name} para reaproveitar (gere antes um chamado limpo dele)"
+                )
             else:
                 defects.remove("reused")
         if "date_before" in defects:
-            target = next((n for n, r in rot.items() if n.startswith("IMG_") and r["readable"] and r["matches_scope"]), None)
+            target = next(
+                (
+                    n
+                    for n, r in rot.items()
+                    if n.startswith("IMG_") and r["readable"] and r["matches_scope"]
+                ),
+                None,
+            )
             if target:
                 img = Image.open(folder / target).convert("RGB")
                 old = opening - timedelta(days=rnd.randint(20, 120))
                 save_jpg(img, folder / target, f"{old:%Y:%m:%d} 10:00:00", 1)
-                for meta in attachments_meta:  # a foto foi regravada: o tamanho registrado precisa acompanhar
+                for (
+                    meta
+                ) in (
+                    attachments_meta
+                ):  # a foto foi regravada: o tamanho registrado precisa acompanhar
                     if meta["file_name"] == target:
                         meta["size_bytes"] = (folder / target).stat().st_size
             elif forced:
-                raise ValueError(f"{tid}: nenhuma foto legível e aderente para receber data anterior à abertura")
+                raise ValueError(
+                    f"{tid}: nenhuma foto legível e aderente para receber data anterior à abertura"
+                )
             else:
                 defects.remove("date_before")
         for d in docs:
@@ -780,15 +1192,35 @@ class ValidationGenerator:
                     seed=int(tid) % 991,
                 )
                 cat, desc = "technical_report_doc", "Relatório de preventiva"
-            save_jpg(photograph(finish(img, seed=int(tid) % 89), int(tid), paper=True), folder / name, f"{submission:%Y:%m:%d} 19:00:00", 5)
-            attachments_meta.append(attachment_meta(folder / name, case["dates"]["supplier_submission"]))
-            rot[name] = {"category": cat, "moment": "after", "matches_scope": True, "readable": True, "description": desc}
+            save_jpg(
+                photograph(finish(img, seed=int(tid) % 89), int(tid), paper=True),
+                folder / name,
+                f"{submission:%Y:%m:%d} 19:00:00",
+                5,
+            )
+            attachments_meta.append(
+                attachment_meta(folder / name, case["dates"]["supplier_submission"])
+            )
+            rot[name] = {
+                "category": cat,
+                "moment": "after",
+                "matches_scope": True,
+                "readable": True,
+                "description": desc,
+            }
 
         # guarda fotos "boas" deste chamado como fonte de reaproveitamento para os próximos do mesmo modelo
         good = [
-            folder / n for n, r in rot.items() if n.startswith("IMG_") and r["readable"] and r["matches_scope"] and not r["category"].endswith("_doc")
+            folder / n
+            for n, r in rot.items()
+            if n.startswith("IMG_")
+            and r["readable"]
+            and r["matches_scope"]
+            and not r["category"].endswith("_doc")
         ]
-        self.photos_per_template.setdefault(m.name, []).extend((tid, p, submission) for p in good)
+        self.photos_per_template.setdefault(m.name, []).extend(
+            (tid, p, submission) for p in good
+        )
         _LABELS[(tid,)] = rot
 
         # ---- chamado.json
@@ -800,7 +1232,10 @@ class ValidationGenerator:
             "category": m.category,
             "symptom": symptom,
             "branch": {"code": code, "name": branch, "environment": env},
-            "supplier": {"name": SUPPLIER[m.supplier][0], "cnpj": SUPPLIER[m.supplier][1]},
+            "supplier": {
+                "name": SUPPLIER[m.supplier][0],
+                "cnpj": SUPPLIER[m.supplier][1],
+            },
             "requested_scope": scope,
             "quoted_value": ticket_value,
             "dates": case["dates"],
@@ -810,12 +1245,19 @@ class ValidationGenerator:
             "manager": {"first_check": "forwarded", "note": ""},
             "attachments": attachments_meta,
         }
-        (folder.parent / "ticket.json").write_text(json.dumps(ticket, ensure_ascii=False, indent=2), encoding="utf-8")
+        (folder.parent / "ticket.json").write_text(
+            json.dumps(ticket, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
 
         # ---- gabarito: aplica a régua aos defeitos
         kinds: list[str] = []
         if "checklist" in defects:
-            recommendation, score, grades, confidence = "checklist_returned", None, None, None
+            recommendation, score, grades, confidence = (
+                "checklist_returned",
+                None,
+                None,
+                None,
+            )
         else:
             mapping = {
                 "vague": "vague_scope",
@@ -828,14 +1270,19 @@ class ValidationGenerator:
                 "reused": "reused_photo",
                 "date_before": "photo_dated_before",
             }
-            kinds = sorted({mapping[d] for d in defects if d in mapping} | {a for x in items for a in x[4]["findings"]})
+            kinds = sorted(
+                {mapping[d] for d in defects if d in mapping}
+                | {a for x in items for a in x[4]["findings"]}
+            )
             if "vague" in defects:
                 # com escopo vago, o modelo não tem como conferir quantidades nem a cobertura das fotos
                 optional += ["unjustified_replacement", *VAGUE_SCOPE_OPTIONAL]
         at_issue = 0.0
         for _desc, _unit_label, qty, unit, r in items:
             tps = r["findings"]
-            if any(rubric.finding_types[t].amount_at_issue.value == "item" for t in tps):
+            if any(
+                rubric.finding_types[t].amount_at_issue.value == "item" for t in tps
+            ):
                 at_issue += qty * unit
             else:
                 exc = 0.0
@@ -848,8 +1295,14 @@ class ValidationGenerator:
             # a régua decide o gabarito; o valor em questão entra pelo apontamento de valor relevante
             scorer = ScoreCalculator(rubric)
             quote_total = sum(qty * unit for _d, _u, qty, unit, _r in items)
-            kinds, res = scorer.expected(kinds, 100 * at_issue / quote_total if quote_total else 0.0)
-            recommendation, score, confidence = res.recommendation.value, res.score, res.confidence.value
+            kinds, res = scorer.expected(
+                kinds, 100 * at_issue / quote_total if quote_total else 0.0
+            )
+            recommendation, score, confidence = (
+                res.recommendation.value,
+                res.score,
+                res.confidence.value,
+            )
             grades = res.grades.model_dump()
         gt = {
             "ticket_id": tid,
@@ -893,8 +1346,16 @@ class ValidationGenerator:
         }
         if scenario:
             gt["scenario"] = scenario
-        (ROOT / "ground_truth" / f"{tid}.json").write_text(json.dumps(gt, ensure_ascii=False, indent=2), encoding="utf-8")
-        return {"id": tid, "model": m.name, "defects": defects, "recommendation": recommendation, "score": score}
+        (ROOT / "ground_truth" / f"{tid}.json").write_text(
+            json.dumps(gt, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
+        return {
+            "id": tid,
+            "model": m.name,
+            "defects": defects,
+            "recommendation": recommendation,
+            "score": score,
+        }
 
 
 _LABELS: dict = {}
@@ -906,7 +1367,9 @@ def origin_label(tid: str, name: str) -> dict:
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("--n", type=int, default=8, help="chamados por modelo de serviço (10 modelos)")
+    ap.add_argument(
+        "--n", type=int, default=8, help="chamados por modelo de serviço (10 modelos)"
+    )
     a = ap.parse_args()
     for p in list((ROOT / "tickets").glob("0100*")):
         shutil.rmtree(p)
@@ -918,5 +1381,9 @@ if __name__ == "__main__":
     from collections import Counter
 
     print(f"{len(summary)} chamados de validação em {ROOT / 'tickets'}")
-    print("recomendações esperadas:", dict(Counter(r["recommendation"] for r in summary)))
-    print("defeitos injetados:", dict(Counter(d for r in summary for d in r["defects"])))
+    print(
+        "recomendações esperadas:", dict(Counter(r["recommendation"] for r in summary))
+    )
+    print(
+        "defeitos injetados:", dict(Counter(d for r in summary for d in r["defects"]))
+    )

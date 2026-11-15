@@ -17,7 +17,9 @@ class CostCalculator:
 
     def price(self, model: str) -> Price | None:
         """Preço do modelo; aceita "provedor:modelo" ou só o id do modelo."""
-        return self.settings.prices.get(model) or self.settings.prices.get(model.split(":", 1)[-1])
+        return self.settings.prices.get(model) or self.settings.prices.get(
+            model.split(":", 1)[-1]
+        )
 
     def usd(
         self,
@@ -28,15 +30,34 @@ class CostCalculator:
         cache_write_tokens: int = 0,
         via_batch: bool = False,
     ) -> float:
-        """Custo de uma chamada. Sem preço configurado, registra 0 e avisa no log."""
+        """Custo de uma chamada. Sem preço configurado, registra 0 e avisa no log.
+
+        Args:
+            model: "provedor:modelo" ou só o id; o preço vem de [costs.prices] (por milhão de tokens).
+            input_tokens: tokens de entrada sem cache (a API já exclui os lidos/gravados no cache).
+            output_tokens: tokens de saída.
+            cache_read_tokens: tokens lidos do cache de prompt.
+            cache_write_tokens: tokens gravados no cache de prompt.
+            via_batch: True aplica o desconto de lote ([costs.batch_discount]).
+
+        Returns:
+            Custo em US$, com 6 casas.
+        """
+        # Preços em US$ por milhão de tokens, separados por entrada, saída, leitura e gravação de cache.
         price = self.price(model)
         if price is None:
-            log.warning("sem preço configurado para o modelo %s; custo registrado como 0", model)
+            log.warning(
+                "sem preço configurado para o modelo %s; custo registrado como 0", model
+            )
             return 0.0
         # input_tokens da API já exclui os tokens lidos/gravados no cache
         total = (
-            input_tokens * price.input + output_tokens * price.output + cache_read_tokens * price.cache_read + cache_write_tokens * price.cache_write
+            input_tokens * price.input
+            + output_tokens * price.output
+            + cache_read_tokens * price.cache_read
+            + cache_write_tokens * price.cache_write
         ) / 1e6
+        # Message Batches custa menos (ex.: batch_discount = 0.5 → metade do preço).
         if via_batch:
             total *= 1 - self.settings.batch_discount
         return round(total, 6)

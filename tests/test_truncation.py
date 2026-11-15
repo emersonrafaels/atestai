@@ -24,9 +24,13 @@ def _session(cfg, errors: list[Exception]) -> tuple[LlmSession, list[int]]:
 
 def test_truncated_answer_retries_once_with_a_bigger_limit(cfg):
     session, seen = _session(cfg, [ProviderError("cortada", truncated=True)])
-    assert session.ask("quote_review", [], QuoteReview, max_tokens=5000) == "ok" and seen == [5000, 10000]
+    assert session.ask(
+        "quote_review", [], QuoteReview, max_tokens=5000
+    ) == "ok" and seen == [5000, 10000]
     session, seen = _session(cfg, [ProviderError("cortada", truncated=True)])
-    assert session.ask("photos", [], QuoteReview, max_tokens=12000) == "ok" and seen == [12000, MAX_OUTPUT_TOKENS]
+    assert session.ask(
+        "photos", [], QuoteReview, max_tokens=12000
+    ) == "ok" and seen == [12000, MAX_OUTPUT_TOKENS]
 
 
 def test_other_errors_and_a_second_cut_are_not_retried(cfg):
@@ -34,13 +38,21 @@ def test_other_errors_and_a_second_cut_are_not_retried(cfg):
     with pytest.raises(ProviderError):
         session.ask("quote_review", [], QuoteReview, max_tokens=4000)
     assert seen == [4000]
-    session, seen = _session(cfg, [ProviderError("cortada", truncated=True), ProviderError("cortada de novo", truncated=True)])
+    session, seen = _session(
+        cfg,
+        [
+            ProviderError("cortada", truncated=True),
+            ProviderError("cortada de novo", truncated=True),
+        ],
+    )
     with pytest.raises(ProviderError):
         session.ask("quote_review", [], QuoteReview, max_tokens=4000)
     assert seen == [4000, 8000]  # uma tentativa a mais só
     session, seen = _session(cfg, [ProviderError("cortada", truncated=True)])
     with pytest.raises(ProviderError):
-        session.ask("photos", [], QuoteReview, max_tokens=MAX_OUTPUT_TOKENS)  # já no teto: não há como dar mais espaço
+        session.ask(
+            "photos", [], QuoteReview, max_tokens=MAX_OUTPUT_TOKENS
+        )  # já no teto: não há como dar mais espaço
 
 
 def test_anthropic_marks_max_tokens_as_truncated():

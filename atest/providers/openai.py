@@ -4,7 +4,17 @@ from __future__ import annotations
 
 from typing import Any
 
-from .base import DocumentPart, ImagePart, Provider, ProviderError, ProviderResponse, Request, T, TextPart, Usage
+from .base import (
+    DocumentPart,
+    ImagePart,
+    Provider,
+    ProviderError,
+    ProviderResponse,
+    Request,
+    T,
+    TextPart,
+    Usage,
+)
 
 
 def convert(req: Request) -> list[dict]:
@@ -14,9 +24,17 @@ def convert(req: Request) -> list[dict]:
         if isinstance(p, TextPart):
             content.append({"type": "input_text", "text": p.text})
         elif isinstance(p, ImagePart):
-            content.append({"type": "input_image", "image_url": f"data:{p.mime};base64,{p.b64}"})
+            content.append(
+                {"type": "input_image", "image_url": f"data:{p.mime};base64,{p.b64}"}
+            )
         elif isinstance(p, DocumentPart):
-            content.append({"type": "input_file", "filename": p.title or "document.pdf", "file_data": f"data:{p.mime};base64,{p.b64}"})
+            content.append(
+                {
+                    "type": "input_file",
+                    "filename": p.title or "document.pdf",
+                    "file_data": f"data:{p.mime};base64,{p.b64}",
+                }
+            )
     return [{"role": "user", "content": content}]
 
 
@@ -25,11 +43,15 @@ class OpenAIProvider(Provider):
 
     name = "openai"
 
-    def __init__(self, timeout_s: float = 180, max_retries: int = 4, client: Any = None):
+    def __init__(
+        self, timeout_s: float = 180, max_retries: int = 4, client: Any = None
+    ):
         import openai
 
         self._openai = openai
-        self.client = client or openai.OpenAI(max_retries=max_retries, timeout=timeout_s)
+        self.client = client or openai.OpenAI(
+            max_retries=max_retries, timeout=timeout_s
+        )
 
     def generate(self, req: Request, output: type[T]) -> ProviderResponse[T]:
         kwargs: dict[str, Any] = {
@@ -42,23 +64,42 @@ class OpenAIProvider(Provider):
         if req.effort in ("low", "medium", "high"):
             kwargs["reasoning"] = {"effort": req.effort}
         if req.timeout_s:
-            kwargs["timeout"] = req.timeout_s  # limite desta chamada (calculado pelo tamanho)
+            kwargs["timeout"] = (
+                req.timeout_s
+            )  # limite desta chamada (calculado pelo tamanho)
         try:
             resp = self.client.responses.parse(**kwargs)
-        except (self._openai.APIConnectionError, self._openai.RateLimitError, self._openai.InternalServerError) as e:
-            raise ProviderError(f"[{req.task}] {type(e).__name__}: {e}", transient=True) from e
+        except (
+            self._openai.APIConnectionError,
+            self._openai.RateLimitError,
+            self._openai.InternalServerError,
+        ) as e:
+            raise ProviderError(
+                f"[{req.task}] {type(e).__name__}: {e}", transient=True
+            ) from e
         if resp.status == "incomplete":
             reason = getattr(resp.incomplete_details, "reason", "")
-            raise ProviderError(f"[{req.task}] resposta incompleta: {resp.incomplete_details}", truncated=reason == "max_output_tokens")
+            raise ProviderError(
+                f"[{req.task}] resposta incompleta: {resp.incomplete_details}",
+                truncated=reason == "max_output_tokens",
+            )
         obj = resp.output_parsed
         if obj is None:
-            raise ProviderError(f"[{req.task}] resposta sem JSON válido (possível recusa)")
+            raise ProviderError(
+                f"[{req.task}] resposta sem JSON válido (possível recusa)"
+            )
         u = resp.usage
-        cache = getattr(getattr(u, "input_tokens_details", None), "cached_tokens", 0) or 0
+        cache = (
+            getattr(getattr(u, "input_tokens_details", None), "cached_tokens", 0) or 0
+        )
         # input_tokens da OpenAI inclui os tokens lidos do cache; aqui separamos para o cálculo de custo
         return ProviderResponse(
             obj=obj,
-            usage=Usage(input=(u.input_tokens or 0) - cache, output=u.output_tokens or 0, cache_read_tokens=cache),
+            usage=Usage(
+                input=(u.input_tokens or 0) - cache,
+                output=u.output_tokens or 0,
+                cache_read_tokens=cache,
+            ),
             resolved_model=resp.model,
             response_id=resp.id,
         )
