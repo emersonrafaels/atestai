@@ -368,7 +368,7 @@ function LpuTab({ ov }: { ov: AdminOverview }) {
   const rows = (ov.lpu[ws] ?? []).filter((r) => !q || `${r.code} ${r.description}`.toLowerCase().includes(q.toLowerCase()));
   return (
     <div className="space-y-4">
-      <InfoBox id="admin-lpu">Tabela de referência usada para apontar <b>preço acima da referência</b>. Ela vem dos arquivos <span className="font-mono">data/references/lpu_*.csv</span>; a tolerância fica em Régua do score.</InfoBox>
+      <InfoBox id="admin-lpu">LPU (Lista de Preços Unitários) usada para apontar <b>preço acima da referência</b>. Ela vem dos arquivos <span className="font-mono">data/references/lpu_*.csv</span>; a tolerância fica em Régua do score.</InfoBox>
       <div className="flex flex-wrap items-center gap-3">
         <div className="flex rounded-lg bg-paper p-0.5 text-sm">
           {streams.map((s) => <button key={s} onClick={() => setWs(s)} className={`rounded-md px-3 py-1 ${ws === s ? "bg-sheet font-semibold shadow-sm" : "text-muted"}`}>{s} ({ov.lpu[s].length})</button>)}

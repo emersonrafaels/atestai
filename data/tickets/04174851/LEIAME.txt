@@ -1,0 +1,13 @@
+CASO FICTÍCIO criado para testar o Atest.AI (não é um chamado real do Salesforce): agência, fornecedor, valores e
+problemas foram inventados. As imagens em attachments/ são SIMULADAS (cópias de fotos de outro chamado); não são evidência real.
+A origem também está no EXIF (ImageDescription) de cada imagem. Gerado por generator/build_salesforce_cases.py.
+
+Chamado 04174851 - Piso quebrado na área dos caixas eletrônicos (aprovação do orçamento).
+
+Problemas plantados (o que o parecer deveria apontar):
+- POSSÍVEL CHAMADO DUPLICADO: o chamado 04164650 (mesma agência 7856, "Substituição de piso cerâmico quebrado
+  no autoatendimento") foi aberto em 01/10, 44 dias antes, dentro da janela de 60 dias (e SEGUE ABERTO) -> entra
+  na comparação -> mesmo problema -> possible_duplicate_ticket.
+- FOTOS REAPROVEITADAS: as duas fotos são cópias recortadas e recomprimidas, com data nova no EXIF, de fotos do
+  04164650 (IMG_20261001_150238.jpg e IMG_20261001_150412.jpg), enviadas por OUTRO fornecedor -> reused_photo.
+A trava de integridade vence: DEVOLVER (trava). Os dois apontamentos aparecem no parecer.

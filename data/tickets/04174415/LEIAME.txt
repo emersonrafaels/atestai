@@ -1,0 +1,12 @@
+CASO FICTÍCIO criado para testar o Atest.AI (não é um chamado real do Salesforce): agência, fornecedor, valores e
+problemas foram inventados. As imagens em attachments/ são SIMULADAS (recortes de imagens geradas por IA da biblioteca data/real_photos_itau, OpenAI gpt-image); não são evidência real.
+A origem também está no EXIF (ImageDescription) de cada imagem. Gerado por generator/build_salesforce_cases.py.
+
+Chamado 04174415 - Tomada queimada no backoffice (aprovação do orçamento).
+Agência informada SÓ COM O NOME ("Ag. Campinas - Cambuí"), sem o código: a comparação usa o nome
+normalizado (sem "Ag.", acentos e pontuação), que bate com "Campinas Cambuí".
+
+Chamados da mesma agência que entram na comparação: 04174102 (forro, 4 dias antes), 04172318 (porta giratória,
+segue aberta) e 04161377 (split, segue aberto) -> todos OUTROS PROBLEMAS (chance baixa). O 04174388 não entra
+(só tem o código).
+O que o parecer deveria apontar: nada de duplicidade; o orçamento é coerente (LPU) -> aprovar.

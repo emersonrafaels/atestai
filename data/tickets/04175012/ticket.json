@@ -1,0 +1,56 @@
+{
+  "ticket_id": "04175012",
+  "workstream": "SISR",
+  "maintenance_type": "corrective",
+  "moment": "quote",
+  "category": "alarm",
+  "symptom": "false_alarm",
+  "requested_scope": "Sensor de presença da tesouraria disparando sozinho de madrugada. A central registrou 5 disparos na última semana, sem ninguém na agência.",
+  "solution_description": "Substituição do sensor da tesouraria e teste dos demais sensores da agência.",
+  "branch": {
+    "code": "4417",
+    "name": "Belo Horizonte Savassi",
+    "environment": "tesouraria"
+  },
+  "supplier": {
+    "name": "Alerta Total Sistemas de Segurança LTDA (fictício)",
+    "cnpj": ""
+  },
+  "blocks_opening": false,
+  "quoted_value": 1444.0,
+  "dates": {
+    "opening": "2026-11-12",
+    "supplier_submission": "2026-11-13",
+    "manager_review": null
+  },
+  "status": "forwarded_to_backoffice",
+  "origin": "dataset",
+  "dataset": "casos",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "attachments": [
+    {
+      "file_name": "Orcamento_AlertaTotal_04175012.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 5907,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-13"
+    },
+    {
+      "file_name": "IMG_20261112_084215.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 153223,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-13"
+    },
+    {
+      "file_name": "IMG_20261112_084430.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 211269,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-13"
+    }
+  ]
+}

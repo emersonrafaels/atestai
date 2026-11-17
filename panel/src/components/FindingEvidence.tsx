@@ -1,12 +1,14 @@
 import { ArrowRight, ExternalLink, FileSpreadsheet, ImageOff, Lock } from "lucide-react";
 import { ReuseModal } from "./ReuseModal";
 import { useState } from "react";
-import type { Assessment, EvaluatedItem, EvaluatedPhoto, Finding, TicketDetail } from "../api";
+import type { Assessment, EvaluatedItem, EvaluatedPhoto, Finding, RelatedTicket, TicketDetail } from "../api";
+import { ProbabilityBar, statusLabel, whenLabel } from "./RelatedBits";
+import { DuplicateModal } from "./DuplicateModal";
 import { brl, num, MOMENT_LABEL, envLabel } from "../format";
 import { locate, type Located } from "../evidence";
 import type { LightboxItem } from "./ui/Lightbox";
 
-export type GoTo = (tab: "assessment" | "scope" | "quote" | "photos" | "documents" | "calls" | "input", highlight?: { items?: number[]; files?: string[] }) => void;
+export type GoTo = (tab: "assessment" | "scope" | "related" | "quote" | "photos" | "documents" | "calls" | "input", highlight?: { items?: number[]; files?: string[] }) => void;
 
 interface Props {
   f: Finding;
@@ -22,6 +24,7 @@ const photoUrl = (ticket: string, file: string) => `/api/tickets/${ticket}/attac
 
 /** Resumo curto de onde o apontamento está, para mostrar no card antes de abrir. */
 export function whereLabel(loc: Located, p: Assessment): string {
+  if (loc.related) return `Chamado ${loc.related.ticket_id} da mesma agência`;
   if (loc.scope) return "Texto do escopo";
   if (loc.spreadsheet) return "Cabeçalho da planilha";
   if (loc.items.length) {
@@ -38,15 +41,46 @@ export function FindingEvidence({ f, p, ticket, openPhoto, goTo, openTicket }: P
   const loc = locate(f, p);
   return (
     <div className="surgir mt-3 space-y-3 rounded-lg border border-line bg-paper/50 p-3 text-sm">
+      {loc.related && <RelatedEvidence p={p} r={loc.related} ticket={ticket} goTo={goTo} openTicket={openTicket} openPhoto={openPhoto} />}
       {loc.scope && <ScopeEvidence p={p} ticket={ticket} />}
       {loc.spreadsheet && <SpreadsheetEvidence ticket={ticket} goTo={goTo} />}
       {loc.items.length > 0 && <QuoteEvidence f={f} loc={loc} goTo={goTo} />}
       {loc.reusedFrom && loc.photos[0] && <ReusedEvidence p={p} photo={loc.photos[0]} other={loc.reusedFrom} openPhoto={openPhoto} openTicket={openTicket} />}
       {!loc.reusedFrom && loc.photos.length > 0 && <PhotoEvidence f={f} p={p} photos={loc.photos} openPhoto={openPhoto} goTo={goTo} />}
       {loc.absence && <AbsenceEvidence p={p} kind={loc.absence} openPhoto={openPhoto} goTo={goTo} />}
-      {!loc.scope && !loc.spreadsheet && !loc.items.length && !loc.photos.length && !loc.absence && (
+      {!loc.related && !loc.scope && !loc.spreadsheet && !loc.items.length && !loc.photos.length && !loc.absence && (
         <p className="text-muted">Este apontamento não cita uma linha do orçamento nem uma foto específica. A evidência é o texto acima.</p>
       )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------- chamado da mesma agência
+function RelatedEvidence({ p, r, ticket, goTo, openTicket, openPhoto }: {
+  p: Assessment; r: RelatedTicket; ticket: TicketDetail | null; goTo: GoTo; openTicket?: (id: string) => void; openPhoto: Props["openPhoto"];
+}) {
+  const c = p.related!;
+  const [compare, setCompare] = useState(false);
+  return (
+    <div className="space-y-2">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <span className="text-[13px] text-muted">Chamado <b className="text-ink">{r.ticket_id}</b> · {whenLabel(r)} · {statusLabel(r.status)}</span>
+        <div className="w-56"><ProbabilityBar r={r} show={c.show_probability} min={c.min_probability} /></div>
+      </div>
+      <div className="grid gap-2 md:grid-cols-2">
+        <blockquote className="rounded-md border-l-4 border-blueprint/40 bg-sheet px-3 py-2"><div className="text-[12px] text-muted">Este chamado</div>“{ticket?.scope ?? p.requested_scope ?? ""}”</blockquote>
+        <blockquote className="rounded-md border-l-4 border-bad/50 bg-sheet px-3 py-2"><div className="text-[12px] text-muted">Chamado {r.ticket_id} · {r.category_label}</div>“{r.scope}”</blockquote>
+      </div>
+      {r.matching_points.length > 0 && <p className="text-[13px]"><b>Coincide:</b> {r.matching_points.join("; ")}</p>}
+      <div className="flex flex-wrap items-center gap-4">
+        <button onClick={() => setCompare(true)} aria-haspopup="dialog"
+          className="flex items-center gap-1.5 rounded-lg bg-bad px-3 py-1.5 text-[13px] font-semibold text-white hover:brightness-110">Comparar os chamados <ArrowRight size={13} /></button>
+        <button onClick={() => goTo("related")} className="flex items-center gap-1 text-[13px] font-medium text-blueprint hover:underline">Ver todos os chamados da agência <ArrowRight size={13} /></button>
+        {openTicket && r.source === "tickets" && (
+          <button onClick={() => openTicket(r.ticket_id)} className="flex items-center gap-1 text-[13px] font-medium text-blueprint hover:underline">Abrir o chamado {r.ticket_id} <ExternalLink size={13} /></button>
+        )}
+      </div>
+      {compare && <DuplicateModal p={p} current={ticket} r={r} onClose={() => setCompare(false)} openPhoto={openPhoto} openTicket={openTicket} showAll={() => goTo("related")} />}
     </div>
   );
 }

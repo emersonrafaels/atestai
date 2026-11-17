@@ -1,6 +1,8 @@
-import { ArrowDown, Check, ChevronDown, ChevronRight, Copy, Lock, MapPin, MessageSquareText, ShieldAlert, ThumbsDown, ThumbsUp, Undo2, X } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { api, type Assessment, type FindingFeedback, type RubricInfo, type TicketDetail } from "../api";
+import { ArrowDown, ArrowRight, Check, ChevronDown, ChevronRight, Copy, History, Link2, Lock, MapPin, MessageSquareText, ShieldAlert, ThumbsDown, ThumbsUp, Undo2, X } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { api, type Assessment, type FindingFeedback, type RelatedTicket, type RubricInfo, type TicketDetail } from "../api";
+import { DuplicateModal } from "./DuplicateModal";
+import { statusLabel, whenLabel } from "./RelatedBits";
 import { FindingFeedbackDialog } from "./FindingFeedbackDialog";
 import { brl, brl4, REC, SEVERITY, discountText, findingLabel, CONFIDENCE_LABEL, CONFIDENCE_TEXT, VALIDATIONS, VALIDATION_LABEL, VALIDATION_SHORT, explainFindings, GLOSSARY, pts, STAGE_LABEL, MAINTENANCE_LABEL } from "../format";
 import { locate, underCurrentRule } from "../evidence";
@@ -14,7 +16,7 @@ import type { LightboxItem } from "./ui/Lightbox";
 import { InfoBox } from "./ui/InfoBox";
 import { InfoTip, Tooltip } from "./ui/Tooltip";
 import { StepTitle } from "./ui/StepTitle";
-import { actions, highlight, SentenceList, splitLead } from "./ui/RichText";
+import { actions, highlight, itemMap, QuoteItemsContext, SentenceList, splitLead, type TicketLinks } from "./ui/RichText";
 
 interface Props {
   p: Assessment;
@@ -49,6 +51,24 @@ export function AssessmentTab({ p, rubric, ticket, openPhoto, goTo, openTicket }
   // modal que explica a confiança ou a recomendação
   const [explain, setExplain] = useState<ExplainKind | null>(null);
   const goToDecision = useCallback(() => decisionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), []);
+  // chamado da mesma agência aberto no modal de comparação
+  const [compare, setCompare] = useState<RelatedTicket | null>(null);
+  const related = p.related?.tickets ?? [];
+  const flagged = related.filter((r) => r.flagged);
+  const shown = related.filter((r) => !r.flagged && r.probability >= (p.related?.show_probability ?? 40));
+  // números de chamado da agência citados no parecer viram link para a comparação
+  const links = useMemo<TicketLinks | undefined>(() => {
+    const list = p.related?.tickets ?? [];
+    if (!list.length) return undefined;
+    return {
+      ids: new Set(list.map((r) => r.ticket_id)),
+      flagged: new Set(list.filter((r) => r.flagged).map((r) => r.ticket_id)),
+      open: (id) => setCompare(list.find((r) => r.ticket_id === id) ?? null),
+    };
+  }, [p.related]);
+
+  // nome de cada item citado no texto (hover em "item 3"): itens avaliados no parecer; sem eles, os do orçamento
+  const quoteItems = useMemo(() => itemMap(p.items, ticket?.quote?.items), [p.items, ticket?.quote?.items]);
 
   const copy = async () => {
     await navigator.clipboard.writeText(p.supplier_message);
@@ -88,6 +108,7 @@ export function AssessmentTab({ p, rubric, ticket, openPhoto, goTo, openTicket }
   let n = 0;
 
   return (
+    <QuoteItemsContext.Provider value={quoteItems}>
     <div className="space-y-5">
       {/* 1. checklist mínimo: é a primeira etapa do fluxo, então vem primeiro */}
       <section data-tour="checklist" className="rounded-xl border border-line bg-sheet p-5">
@@ -125,6 +146,11 @@ export function AssessmentTab({ p, rubric, ticket, openPhoto, goTo, openTicket }
       {/* 2. recomendação */}
       <section data-tour="verdict" className="rounded-xl border border-line bg-sheet p-5">
         <StepTitle n={++n}>Parecer do Atest.AI</StepTitle>
+        {flagged.length > 0 && (
+          <div className="mt-3 space-y-2">
+            {flagged.map((r) => <DuplicateBanner key={r.ticket_id} r={r} onCompare={() => setCompare(r)} openTicket={openTicket} />)}
+          </div>
+        )}
         <div className="mt-3 flex flex-col gap-6 md:flex-row md:items-start">
           <Tooltip className="inline-flex self-center md:self-start" content={p.score !== null
             ? `Score ${p.score} de 100 → ${REC[p.recommendation].label}. Veja abaixo como cada ponto foi calculado.`
@@ -144,7 +170,8 @@ export function AssessmentTab({ p, rubric, ticket, openPhoto, goTo, openTicket }
                   </span>
                 </button>
               </h2>
-              <Reason text={p.recommendation_reason} onReasons={p.recommendation === "detailed_review" && p.confidence ? () => setExplain("confidence") : undefined} />
+              <Reason text={p.recommendation_reason} links={links}
+                onReasons={p.recommendation === "detailed_review" && p.confidence && !flagged.length ? () => setExplain("confidence") : undefined} />
             </div>
             <dl className="flex flex-wrap gap-x-8 gap-y-3 border-y border-line py-3 text-sm">
               {p.confidence && (
@@ -168,7 +195,20 @@ export function AssessmentTab({ p, rubric, ticket, openPhoto, goTo, openTicket }
               )}
               <Fact label="Custo da análise"><b>{p.mode === "api" ? brl4(p.cost_brl) : "simulado"}</b></Fact>
             </dl>
-            <Summary text={p.summary} color={REC[p.recommendation].color} label={REC[p.recommendation].label} onItems={(items) => goTo("quote", { items })} />
+            <Summary text={p.summary} color={REC[p.recommendation].color} label={REC[p.recommendation].label} onItems={(items) => goTo("quote", { items })} links={links} />
+            {shown.length > 0 && (
+              <p className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[13px] text-muted">
+                <Link2 size={14} className="text-warn" />
+                {shown.length === 1 ? "Chamado relacionado na mesma agência:" : `${shown.length} chamados relacionados na mesma agência:`}
+                {shown.map((r) => (
+                  <button key={r.ticket_id} type="button" onClick={() => setCompare(r)}
+                    className="rounded-full border border-warn/40 bg-[#fdf6e4] px-2 py-0.5 font-medium text-ink hover:border-warn">
+                    {r.ticket_id} · {r.probability}%
+                  </button>
+                ))}
+                <span>(não é duplicado, mas vale olhar)</span>
+              </p>
+            )}
           </div>
         </div>
       </section>
@@ -322,6 +362,10 @@ export function AssessmentTab({ p, rubric, ticket, openPhoto, goTo, openTicket }
         <ExplainDialog kind={explain} p={p} rubric={rubric} unfounded={unfounded} toggleUnfounded={toggleUnfounded} focusFinding={focusFinding}
           goToDecision={goToDecision} onSwitch={setExplain} onClose={() => setExplain(null)} />
       )}
+      {compare && (
+        <DuplicateModal p={p} current={ticket} r={compare} onClose={() => setCompare(null)} openPhoto={openPhoto}
+          openTicket={openTicket} showAll={() => goTo("related")} />
+      )}
 
       {fbOpen !== null && p.record_id && p.findings[fbOpen] && (
         <FindingFeedbackDialog assessmentId={p.record_id} index={fbOpen} finding={p.findings[fbOpen]} previous={findingFb[fbOpen]}
@@ -340,6 +384,7 @@ export function AssessmentTab({ p, rubric, ticket, openPhoto, goTo, openTicket }
         </div>
       )}
     </div>
+    </QuoteItemsContext.Provider>
   );
 }
 
@@ -367,9 +412,9 @@ function FeedbackButton({ fb, disabled, onClick }: { fb?: FindingFeedback; disab
 }
 
 /** "Confiança baixa (motivo 1; motivo 2): conclusão" → conclusão em destaque e cada motivo como etiqueta. */
-function Reason({ text, onReasons }: { text: string; onReasons?: () => void }) {
+function Reason({ text, onReasons, links }: { text: string; onReasons?: () => void; links?: TicketLinks }) {
   const m = /^(.*?)\s*\(([^()]+)\)\s*:\s*(.*)$/s.exec(text);
-  if (!m) return <p className="text-sm font-medium text-muted">Por quê: <span className="text-ink">{highlight(text)}</span></p>;
+  if (!m) return <p className="text-sm font-medium text-muted">Por quê: <span className="text-ink">{highlight(text, undefined, links)}</span></p>;
   const [, head, list, tail] = m;
   const reasons = list.split(/\s*;\s*/).filter(Boolean);
   return (
@@ -393,7 +438,7 @@ function Reason({ text, onReasons }: { text: string; onReasons?: () => void }) {
 }
 
 /** Resumo do parecer: a manchete ("Recomendo …") em destaque e cada frase numa linha, com o assunto e os números à vista. */
-function Summary({ text, color, label, onItems }: { text: string; color: string; label: string; onItems: (items: number[]) => void }) {
+function Summary({ text, color, label, onItems, links }: { text: string; color: string; label: string; onItems: (items: number[]) => void; links?: TicketLinks }) {
   if (!text.trim()) return null;
   const { lead, body } = splitLead(text);
   // "Recomendo devolver ao fornecedor" só repete o título logo acima: some quando não acrescenta nada
@@ -402,7 +447,41 @@ function Summary({ text, color, label, onItems }: { text: string; color: string;
   return (
     <div className="rounded-lg border border-line border-l-4 bg-paper/40 px-4 py-3" style={{ borderLeftColor: color }}>
       {showLead && <p className="mb-2 text-[15px] font-semibold" style={{ color }}>{lead}</p>}
-      <SentenceList text={body} onItems={onItems} className="max-w-[78ch] text-[15px] leading-relaxed" />
+      <SentenceList text={body} onItems={onItems} tickets={links} className="max-w-[78ch] text-[15px] leading-relaxed" />
+    </div>
+  );
+}
+
+/** Aviso declarado de possível chamado duplicado: abre a comparação dos dois chamados ou leva ao mais antigo. */
+function DuplicateBanner({ r, onCompare, openTicket }: { r: RelatedTicket; onCompare: () => void; openTicket?: (id: string) => void }) {
+  const older = r.days_apart > 0;
+  return (
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-3 rounded-xl border border-bad/40 bg-[#fbefed] px-4 py-3">
+      <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-bad text-white"><Copy size={19} /></span>
+      <div className="min-w-0 flex-1 text-sm">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+          <span className="text-[12px] font-bold uppercase tracking-wide text-bad">Possível chamado duplicado</span>
+          <span className="rounded-full bg-bad/10 px-2 py-px text-[12px] font-semibold tabular-nums text-bad">{r.probability}% de chance</span>
+        </div>
+        <p className="mt-0.5">
+          Pode ser o mesmo problema do chamado{" "}
+          <button type="button" onClick={onCompare} className="font-bold tabular-nums text-bad underline decoration-dotted underline-offset-2 hover:decoration-solid">{r.ticket_id}</button>
+          {" "}<span className="text-ink/70">({whenLabel(r)} · {statusLabel(r.status)}{!r.in_window ? ", segue aberto" : ""})</span>.
+          {" "}Confira antes de aprovar ou devolver.
+        </p>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        <button type="button" onClick={onCompare} aria-haspopup="dialog"
+          className="flex items-center gap-1.5 rounded-lg bg-bad px-3 py-1.5 text-sm font-semibold text-white hover:brightness-110">
+          Comparar os chamados <ArrowRight size={15} />
+        </button>
+        {openTicket && r.source === "tickets" && (
+          <button type="button" onClick={() => openTicket(r.ticket_id)}
+            className="flex items-center gap-1.5 rounded-lg border border-bad/40 bg-sheet px-3 py-1.5 text-sm font-medium text-ink hover:bg-paper">
+            {older && <History size={15} />}{older ? `Abrir o mais antigo (${r.ticket_id})` : `Abrir ${r.ticket_id}`}
+          </button>
+        )}
+      </div>
     </div>
   );
 }

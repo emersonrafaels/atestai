@@ -40,6 +40,7 @@ EXTRA_REDUCERS = {
     "unreadable_quote": "orçamento não lido",
     "photos_not_analyzed": "fotos não analisadas pelo modelo",
     "documents_not_analyzed": "documentos não lidos pelo modelo",
+    "related_not_checked": "chamados da agência não comparados pelo modelo",
 }
 
 
@@ -117,6 +118,7 @@ class ScoreCalculator:
             phase=spec.phase,
             amount_at_issue=round(amount, 2),
             returns=spec.returns,
+            review=spec.review,
         )
 
     # ------------------------------------------------------------------ proporcional ao que foi enviado
@@ -425,10 +427,12 @@ class ScoreCalculator:
         """Recomendação e motivo, pelas regras da régua nesta ordem de prioridade:
 
         1. trava de integridade (`lock`) → devolver travado, qualquer que seja a nota;
-        2. falta do fornecedor (`returns`, não absorvida) → devolver ao fornecedor;
-        3. confiança baixa → revisão detalhada;
-        4. % em questão ≥ [max_amount_at_issue_for_caveats_pct] → devolver ao fornecedor;
-        5. faixa do score ([bands]); "aprovar" com % em questão acima de [max_amount_at_issue_for_approve_pct]
+        2. conferência da pessoa analista (`review`, não absorvida; ex.: possível chamado duplicado) → análise
+           detalhada: antes de pedir ajuste ao fornecedor, é preciso saber se o chamado deve seguir;
+        3. falta do fornecedor (`returns`, não absorvida) → devolver ao fornecedor;
+        4. confiança baixa → revisão detalhada;
+        5. % em questão ≥ [max_amount_at_issue_for_caveats_pct] → devolver ao fornecedor;
+        6. faixa do score ([bands]); "aprovar" com % em questão acima de [max_amount_at_issue_for_approve_pct]
            cai para "aprovar com ressalvas". Confiança média acrescenta o aviso ao motivo.
 
         Args:
@@ -447,8 +451,22 @@ class ScoreCalculator:
                 Recommendation.RETURN_LOCKED,
                 f"Trava de integridade: {locks[0].description.lower()}. Devolver qualquer que seja a nota",
             )
-        # falta do fornecedor: o que precisa ajustar já está claro, então volta antes de qualquer análise detalhada
         absorbed = self.absorbers(findings)
+        # conferência da pessoa analista (ex.: outro chamado da agência para o mesmo problema): vem antes de devolver,
+        # porque o chamado pode nem precisar seguir
+        reviews = [
+            f
+            for f in findings
+            if f.review and (f.validation.value, f.kind) not in absorbed
+        ]
+        if reviews:
+            refs = ", ".join(dict.fromkeys(f.reference for f in reviews if f.reference))
+            return (
+                Recommendation.DETAILED_REVIEW,
+                f"Conferir antes de seguir: {self.reducer_label(reviews[0].kind)}"
+                + (f" ({refs})" if refs else ""),
+            )
+        # falta do fornecedor: o que precisa ajustar já está claro, então volta antes de qualquer análise detalhada
         gaps = list(
             dict.fromkeys(
                 self.reducer_label(f.kind)

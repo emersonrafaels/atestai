@@ -1,0 +1,11 @@
+CASO FICTÍCIO criado para testar o Atest.AI (não é um chamado real do Salesforce): agência, fornecedor, valores e
+problemas foram inventados. As imagens em attachments/ são SIMULADAS (recortes de imagens geradas por IA da biblioteca data/real_photos_itau, OpenAI gpt-image); não são evidência real.
+A origem também está no EXIF (ImageDescription) de cada imagem. Gerado por generator/build_salesforce_cases.py.
+
+Chamado 04161377 - Ar-condicionado do autoatendimento pingando (aprovação do orçamento).
+Situação: aguardando o fornecedor (SEGUE ABERTO). Aberto em 22/10, dentro da janela de 60 dias dos chamados
+de novembro desta agência (e ainda aberto): entra na comparação deles.
+
+O que o parecer deveria apontar: nada (orçamento coerente com o escopo, preços da LPU). Na comparação feita
+pelos chamados 04174102 e 04174388 (forro manchado no mesmo autoatendimento), este deve aparecer como
+RELACIONADO (a água do split pode ser a origem da mancha), com chance intermediária, sem virar duplicidade.

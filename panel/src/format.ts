@@ -19,11 +19,16 @@ export const REC: Record<Recommendation, { label: string; short: string; color: 
   checklist_returned: { label: "Devolvido por checklist incompleto", short: "Checklist", color: "var(--color-return)", mark: "#e87ba4" },
 };
 
+/** Agência como aparece na tela (atest/domain.py: Branch.label): nome e número do ponto, ou só o que foi informado. */
+export const branchLabel = (b?: { code?: string; name?: string } | null) =>
+  !b ? "—" : b.name && b.code ? `${b.name} (núm. do ponto ${b.code})` : b.name || (b.code ? `Agência núm. do ponto ${b.code}` : "—");
+
 export const pct = (v: number | null | undefined, decimals = 0) => (v === null || v === undefined ? "—" : `${(100 * v).toFixed(decimals)}%`);
 
 export const STAGES: { id: Stage; label: string }[] = [
   { id: "checklist", label: "Checklist" },
   { id: "scope", label: "Escopo" },
+  { id: "related", label: "Agência" },
   { id: "quote", label: "Orçamento" },
   { id: "photos", label: "Fotos" },
   { id: "documents", label: "Documentos" },
@@ -33,6 +38,7 @@ export const STAGES: { id: Stage; label: string }[] = [
 
 export const FINDING_LABELS: Record<string, string> = {
   vague_scope: "Escopo vago",
+  possible_duplicate_ticket: "Possível chamado duplicado",
   out_of_scope_item: "Item fora do escopo",
   unjustified_replacement: "Troca sem justificativa",
   duplicate_item: "Item duplicado",
@@ -61,6 +67,7 @@ export const FINDING_LABELS: Record<string, string> = {
   unreadable_quote: "Orçamento não lido",
   photos_not_analyzed: "Fotos não analisadas pelo modelo",
   documents_not_analyzed: "Documentos não lidos pelo modelo",
+  related_not_checked: "Chamados da agência não comparados",
 };
 
 /** Rótulo de um tipo de apontamento ou redutor; valor desconhecido aparece legível, sem "_". */
@@ -75,6 +82,7 @@ export const TASK_LABELS: Record<string, string> = {
   quote_review: "Orçamento",
   photos: "Análise das fotos",
   documents: "Leitura dos documentos (OCR)",
+  related_tickets: "Chamados da agência",
   assessment: "Redação do parecer",
 };
 

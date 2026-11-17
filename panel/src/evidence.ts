@@ -1,4 +1,4 @@
-import type { Assessment, EvaluatedItem, EvaluatedPhoto, Finding, Recommendation, RubricInfo, ValidationKind } from "./api";
+import type { Assessment, EvaluatedItem, EvaluatedPhoto, Finding, Recommendation, RelatedTicket, RubricInfo, ValidationKind } from "./api";
 import { VALIDATIONS, explainFindings } from "./format";
 
 // ============================================================================ onde está o erro
@@ -17,13 +17,22 @@ export interface Located {
   scope: boolean;
   /** divergência entre a planilha e o chamado */
   spreadsheet: boolean;
+  /** outro chamado da mesma agência, quando é possível duplicidade */
+  related: RelatedTicket | null;
 }
 
 const sameFinding = (a: Finding, b: Finding) => a.kind === b.kind && a.evidence === b.evidence;
 
 /** Liga o apontamento às linhas do orçamento e às fotos que ele cita (pela referência gravada pelo backend). */
 export function locate(f: Finding, p: Assessment): Located {
-  const out: Located = { items: [], duplicateOf: null, photos: [], reusedFrom: null, absence: null, scope: false, spreadsheet: false };
+  const out: Located = { items: [], duplicateOf: null, photos: [], reusedFrom: null, absence: null, scope: false, spreadsheet: false, related: null };
+  if (f.kind === "possible_duplicate_ticket") {
+    // referência "chamado 04174102"
+    const id = /(\d{8})/.exec(f.reference)?.[1] ?? /(\d{8})/.exec(f.evidence)?.[1];
+    out.related = p.related?.tickets.find((r) => r.ticket_id === id) ?? null;
+    if (!out.related) out.scope = true;
+    return out;
+  }
   if (f.validation === "scope") {
     out.scope = true;
     return out;
@@ -83,7 +92,7 @@ export function underCurrentRule(p: Assessment, rubric: RubricInfo): CurrentRule
   if (!flags || !p.confidence) return { p, outdated: false, dropped: [], added: [] };
   const findings = p.findings.map((f) => {
     const fl = flags[f.kind];
-    return fl ? { ...f, reduces_confidence: fl.reduces_confidence, returns: fl.returns, lock: fl.lock } : f;
+    return fl ? { ...f, reduces_confidence: fl.reduces_confidence, returns: fl.returns, lock: fl.lock, review: fl.review ?? f.review } : f;
   });
   const kinds = new Set(p.findings.map((f) => f.kind));
   const reading = p.confidence_reducers.filter((r) => !kinds.has(r));
@@ -140,7 +149,9 @@ export function simulate(stored: Assessment, rubric: RubricInfo, removed: Set<st
   const gap = kept.some((f, k) => f.returns && !impacts[k].absorbedBy);
   const back = rubric.max_amount_at_issue_for_caveats_pct ?? 30;
   const approveCap = rubric.max_amount_at_issue_for_approve_pct ?? 10;
+  const review = kept.some((f, k) => f.review && !impacts[k].absorbedBy);
   if (kept.some((f) => f.lock)) recommendation = "return_locked";
+  else if (review) recommendation = "detailed_review";  // conferência da pessoa analista (ex.: chamado duplicado)
   else if (gap) recommendation = "return_to_supplier";  // falta do fornecedor vence a nota
   else if (confidence === "low") recommendation = "detailed_review";
   else if (back && pct >= back) recommendation = "return_to_supplier";
@@ -152,7 +163,7 @@ export function simulate(stored: Assessment, rubric: RubricInfo, removed: Set<st
 }
 
 // ============================================================================ por que esta recomendação?
-export type DecisionStepId = "checklist" | "lock" | "gap" | "confidence" | "amount" | "band";
+export type DecisionStepId = "checklist" | "lock" | "review" | "gap" | "confidence" | "amount" | "band";
 
 export interface DecisionStep {
   id: DecisionStepId;
@@ -174,7 +185,7 @@ export interface DecisionPath {
 
 /**
  * A ordem em que a régua decide (atest/score.py, _recommendation), passo a passo, com a regra que decidiu este parecer:
- * checklist → trava → falta do fornecedor → confiança baixa → valor em questão → faixa do score.
+ * checklist → trava → conferência da pessoa analista → falta do fornecedor → confiança baixa → valor em questão → faixa do score.
  */
 export function decisionPath(stored: Assessment, rubric: RubricInfo): DecisionPath {
   const p = underCurrentRule(stored, rubric).p;
@@ -185,6 +196,8 @@ export function decisionPath(stored: Assessment, rubric: RubricInfo): DecisionPa
   checks.push({ id: "checklist", hit: noScore, findings: [], rec: "checklist_returned" });
   const locks = all.filter((i) => p.findings[i].lock);
   checks.push({ id: "lock", hit: locks.length > 0, findings: locks, rec: "return_locked" });
+  const reviews = all.filter((i) => p.findings[i].review && !impacts[i].absorbedBy);
+  checks.push({ id: "review", hit: reviews.length > 0, findings: reviews, rec: "detailed_review" });
   const gaps = all.filter((i) => p.findings[i].returns && !impacts[i].absorbedBy);
   checks.push({ id: "gap", hit: gaps.length > 0, findings: gaps, rec: "return_to_supplier" });
   checks.push({ id: "confidence", hit: p.confidence === "low", findings: all.filter((i) => p.findings[i].reduces_confidence), rec: "detailed_review" });
@@ -218,6 +231,7 @@ export const REASONS_BY_KIND: Record<string, string> = {
   photo_mismatch: "A foto mostra o ambiente certo, só de outro ângulo",
   unreadable_photo: "A foto está legível o suficiente",
   reused_photo: "Não é reaproveitamento: mesmo local, serviço diferente",
+  possible_duplicate_ticket: "Não é o mesmo problema: conferi o outro chamado",
   photo_dated_before: "A data da câmera está errada",
   out_of_scope_item: "O item é necessário para executar o escopo",
   unjustified_replacement: "A troca tem justificativa técnica",

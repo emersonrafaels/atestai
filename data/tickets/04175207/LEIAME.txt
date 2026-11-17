@@ -1,0 +1,12 @@
+CASO FICTÍCIO criado para testar o Atest.AI (não é um chamado real do Salesforce): agência, fornecedor, valores e
+problemas foram inventados. As imagens em attachments/ são SIMULADAS (recortes de imagens geradas por IA da biblioteca data/real_photos_itau, OpenAI gpt-image); não são evidência real.
+A origem também está no EXIF (ImageDescription) de cada imagem. Gerado por generator/build_salesforce_cases.py.
+
+Chamado 04175207 - Hall dos caixas eletrônicos escuro (aprovação do orçamento).
+
+Problemas plantados (o que o parecer deveria apontar):
+- POSSÍVEL CHAMADO DUPLICADO: o chamado 04168903 (mesma agência 6260, "Lâmpada queimada do hall dos caixas
+  eletrônicos", aberto 2 dias antes, sem fotos e com a cotação de 2 lâmpadas T8) trata da mesma falta de luz
+  no hall, com outra categoria (Elétrica / Energia parcial) -> possible_duplicate_ticket -> ANÁLISE DETALHADA.
+- TROCA SEM JUSTIFICATIVA / QUANTIDADE ACIMA: o pedido é o hall escuro perto da entrada; o orçamento troca 6
+  luminárias inteiras, e as fotos mostram 2 luminárias antigas apagadas (o outro chamado orçou só 2 lâmpadas).

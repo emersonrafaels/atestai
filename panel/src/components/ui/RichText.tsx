@@ -1,5 +1,8 @@
 import { Camera, ClipboardList, FileText, Ruler, Tag } from "lucide-react";
-import type { ReactNode } from "react";
+import { createContext, useContext, type ReactNode } from "react";
+import type { QuoteItem } from "../../api";
+import { brl, num } from "../../format";
+import { Tooltip } from "./Tooltip";
 
 /**
  * Textos longos do modelo (parecer, mensagem ao fornecedor, leitura das fotos) em pedaços legíveis:
@@ -13,6 +16,8 @@ const TOKEN = new RegExp(
     // "itens 1, 2 e 4", mas não engole a quantidade em "item 1, 1 un"
     String.raw`(?<item>\bite(?:m|ns)\s\d+(?:(?:,\s?|\se\s)\d+(?![.,]?\d)(?!\s?(?:m²|m2|m³|m\b|ml|un|unid|peç|pç|R\$)))*)`,
     String.raw`(?<annex>\bAnexos?\s\d+(?:(?:,\s?|\se\s)\d+)*)`,
+    // número de chamado (8 dígitos): vira link quando é um chamado da mesma agência comparado com este
+    String.raw`(?<ticket>\b\d{8}\b)`,
     String.raw`(?<qty>\b\d+(?:[.,]\d+)?\s?(?:m²|m2|m³|m3|ml|un|unid\.?|peças?|pontos?|chapas?|quadros?)(?![\p{L}\d]))`,
   ].join("|"),
   "giu",
@@ -20,8 +25,75 @@ const TOKEN = new RegExp(
 
 type OnItems = (items: number[]) => void;
 
+/** Item do orçamento como aparece no balão; `classification` vem do parecer (itens avaliados). */
+export type ItemInfo = QuoteItem & { classification?: "compliant" | "out_of_scope" | "to_justify" };
+
+/**
+ * Itens do orçamento do chamado aberto, pelo número. Quem mostra um parecer fornece a lista, e cada "item 3" ou
+ * "itens 1, 2 e 4" citado no texto ganha um balão com o nome do item ao passar o mouse.
+ */
+export const QuoteItemsContext = createContext<Map<number, ItemInfo> | null>(null);
+
+export function itemMap(...lists: (ItemInfo[] | null | undefined)[]): Map<number, ItemInfo> {
+  const m = new Map<number, ItemInfo>();
+  for (const list of lists) for (const it of list ?? []) if (!m.has(it.n)) m.set(it.n, it);
+  return m;
+}
+
+const CLASSIFICATION_TAG: Record<string, string> = { out_of_scope: "fora do escopo", to_justify: "a justificar" };
+
+/** Balão: número, nome, quantidade e valor de cada item citado, com as marcas que importam para o parecer. */
+function ItemTip({ nums, items, clickable }: { nums: number[]; items: Map<number, ItemInfo>; clickable: boolean }) {
+  return (
+    <span className="block space-y-1.5 text-left">
+      {nums.map((n) => {
+        const it = items.get(n);
+        const tags = it ? [it.classification && CLASSIFICATION_TAG[it.classification], it.lpu === false && "fora da LPU"].filter(Boolean) : [];
+        return (
+          <span key={n} className="block">
+            <b className="tabular-nums">Item {n}</b>
+            {it ? (
+              <>
+                {" — "}{it.description}
+                <span className="block tabular-nums opacity-75">
+                  {num(it.quantity)} {it.unit} × {brl(it.unit_value)} = {brl(it.total_value)}
+                  {tags.length > 0 && <> · <span className="font-semibold text-[#ffd27a]">{tags.join(" · ")}</span></>}
+                </span>
+              </>
+            ) : <span className="opacity-75"> — não está no orçamento</span>}
+          </span>
+        );
+      })}
+      {clickable && <span className="block border-t border-white/20 pt-1 opacity-70">Clique para ver no orçamento</span>}
+    </span>
+  );
+}
+
+/** Referência a itens no texto: leva ao orçamento no clique e mostra o nome dos itens no hover (quando conhecidos). */
+function ItemRef({ text, nums, onItems }: { text: string; nums: number[]; onItems?: OnItems }) {
+  const items = useContext(QuoteItemsContext);
+  const known = !!items && nums.some((n) => items.has(n));
+  const base = "whitespace-nowrap rounded bg-blueprint-soft px-0.5 font-medium text-blueprint transition-colors";
+  const el = onItems
+    ? <button type="button" onClick={() => onItems(nums)} title={known ? undefined : "Ver no orçamento"}
+        aria-label={known ? `${text}: ${nums.map((n) => items!.get(n)?.description ?? `item ${n}`).join("; ")}. Ver no orçamento` : undefined}
+        className={`${base} underline decoration-dotted decoration-blueprint/50 underline-offset-2 hover:bg-blueprint hover:text-white hover:decoration-transparent focus-visible:bg-blueprint focus-visible:text-white`}>{text}</button>
+    : <span tabIndex={known ? 0 : undefined}
+        className={`${base} ${known ? "cursor-help underline decoration-dotted decoration-blueprint/50 underline-offset-2 hover:bg-blueprint/15" : ""}`}>{text}</span>;
+  if (!known) return el;
+  return <Tooltip className="inline" delay={80} content={<ItemTip nums={nums} items={items!} clickable={!!onItems} />}>{el}</Tooltip>;
+}
+
+/** Chamados citáveis no texto (os da mesma agência) e o que fazer ao clicar num deles. */
+export interface TicketLinks {
+  ids: Set<string>;
+  open: (id: string) => void;
+  /** chamados marcados como possível duplicado (link em vermelho) */
+  flagged?: Set<string>;
+}
+
 /** Destaca valores, percentuais, quantidades e referências a itens/anexos dentro de um texto corrido. */
-export function highlight(text: string, onItems?: OnItems): ReactNode[] {
+export function highlight(text: string, onItems?: OnItems, tickets?: TicketLinks): ReactNode[] {
   const out: ReactNode[] = [];
   let last = 0;
   for (const m of text.matchAll(TOKEN)) {
@@ -37,11 +109,15 @@ export function highlight(text: string, onItems?: OnItems): ReactNode[] {
       out.push(<b key={k} className={`whitespace-nowrap font-semibold tabular-nums ${bad ? "text-bad" : "text-ink"}`}>{s}</b>);
     } else if (g.item) {
       const nums = [...s.matchAll(/\d+/g)].map((x) => Number(x[0]));
-      out.push(onItems
-        ? <button key={k} type="button" onClick={() => onItems(nums)} title="Ver no orçamento"
-            className="whitespace-nowrap rounded bg-blueprint-soft px-0.5 font-medium text-blueprint hover:underline">{s}</button>
-        : <span key={k} className="whitespace-nowrap rounded bg-blueprint-soft px-0.5 font-medium text-blueprint">{s}</span>);
+      out.push(<ItemRef key={k} text={s} nums={nums} onItems={onItems} />);
     } else if (g.annex) out.push(<span key={k} className="whitespace-nowrap font-medium text-ink">{s}</span>);
+    else if (g.ticket) {
+      const dup = tickets?.flagged?.has(s);
+      out.push(tickets?.ids.has(s)
+        ? <button key={k} type="button" onClick={() => tickets.open(s)} title="Comparar os dois chamados"
+            className={`inline-flex items-center whitespace-nowrap rounded px-0.5 font-semibold tabular-nums underline decoration-dotted underline-offset-2 hover:decoration-solid ${dup ? "bg-[#fbefed] text-bad" : "bg-blueprint-soft text-blueprint"}`}>{s}</button>
+        : s);
+    }
     else out.push(<b key={k} className="whitespace-nowrap font-semibold tabular-nums text-ink">{s}</b>);
     last = i + s.length;
   }
@@ -68,7 +144,7 @@ export function actions(text: string): string[] {
 
 const TOPICS = [
   { key: "qty", label: "Quantidade", icon: Ruler, re: /\bquantidade|cobra(?:m|do)?\s+\d|\bm²|peças?\b|medida/i },
-  { key: "price", label: "Preço", icon: Tag, re: /\bpreço|anúncio|tabela de referência|valor de mercado/i },
+  { key: "price", label: "Preço", icon: Tag, re: /\bpreço|anúncio|\bLPU\b|tabela de referência|valor de mercado/i },
   { key: "photos", label: "Fotos", icon: Camera, re: /\bfotos?\b/i },
   { key: "docs", label: "Documentos", icon: FileText, re: /\bdocumento|print|laudo|nota fiscal|\bART\b/i },
   { key: "scope", label: "Pedido", icon: ClipboardList, re: /orçamento|\bitens?\b|pedid|escopo|serviço/i },
@@ -79,9 +155,9 @@ function topicOf(sentence: string) {
 }
 
 /** Parágrafo corrido → lista de frases, cada uma com o assunto (pedido, quantidade, preço, fotos) e os números em destaque. */
-export function SentenceList({ text, onItems, topics = true, className = "" }: { text: string; onItems?: OnItems; topics?: boolean; className?: string }) {
+export function SentenceList({ text, onItems, tickets, topics = true, className = "" }: { text: string; onItems?: OnItems; tickets?: TicketLinks; topics?: boolean; className?: string }) {
   const list = sentences(text, true);
-  if (list.length <= 1) return <p className={`leading-relaxed ${className}`}>{highlight(text, onItems)}</p>;
+  if (list.length <= 1) return <p className={`leading-relaxed ${className}`}>{highlight(text, onItems, tickets)}</p>;
   return (
     <ul className={`space-y-2 ${className}`}>
       {list.map((s, i) => {
@@ -92,7 +168,7 @@ export function SentenceList({ text, onItems, topics = true, className = "" }: {
             {Icon
               ? <span title={t.label} className="mt-[3px] flex size-5 shrink-0 items-center justify-center rounded-md bg-paper text-muted"><Icon size={12} /></span>
               : <span className="mt-[9px] size-1.5 shrink-0 rounded-full bg-muted/60" />}
-            <span className="min-w-0">{highlight(s, onItems)}</span>
+            <span className="min-w-0">{highlight(s, onItems, tickets)}</span>
           </li>
         );
       })}

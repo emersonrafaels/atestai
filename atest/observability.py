@@ -71,6 +71,7 @@ class JsonFormatter(logging.Formatter):
 STAGE_PT = {
     "checklist": "Checklist",
     "scope": "Escopo",
+    "related": "Chamados da agência",
     "quote": "Orçamento",
     "photos": "Fotos",
     "documents": "Documentos",

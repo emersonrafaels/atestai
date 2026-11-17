@@ -200,5 +200,5 @@ def test_photos_must_count_measured_items_and_rationale_reaches_the_writer(cfg, 
         f"cobrado {first.quantity:g} {first.unit}; as fotos somam 8 (peças quebradas), cerca de 1.62 {first.unit}"
         in text
     )
-    assert "Nenhum item tem equivalente na tabela de referência" in text
+    assert "Nenhum item tem equivalente na LPU" in text
     assert "risco de tropeço" in text

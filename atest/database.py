@@ -6,6 +6,7 @@ SQLite atende ao piloto (um arquivo, sem servidor). Para produção, o mesmo esq
 from __future__ import annotations
 
 import json
+import re
 import sqlite3
 import threading
 from collections.abc import Iterator
@@ -18,6 +19,19 @@ from typing import Any
 from pydantic import BaseModel, Field
 
 from .domain import Assessment, Recommendation
+from .formatting import lpu_terms
+
+# Pareceres gravados antes das mudanças de nome: agência "(cód. 0418)" → "(núm. do ponto 0418)", sem "(fictícia)".
+_OLD_CODE = re.compile(r"(\(|Agência )cód\. (\d{4})\b")
+
+
+def _current_terms(raw: str) -> str:
+    """JSON de um parecer gravado com os nomes de hoje (LPU, número do ponto, agência sem \"(fictícia)\")."""
+    raw = _OLD_CODE.sub(
+        lambda m: f"{m.group(1)}núm. do ponto {m.group(2)}", lpu_terms(raw)
+    )
+    return raw.replace(" (fictícia)", "")
+
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS runs (
@@ -315,19 +329,23 @@ class Database:
 
     def assessment(self, pid: int) -> Assessment | None:
         r = self._rows("SELECT json FROM assessments WHERE id=?", (pid,))
-        return Assessment.model_validate_json(r[0]["json"]) if r else None
+        # pareceres antigos aparecem com os nomes de hoje (LPU, número do ponto)
+        return (
+            Assessment.model_validate_json(_current_terms(r[0]["json"])) if r else None
+        )
 
     def run_assessments(self, run_id: str) -> list[Assessment]:
         rows = self._rows(
             "SELECT json FROM assessments WHERE run_id=? ORDER BY ticket_id", (run_id,)
         )
-        return [Assessment.model_validate_json(r["json"]) for r in rows]
+        return [Assessment.model_validate_json(_current_terms(r["json"])) for r in rows]
 
     def ticket_history(self, ticket_id: str) -> list[dict[str, Any]]:
         """Pareceres anteriores do chamado, do mais novo ao mais antigo, com o último feedback de cada um."""
         return self._rows(
             """SELECT p.id, p.run_id, p.generated_at, p.recommendation, p.score, p.mode, p.cost_brl,
-                      (SELECT action FROM feedbacks f WHERE f.assessment_id = p.id ORDER BY f.id DESC LIMIT 1) AS feedback
+                      (SELECT action FROM feedbacks f WHERE f.assessment_id = p.id ORDER BY f.id DESC LIMIT 1) AS feedback,
+                      json_extract(p.json, '$.related.tickets') AS related_tickets
                FROM assessments p WHERE ticket_id=? ORDER BY p.id DESC""",
             (ticket_id,),
         )

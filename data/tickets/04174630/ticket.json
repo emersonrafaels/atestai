@@ -1,0 +1,56 @@
+{
+  "ticket_id": "04174630",
+  "workstream": "SETA",
+  "maintenance_type": "corrective",
+  "moment": "quote",
+  "category": "electrical",
+  "symptom": "pecas_e_equipamentos_diversos",
+  "requested_scope": "Quadro de distribuição de energia do salão de atendimento com fiação exposta e emaranhada, a porta do quadro não fecha. Risco de choque e de curto.",
+  "solution_description": "Instalação de chapa de acrílico para proteção do quadro e organização da fiação.",
+  "branch": {
+    "code": "2754",
+    "name": "Duque de Caxias Centro",
+    "environment": "area_interna_publico"
+  },
+  "supplier": {
+    "name": "ATM Engenharia LTDA",
+    "cnpj": ""
+  },
+  "blocks_opening": false,
+  "quoted_value": 995.0,
+  "dates": {
+    "opening": "2026-11-10",
+    "supplier_submission": "2026-11-11",
+    "manager_review": null
+  },
+  "status": "forwarded_to_backoffice",
+  "origin": "dataset",
+  "dataset": "casos",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "attachments": [
+    {
+      "file_name": "Orcamento_ATM_04174630.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 5872,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-11"
+    },
+    {
+      "file_name": "IMG_20261110_151730.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 199819,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-11"
+    },
+    {
+      "file_name": "IMG_20261110_152044.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 210418,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-11"
+    }
+  ]
+}

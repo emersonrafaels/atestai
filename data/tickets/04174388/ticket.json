@@ -1,0 +1,56 @@
+{
+  "ticket_id": "04174388",
+  "workstream": "SETA",
+  "maintenance_type": "corrective",
+  "moment": "quote",
+  "category": "civil",
+  "symptom": "moisture_infiltration",
+  "requested_scope": "GOTEIRA NO TETO DA SALA DOS CAIXAS ELETRONICOS, DO LADO DO ATM 4. PLACAS DO FORRO MANCHADAS E UMA QUASE CAINDO. RISCO PARA OS CLIENTES, FAVOR ATENDER RAPIDO",
+  "solution_description": "Troca de 8 placas de forro e impermeabilização do ponto de infiltração.",
+  "branch": {
+    "code": "1520",
+    "name": "",
+    "environment": "area_interna_publico"
+  },
+  "supplier": {
+    "name": "Reforma Já Engenharia LTDA (fictício)",
+    "cnpj": ""
+  },
+  "blocks_opening": false,
+  "quoted_value": 1377.5,
+  "dates": {
+    "opening": "2026-11-12",
+    "supplier_submission": "2026-11-13",
+    "manager_review": null
+  },
+  "status": "forwarded_to_backoffice",
+  "origin": "dataset",
+  "dataset": "casos",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "attachments": [
+    {
+      "file_name": "Orcamento_ReformaJa_04174388.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 5910,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-13"
+    },
+    {
+      "file_name": "IMG_20261112_090145.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 240576,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-13"
+    },
+    {
+      "file_name": "IMG_20261112_090322.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 246263,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-13"
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-"""Orquestrador do Atest.AI: checklist → escopo → orçamento → fotos → documentos (OCR) → score → parecer.
+"""Orquestrador do Atest.AI: checklist → escopo → chamados da agência → orçamento → fotos → documentos (OCR) → score → parecer.
 
 O orquestrador não conhece regra de negócio: ele roda as etapas (`AnalysisStage`) em ordem sobre um
 `AnalysisContext`, mede o tempo de cada uma, avisa o progresso e monta o `Assessment` final. Trocar, remover ou
@@ -23,6 +23,7 @@ from .llm import LlmClient, LlmSession
 from .observability import context, event, timed_stage
 from .photos import PhotoIndex, PhotoStage
 from .quote import QuoteStage
+from .related import RelatedTicketsStage
 from .repository import LoadedTicket, References
 from .scope import ScopeStage
 from .score import ScoreCalculator
@@ -71,18 +72,20 @@ class Orchestrator:
         self.stages = list(stages) if stages is not None else self.default_stages(index)
 
     def default_stages(self, photo_index: PhotoIndex | None) -> list[AnalysisStage]:
-        """As etapas do deck, na ordem, com a leitura dos documentos depois das fotos.
+        """As etapas do deck, na ordem, com a comparação com os chamados da agência depois do escopo e a leitura dos
+        documentos depois das fotos.
 
         Args:
             photo_index: índice de fotos repassado à etapa de fotos (None desliga a checagem de reaproveitamento).
 
         Returns:
-            Checklist → escopo → orçamento → fotos → documentos → score → parecer.
+            Checklist → escopo → chamados da agência → orçamento → fotos → documentos → score → parecer.
         """
         args = (self.cfg, self.references, self.scorer)
         return [
             ChecklistStage(*args),
             ScopeStage(*args),
+            RelatedTicketsStage(*args),
             QuoteStage(*args),
             PhotoStage(*args, index=photo_index),
             DocumentStage(*args),
@@ -231,6 +234,7 @@ class Orchestrator:
                 },
             ),
             "documents": ctx.documents,
+            "related": ctx.related,
             "summary": ctx.text.summary,
             "supplier_message": ctx.text.supplier_message,
         }

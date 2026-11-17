@@ -42,7 +42,8 @@ Application (main.py)
      │                                → Orchestrator
      ├─ Orchestrator ─ AnalysisContext (estado de um chamado)
      │   └─ AnalysisStage (ABC), em ordem:
-     │       ChecklistStage → ScopeStage → QuoteStage → PhotoStage → ScoringStage → AssessmentStage
+     │       ChecklistStage → ScopeStage → RelatedTicketsStage → QuoteStage → PhotoStage → DocumentStage
+     │       → ScoringStage → AssessmentStage
      │       (cada etapa recebe Settings, References e ScoreCalculator; o checklist pode encerrar a análise)
      ├─ RunOutputWriter (output/runs/<id>/)
      ├─ GroundTruthEvaluator + ValidationReporter (métricas e portão de qualidade)
@@ -140,14 +141,42 @@ O `Orchestrator` inteiro vira um único nó do grafo. Também passa a valer a pe
 - **Itens sem foto**: os itens físicos cobrados que nenhuma foto evidencia (`items_without_photo` da análise de fotos, inclusive quando as fotos mostram menos unidades do que as cobradas) viram um apontamento `item_without_photo` (médio, desconta uma vez).
 - **Materialidade**: cada tipo desconta uma vez por validação. Por isso, quando o valor potencial divergente chega a `relevant_amount_at_issue_pct` do orçamento (padrão: 50%), entra `relevant_amount_at_issue` (médio, na nota do orçamento). Seis itens com o mesmo problema deixam de pesar como um só.
 - **Escopo vago pesa alto**: `vague_scope` é de severidade alta, porque escopo vago impede conferir orçamento e fotos.
+- **Chamado duplicado na mesma agência pede conferência**: `possible_duplicate_ticket` tem `review = true` e leva à análise detalhada antes de qualquer devolução (só a trava vem antes). Veja **Chamados da mesma agência**.
 - **Contingência** só em erro transitório; erro definitivo não troca de modelo e aparece.
 - **Custo por chamado** em USD e BRL, com desconto de batch; **observabilidade** em JSON lines com ids de execução e chamado; persistência em SQLite.
 - **Feedback do copiloto** (aceitar, ajustar, discordar) gravado por parecer: vira dado rotulado para a próxima validação.
 
+## Chamados da mesma agência (possível duplicidade)
+
+É comum a agência abrir mais de um chamado para o mesmo problema: pessoas diferentes, reabertura, pedido repetido por
+urgência, categoria escolhida diferente. Depois da leitura do escopo, a etapa `RelatedTicketsStage` (`atest/related.py`)
+compara o chamado com os outros da **mesma agência**: mesmo código ou, quando um dos dois não tem código, mesmo nome
+normalizado (sem acento, "Ag.", "Agência", "Itaú" e pontuação).
+
+Quais chamados entram é parametrizado na régua (`[rubric.related_tickets]` em `config/rubric.toml`, editável no portal,
+aba Régua do score):
+
+| Parâmetro | Padrão | O que faz |
+|---|---|---|
+| `window_days` | 5 | entram os chamados da agência abertos até N dias antes ou depois da abertura deste |
+| `include_still_open` | `true` | entram também os que **seguem abertos**, abertos antes da janela, qualquer que seja a data |
+| `closed_statuses` | approved, rejected, cancelled, closed, completed, paid | situações de encerrado; qualquer outra conta como aberto |
+| `min_probability` | 70 | chance (%) de ser o mesmo problema a partir da qual vira `possible_duplicate_ticket` (análise detalhada) |
+| `show_probability` | 40 | a partir desta chance o chamado aparece no parecer como relacionado, sem descontar |
+| `max_candidates` | 8 | chamados comparados pelo modelo (mesma categoria e abertura mais próxima primeiro) |
+| `enabled` | `true` | liga e desliga a etapa |
+
+A seleção dos candidatos é regra; o modelo (tarefa `related_tickets`, só texto, modelo rápido) lê escopo, solução, local,
+categoria e itens de cada um e devolve a relação (`same_problem`, `related`, `different`) e a chance; a régua decide.
+O resultado fica em `Assessment.related` e na aba **Agência** do painel (os dois escopos lado a lado, o que coincide, o que
+difere e o link para abrir o outro chamado). Os conjuntos sintéticos (`validation`, `itau`, `scenarios`) ficam fora da
+comparação (`[pipeline] related_skip_datasets`): eles sorteiam agência e data, então dois chamados deles na mesma agência
+são coincidência do gerador e o gabarito não conta com isso.
+
 ## O painel
 
-- **Cenários**: acha chamados por tipo de problema (escopo mal preenchido, orçamento com vários erros, foto de outro ambiente, checklist incompleto...). Mostra o catálogo com um chamado por cenário e, para cada tipo, os chamados de todos os conjuntos cujo gabarito traz aquele problema. Um clique abre o chamado na Análise; **Selecionar** marca todos para analisar de uma vez. A mesma lista fica em [`docs/cenarios.md`](docs/cenarios.md).
-- **Análise**: lista de chamados (filtro por conjunto e esteira), modo simulado ou API, régua Fase 1/2, síncrono ou batch. Abas: entrada do chamado, parecer (carimbo, notas, apontamentos, mensagem ao fornecedor, feedback), escopo, orçamento, fotos, documentos (transcrição por OCR, campos lidos e divergências com o chamado) e chamadas ao modelo; o botão Parecer em JSON fica ao lado. **Novo chamado** envia a planilha (só os itens) e as fotos e documentos pela tela.
+- **Cenários**: acha chamados por tipo de problema (escopo mal preenchido, orçamento com vários erros, foto de outro ambiente, checklist incompleto...). Mostra o catálogo com um chamado por cenário e, para cada tipo, os chamados de todos os conjuntos cujo gabarito traz aquele problema. Um clique abre o chamado na Análise; **Selecionar** marca todos para analisar de uma vez. A mesma lista fica em [`docs/cenarios.md`](docs/cenarios.md). No topo, um filtro por **conjunto de dados** mostra o que esperar de cada conjunto; nos **Casos Itaú - Salesforce** (sem gabarito), um roteiro por chamado diz o resultado esperado, os apontamentos plantados, o que mostrar na tela, os chamados ligados e o último parecer. O roteiro fica em [`data/demo_guide.toml`](data/demo_guide.toml), editável à mão (um teste confere que cobre todos os chamados `casos`).
+- **Análise**: lista de chamados (filtro por conjunto e esteira; busca por nº do chamado — vários de uma vez —, agência, fornecedor ou texto; e, em **Filtros**, agência por nome ou código (418 = 0418), etapa, tipo, categoria, local, fornecedor, parecer — inclusive "possível duplicado" e "diferente do gabarito" —, impede abertura, valor orçado, data de abertura e fotos; os filtros ficam salvos no navegador), modo simulado ou API, régua Fase 1/2, síncrono ou batch. Abas: entrada do chamado, parecer (carimbo, notas, apontamentos, mensagem ao fornecedor, feedback), escopo, orçamento, fotos, documentos (transcrição por OCR, campos lidos e divergências com o chamado) e chamadas ao modelo; o botão Parecer em JSON fica ao lado. **Novo chamado** envia a planilha (só os itens) e as fotos e documentos pela tela.
 - **Validação**: roda um conjunto inteiro (ou uma amostra) e mostra a leitura de ciência de dados: portão de qualidade, acurácia com IC 95% por bootstrap, kappa de Cohen, F1 de "pegar problema", matriz de confusão, dispersão do score, precisão/cobertura/F1 por tipo de apontamento, acurácia por categoria, valor em questão, latência e custo p50/p95, e os casos divergentes.
 - **Operação**: histórico de execuções, custos e feedbacks.
 
@@ -163,6 +192,8 @@ A aba **Configuração** do painel é o portal para manter as regras sem editar 
 
 ## Contrato de entrada
 
+A **agência** pode vir pelo **nome**, pelo **código** ou pelos dois (pelo menos um). O código é um número de 0 a 9999, gravado com 4 dígitos (`418` → `0418`); código fora disso é recusado no envio. Com código, a comparação entre chamados da mesma agência (fotos reaproveitadas, possível duplicidade) usa o código; sem ele, usa o nome normalizado.
+
 Cada chamado (`data/tickets/<id>/ticket.json`, modelo Pydantic `Ticket`) tem obrigatoriamente **categoria** (`painting`, `waterproofing`, `electrical`, `lighting`, `air_conditioning`, `plumbing`, `metalwork`, `cctv`, `alarm`, `cctv_and_alarm`), **sintoma** macro e **escopo** em linguagem natural.
 
 O **orçamento é sempre Excel**, com duas abas em formato Tabela: `Chamado`/`tbChamado` (Campo, Valor: chamado, esteira, agência, fornecedor, CNPJ, nº, data, categoria, sintoma, escopo, valor total) e `Itens`/`tbItens` (Item, Descrição, Unidade, Quantidade, Valor unitário, Valor total). A leitura é por regra, sem LLM (`repository.read_quote`). Divergência entre planilha e chamado vira o apontamento `spreadsheet_mismatch`. O painel oferece o modelo da planilha para download.
@@ -172,6 +203,20 @@ O **orçamento é sempre Excel**, com duas abas em formato Tabela: `Chamado`/`tb
 - **Cenários de teste** inclui os 13 casos do deck (`00…`) e variações, com gabarito escrito à mão.
 - **Validação** (80 chamados, `0100…`): 10 modelos de serviço × 8, com defeitos injetados por sorteio. O gabarito é calculado pela própria régua a partir dos defeitos.
 - **Cenários** (`0300…`): **um chamado por tipo de problema**, com os defeitos fixos em vez de sorteados (`generator/build_scenarios_dataset.py`). Se um defeito não puder ser aplicado, a geração falha, em vez de pular o defeito em silêncio. Um teste (`test_every_scenario_type_has_a_ticket_in_the_catalog`) garante que todo tipo de cenário de `atest/scenarios.py` tem pelo menos um chamado no catálogo.
+- **Casos Itaú - Salesforce** (`04…`, conjunto `casos`, sem gabarito: rodam no modo API): casos reconstituídos do Salesforce e casos fictícios no mesmo formato, cada um com um `LEIAME.txt` que diz o que o parecer deveria apontar. Os gerados por `python generator/build_salesforce_cases.py` testam os chamados da mesma agência e o reaproveitamento de foto:
+
+  | Chamado | Agência | O que testa |
+  |---|---|---|
+  | `04161377` | 1520 Campinas Cambuí | split pingando, **segue aberto** (aberto em 22/10): entra na comparação dos chamados de novembro só por estar aberto; deve aparecer como relacionado ao forro manchado |
+  | `04174102` | 1520 (nome e código) | forro do autoatendimento manchado → **possível duplicado** de `04174388` |
+  | `04174388` | só o código `1520` | goteira no teto da sala dos caixas, outro fornecedor e outro sintoma → **possível duplicado** de `04174102` |
+  | `04174415` | só o nome "Ag. Campinas - Cambuí" | tomada queimada: compara pelo nome, nenhum duplicado → aprovar |
+  | `04174630` | 2754 Duque de Caxias | **foto reaproveitada** do `04159084` (mesmo fornecedor, outra agência) → trava |
+  | `04174851` | 7856 Guapimirim | piso quebrado: **duplicado** do `04164650` (aberto 44 dias antes, segue aberto) **e** fotos reaproveitadas dele → trava |
+  | `04175012` | 4417 BH Savassi | sensor de alarme: 3 sensores cobrados para 1, preço acima da LPU; o `04173506` (ainda aberto) é outro problema |
+  | `04175207` | 6260 Indaiatuba | hall escuro: **duplicado** do `04168903` (lâmpada do hall, 2 dias antes) e 6 luminárias para 2 |
+
+  O gerador recorta ângulos diferentes das fotos da biblioteca `data/real_photos_itau/` (sem custo de API) e, no fim, confere com o índice de hashes do pipeline que só as fotos reaproveitadas de propósito parecem com fotos de outros chamados.
 - **Itaú** (41 chamados, `0200…`): a mesma mecânica da validação (defeitos sorteados, gabarito pela régua), em agências no padrão Itaú e com **fotos fotorrealistas geradas por IA** com a identidade visual do banco. Agências, fornecedores, CNPJs e valores continuam fictícios; a marca aparece só para demonstração interna. São 20 chamados de execução (10 modelos × 2, `02000001`–`02000020`) e 21 de **Aprovação de Orçamento** (`02000021`–`02000041`): os 7 modelos que têm foto do problema (pintura, infiltração, lâmpadas, ar-condicionado, tomadas, câmera e sensor) × 3, só com a planilha e as fotos do antes, como o fornecedor envia antes de executar (`quote_stage()` em `generator/build_validation_dataset.py`).
 
 Regerar, nesta ordem (o `--clean` apaga todos os chamados; os seguintes indexam as fotos dos anteriores para não gerar reaproveitamento por acaso):
@@ -226,6 +271,7 @@ atest/
   checklist.py scope.py quote.py photos.py scoring.py assessment.py   as etapas
   score.py               ScoreCalculator (régua: apontamentos → notas, score, recomendação, absorção)
   scenarios.py           etiquetas de cenário de teste a partir do gabarito (aba Cenários, docs/cenarios.md)
+  demo_guide.py          guia de demonstração da aba Cenários (data/demo_guide.toml)
   pipeline.py            Orchestrator de um chamado
   batch.py               ComponentFactory, BatchRunner, RunOutputWriter
   evaluation.py          GroundTruthEvaluator

@@ -8,7 +8,7 @@ export type Recommendation =
   | "detailed_review"
   | "checklist_returned";
 
-export type Stage = "checklist" | "scope" | "quote" | "photos" | "documents" | "score" | "assessment" | "done";
+export type Stage = "checklist" | "scope" | "related" | "quote" | "photos" | "documents" | "score" | "assessment" | "done";
 
 export interface Expected {
   recommendation: Recommendation;
@@ -26,6 +26,8 @@ export interface LastAssessment {
   score: number | null;
   mode: string;
   feedback: string | null;
+  /** chamados da mesma agência que o parecer apontou como possível duplicado */
+  duplicate_of?: string[];
 }
 
 export interface TicketSummary {
@@ -40,7 +42,12 @@ export interface TicketSummary {
   symptom_label: string;
   /** descrição detalhada do problema (o escopo pedido) */
   scope: string;
+  /** agência como aparece na tela: "Nome (núm. do ponto 0418)", só o nome ou "Agência núm. do ponto 0418" */
   branch: string;
+  /** número do ponto (código da agência), de 0 a 9999 com 4 dígitos; vazio = não informado */
+  branch_code?: string;
+  /** nome; vazio = não informado */
+  branch_name?: string;
   environment: string;
   /** o problema está impedindo a abertura da agência? (null = não informado) */
   blocks_opening?: boolean | null;
@@ -51,6 +58,12 @@ export interface TicketSummary {
   moment: "quote" | "execution";
   maintenance_type: string;
   n_photos: number;
+  /** data de abertura (AAAA-MM-DD) */
+  opened_at?: string | null;
+  /** situação do chamado, em português */
+  status?: string;
+  /** ainda aberto, pelas situações encerradas da régua */
+  is_open?: boolean | null;
   expected: Expected | null;
   /** tipos de cenário de teste que o gabarito descreve (atest/scenarios.py) */
   tags?: string[];
@@ -121,6 +134,8 @@ export interface Finding {
   absorbed_by?: string;
   /** falta do fornecedor: leva a devolver qualquer que seja a nota (régua v9) */
   returns?: boolean;
+  /** pede conferência da pessoa analista (ex.: possível chamado duplicado): leva à análise detalhada (régua v10) */
+  review?: boolean;
   /** fração do que foi enviado que o tipo atinge (1 = tudo) e a mesma fração em palavras ("3 de 6 fotos") */
   extent?: number;
   extent_label?: string;
@@ -209,6 +224,10 @@ export interface ServiceCoverage {
 export interface Assessment {
   ticket_id: string;
   workstream: string;
+  /** escopo pedido, como veio no chamado */
+  requested_scope?: string;
+  /** agência: nome e/ou código (código de 0 a 9999, com 4 dígitos) */
+  branch?: { code: string; name: string; environment: string };
   category: string;
   symptom: string;
   moment: string;
@@ -250,6 +269,8 @@ export interface Assessment {
   photo_summary: Record<string, unknown> | null;
   /** documentos lidos por OCR (foto de documento ou PDF) */
   documents?: EvaluatedDocument[];
+  /** chamados da mesma agência comparados com este (pareceres antigos não têm) */
+  related?: RelatedTicketsCheck | null;
   summary: string;
   supplier_message: string;
   llm_calls: LlmCall[];
@@ -257,6 +278,45 @@ export interface Assessment {
   stage_durations_s: Record<string, number>;
   cost_usd: number;
   cost_brl: number;
+}
+
+/** Chamado da mesma agência comparado com este, com a chance de ser o mesmo problema. */
+export interface RelatedTicket {
+  ticket_id: string;
+  /** "tickets" (base atual) ou "history" (chamados antigos) */
+  source: string;
+  opening: string;
+  status: string;
+  is_open: boolean;
+  category: string;
+  category_label: string;
+  symptom_label: string;
+  environment: string;
+  scope: string;
+  supplier: string;
+  quoted_value: number | null;
+  /** dias entre as aberturas: positivo = aberto antes deste */
+  days_apart: number;
+  /** aberto dentro da janela; false = entrou por seguir aberto */
+  in_window: boolean;
+  probability: number;
+  relation: "same_problem" | "related" | "different";
+  reason: string;
+  matching_points: string[];
+  differences: string[];
+  /** virou o apontamento "possível chamado duplicado" */
+  flagged: boolean;
+}
+
+export interface RelatedTicketsCheck {
+  window_days: number;
+  include_still_open: boolean;
+  min_probability: number;
+  show_probability: number;
+  candidates_found: number;
+  tickets: RelatedTicket[];
+  /** motivo de a checagem não rodar (vazio = rodou) */
+  skipped: string;
 }
 
 export interface Comparison {
@@ -390,7 +450,7 @@ export interface RubricInfo {
   /** tipo de apontamento → tipos da mesma validação que ele absorve (deixam de descontar quando ele aparece) */
   absorbs?: Record<string, string[]>;
   /** flags atuais de cada tipo de apontamento (pareceres antigos podem ter sido gravados com outros) */
-  finding_flags?: Record<string, { reduces_confidence: boolean; returns: boolean; lock: boolean }>;
+  finding_flags?: Record<string, { reduces_confidence: boolean; returns: boolean; lock: boolean; review?: boolean }>;
   proportional_floor?: number;
   relevant_amount_at_issue_pct?: number;
   max_amount_at_issue_for_approve_pct?: number;
@@ -401,6 +461,28 @@ export interface Dataset {
   name: string;
   label: string;
   n: number;
+}
+
+/** Guia de demonstração (GET /api/guide, data/demo_guide.toml). */
+export interface DemoGuide {
+  /** o que é cada conjunto e o que esperar dele */
+  datasets: Record<string, { label: string; what: string; expect: string; tips: string[] }>;
+  /** temas do roteiro dos Casos Salesforce, na ordem de exibição */
+  groups: { id: string; label: string; description: string }[];
+  cases: GuideCase[];
+}
+
+/** Roteiro de um chamado dos Casos Salesforce: o que foi plantado e o que mostrar. */
+export interface GuideCase {
+  id: string;
+  group: string;
+  title: string;
+  /** recomendações esperadas; mais de uma = o modelo real pode variar entre elas */
+  expect: Recommendation[];
+  findings: string[];
+  show: string[];
+  linked: string[];
+  note: string;
 }
 
 export interface Interval {
@@ -664,6 +746,7 @@ export const api = {
   execution: (id: string, light = false) => ask<Run>(`/api/runs/${id}${light ? "?light=true" : ""}`),
   datasets: () => ask<Dataset[]>("/api/datasets"),
   scenarios: () => ask<ScenarioTag[]>("/api/scenarios"),
+  guide: () => ask<DemoGuide>("/api/guide"),
   validation: (id: string) => ask<ValidationReport>(`/api/runs/${id}/validation`),
   validations: () => ask<RunSummary[]>("/api/validations"),
   runs: () => ask<RunSummary[]>("/api/runs"),
@@ -694,6 +777,8 @@ export interface FindingTypeConfig {
   extent?: "value" | "photos" | "items" | "documents" | "services" | "whole";
   /** falta do fornecedor: devolve qualquer que seja a nota */
   returns?: boolean;
+  /** pede conferência da pessoa analista: leva à análise detalhada */
+  review?: boolean;
   enabled: boolean;
   /** tipos da mesma validação que deixam de descontar quando este aparece */
   absorbs?: string[];
@@ -722,7 +807,19 @@ export interface RubricConfig {
   max_amount_at_issue_for_caveats_pct?: number;
   proportional_floor?: number;
   market_price_tolerance_pct?: number;
+  related_tickets?: RelatedTicketsRule;
   finding_types: Record<string, FindingTypeConfig>;
+}
+
+/** Chamados da mesma agência ([rubric.related_tickets]): janela, ainda abertos e chances que contam. */
+export interface RelatedTicketsRule {
+  enabled: boolean;
+  window_days: number;
+  include_still_open: boolean;
+  closed_statuses: string[];
+  min_probability: number;
+  show_probability: number;
+  max_candidates: number;
 }
 
 export interface ChecklistRequirementConfig {
@@ -811,7 +908,7 @@ export interface AdminUser {
 }
 
 /** Revisão da API que este front-end espera (atest/api.py: PANEL_API). */
-export const PANEL_API = 7;
+export const PANEL_API = 9;
 export const serverOutdated = (c: AppSettings | null) => !!c && (c.panel_api ?? 0) < PANEL_API;
 
 const TOKEN_KEY = "atest.admin.token";

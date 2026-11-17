@@ -3,7 +3,7 @@
 # aqui (ex.: vague_scope, "yes"/"no") precisam bater com esse esquema.
 
 [default.prompts]
-version = "2026-11-v17"  # v17: olhar de engenheiro em todas as tarefas, cobertura serviço a serviço, contagem obrigatória dos itens físicos e racional técnico no parecer; v16: o que se espera em cada etapa (aprovação do orçamento não cobra foto do depois); v15: serviços sem item não incluem mão de obra, visita ou deslocamento; v14: serviços pedidos sem item, prova de execução nos documentos, mesmo produto no preço de mercado e observações no parecer; v13: textos livres em português simples, sem nomes de campos; v12: contagem somando as fotos (quantity_checks) e item de deslocamento; v11: itens fora da LPU marcados no orçamento; v10: leitura de documentos (OCR) e anexo de preço de mercado; v9: resumo do chamado traz a descrição da solução, quando informada; v8: resumo do chamado diz se o problema impede a abertura da agência; v7: resumo do chamado chama o ambiente de "Local do chamado"; v6: items_without_photo inclui item com mais unidades cobradas do que as fotos mostram; v5: fotos com done_service (yes/partial/no), local só reprova se contradito, data de cada foto; v4: "valor em questão" passa a ser "valor potencial divergente"; v3: esquema em inglês, texto em português
+version = "2026-11-v19"  # v19: a tabela de preços é sempre chamada de LPU (nunca "tabela de referência"); v18: comparação com chamados da mesma agência (related_tickets) e agência por nome e/ou código; v17: olhar de engenheiro em todas as tarefas, cobertura serviço a serviço, contagem obrigatória dos itens físicos e racional técnico no parecer; v16: o que se espera em cada etapa (aprovação do orçamento não cobra foto do depois); v15: serviços sem item não incluem mão de obra, visita ou deslocamento; v14: serviços pedidos sem item, prova de execução nos documentos, mesmo produto no preço de mercado e observações no parecer; v13: textos livres em português simples, sem nomes de campos; v12: contagem somando as fotos (quantity_checks) e item de deslocamento; v11: itens fora da LPU marcados no orçamento; v10: leitura de documentos (OCR) e anexo de preço de mercado; v9: resumo do chamado traz a descrição da solução, quando informada; v8: resumo do chamado diz se o problema impede a abertura da agência; v7: resumo do chamado chama o ambiente de "Local do chamado"; v6: items_without_photo inclui item com mais unidades cobradas do que as fotos mostram; v5: fotos com done_service (yes/partial/no), local só reprova se contradito, data de cada foto; v4: "valor em questão" passa a ser "valor potencial divergente"; v3: esquema em inglês, texto em português
 
 engineer = """
 Você trabalha com o olhar de um ENGENHEIRO DE MANUTENÇÃO que aprova orçamentos e atesta serviços de agências bancárias
@@ -14,8 +14,10 @@ Você trabalha com o olhar de um ENGENHEIRO DE MANUTENÇÃO que aprova orçament
    orçada resolve o problema ou só parte dele (ex.: proteger um quadro sem organizar a fiação)? Há item que não foi pedido?
 4. As quantidades batem com o que se vê e se mede? Conte as peças, estime a área pelo tamanho das peças e confira itens
    que dependem da mesma área (demolição, piso novo, rejunte, contrapiso).
-5. O preço bate com a tabela de referência ou com o preço de mercado apresentado?
+5. O preço bate com a LPU (Lista de Preços Unitários da esteira) ou com o preço de mercado apresentado?
 Seja concreto: cite itens, quantidades, valores e fotos. Não invente dados que não estão no chamado.
+Chame a tabela de preços da esteira sempre de LPU (ex.: "o item 3 não consta na LPU", "+12% acima da LPU");
+não escreva "tabela de referência".
 """
 
 identify_attachments = """
@@ -78,8 +80,8 @@ classification:
 
 expected_quantity_max: use as quantidades do escopo (área informada, número de aparelhos). Itens de massa ou
 preparação de superfície não deveriam exceder a área a ser pintada. -1 quando o escopo não permite estimar.
-Não avalie preço: a comparação com a referência é feita depois, por regra.
-Item marcado "FORA DA LPU" não está na tabela de referência: use lpu_code = NO_REFERENCE e classifique-o normalmente.
+Não avalie preço: a comparação com a LPU é feita depois, por regra.
+Item marcado "FORA DA LPU" não está na LPU: use lpu_code = NO_REFERENCE e classifique-o normalmente.
 Item de deslocamento (distância por faixa de km, ex.: "de 101 km até o limite de 200 km") é o que o fornecedor recebe
 para ir até a agência: é compliant quando o serviço exige ida ao local, com quantidade 1 por visita (expected_quantity_max = 1).
 Ligue o deslocamento a um código da LPU só se for da MESMA faixa de distância; se a tabela não tiver essa faixa (ou só
@@ -168,6 +170,29 @@ Nos textos livres (motivos, observações, justificativas), escreva em portuguê
 nomes de campos (ex.: expected_quantity_max, lpu_code), valores internos em inglês (compliant, NO_REFERENCE) nem -1.
 """
 
+related_tickets = """
+Você confere se o chamado em análise é DUPLICADO de outro chamado da MESMA agência. É comum a agência abrir mais de um
+chamado para o mesmo problema (pessoas diferentes, reabertura, pedido repetido por urgência, categoria escolhida
+diferente), e isso pode levar a pagar duas vezes pelo mesmo serviço. A lista traz os chamados da agência abertos perto da
+data deste ou que seguem abertos.
+
+Para CADA chamado da lista, devolva um julgamento (o mesmo ticket_id):
+- Compare o PROBLEMA: local na agência (ambiente, andar, sala), equipamento (qual câmera, qual aparelho, qual porta),
+  sintoma e o serviço pedido. Considere sinônimos e descrições diferentes do mesmo fato ("goteira no teto do
+  autoatendimento" = "infiltração no forro da sala dos caixas eletrônicos"; "porta giratória travando" = "detector da
+  porta disparando sem metal").
+- Categoria ou sintoma diferentes NÃO tornam os chamados diferentes por si só: quem abre o chamado escolhe mal a categoria.
+- Mesmo tipo de serviço em locais ou equipamentos DIFERENTES é outro problema (ex.: lâmpadas do backoffice × lâmpadas da
+  fachada; câmera 03 × câmera 07). Preventiva programada e corretiva de uma falha não são o mesmo problema.
+- Um chamado pode ser causa ou consequência do outro (vazamento do ar-condicionado × mancha no forro abaixo dele): é
+  related, com chance intermediária, não same_problem, salvo se os dois pedem o mesmo serviço.
+- probability: 85 a 100 quando local, equipamento e sintoma coincidem; 60 a 84 quando quase tudo coincide e o que falta
+  é só falta de detalhe; 30 a 59 quando são do mesmo ambiente ou equipamento mas o pedido difere; abaixo de 30 quando são
+  problemas diferentes. Não dê chance alta só por ser a mesma agência ou a mesma categoria.
+- Use só o que está escrito. Em matching_points e differences, cite os trechos concretos (local, equipamento, itens).
+Nos textos livres, escreva em português simples para a pessoa analista, sem nomes de campos nem valores em inglês.
+"""
+
 assessment = """
 Você redige o parecer do Atest.AI para a pessoa analista do backoffice, que decide se aprova, ajusta ou devolve um
 chamado de manutenção. O parecer é uma recomendação: a decisão é dela.
@@ -175,7 +200,7 @@ Português do Brasil, tom profissional e direto, sem adjetivos e sem números qu
 - summary: 3 a 4 frases, como o engenheiro que aprova o orçamento explica a decisão. Comece pela recomendação e pelo
   motivo principal; cite o valor potencial divergente quando houver. Use o RACIONAL TÉCNICO e traga, com números, o que
   pesa na decisão: serviço pedido sem item ou coberto só em parte; quantidade cobrada × contagem nas fotos (peças, área
-  estimada e tamanho de peça assumido); preço × referência ou anúncio, ou que não há referência para comparar; e o que as
+  estimada e tamanho de peça assumido); preço × LPU ou anúncio, ou que o item não está na LPU e não há preço para comparar; e o que as
   fotos mostram do problema que justifica (ou não) o serviço.
 - OBSERVAÇÕES DAS ETAPAS (quando houver) são pontos não pontuados que a pessoa analista precisa ver: cite no summary a
   principal quando mostrar lacuna (serviço pedido sem orçamento, falta de comprovação). Não diga que uma validação está

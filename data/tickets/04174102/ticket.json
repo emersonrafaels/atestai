@@ -1,0 +1,56 @@
+{
+  "ticket_id": "04174102",
+  "workstream": "SETA",
+  "maintenance_type": "corrective",
+  "moment": "quote",
+  "category": "civil",
+  "symptom": "forro_danificado",
+  "requested_scope": "Forro do autoatendimento com manchas de umidade e placas estufadas em cima dos caixas eletrônicos 3 e 4. Quando chove pinga água no piso perto dos caixas. Verificar a origem da água e trocar as placas danificadas.",
+  "solution_description": "Tratamento da infiltração na laje sobre o autoatendimento com manta líquida (12 m²), troca das placas de forro danificadas (6 m²) e pintura do forro recomposto.",
+  "branch": {
+    "code": "1520",
+    "name": "Campinas Cambuí",
+    "environment": "area_interna_publico"
+  },
+  "supplier": {
+    "name": "Construtora Alvorada Serviços LTDA (fictício)",
+    "cnpj": ""
+  },
+  "blocks_opening": false,
+  "quoted_value": 1746.0,
+  "dates": {
+    "opening": "2026-11-09",
+    "supplier_submission": "2026-11-10",
+    "manager_review": null
+  },
+  "status": "forwarded_to_backoffice",
+  "origin": "dataset",
+  "dataset": "casos",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "attachments": [
+    {
+      "file_name": "Orcamento_Alvorada_04174102.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 5922,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-10"
+    },
+    {
+      "file_name": "IMG_20261109_143010.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 348366,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-10"
+    },
+    {
+      "file_name": "IMG_20261109_143255.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 339372,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-10"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+CASO FICTÍCIO criado para testar o Atest.AI (não é um chamado real do Salesforce): agência, fornecedor, valores e
+problemas foram inventados. As imagens em attachments/ são SIMULADAS (recortes de imagens geradas por IA da biblioteca data/real_photos_itau, OpenAI gpt-image; e cópias de fotos de outro chamado, de propósito); não são evidência real.
+A origem também está no EXIF (ImageDescription) de cada imagem. Gerado por generator/build_salesforce_cases.py.
+
+Chamado 04174630 - Quadro de energia com fiação exposta (aprovação do orçamento).
+
+Problemas plantados (o que o parecer deveria apontar):
+- FOTO REAPROVEITADA: IMG_20261110_152044.jpg é cópia recortada (4% das bordas) e recomprimida, com data nova
+  no EXIF, da foto IMG_20261020_094512.jpg do chamado 04159084 (agência 7942 - Rio da Pedra de Guaratiba,
+  outubro). É o MESMO FORNECEDOR (ATM Engenharia) em OUTRA AGÊNCIA -> reused_photo -> TRAVA (devolver).
+Na tela, "Comparar" na foto mostra as duas fotos lado a lado, com agência, fornecedor e datas.
+Não há outro chamado da agência 2754 na base: a comparação com chamados da agência não acha candidatos.

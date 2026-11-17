@@ -36,6 +36,7 @@ const REC_MEANING: Record<Recommendation, string> = {
 const STEP_TITLE: Record<DecisionStepId, string> = {
   checklist: "Checklist mínimo",
   lock: "Trava de integridade",
+  review: "Conferência da pessoa analista",
   gap: "Falta do fornecedor",
   confidence: "Confiança",
   amount: "Valor em questão",
@@ -387,6 +388,9 @@ function StepDetail({ s, p, rubric, band, missing, go, onConfidence }: {
       break;
     case "lock":
       text = fired ? "Indício grave (ex.: foto reaproveitada de outro chamado): devolve qualquer que seja o score." : "Nenhuma trava de integridade.";
+      break;
+    case "review":
+      text = fired ? "Há outro chamado da mesma agência com chance alta de ser o mesmo problema: confira antes de aprovar ou devolver (pode ser chamado duplicado)." : "Nenhum chamado da agência com chance alta de ser o mesmo problema.";
       break;
     case "gap":
       text = fired ? "O que o fornecedor precisa ajustar está claro (serviço sem orçamento, item fora do escopo ou em dobro): volta ao fornecedor." : "Nenhuma falta do fornecedor.";

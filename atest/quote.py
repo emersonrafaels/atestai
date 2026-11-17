@@ -126,7 +126,10 @@ class QuoteStage(AnalysisStage):
             or "1. " + ticket.data.requested_scope
         )
         workstream = ticket.data.workstream.value
-        system = f"{session.system('quote_review')}\n\nTABELA DE REFERÊNCIA (LPU) DA ESTEIRA {workstream}:\n{self.references.lpu_text(workstream)}"
+        system = (
+            f"{session.system('quote_review')}\n\nLPU (LISTA DE PREÇOS UNITÁRIOS) DA ESTEIRA {workstream}:\n"
+            f"{self.references.lpu_text(workstream)}"
+        )
         text = (
             f"{ticket.data.summary_text()}\n\nLEITURA DO ESCOPO:\n{ScopeStage.describe(scope)}"
             f"\n\nITENS DO ORÇAMENTO:\n{items}"

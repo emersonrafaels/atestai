@@ -1,0 +1,56 @@
+{
+  "ticket_id": "04174851",
+  "workstream": "SETA",
+  "maintenance_type": "corrective",
+  "moment": "quote",
+  "category": "civil",
+  "symptom": "piso_danificado",
+  "requested_scope": "Piso quebrado na área dos caixas eletrônicos, várias peças trincadas e soltando na frente das máquinas. Cliente já tropeçou.",
+  "solution_description": "Retirada das peças quebradas e assentamento de piso novo, com rejunte.",
+  "branch": {
+    "code": "7856",
+    "name": "Guapimirim - RJ",
+    "environment": "area_interna_publico"
+  },
+  "supplier": {
+    "name": "Piso Forte Revestimentos LTDA (fictício)",
+    "cnpj": ""
+  },
+  "blocks_opening": false,
+  "quoted_value": 1509.0,
+  "dates": {
+    "opening": "2026-11-14",
+    "supplier_submission": "2026-11-15",
+    "manager_review": null
+  },
+  "status": "forwarded_to_backoffice",
+  "origin": "dataset",
+  "dataset": "casos",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "attachments": [
+    {
+      "file_name": "Orcamento_PisoForte_04174851.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 5881,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-15"
+    },
+    {
+      "file_name": "IMG_20261114_100512.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 139621,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-15"
+    },
+    {
+      "file_name": "IMG_20261114_100733.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 148343,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-15"
+    }
+  ]
+}

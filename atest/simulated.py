@@ -20,6 +20,7 @@ from .llm_schemas import (
     DocumentAnalysis,
     PhotoAnalysis,
     QuoteReview,
+    RelatedTicketsReview,
     ScopeReading,
 )
 from .repository import GroundTruth, load_ground_truth
@@ -284,6 +285,23 @@ class SimulatedClient:
                 }
             )
         return DocumentAnalysis(documents=docs, notes="").model_dump()
+
+    def _related_tickets(self, g: GroundTruth, meta: dict) -> dict:
+        """Comparação simulada: nenhum chamado é o mesmo problema, salvo quando o gabarito espera a duplicidade
+        (aí o primeiro da lista, que é o de mesma categoria e abertura mais próxima)."""
+        dup = "possible_duplicate_ticket" in g.findings
+        judgments = [
+            {
+                "ticket_id": tid,
+                "relation": "same_problem" if dup and i == 0 else "different",
+                "probability": 90 if dup and i == 0 else 10,
+                "matching_points": ["(simulado)"] if dup and i == 0 else [],
+                "differences": [] if dup and i == 0 else ["(simulado)"],
+                "reason": "(simulado a partir do gabarito)",
+            }
+            for i, tid in enumerate(meta.get("candidates", []))
+        ]
+        return RelatedTicketsReview(judgments=judgments).model_dump()
 
     def _assessment(self, g: GroundTruth, meta: dict) -> dict:
         from .assessment import AssessmentWriter

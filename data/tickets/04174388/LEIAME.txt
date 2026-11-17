@@ -1,0 +1,15 @@
+CASO FICTÍCIO criado para testar o Atest.AI (não é um chamado real do Salesforce): agência, fornecedor, valores e
+problemas foram inventados. As imagens em attachments/ são SIMULADAS (recortes de imagens geradas por IA da biblioteca data/real_photos_itau, OpenAI gpt-image); não são evidência real.
+A origem também está no EXIF (ImageDescription) de cada imagem. Gerado por generator/build_salesforce_cases.py.
+
+Chamado 04174388 - Goteira no teto da sala dos caixas eletrônicos (aprovação do orçamento).
+Agência informada SÓ COM O CÓDIGO (1520), sem o nome: a comparação usa o código.
+
+Chamados da mesma agência que entram na comparação:
+- 04174102 (aberto 3 dias ANTES, outro fornecedor, categoria Civil / Forro danificado): forro do
+  autoatendimento manchado e pingando sobre os caixas 3 e 4 -> MESMO PROBLEMA -> possible_duplicate_ticket.
+- 04172318 (7 dias antes, fora da janela, mas segue aberto): porta giratória -> outro problema.
+- 04161377 (aberto em 22/10, segue aberto): split pingando -> relacionado, sem apontamento.
+- 04174415 NÃO entra: foi aberto só com o nome da agência, e este só tem o código (não há como saber que é a
+  mesma agência).
+O que o parecer deveria apontar: possível chamado duplicado (04174102) -> ANÁLISE DETALHADA.

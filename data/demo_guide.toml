@@ -1,0 +1,280 @@
+# Guia de demonstração: o que esperar de cada conjunto de chamados e o roteiro dos Casos Itaú - Salesforce.
+# O painel mostra este arquivo na aba Cenários (GET /api/guide). Edite à mão; o painel lê a cada abertura da aba.
+#
+# [datasets.<nome>]   o que é o conjunto, o que esperar e dicas (nomes: scenarios, validation, itau, casos, uploaded)
+# [[groups]]          temas do roteiro dos Casos Salesforce, na ordem de exibição
+# [[cases]]           um chamado do conjunto casos:
+#   expect            recomendações esperadas (approve, approve_with_caveats, return_to_supplier, return_locked,
+#                     detailed_review, checklist_returned); mais de uma = o modelo real pode variar entre elas
+#   findings          apontamentos que o parecer deve trazer (tipos da régua, config/rubric.toml)
+#   show              o que mostrar na tela, em ordem
+#   linked            outros chamados que entram na história (abrem com um clique)
+
+[datasets.scenarios]
+label = "Cenários de teste"
+what = "Os casos do deck (00…) e o catálogo com um chamado por tipo de problema (0300…), todos com gabarito."
+expect = "O parecer deve bater com o gabarito: a tabela do catálogo diz a recomendação, o score e os apontamentos esperados de cada chamado."
+tips = [
+  "No modo simulado o resultado é o próprio gabarito: serve para mostrar o fluxo e as telas, não a qualidade do modelo.",
+  "No modo API dá para comparar o que o modelo achou com o esperado.",
+]
+
+[datasets.validation]
+label = "Validação"
+what = "80 chamados sintéticos com defeitos injetados de propósito (01…), cada um com gabarito."
+expect = "Usado para medir o Atest.AI: a aba Validação roda uma amostra e mostra acurácia, erros por tipo e custo."
+tips = [
+  "Para um chamado específico, use os cartões 'Por tipo de problema' abaixo.",
+  "Em demonstração, prefira a aba Validação à análise de um a um.",
+]
+
+[datasets.itau]
+label = "Itaú"
+what = "41 chamados sintéticos no formato do Itaú (02…), com gabarito: limpos, com ressalvas, devoluções e travas."
+expect = "Recomendação e apontamentos do gabarito, como nos cenários. Bom para mostrar volume e variedade de categorias."
+tips = ["Os cartões 'Por tipo de problema' mostram quais trazem cada defeito."]
+
+[datasets.casos]
+label = "Casos Itaú - Salesforce"
+what = "14 chamados no formato do Salesforce (04…): 3 reconstituídos de chamados reais e 11 fictícios, montados para mostrar cada recurso do Atest.AI. As fotos são simuladas."
+expect = "Não têm gabarito: analise no modo API (o simulado recusa). O esperado abaixo é o que foi plantado em cada caso (LEIAME.txt da pasta); o modelo real pode variar no score e em apontamentos menores."
+tips = [
+  "Para a duplicidade aparecer, os chamados da mesma agência precisam estar na base, e estão: o Atest.AI compara com os abertos até 60 dias antes ou depois e com os que seguem abertos.",
+  "Marque o grupo inteiro com Selecionar e analise de uma vez; depois abra um por um.",
+  "A agência pode vir só com o código, só com o nome ou com os dois: a comparação usa o que houver.",
+]
+
+[datasets.uploaded]
+label = "Enviados pelo painel"
+what = "Chamados que você mandou pelo botão Novo chamado."
+expect = "Sem gabarito: só o modo API. Os chamados da mesma agência já cadastrados entram na comparação de duplicidade."
+tips = []
+
+# ------------------------------------------------------------------ roteiro dos Casos Salesforce
+
+[[groups]]
+id = "duplicate"
+label = "Chamado duplicado na mesma agência"
+description = "O Atest.AI compara o chamado com os da mesma agência (60 dias + os que seguem abertos) e marca quando é o mesmo problema."
+
+[[groups]]
+id = "reuse"
+label = "Foto reaproveitada"
+description = "Foto de outro chamado, recortada e com data nova: trava de integridade, devolve qualquer que seja a nota."
+
+[[groups]]
+id = "quote"
+label = "Orçamento e solução"
+description = "Preço, quantidade, troca sem justificativa e item fora do escopo."
+
+[[groups]]
+id = "agency"
+label = "Mesma agência, outro problema"
+description = "Contraprova da duplicidade: chamados da mesma agência que não devem ser marcados."
+
+[[groups]]
+id = "real"
+label = "Reconstituídos do Salesforce"
+description = "Chamados reais (textos e orçamentos do Salesforce), com fotos simuladas."
+
+# duplicidade
+
+[[cases]]
+id = "04174102"
+group = "duplicate"
+title = "Forro do autoatendimento manchado e pingando"
+expect = ["detailed_review"]
+findings = ["possible_duplicate_ticket"]
+show = [
+  "Agência com nome e código (Campinas Cambuí, 1520).",
+  "No topo do parecer, o aviso 'Possível chamado duplicado' com o 04174388, aberto 3 dias depois por outro fornecedor.",
+  "Clique em 'Comparar os chamados': o modal põe os dois lado a lado (escopo, fotos, orçamento) e diz o que coincide.",
+  "Na aba Agência, o 04161377 (split pingando) aparece como relacionado, sem virar duplicidade; porta giratória e tomada aparecem como outro problema.",
+]
+linked = ["04174388", "04161377", "04172318", "04174415"]
+note = "O orçamento em si é coerente (preços da LPU): só a duplicidade leva à análise detalhada."
+
+[[cases]]
+id = "04174388"
+group = "duplicate"
+title = "Goteira no teto da sala dos caixas eletrônicos"
+expect = ["detailed_review"]
+findings = ["possible_duplicate_ticket"]
+show = [
+  "Agência só com o código (1520): a comparação acha os chamados pelo código.",
+  "O aviso aponta o 04174102 como o mais antigo; no modal, use 'Abrir o chamado mais antigo'.",
+  "Outra categoria e outro sintoma, mesmo problema: o modelo junta pelo local (ATM 4) e pela água no teto.",
+  "Na aba Agência, o 04174415 não aparece: foi aberto só com o nome, e este só tem o código.",
+]
+linked = ["04174102", "04161377", "04172318"]
+
+[[cases]]
+id = "04174851"
+group = "duplicate"
+title = "Piso quebrado na área dos caixas eletrônicos"
+expect = ["return_locked"]
+findings = ["possible_duplicate_ticket", "reused_photo"]
+show = [
+  "Duplicado do 04164650, aberto 44 dias antes: dentro da janela de 60 dias da agência (e ainda aberto).",
+  "As duas fotos são do 04164650, recortadas e com data nova, mandadas por outro fornecedor: 'Comparar' na foto mostra o par.",
+  "A trava de integridade vence: o resultado é Devolver com trava, e o aviso de duplicidade continua no parecer.",
+]
+linked = ["04164650"]
+
+[[cases]]
+id = "04175207"
+group = "duplicate"
+title = "Hall dos caixas eletrônicos escuro"
+expect = ["detailed_review"]
+findings = ["possible_duplicate_ticket", "unjustified_replacement", "quantity_above_photos"]
+show = [
+  "Duplicado do 04168903 (lâmpada queimada no mesmo hall, 2 dias antes, outra categoria).",
+  "No modal, compare os orçamentos: o antigo pede 2 lâmpadas, este troca 6 luminárias inteiras.",
+  "As fotos mostram 2 luminárias apagadas: troca sem justificativa e quantidade acima do que as fotos mostram.",
+]
+linked = ["04168903"]
+
+# foto reaproveitada
+
+[[cases]]
+id = "04174630"
+group = "reuse"
+title = "Quadro de energia com fiação exposta"
+expect = ["return_locked"]
+findings = ["reused_photo"]
+show = [
+  "A foto IMG_20261110_152044 é a do 04159084, recortada e com data nova.",
+  "Na foto, 'Comparar' mostra as duas lado a lado: mesmo fornecedor (ATM Engenharia), outra agência, um mês antes.",
+  "Trava de integridade: Devolver com trava, qualquer que seja a nota.",
+  "A aba Agência fica sem candidatos: não há outro chamado da agência 2754.",
+]
+linked = ["04159084"]
+
+[[cases]]
+id = "04171245"
+group = "reuse"
+title = "CFTV: cabos das câmeras externas furtados"
+expect = ["return_locked"]
+findings = ["reused_photo", "unjustified_replacement", "duplicate_item", "quantity_above_expected"]
+show = [
+  "Foto reaproveitada do 04098817 (outra agência, agosto, no histórico): trava.",
+  "O pedido é recompor cabos, mas o orçamento troca as 4 câmeras e o gravador (R$ 17.000 sem justificativa); as fotos mostram tudo funcionando.",
+  "Item 7 repete o item 6 (deslocamento) e 220 m de cabo para lances de ~60 m.",
+  "Bom caso para mostrar muitos apontamentos e o valor em questão.",
+]
+linked = []
+
+# orçamento e solução
+
+[[cases]]
+id = "04172318"
+group = "quote"
+title = "Porta giratória travando sem motivo"
+expect = ["return_to_supplier"]
+findings = ["unjustified_replacement", "price_above_market", "price_above_reference", "out_of_scope_item", "photo_dated_before"]
+show = [
+  "O sintoma pede calibração; a solução troca a porta inteira (R$ 55.200).",
+  "Item 1 83% acima do anúncio anexado (print da loja): preço acima do mercado.",
+  "Placa e mão de obra acima da LPU; pintura da fachada fora do escopo.",
+  "Uma foto tem data de março no EXIF, antes da abertura.",
+]
+linked = []
+note = "Mesma agência dos casos de duplicidade (1520): aparece nas comparações deles como outro problema."
+
+[[cases]]
+id = "04173506"
+group = "quote"
+title = "Fechadura biométrica não reconhece digitais (atestação)"
+expect = ["return_to_supplier"]
+findings = ["unjustified_replacement", "price_above_reference", "quantity_above_expected", "photo_mismatch"]
+show = [
+  "Etapa de atestação (serviço feito), não de orçamento.",
+  "A solução fala em limpeza e firmware; o orçamento cobra leitor e fechadura novos.",
+  "Leitor 447% acima da LPU e 40 recadastramentos para 9 funcionários.",
+  "A foto do depois é de uma catraca do saguão, não da porta da tesouraria.",
+]
+linked = ["04175012"]
+
+[[cases]]
+id = "04175012"
+group = "quote"
+title = "Sensor de presença da tesouraria com disparo falso"
+expect = ["approve_with_caveats", "return_to_supplier"]
+findings = ["quantity_above_expected", "price_above_reference"]
+show = [
+  "Escopo e solução falam de um sensor; o orçamento cobra 3 sensores e 3 mãos de obra.",
+  "Sensor 36% acima da LPU.",
+  "Na aba Agência, o 04173506 (leitor da mesma tesouraria, ainda aberto) aparece com chance baixa: mesmo ambiente, outro problema.",
+]
+linked = ["04173506"]
+
+# mesma agência, outro problema
+
+[[cases]]
+id = "04174415"
+group = "agency"
+title = "Tomada queimada no backoffice"
+expect = ["approve"]
+findings = []
+show = [
+  "Agência só com o nome ('Ag. Campinas - Cambuí'): a comparação normaliza e acha a 1520.",
+  "Na aba Agência, os chamados de forro, porta e split aparecem com chance baixa: nenhum duplicado.",
+  "Orçamento coerente: Aprovar.",
+]
+linked = ["04174102", "04172318", "04161377"]
+
+[[cases]]
+id = "04161377"
+group = "agency"
+title = "Ar-condicionado do autoatendimento pingando"
+expect = ["approve"]
+findings = []
+show = [
+  "Aberto em 22/10 e ainda aguardando o fornecedor: entra nas comparações de novembro só porque segue aberto.",
+  "O orçamento é coerente: Aprovar.",
+  "Mostre-o a partir do 04174102: lá ele aparece como relacionado (a água pode vir do split), sem virar duplicidade.",
+]
+linked = ["04174102", "04174388"]
+
+# reconstituídos do Salesforce
+
+[[cases]]
+id = "04159084"
+group = "real"
+title = "Quadro de energia com fios emaranhados"
+expect = ["return_to_supplier", "detailed_review"]
+findings = ["scope_not_quoted", "price_above_market"]
+show = [
+  "Relato real e informal ('emaranhado de fios, pode dar curto'), com orçamento e print de preço de mercado.",
+  "Serviço pedido sem item no orçamento e preço acima do anúncio anexado.",
+  "É a origem da foto reaproveitada do 04174630.",
+]
+linked = ["04174630"]
+note = "Nas últimas análises no modo API deu Devolver (79) e Análise detalhada (87)."
+
+[[cases]]
+id = "04164650"
+group = "real"
+title = "Piso cerâmico quebrado no autoatendimento"
+expect = ["approve_with_caveats"]
+findings = ["quantity_above_photos"]
+show = [
+  "As 6 fotos mostram ~7 peças quebradas (~1,4 a 2,5 m²) contra 4,6 m² cobrados.",
+  "Quantidade acima do que as fotos mostram, item por item.",
+  "Segue aberto: é o chamado mais antigo do duplicado 04174851.",
+]
+linked = ["04174851"]
+note = "Nas últimas análises no modo API deu Aprovar com ressalvas (85 a 94), com parte relevante do orçamento em questão."
+
+[[cases]]
+id = "04168903"
+group = "real"
+title = "Lâmpada queimada do hall dos caixas eletrônicos"
+expect = ["checklist_returned"]
+findings = []
+show = [
+  "Sem fotos: volta no checklist mínimo antes da análise (falta a foto do problema).",
+  "Mostre a tela do checklist e o que falta.",
+  "É o chamado mais antigo do duplicado 04175207.",
+]
+linked = ["04175207"]

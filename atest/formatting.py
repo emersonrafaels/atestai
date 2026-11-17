@@ -121,13 +121,25 @@ _TERM = re.compile(
 )
 KEEP_VERBATIM = {"transcription"}  # transcrição (OCR) fica como está no documento
 
+# A tabela de preços da esteira se chama LPU (Lista de Preços Unitários) em todo o Atest.AI: "tabela de referência"
+# (e variações, com ou sem "(LPU)" depois) vira "LPU" nos textos do modelo e nos pareceres já gravados.
+_REFERENCE_TABLE = re.compile(
+    r"\btabelas?\s+de\s+(?:preços\s+de\s+)?refer[êe]ncia(?:\s+de\s+preços)?(?:\s*\(LPU\))?",
+    re.I,
+)
+
+
+def lpu_terms(text: str) -> str:
+    """ "tabela de referência" → "LPU" (ex.: "não consta na tabela de referência" → "não consta na LPU")."""
+    return _REFERENCE_TABLE.sub("LPU", text)
+
 
 def plain_text(text: str) -> str:
     """Tira de um texto livre os nomes internos de campos e valores em inglês (ex.: '(expected_quantity_max = -1)')."""
     if " " not in text:  # valor de campo (código, enum), não texto livre
         return text
     text = _ASSIGNMENT.sub("", text)
-    return _TERM.sub(lambda m: _INTERNAL_TERMS[m.group(1)], text)
+    return lpu_terms(_TERM.sub(lambda m: _INTERNAL_TERMS[m.group(1)], text))
 
 
 # Marcação de chamada de ferramenta que o modelo às vezes deixa vazar para dentro de um campo de texto
@@ -233,6 +245,9 @@ def pt_validation_error(errors: list[dict], limit: int = 3) -> str:
             str(x) for x in err.get("loc", ()) if x not in ("body", "query", "path")
         )
         reason = VALIDATION_ERROR_PT.get(err.get("type", ""), "valor inválido")
+        if err.get("type") == "value_error" and err.get("msg"):
+            # mensagem escrita em português pelo próprio validador (ex.: código da agência fora de 0 a 9999)
+            reason = str(err["msg"]).removeprefix("Value error, ")
         if err.get("type") in ("enum", "literal_error") and (
             expected := (err.get("ctx") or {}).get("expected")
         ):
@@ -248,6 +263,7 @@ TASK_PT = {
     "scope": "Leitura do escopo",
     "quote_review": "Orçamento",
     "documents": "Leitura dos documentos",
+    "related_tickets": "Chamados da agência",
     "photos": "Análise das fotos",
     "assessment": "Redação do parecer",
 }

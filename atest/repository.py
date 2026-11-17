@@ -390,7 +390,7 @@ class References:
         )
 
     def lpu_text(self, workstream: str) -> str:
-        """Tabela de referência da esteira em texto, para o prompt de conferência do orçamento."""
+        """LPU da esteira em texto, para o prompt de conferência do orçamento."""
         rows = ["codigo | descricao | unidade | preco_referencia (R$)"]
         rows += [
             f"{r.code} | {r.description} | {r.unit} | {r.reference_price:.2f}"

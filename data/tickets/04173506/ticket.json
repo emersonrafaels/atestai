@@ -9,7 +9,7 @@
   "solution_description": "realizado limpeza do sensor otico, atualizacao do firmware e recadastro das digitais dos 9 funcionarios da agencia. leitor voltou a funcionar normal",
   "branch": {
     "code": "4417",
-    "name": "Belo Horizonte Savassi (fictícia)",
+    "name": "Belo Horizonte Savassi",
     "environment": "tesouraria"
   },
   "supplier": {

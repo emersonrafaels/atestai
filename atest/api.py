@@ -12,6 +12,7 @@ Portal        POST /api/admin/login · GET /api/admin/overview · PUT /api/admin
 
 from __future__ import annotations
 
+import json
 import logging
 import shutil
 import tempfile
@@ -53,9 +54,11 @@ from .database import (
     FindingFeedback,
     FindingFeedbackInput,
 )
+from .demo_guide import DemoGuide, load_demo_guide
 from .domain import (
     Assessment,
     Attachment,
+    Branch,
     Catalog,
     MaintenanceType,
     Moment,
@@ -67,6 +70,7 @@ from .domain import (
 from .evaluation import Evaluation, GroundTruthEvaluator, TicketComparison
 from .formatting import error_message, pt_validation_error
 from .observability import configure_logging, event
+from .related import status_label
 from .repository import (
     QuoteError,
     References,
@@ -113,6 +117,20 @@ class LastAssessment(BaseModel):
     score: int | None
     mode: str
     feedback: str | None
+    duplicate_of: list[str] = Field(
+        default_factory=list,
+        description="chamados da mesma agência que o parecer apontou como possível duplicado",
+    )
+
+
+def flagged_related(raw: str | None) -> list[str]:
+    """Ids dos chamados marcados como possível duplicado, a partir de `related.tickets` gravado no parecer (JSON)."""
+    if not raw:
+        return []
+    try:
+        return [t["ticket_id"] for t in json.loads(raw) if t.get("flagged")]
+    except (ValueError, TypeError, KeyError):
+        return []
 
 
 class TicketSummary(BaseModel):
@@ -127,7 +145,11 @@ class TicketSummary(BaseModel):
     symptom: str
     symptom_label: str
     scope: str
-    branch: str
+    branch: str = Field(
+        description="agência como aparece na tela: nome e código, ou só o que foi informado"
+    )
+    branch_code: str = ""
+    branch_name: str = ""
     environment: str
     supplier: str
     blocks_opening: bool | None = None
@@ -136,6 +158,11 @@ class TicketSummary(BaseModel):
     moment: str
     maintenance_type: str
     n_photos: int
+    opened_at: date | None = None
+    status: str = Field("", description="situação do chamado, em português")
+    is_open: bool | None = Field(
+        None, description="ainda aberto, pelas situações encerradas da régua"
+    )
     expected: Expected | None
     last: LastAssessment | None
     tags: list[str] = (
@@ -191,6 +218,7 @@ class TicketFacts(BaseModel):
     scope: str
     branch_code: str
     branch_name: str
+    branch_label: str = ""
     environment: str
     supplier_name: str
     supplier_cnpj: str
@@ -225,7 +253,9 @@ class ReuseComparison(BaseModel):
         description="a origem é anterior ou igual ao chamado atual"
     )
     gap_hours: float
-    same_branch: bool
+    same_branch: bool = Field(
+        description="mesma agência: pelo código quando os dois têm; senão, pelo nome"
+    )
     same_supplier: bool
 
 
@@ -345,7 +375,7 @@ class DeleteAssessmentsInput(BaseModel):
 
 
 # Suba quando o painel passar a depender de rotas ou campos novos da API (panel/src/api.ts: PANEL_API).
-PANEL_API = 7
+PANEL_API = 9
 SectionName = Literal["rubric", "checklists", "catalog"]
 
 
@@ -706,6 +736,7 @@ def create_app(cfg: Settings) -> FastAPI:
                 score=hist[0]["score"],
                 mode=hist[0]["mode"],
                 feedback=hist[0]["feedback"],
+                duplicate_of=flagged_related(hist[0].get("related_tickets")),
             )
             if hist
             else None
@@ -720,7 +751,9 @@ def create_app(cfg: Settings) -> FastAPI:
             symptom=d.symptom.value,
             symptom_label=d.symptom.label,
             scope=d.requested_scope,
-            branch=d.branch.name,
+            branch=d.branch.label,
+            branch_code=d.branch.code,
+            branch_name=d.branch.name,
             environment=d.branch.environment,
             supplier=d.supplier.name,
             blocks_opening=d.blocks_opening,
@@ -729,6 +762,9 @@ def create_app(cfg: Settings) -> FastAPI:
             moment=d.moment.value,
             maintenance_type=d.maintenance_type.value,
             n_photos=sum(a.is_image for a in ch.attachments),
+            opened_at=d.dates.opening,
+            status=status_label(d.status),
+            is_open=manager.cfg_base.rubric.related_tickets.is_open(d.status),
             last=last,
             expected=(
                 Expected(
@@ -1072,6 +1108,7 @@ def create_app(cfg: Settings) -> FastAPI:
                         "reduces_confidence": t.reduces_confidence,
                         "returns": t.returns,
                         "lock": t.lock,
+                        "review": t.review,
                     }
                     for k, t in manager.cfg_base.rubric.finding_types.items()
                 },
@@ -1101,6 +1138,11 @@ def create_app(cfg: Settings) -> FastAPI:
     def scenarios() -> list[dict[str, str]]:
         """Tipos de cenário de teste, na ordem de exibição; cada chamado traz os seus em `tags`."""
         return scenario_catalog()
+
+    @app.get("/api/guide")
+    def guide() -> DemoGuide:
+        """Guia de demonstração (data/demo_guide.toml): o que esperar de cada conjunto e o roteiro dos Casos Salesforce."""
+        return load_demo_guide(cfg.data_dir / "demo_guide.toml")
 
     @app.get("/api/metrics")
     def metrics() -> dict:
@@ -1169,6 +1211,7 @@ def create_app(cfg: Settings) -> FastAPI:
             scope=d.requested_scope,
             branch_code=d.branch.code,
             branch_name=d.branch.name,
+            branch_label=d.branch.label,
             environment=d.branch.environment,
             supplier_name=d.supplier.name,
             supplier_cnpj=d.supplier.cnpj,
@@ -1258,7 +1301,9 @@ def create_app(cfg: Settings) -> FastAPI:
             current_moment=c_m,
             chronology_ok=o_m <= c_m,
             gap_hours=round((c_m - o_m).total_seconds() / 3600, 1),
-            same_branch=cur.branch_code == org.branch_code,
+            same_branch=Branch(code=cur.branch_code, name=cur.branch_name).same_as(
+                Branch(code=org.branch_code, name=org.branch_name)
+            ),
             same_supplier=cur.supplier_cnpj == org.supplier_cnpj,
         )
 
@@ -1289,8 +1334,10 @@ def create_app(cfg: Settings) -> FastAPI:
         maintenance_type: Annotated[MaintenanceType, Form()],
         moment: Annotated[Moment, Form()],
         scope: Annotated[str, Form(min_length=3)],
-        branch_name: Annotated[str, Form(min_length=1)],
-        branch_code: Annotated[str, Form()] = "0000",
+        branch_name: Annotated[
+            str, Form(max_length=120)
+        ] = "",  # nome e/ou código: pelo menos um
+        branch_code: Annotated[str, Form(max_length=12)] = "",  # de 0 a 9999
         environment: Annotated[str, Form()] = "",  # local do chamado
         supplier_name: Annotated[
             str, Form()
@@ -1325,6 +1372,12 @@ def create_app(cfg: Settings) -> FastAPI:
             raise HTTPException(
                 422, f"O sintoma {sym.label} não vale para a categoria {cat.label}."
             )
+        try:  # nome e/ou código da agência (código de 0 a 9999, gravado com 4 dígitos)
+            branch = Branch(code=branch_code, name=branch_name, environment=environment)
+        except ValidationError as e:
+            raise HTTPException(
+                422, f"Agência inválida: {pt_validation_error(e.errors())}"
+            ) from e
         loc = next(
             (e for e in catalog.locations if e.value == environment and e.enabled), None
         )
@@ -1404,11 +1457,7 @@ def create_app(cfg: Settings) -> FastAPI:
                     category=category,
                     symptom=symptom,
                     requested_scope=scope,
-                    branch={
-                        "code": branch_code,
-                        "name": branch_name,
-                        "environment": environment,
-                    },
+                    branch=branch,
                     supplier={
                         "name": supplier_name.strip()
                         or quote.supplier

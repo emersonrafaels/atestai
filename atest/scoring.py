@@ -40,11 +40,16 @@ class ScoringStage(AnalysisStage):
                 ):  # aprovação do orçamento: sem cobrar o depois
                     continue
                 spec = kinds.get(f.kind)
-                if spec and (spec.severity != f.severity or spec.returns != f.returns):
+                if spec and (
+                    spec.severity != f.severity
+                    or spec.returns != f.returns
+                    or spec.review != f.review
+                ):
                     update = {
                         "severity": spec.severity,
                         "discount": rubric.discount_by_severity[spec.severity],
                         "returns": spec.returns,
+                        "review": spec.review,
                     }
                     f = f.model_copy(update=update)
                 out.append(f)

@@ -1,6 +1,8 @@
-import { useEffect } from "react";
+import { ClipboardCheck } from "lucide-react";
+import { useEffect, useMemo } from "react";
 import type { Assessment, ServiceCoverage } from "../api";
 import { brl, num, findingLabel } from "../format";
+import { itemMap, QuoteItemsContext, SentenceList } from "./ui/RichText";
 
 const CLASS = {
   compliant: { label: "Aderente", cls: "bg-[#e3f2ea] text-ok" },
@@ -10,12 +12,15 @@ const CLASS = {
 
 export function QuoteTab({ p, highlight = [] }: { p: Assessment; highlight?: number[] }) {
   useScrollToHighlight(highlight.map((n) => `quote-item-${n}`));
+  const items = useMemo(() => itemMap(p.items), [p.items]);
   if (!p.items.length) return <p className="text-muted">O orçamento não foi conferido neste chamado.</p>;
   // contagem feita nas fotos, ao lado da quantidade cobrada
   const counted = new Map(((p.photo_summary as { quantity_checks?: { item: number; estimated_quantity: number }[] } | null)?.quantity_checks ?? [])
     .filter((c) => c.estimated_quantity > 0).map((c) => [c.item, c.estimated_quantity]));
   return (
+    <QuoteItemsContext.Provider value={items}>
     <div className="space-y-4">
+      <EngineerNotes notes={p.quote_notes} />
       <Coverage rows={p.service_coverage ?? []} />
       <div className="overflow-x-auto rounded-xl border border-line bg-sheet">
         <table className="w-full min-w-[920px] text-sm">
@@ -67,10 +72,41 @@ export function QuoteTab({ p, highlight = [] }: { p: Assessment; highlight?: num
         <span>Valor potencial divergente <b className="tabular-nums text-bad">{brl(p.amount_at_issue)}</b> ({p.amount_at_issue_pct.toFixed(0)}%)</span>
         <span className="text-muted">Item fora do escopo, sem justificativa ou duplicado conta inteiro; preço e quantidade acima contam só o excedente.</span>
       </div>
-      {p.quote_notes.length > 0 && (
-        <ul className="list-disc space-y-1 pl-5 text-sm text-muted">{p.quote_notes.map((o, k) => <li key={k}>{o}</li>)}</ul>
-      )}
     </div>
+    </QuoteItemsContext.Provider>
+  );
+}
+
+/** Rola até a linha do item na tabela e a destaca por um instante (clique em "item 3" nas observações). */
+function flashItems(nums: number[]) {
+  const rows = nums.map((n) => document.getElementById(`quote-item-${n}`)).filter((e): e is HTMLElement => !!e);
+  if (!rows.length) return;
+  rows[0].scrollIntoView({ block: "center", behavior: "smooth" });
+  for (const r of rows) {
+    const had = r.classList.contains("destaque"); // já destacada pelo clique num apontamento: fica destacada
+    r.classList.remove("destaque");
+    void r.offsetWidth; // reinicia a animação
+    r.classList.add("destaque");
+    if (!had) window.setTimeout(() => r.classList.remove("destaque"), 2400);
+  }
+}
+
+/**
+ * Observações da conferência do orçamento: a leitura de engenheiro sobre o que foi orçado (itens ligados ao pedido,
+ * preço sem LPU para comparar, o que falta conferir nas fotos). É o resumo que a pessoa analista lê primeiro.
+ */
+function EngineerNotes({ notes }: { notes: string[] }) {
+  const text = notes.map((n) => n.trim()).filter(Boolean).map((n) => (/[.!?]$/.test(n) ? n : `${n}.`)).join(" ");
+  if (!text) return null;
+  return (
+    <section aria-labelledby="quote-notes-title" className="rounded-xl border border-line border-l-4 border-l-blueprint bg-sheet p-4 shadow-sm">
+      <h3 id="quote-notes-title" className="flex items-center gap-2 font-semibold">
+        <span className="flex size-7 items-center justify-center rounded-lg bg-blueprint-soft text-blueprint"><ClipboardCheck size={16} /></span>
+        Observações da conferência do orçamento
+      </h3>
+      <p className="mb-3 mt-0.5 pl-9 text-[13px] text-muted">O que o modelo viu ao conferir os itens contra o pedido, a LPU e o que ainda precisa ser checado.</p>
+      <SentenceList text={text} onItems={flashItems} className="pl-9 text-[15px] text-ink" />
+    </section>
   );
 }
 

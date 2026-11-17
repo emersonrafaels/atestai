@@ -1,11 +1,18 @@
-import { Check, Image as ImageIcon, Info, Loader2, PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
-import { useState } from "react";
-import type { TicketSummary, Dataset, Run } from "../api";
+import { Building2, Check, Copy, Image as ImageIcon, Info, Loader2, PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import type { Assessment, TicketSummary, Dataset, Run } from "../api";
 import { REC, MAINTENANCE_LABEL, STAGE_LABEL, STAGE_SHORT, envLabel } from "../format";
 import { StageProgress } from "./StageProgress";
 import { ScorePill } from "./ScoreBadge";
 import { InfoTip, Tooltip } from "./ui/Tooltip";
+import { TicketFilters } from "./TicketFilters";
+import { hasFilters, matches, verdictOf, EMPTY_FILTERS, type ListFilters } from "../ticketFilters";
 import { Switch } from "./ui/Switch";
+
+/** Chamados apontados como possível duplicado: do parecer desta execução ou, fora dela, do último parecer gravado. */
+const duplicatesOf = (c: TicketSummary, a: Assessment | null | undefined, inRun: boolean): string[] => verdictOf(c, a, inRun).duplicates;
+
+const fmtDay = (d?: string | null) => (d ? d.split("-").reverse().join("/") : "");
 
 interface Props {
   tickets: TicketSummary[];
@@ -22,26 +29,37 @@ interface Props {
   setDataset: (c: string) => void;
   collapsed: boolean;
   setCollapsed: (v: boolean) => void;
+  filters: ListFilters;
+  setFilters: (f: ListFilters) => void;
 }
 
 export function TicketList(p: Props) {
-  // filtros de classificação: etapa da esteira e tipo de manutenção
-  const [stage, setStage] = useState<"all" | "quote" | "execution">("all");
-  const [kind, setKind] = useState<"all" | "corrective" | "preventive">("all");
   const [onlyMarked, setOnlyMarked] = useState(false);
   const [showAllMarked, setShowAllMarked] = useState(false);
+  const [filtersOpen, setFiltersOpenRaw] = useState(() => { try { return localStorage.getItem("atest.list.filtersOpen") === "1"; } catch { return false; } });
+  const setFiltersOpen = (v: boolean) => {
+    setFiltersOpenRaw(v);
+    try { localStorage.setItem("atest.list.filtersOpen", v ? "1" : "0"); } catch { /* armazenamento indisponível */ }
+  };
+  // com os filtros abertos, painel + contador + marcados + lista rolam juntos (a busca fica fixa);
+  // ao abrir, a área volta ao topo para começar pela Agência
+  const scroller = useRef<HTMLDivElement>(null);
+  useEffect(() => { if (filtersOpen) scroller.current?.scrollTo({ top: 0 }); }, [filtersOpen]);
   const marked = p.tickets.filter((c) => p.selected.has(c.ticket_id));
-  const filtered = p.tickets.filter((c) => (p.streamFilter === "all" || c.workstream === p.streamFilter) && (p.dataset === "all" || c.dataset === p.dataset)
-    && (stage === "all" || c.moment === stage) && (kind === "all" || c.maintenance_type === kind));
+  // escopo = conjunto + esteira; os filtros (busca, agência, etapa, parecer…) atuam dentro dele
+  const inScope = p.tickets.filter((c) => (p.streamFilter === "all" || c.workstream === p.streamFilter) && (p.dataset === "all" || c.dataset === p.dataset));
+  const filtered = inScope.filter((c) => {
+    const st = p.execution?.tickets[c.ticket_id];
+    return matches(c, p.filters, verdictOf(c, st?.assessment ?? null, !!st));
+  });
+  const filtering = hasFilters(p.filters);
   // "só marcados" ignora os outros filtros: mostra tudo o que vai para a análise
   const visible = onlyMarked && marked.length ? marked : filtered;
   const hiddenMarked = marked.filter((c) => !filtered.includes(c));
-  const inScope = p.tickets.filter((c) => (p.streamFilter === "all" || c.workstream === p.streamFilter) && (p.dataset === "all" || c.dataset === p.dataset));
-  const count = (f: (c: TicketSummary) => boolean) => inScope.filter(f).length;
   const allMarked = visible.length > 0 && visible.every((c) => p.selected.has(c.ticket_id));
   if (p.collapsed) return <Rail {...p} visible={visible} />;
   return (
-    <aside data-tour="ticket-list" className="flex min-h-0 flex-col border-r border-line bg-sheet">
+    <aside data-tour="ticket-list" className="flex min-h-0 flex-col overflow-hidden border-r border-line bg-sheet">
       <div className="flex items-center gap-2 border-b border-line px-4 pt-3 pb-2 text-sm">
         <Tooltip content="Recolher a lista (atalho: [ )">
           <button onClick={() => p.setCollapsed(true)} aria-label="Recolher a lista de chamados" aria-expanded="true"
@@ -72,28 +90,14 @@ export function TicketList(p: Props) {
           </label>
         </Tooltip>
       </div>
-      <div className="grid grid-cols-2 gap-2 border-b border-line px-4 py-2 text-[13px]">
-        <label className="min-w-0">
-          <span className="mb-0.5 flex items-center gap-1 text-[11px] font-medium uppercase tracking-wide text-muted">Etapa <InfoTip term="stage" size={11} /></span>
-          <select value={stage} onChange={(e) => setStage(e.target.value as typeof stage)} className={`w-full rounded-md border bg-sheet px-1.5 py-1 ${stage !== "all" ? "border-blueprint text-blueprint" : "border-line"}`}>
-            <option value="all">Todas ({inScope.length})</option>
-            <option value="quote">{STAGE_LABEL.quote} ({count((c) => c.moment === "quote")})</option>
-            <option value="execution">{STAGE_LABEL.execution} ({count((c) => c.moment === "execution")})</option>
-          </select>
-        </label>
-        <label className="min-w-0">
-          <span className="mb-0.5 flex items-center gap-1 text-[11px] font-medium uppercase tracking-wide text-muted">Tipo <InfoTip term="maintenance" size={11} /></span>
-          <select value={kind} onChange={(e) => setKind(e.target.value as typeof kind)} className={`w-full rounded-md border bg-sheet px-1.5 py-1 ${kind !== "all" ? "border-blueprint text-blueprint" : "border-line"}`}>
-            <option value="all">Todos ({inScope.length})</option>
-            <option value="corrective">Corretiva ({count((c) => c.maintenance_type === "corrective")})</option>
-            <option value="preventive">Preventiva ({count((c) => c.maintenance_type === "preventive")})</option>
-          </select>
-        </label>
-      </div>
-      <div className="flex items-center justify-between border-b border-line bg-paper/50 px-4 py-1.5 text-[12px] text-muted">
+      <TicketFilters part="bar" filters={p.filters} setFilters={p.setFilters} scope={inScope} open={filtersOpen} setOpen={setFiltersOpen} />
+      {/* fechado: `contents` mantém o layout de antes (só a lista rola); aberto: uma área de rolagem só */}
+      <div ref={scroller} className={filtersOpen ? "min-h-0 flex-1 overflow-y-auto overscroll-contain" : "contents"}>
+      <TicketFilters part="panel" filters={p.filters} setFilters={p.setFilters} scope={inScope} open={filtersOpen} setOpen={setFiltersOpen} />
+      <div className={`flex items-center justify-between border-b border-line bg-[color-mix(in_srgb,var(--color-paper)_50%,var(--color-sheet))] px-4 py-1.5 text-[12px] text-muted ${filtersOpen ? "sticky top-0 z-10" : ""}`}>
         <span>
-          {onlyMarked && marked.length ? "Mostrando só os marcados" : <>{visible.length} chamado{visible.length === 1 ? "" : "s"}</>}
-          {!onlyMarked && (stage !== "all" || kind !== "all") && <button onClick={() => { setStage("all"); setKind("all"); }} className="ml-1.5 font-medium text-blueprint hover:underline">limpar filtros</button>}
+          {onlyMarked && marked.length ? "Mostrando só os marcados" : <>{visible.length} chamado{visible.length === 1 ? "" : "s"}{filtering && <> de {inScope.length}</>}</>}
+          {!onlyMarked && filtering && <button onClick={() => p.setFilters(EMPTY_FILTERS)} className="ml-1.5 font-medium text-blueprint hover:underline">limpar filtros</button>}
         </span>
         <label className={`flex items-center gap-1.5 ${marked.length ? "cursor-pointer" : "opacity-50"}`}>
           <Switch size="sm" on={onlyMarked && marked.length > 0} disabled={!marked.length} onChange={setOnlyMarked} label="Mostrar só os marcados" />
@@ -102,15 +106,24 @@ export function TicketList(p: Props) {
       </div>
       <MarkedTray marked={marked} hidden={hiddenMarked} focus={p.focus} expanded={showAllMarked} setExpanded={setShowAllMarked}
         open={p.focusTicket} unmark={p.toggle} clear={() => { p.setAll(marked.map((c) => c.ticket_id), false); setOnlyMarked(false); }} />
-      <ul className="min-h-0 flex-1 overflow-y-auto">
+      <ul className={filtersOpen ? "" : "min-h-0 flex-1 overflow-y-auto"}>
         {!visible.length && (
-          <li className="px-6 py-10 text-center text-sm text-muted">Nenhum chamado neste filtro. Troque o conjunto, a esteira, a etapa ou o tipo acima.</li>
+          <li className="px-6 py-10 text-center text-sm text-muted">
+            Nenhum chamado neste filtro.{" "}
+            {filtering ? (
+              <>
+                {p.dataset !== "all" && inScope.length < p.tickets.length && <>Talvez esteja em outro conjunto: troque para <button onClick={() => p.setDataset("all")} className="font-medium text-blueprint hover:underline">Todos</button> ou </>}
+                <button onClick={() => p.setFilters(EMPTY_FILTERS)} className="font-medium text-blueprint hover:underline">limpe os filtros</button>.
+              </>
+            ) : "Troque o conjunto ou a esteira acima."}
+          </li>
         )}
         {visible.map((c) => {
           const st = p.execution?.tickets[c.ticket_id];
           const done = st?.assessment;
           const active = p.focus === c.ticket_id;
           const isMarked = p.selected.has(c.ticket_id);
+          const dups = duplicatesOf(c, st?.assessment ?? null, !!st);
           return (
             <li key={c.ticket_id}
               className={`relative flex gap-3 border-b border-line/70 px-4 py-3 transition-colors ${active ? "bg-blueprint-soft" : isMarked ? "bg-[#f3f6fd] hover:bg-blueprint-soft/70" : "hover:bg-paper/60"}`}>
@@ -124,6 +137,11 @@ export function TicketList(p: Props) {
                 <div className="flex items-baseline justify-between gap-2">
                   <span className="font-semibold tabular-nums">{c.ticket_id}</span>
                   <span className="flex gap-1">
+                    {dups.length > 0 && (
+                      <Tooltip content={<>Possível chamado duplicado de {dups.join(", ")} (mesma agência). Abra o parecer para comparar.</>}>
+                        <span className="flex items-center gap-0.5 rounded bg-[#fbefed] px-1.5 text-[11px] font-semibold text-bad"><Copy size={11} /> Duplicado?</span>
+                      </Tooltip>
+                    )}
                     {c.origin === "upload" && <Tooltip content="Enviado pelo painel (Novo chamado)"><span className="rounded bg-[#fdf1dc] px-1.5 text-[11px] font-semibold text-warn">Enviado</span></Tooltip>}
                     <span className={`rounded px-1.5 text-[11px] font-semibold ${c.workstream === "SETA" ? "bg-blueprint-soft text-blueprint" : "bg-[#ece6f6] text-lock"}`}>
                       {c.workstream}
@@ -138,6 +156,11 @@ export function TicketList(p: Props) {
                   <span className="rounded bg-paper px-1.5 text-ink/70" title={STAGE_LABEL[c.moment]}>{STAGE_SHORT[c.moment] ?? c.moment}</span>
                 </div>
                 {c.scenario && <p className="mt-1 text-[12px] font-semibold text-blueprint">Cenário: {c.scenario.title}</p>}
+                <p className="mt-1 flex min-w-0 items-center gap-1 text-[12px] text-ink/70">
+                  <Building2 size={12} className="shrink-0 text-muted" />
+                  <span className="truncate">{c.branch}</span>
+                  {c.opened_at && <span className="shrink-0 text-muted">· {fmtDay(c.opened_at)}</span>}
+                </p>
                 <p className="mt-1 line-clamp-2 text-[13px] leading-snug text-muted">{c.scope}</p>
                 <div className="mt-2 flex items-center gap-3 text-[12px] text-muted">
                   <span className="flex items-center gap-1"><ImageIcon size={13} /> {c.n_photos}</span>
@@ -157,6 +180,7 @@ export function TicketList(p: Props) {
           );
         })}
       </ul>
+      </div>
     </aside>
   );
 }
@@ -201,6 +225,7 @@ function Rail(p: Props & { visible: TicketSummary[] }) {
           const failed = st?.status === "error";
           const active = p.focus === c.ticket_id;
           const isMarked = p.selected.has(c.ticket_id);
+          const dups = duplicatesOf(c, a ?? null, !!st);
           return (
             <li key={c.ticket_id} className="md:w-full">
               <Tooltip className="flex" content={
@@ -209,6 +234,7 @@ function Rail(p: Props & { visible: TicketSummary[] }) {
                   {MAINTENANCE_LABEL[c.maintenance_type] ?? c.maintenance_type} · {c.category_label} · {c.symptom_label} · {STAGE_LABEL[c.moment] ?? c.moment}<br />
                   <span className="opacity-80">{c.branch}{c.environment ? ` · local: ${envLabel(c.environment)}` : ""}</span><br />
                   {c.blocks_opening && <><b>Impede a abertura da agência</b><br /></>}
+                  {dups.length > 0 && <><b>Possível chamado duplicado de {dups.join(", ")}</b><br /></>}
                   {running ? "Analisando…" : failed ? "Erro na análise" : rec ? <>{REC[rec].label}{score !== null ? ` · score ${score}` : ""}</> : "Ainda não analisado"}
                   {isMarked ? " · marcado" : ""}
                   <span className="mt-1 block opacity-70">Clique para abrir · Shift+clique para {isMarked ? "desmarcar" : "marcar"}</span>
@@ -230,6 +256,11 @@ function Rail(p: Props & { visible: TicketSummary[] }) {
                       </>
                     ) : "—"}
                   </span>
+                  {dups.length > 0 && (
+                    <span className={`absolute left-1.5 top-0.5 flex size-3.5 items-center justify-center rounded-full ${active ? "bg-white text-bad" : "bg-bad text-white"}`} aria-label="possível chamado duplicado">
+                      <Copy size={8} strokeWidth={3} />
+                    </span>
+                  )}
                   {isMarked && (
                     <span className={`absolute right-0.5 top-0.5 flex size-3.5 items-center justify-center rounded-full ${active ? "bg-white text-blueprint" : "bg-blueprint text-white"}`}>
                       <Check size={9} strokeWidth={4} />

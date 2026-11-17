@@ -186,6 +186,12 @@ def validate_section(
             raise AdminError(
                 "A confiança média precisa de menos redutores do que a baixa.", 422
             )
+        rel = model.related_tickets
+        if rel.show_probability > rel.min_probability:
+            raise AdminError(
+                "Chamados da agência: a chance que aparece no parecer precisa ser menor ou igual à que vira apontamento.",
+                422,
+            )
         approve, back = (
             model.max_amount_at_issue_for_approve_pct,
             model.max_amount_at_issue_for_caveats_pct,
@@ -319,6 +325,18 @@ FIELD_PT = {
 }
 
 
+# Parâmetros da comparação com chamados da mesma agência ([rubric.related_tickets]) → português (histórico do portal).
+RELATED_PT = {
+    "enabled": "ativa",
+    "window_days": "janela (dias)",
+    "include_still_open": "inclui os ainda abertos",
+    "closed_statuses": "situações de encerrado",
+    "min_probability": "chance que vira apontamento (%)",
+    "show_probability": "chance que aparece no parecer (%)",
+    "max_candidates": "máximo de chamados comparados",
+}
+
+
 # Como o desconto de um tipo cresce com o que foi enviado (régua: extent) → português.
 EXTENT_PT = {
     "value": "valor em questão",
@@ -371,6 +389,7 @@ def describe_changes(
                 ("lock", "trava"),
                 ("reduces_confidence", "reduz confiança"),
                 ("returns", "devolve ao fornecedor"),
+                ("review", "pede conferência"),
             ):
                 if bool(b.get(flag)) != bool(a.get(flag)):
                     out.append(
@@ -412,6 +431,12 @@ def describe_changes(
         for key, label in FIELD_PT.items():
             if before.get(key) != after.get(key):
                 out.append(f"{label}: {before.get(key)} → {after.get(key)}")
+        rb, ra = before.get("related_tickets") or {}, after.get("related_tickets") or {}
+        for key, label in RELATED_PT.items():
+            if rb.get(key) != ra.get(key):
+                out.append(
+                    f"Chamados da agência, {label}: {rb.get(key)} → {ra.get(key)}"
+                )
     elif section == "catalog":
         for kind, (one, _) in CATALOG_PT.items():
             eb = {e["value"]: e for e in before.get(kind, [])}

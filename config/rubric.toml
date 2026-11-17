@@ -2,7 +2,7 @@
 # Alterar aqui muda notas, score e recomendação sem tocar no código. Suba a versão a cada mudança.
 
 [default.rubric]
-version = "2026-11-v9"  # v9: desconto proporcional ao que foi enviado (fração de fotos, itens, serviços, documentos ou valor), valor em questão limita a nota de Orçamento, faltas do fornecedor devolvem (serviço pedido sem item, item fora do escopo ou duplicado; 30% ou mais do orçamento em questão) e "serviço pedido sem item" deixa de reduzir a confiança; v8: serviço pedido sem item no orçamento, serviço executado antes da aprovação, valor em questão limita "Aprovar" e tolerância própria para preço de mercado; v7: quantidade cobrada acima do que as fotos mostram; v6: leitura de documentos (OCR): documento ilegível, de outro chamado, com data fora da janela e preço acima do mercado; v5: escopo vago alto, quantidade não verificável, item sem foto e valor divergente relevante; v4: absorção entre tipos (absorbs) e foto do depois com local não confirmado; v3: chaves em inglês
+version = "2026-11-v11"  # v11: janela de duplicidade da agência passa de 5 para 60 dias; v10: chamados da mesma agência (janela de dias + ainda abertos) e possível chamado duplicado, que leva à análise detalhada (review); v9: desconto proporcional ao que foi enviado (fração de fotos, itens, serviços, documentos ou valor), valor em questão limita a nota de Orçamento, faltas do fornecedor devolvem (serviço pedido sem item, item fora do escopo ou duplicado; 30% ou mais do orçamento em questão) e "serviço pedido sem item" deixa de reduzir a confiança; v8: serviço pedido sem item no orçamento, serviço executado antes da aprovação, valor em questão limita "Aprovar" e tolerância própria para preço de mercado; v7: quantidade cobrada acima do que as fotos mostram; v6: leitura de documentos (OCR): documento ilegível, de outro chamado, com data fora da janela e preço acima do mercado; v5: escopo vago alto, quantidade não verificável, item sem foto e valor divergente relevante; v4: absorção entre tipos (absorbs) e foto do depois com local não confirmado; v3: chaves em inglês
 
 # peso de cada validação no score (somam 100)
 weights = { scope = 20, quote = 40, photos = 40 }
@@ -49,6 +49,21 @@ photo_quantity_tolerance_pct = 25
 max_amount_at_issue_for_approve_pct = 10
 # preço de mercado anexado (anúncio, cotação): até N% acima não é apontado (margem do fornecedor sobre o varejo)
 market_price_tolerance_pct = 25
+
+# --- chamados da mesma agência (possível duplicidade) -------------------------------------------
+# Antes de conferir o orçamento, o chamado é comparado com os outros chamados da MESMA agência (mesmo código; sem código,
+# mesmo nome): os abertos até N dias antes ou depois da abertura deste e, com include_still_open, os que seguem abertos,
+# qualquer que seja a data. O modelo lê os escopos e diz a chance (0–100%) de ser o mesmo problema; a regra decide:
+# a partir de min_probability vira o apontamento possible_duplicate_ticket (análise detalhada); entre show_probability e
+# min_probability o chamado aparece no parecer como relacionado, sem descontar.
+[default.rubric.related_tickets]
+enabled = true
+window_days = 60
+include_still_open = true
+closed_statuses = ["approved", "rejected", "cancelled", "closed", "completed", "paid"]  # qualquer outra situação = aberto
+min_probability = 70
+show_probability = 40
+max_candidates = 8
 
 # --- tipos de apontamento -----------------------------------------------------------------------
 # amount_at_issue: "item" (o item inteiro), "excess" (só o que passa da referência/quantidade) ou "none"
@@ -140,6 +155,12 @@ validation = "quote"
 severity = "medium"
 amount_at_issue = "excess"
 description = "Quantidade cobrada acima do que as fotos mostram"
+
+[default.rubric.finding_types.possible_duplicate_ticket]
+validation = "scope"
+severity = "high"
+review = true  # pode ser o mesmo problema de outro chamado da agência: a pessoa analista confere antes de seguir
+description = "Possível chamado duplicado na mesma agência"
 
 [default.rubric.finding_types.spreadsheet_mismatch]
 validation = "quote"

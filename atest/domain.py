@@ -6,6 +6,8 @@ Saída: parecer com checklist, notas, score, recomendação e apontamentos.
 
 from __future__ import annotations
 
+import re
+import unicodedata
 from datetime import date, datetime
 from enum import StrEnum
 from pathlib import Path
@@ -305,6 +307,7 @@ class Stage(StrEnum):
 
     CHECKLIST = "checklist"
     SCOPE = "scope"
+    RELATED = "related"  # chamados da mesma agência (possível duplicidade)
     QUOTE = "quote"
     PHOTOS = "photos"
     DOCUMENTS = "documents"
@@ -314,15 +317,70 @@ class Stage(StrEnum):
 
 
 # ============================================================================ chamado (entrada)
-class Branch(DomainModel):
-    """Agência onde o serviço é feito."""
+# Palavras que não identificam a agência no nome ("Itaú Ag. Saúde" = "Ag. Saúde" = "Saude"); "fictícia" marca as
+# agências inventadas dos dados de demonstração.
+_BRANCH_NAME_NOISE = re.compile(r"\b(?:itau|ag|agencia|unibanco|ficticia|ficticio)\b")
 
-    code: str
-    name: str
+
+def branch_name_key(name: str) -> str:
+    """Nome da agência normalizado para comparação: sem acento, caixa, pontuação, "Itaú" nem "Ag."/"Agência"."""
+    plain = unicodedata.normalize("NFKD", name).encode("ascii", "ignore").decode()
+    plain = re.sub(r"[^a-z0-9 ]+", " ", plain.casefold())
+    return " ".join(_BRANCH_NAME_NOISE.sub(" ", plain).split())
+
+
+class Branch(DomainModel):
+    """Agência onde o serviço é feito: pelo nome, pelo código (0 a 9999) ou pelos dois."""
+
+    code: str = Field(
+        "",
+        description="Número do ponto (código da agência), de 0 a 9999, gravado com 4 dígitos (ex.: 0418); vazio = não informado",
+    )
+    name: str = Field("", description="Nome da agência; vazio = não informado")
     environment: str = Field(
         "",
         description="Local do chamado: ambiente da agência (backoffice, fachada, autoatendimento…)",
     )
+
+    @field_validator("code", mode="before")
+    @classmethod
+    def _normalize_code(cls, v: Any) -> str:
+        """Aceita número ou texto ("418", "0418", " 0.418 ") e grava com 4 dígitos; recusa o que não é de 0 a 9999."""
+        if v is None:
+            return ""
+        text = re.sub(r"[\s.]", "", str(v))
+        if not text:
+            return ""
+        if not text.isdigit() or int(text) > 9999:
+            raise ValueError(
+                f"número do ponto '{v}' inválido: use um número de 0 a 9999"
+            )
+        return f"{int(text):04d}"
+
+    @field_validator("name", mode="before")
+    @classmethod
+    def _strip_name(cls, v: Any) -> str:
+        return " ".join(str(v or "").split())
+
+    @model_validator(mode="after")
+    def _name_or_code(self) -> Branch:
+        if not self.code and not self.name:
+            raise ValueError("informe o nome da agência ou o número do ponto")
+        return self
+
+    @property
+    def label(self) -> str:
+        """Como a agência aparece na tela e nos prompts: "Ag. Saúde (núm. do ponto 0661)", "Ag. Saúde" ou "Agência núm. do ponto 0661"."""
+        if self.name and self.code:
+            return f"{self.name} (núm. do ponto {self.code})"
+        return self.name or f"Agência núm. do ponto {self.code}"
+
+    def same_as(self, other: Branch) -> bool:
+        """Mesma agência? Pelo código quando os dois têm; senão, pelo nome normalizado (`branch_name_key`)."""
+        if self.code and other.code:
+            return self.code == other.code
+        mine, theirs = branch_name_key(self.name), branch_name_key(other.name)
+        return bool(mine) and mine == theirs
 
 
 class Supplier(DomainModel):
@@ -405,7 +463,7 @@ class Ticket(DomainModel):
             f"Chamado {self.ticket_id} | Esteira {self.workstream.value} ({self.maintenance_type.value})\n"
             f"Categoria: {self.category.label} | Sintoma: {self.symptom.label}\n"
             f"{stage_expectations(self.moment)}\n"
-            f"Agência: {self.branch.name} (cód. {self.branch.code})"
+            f"Agência: {self.branch.label}"
             f" | Local do chamado: {location_label(self.branch.environment) or 'não informado'}\n"
             + (
                 f"Impede a abertura da agência: {'sim' if self.blocks_opening else 'não'}\n"
@@ -493,7 +551,7 @@ class Quote(DomainModel):
 
 # ============================================================================ referências
 class LpuItem(DomainModel):
-    """Item da tabela de referência de preços (LPU) da esteira."""
+    """Item da LPU (Lista de Preços Unitários) da esteira."""
 
     code: str
     description: str
@@ -545,6 +603,10 @@ class FindingType(DomainModel):
         False,
         description="falta do fornecedor: com este apontamento, a recomendação é no máximo devolver ao fornecedor",
     )
+    review: bool = Field(
+        False,
+        description="pede conferência da pessoa analista (ex.: possível chamado duplicado): leva à análise detalhada",
+    )
     enabled: bool = Field(
         True,
         description="desativado: o apontamento não é gerado nem desconta (portal de configuração)",
@@ -581,6 +643,51 @@ class ConfidenceRule(DomainModel):
 
     medium_with_n_reducers: int = 1
     low_with_n_reducers: int = 2
+
+
+class RelatedTicketsRule(DomainModel):
+    """Chamados da mesma agência: quais entram na comparação e a partir de que chance viram apontamento."""
+
+    enabled: bool = True
+    window_days: int = Field(
+        60,
+        ge=0,
+        le=90,
+        description="compara com os chamados da agência abertos até N dias antes (ou depois) da abertura deste",
+    )
+    include_still_open: bool = Field(
+        True,
+        description="compara também com os chamados da agência que seguem abertos, abertos antes da janela",
+    )
+    closed_statuses: list[str] = Field(
+        default_factory=lambda: [
+            "approved",
+            "rejected",
+            "cancelled",
+            "closed",
+            "completed",
+            "paid",
+        ],
+        description="situações de chamado encerrado; qualquer outra conta como aberto",
+    )
+    min_probability: int = Field(
+        70,
+        ge=1,
+        le=100,
+        description="chance (%) de ser o mesmo problema a partir da qual vira o apontamento possible_duplicate_ticket",
+    )
+    show_probability: int = Field(
+        40,
+        ge=0,
+        le=100,
+        description="a partir desta chance (%), o chamado aparece no parecer como relacionado, sem apontamento",
+    )
+    max_candidates: int = Field(
+        8, ge=1, le=30, description="no máximo N chamados comparados pelo modelo"
+    )
+
+    def is_open(self, status: str) -> bool:
+        return status.strip().lower() not in {s.lower() for s in self.closed_statuses}
 
 
 class Rubric(DomainModel):
@@ -634,6 +741,10 @@ class Rubric(DomainModel):
         ge=0,
         description="quantidade cobrada até N% acima do que as fotos mostram não é apontada (margem de corte e perda)",
     )
+    related_tickets: RelatedTicketsRule = Field(
+        default_factory=RelatedTicketsRule,
+        description="comparação com chamados da mesma agência (possível duplicidade)",
+    )
     finding_types: dict[str, FindingType]
 
     def for_workstream(self, workstream: str) -> Rubric:
@@ -670,6 +781,10 @@ class Finding(DomainModel):
     returns: bool = Field(
         False,
         description="falta do fornecedor: leva a devolver ao fornecedor qualquer que seja a nota",
+    )
+    review: bool = Field(
+        False,
+        description="pede conferência da pessoa analista: leva à análise detalhada (salvo trava)",
     )
     extent: float = Field(
         1.0,
@@ -776,6 +891,58 @@ class EvaluatedDocument(DomainModel):
     reason: str = ""
 
 
+class RelatedTicket(DomainModel):
+    """Chamado da mesma agência comparado com este, com a chance de ser o mesmo problema (leitura do modelo)."""
+
+    ticket_id: str
+    source: str = Field("tickets", description="tickets | history")
+    opening: date
+    status: str
+    is_open: bool
+    category: str = ""
+    category_label: str = ""
+    symptom_label: str = ""
+    environment: str = ""
+    scope: str = ""
+    supplier: str = ""
+    quoted_value: float | None = None
+    days_apart: int = Field(
+        0, description="dias entre as aberturas (positivo = aberto antes deste)"
+    )
+    in_window: bool = Field(
+        True, description="aberto dentro da janela; False = entrou por seguir aberto"
+    )
+    probability: int = Field(
+        0, ge=0, le=100, description="chance de ser o mesmo problema (%)"
+    )
+    relation: str = Field("different", description="same_problem | related | different")
+    reason: str = ""
+    matching_points: list[str] = Field(default_factory=list)
+    differences: list[str] = Field(default_factory=list)
+    flagged: bool = Field(
+        False, description="virou o apontamento possible_duplicate_ticket"
+    )
+
+
+class RelatedTicketsCheck(DomainModel):
+    """O que a etapa de chamados da agência comparou e com que parâmetros."""
+
+    window_days: int
+    include_still_open: bool
+    min_probability: int
+    show_probability: int
+    candidates_found: int = Field(
+        0, description="chamados da agência dentro dos critérios (antes do limite)"
+    )
+    tickets: list[RelatedTicket] = Field(
+        default_factory=list,
+        description="os comparados, do mais provável para o menos",
+    )
+    skipped: str = Field(
+        "", description="motivo de a checagem não rodar (vazio = rodou)"
+    )
+
+
 class Grades(DomainModel):
     """Nota de 0 a 100 de cada validação."""
 
@@ -865,6 +1032,10 @@ class Assessment(DomainModel):
     photo_summary: dict[str, Any] | None = None
     documents: list[EvaluatedDocument] = Field(
         default_factory=list, description="documentos lidos por OCR (imagem ou PDF)"
+    )
+    related: RelatedTicketsCheck | None = Field(
+        None,
+        description="chamados da mesma agência comparados (possível duplicidade); None em pareceres antigos",
     )
 
     summary: str = ""

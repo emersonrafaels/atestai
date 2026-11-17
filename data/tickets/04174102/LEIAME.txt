@@ -1,0 +1,16 @@
+CASO FICTÍCIO criado para testar o Atest.AI (não é um chamado real do Salesforce): agência, fornecedor, valores e
+problemas foram inventados. As imagens em attachments/ são SIMULADAS (recortes de imagens geradas por IA da biblioteca data/real_photos_itau, OpenAI gpt-image); não são evidência real.
+A origem também está no EXIF (ImageDescription) de cada imagem. Gerado por generator/build_salesforce_cases.py.
+
+Chamado 04174102 - Forro do autoatendimento manchado e pingando (aprovação do orçamento).
+Agência informada com NOME E CÓDIGO (1520).
+
+Chamados da mesma agência que entram na comparação (janela de 60 dias + os que seguem abertos):
+- 04174388 (aberto 3 dias DEPOIS, só com o código 1520): goteira no teto da sala dos caixas eletrônicos, ao
+  lado do ATM 4 -> MESMO PROBLEMA, outro fornecedor e outra categoria/sintoma -> possible_duplicate_ticket.
+- 04161377 (aberto em 22/10, segue aberto): split pingando no autoatendimento -> RELACIONADO (pode ser a origem
+  da água), chance intermediária, sem apontamento.
+- 04172318 (4 dias antes): porta giratória travando -> outro problema.
+- 04174415 (4 dias depois, só com o NOME da agência): tomada queimada no backoffice -> outro problema.
+O que o parecer deveria apontar: possível chamado duplicado (04174388) -> ANÁLISE DETALHADA.
+O orçamento em si é coerente (preços da LPU).

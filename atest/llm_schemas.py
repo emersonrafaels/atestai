@@ -107,9 +107,7 @@ class ItemReview(LlmOutput):
     duplicate_of: int = Field(
         description="n de um item ANTERIOR que cobra a mesma coisa; 0 se não há"
     )
-    lpu_code: str = Field(
-        description="Código equivalente na tabela de referência, ou NO_REFERENCE"
-    )
+    lpu_code: str = Field(description="Código equivalente na LPU, ou NO_REFERENCE")
 
 
 class ServiceCoverage(LlmOutput):
@@ -311,6 +309,40 @@ class DocumentAnalysis(LlmOutput):
 
     documents: list[ReadDocument]
     notes: str
+
+
+# --------------------------------------------------------------------------- chamados da mesma agência
+class RelatedTicketJudgment(LlmOutput):
+    """Comparação do chamado em análise com um chamado da mesma agência."""
+
+    ticket_id: str = Field(description="Número do chamado comparado, como na lista")
+    relation: Literal["same_problem", "related", "different"] = Field(
+        description=(
+            "same_problem = o mesmo problema, no mesmo local e equipamento (outro chamado aberto para a mesma falha, "
+            "reaberto ou desdobrado); related = mesmo ambiente ou equipamento, ou um problema que pode ser causa ou "
+            "consequência do outro, mas não o mesmo serviço; different = outro problema"
+        )
+    )
+    probability: int = Field(
+        ge=0,
+        le=100,
+        description="Chance, de 0 a 100, de os dois chamados tratarem do MESMO problema (pagaria duas vezes pelo mesmo serviço)",
+    )
+    matching_points: list[str] = Field(
+        description="O que coincide, de forma concreta (local, equipamento, sintoma, serviço, itens); vazio se nada"
+    )
+    differences: list[str] = Field(
+        description="O que diferencia os dois, de forma concreta; vazio se nada"
+    )
+    reason: str = Field(
+        description="Uma ou duas frases para a pessoa analista justificando a chance"
+    )
+
+
+class RelatedTicketsReview(LlmOutput):
+    """Saída da tarefa related_tickets: um julgamento por chamado da lista."""
+
+    judgments: list[RelatedTicketJudgment]
 
 
 # --------------------------------------------------------------------------- parecer

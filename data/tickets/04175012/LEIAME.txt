@@ -1,0 +1,13 @@
+CASO FICTÍCIO criado para testar o Atest.AI (não é um chamado real do Salesforce): agência, fornecedor, valores e
+problemas foram inventados. As imagens em attachments/ são SIMULADAS (recortes de imagens geradas por IA da biblioteca data/real_photos_itau, OpenAI gpt-image); não são evidência real.
+A origem também está no EXIF (ImageDescription) de cada imagem. Gerado por generator/build_salesforce_cases.py.
+
+Chamado 04175012 - Sensor de presença da tesouraria com disparo falso (aprovação do orçamento, SISR).
+
+Problemas plantados (o que o parecer deveria apontar):
+- QUANTIDADE ACIMA: o escopo e a solução falam de UM sensor (o da tesouraria); o orçamento cobra 3 sensores e
+  3 mãos de obra de substituição (itens 1 e 2).
+- PREÇO ACIMA DA REFERÊNCIA: sensor IVP a R$ 190 contra R$ 140 da LPU (ALA-002), 36% acima.
+Itens corretos: teste dos sensores (item 3) e a visita (item 4).
+Chamados da mesma agência: 04173506 (leitor biométrico da porta da tesouraria, aberto 8 dias antes e ainda
+aberto) entra na comparação pelos ainda abertos -> mesmo ambiente, OUTRO PROBLEMA (chance baixa).

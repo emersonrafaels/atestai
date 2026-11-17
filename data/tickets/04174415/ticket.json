@@ -1,0 +1,56 @@
+{
+  "ticket_id": "04174415",
+  "workstream": "SETA",
+  "maintenance_type": "corrective",
+  "moment": "quote",
+  "category": "electrical",
+  "symptom": "tomada_danificada",
+  "requested_scope": "Tomada da estação de trabalho 4 do backoffice queimada, com marca preta e cheiro de queimado. A tomada do lado também está esquentando.",
+  "solution_description": "Troca das 2 tomadas e verificação do circuito e do disjuntor.",
+  "branch": {
+    "code": "",
+    "name": "Ag. Campinas - Cambuí",
+    "environment": "area_interna_backoffice"
+  },
+  "supplier": {
+    "name": "Volt Instalações Elétricas LTDA (fictício)",
+    "cnpj": ""
+  },
+  "blocks_opening": false,
+  "quoted_value": 396.0,
+  "dates": {
+    "opening": "2026-11-13",
+    "supplier_submission": "2026-11-14",
+    "manager_review": null
+  },
+  "status": "forwarded_to_backoffice",
+  "origin": "dataset",
+  "dataset": "casos",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "attachments": [
+    {
+      "file_name": "Orcamento_Volt_04174415.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 5890,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-14"
+    },
+    {
+      "file_name": "IMG_20261113_110418.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 175432,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-14"
+    },
+    {
+      "file_name": "IMG_20261113_110602.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 171866,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-14"
+    }
+  ]
+}

@@ -19,11 +19,11 @@
     "badgeColor": "#147EBA"
   },
   "view": {
-    "x": 126.3970230793401,
-    "y": 213.19247580852726,
-    "k": 0.17196167423096248
+    "x": -589.270315834389,
+    "y": -847.3353101340201,
+    "k": 0.8689378708765867
   },
-  "savedAt": "2026-11-15T11:18:21.370Z",
+  "savedAt": "2026-11-17T11:25:48.993Z",
   "pageTitle": "Página 1",
   "legend": {
     "order": [
@@ -1047,7 +1047,7 @@
       "type": "gen-prompt",
       "x": 570,
       "y": 700,
-      "label": "Feedback-Augmented Context",
+      "label": "Feedback-Augmented Context (RA-ICL)",
       "sub": "prompt + casos validados parecidos",
       "style": {
         "dashed": true,
@@ -1548,7 +1548,7 @@
       "type": "ml-gate",
       "x": 860,
       "y": 1320,
-      "label": "Portão de qualidade",
+      "label": "Gate de qualidade do modelo",
       "sub": "aprova ou reprova a versão",
       "style": {
         "badge": "V3"

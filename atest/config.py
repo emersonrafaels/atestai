@@ -109,6 +109,10 @@ class PipelineSettings(_Section):
 
     phase: int = Field(2, ge=1, le=2)
     parallel: int = Field(3, ge=1, le=32)
+    related_skip_datasets: list[str] = Field(
+        default_factory=list,
+        description="conjuntos fora da comparação com chamados da mesma agência (agência e data sorteadas pelo gerador)",
+    )
 
 
 class BatchSettings(_Section):
@@ -332,6 +336,7 @@ class Prompts(_Section):
     quote_review: str
     photos: str
     documents: str
+    related_tickets: str = ""
     assessment: str
 
 
@@ -421,6 +426,7 @@ class Settings(BaseModel):
                 include={"default_provider", "effort", "max_tokens", "image_max_side"}
             ),
             "phase": self.pipeline.phase,
+            "related_skip_datasets": sorted(self.pipeline.related_skip_datasets),
         }
         # sort_keys=True: a mesma configuração gera sempre o mesmo texto, independentemente da ordem das chaves.
         return hashlib.sha256(

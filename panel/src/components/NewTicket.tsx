@@ -77,6 +77,10 @@ export function NewTicket({ config, close, created }: Props) {
     e.preventDefault();
     setError(null);
     const data = new FormData(e.currentTarget);
+    const branchName = String(data.get("branch_name") ?? "").trim();
+    const branchCode = String(data.get("branch_code") ?? "").trim();
+    if (!branchName && !branchCode) return setError("Informe o nome da agência ou o número do ponto (ou os dois).");
+    if (branchCode && (!/^\d{1,4}$/.test(branchCode))) return setError("O número do ponto é um número de 0 a 9999.");
     if (!spreadsheet) return setError("Anexe a planilha de orçamento.");
     data.set("spreadsheet", spreadsheet);
     data.delete("attachments");
@@ -177,12 +181,13 @@ export function NewTicket({ config, close, created }: Props) {
           </Section>
 
           <Section n={3} title="Agência e fornecedor">
-            <Field className="md:col-span-4" label="Agência" required tip="Nome da agência onde o serviço será feito.">
-              <input name="branch_name" required placeholder="Ag. Centro" className={field} />
+            <Field className="md:col-span-4" label="Nome da agência" tip="Nome da agência onde o serviço será feito. Informe o nome, o número do ponto ou os dois."
+              hint="Nome, número do ponto ou os dois: pelo menos um.">
+              <input name="branch_name" maxLength={120} placeholder="Ag. Centro" className={field} />
             </Field>
-            <Field className="md:col-span-2" label="Código da agência" tip="Código interno da agência. Ajuda a identificar reuso de fotos e orçamentos entre chamados da mesma agência."
-              hint="Em branco: 0000.">
-              <input name="branch_code" inputMode="numeric" placeholder="0418" className={field} />
+            <Field className="md:col-span-2" label="Núm. do ponto" tip="Número do ponto da agência, de 0 a 9999 (gravado com 4 dígitos: 418 vira 0418). Com ele, o Atest.AI acha os outros chamados da mesma agência com segurança; sem ele, compara pelo nome."
+              hint="De 0 a 9999.">
+              <input name="branch_code" inputMode="numeric" pattern="\d{1,4}" title="Número de 0 a 9999" maxLength={4} placeholder="0418" className={field} />
             </Field>
             <Field className="md:col-span-2" label="Data de abertura" tip="Quando o chamado foi aberto." hint="Em branco: hoje.">
               <input type="date" name="opened_on" className={field} />

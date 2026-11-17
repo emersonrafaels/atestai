@@ -1,0 +1,564 @@
+{
+  "ticket_id": "04161377",
+  "workstream": "SETA",
+  "category": "air_conditioning",
+  "symptom": "leak",
+  "maintenance_type": "corrective",
+  "moment": "quote",
+  "branch": {
+    "code": "1520",
+    "name": "Campinas Cambuí (fictícia)",
+    "environment": "area_interna_publico"
+  },
+  "supplier": "Climafrio Refrigeração LTDA (fictício)",
+  "quoted_value": 585.0,
+  "requested_scope": "Ar-condicionado split do autoatendimento pingando água na parede e no forro ao lado dos caixas eletrônicos. É o aparelho do lado direito de quem entra.",
+  "generated_at": "2026-11-17T14:17:49.488397",
+  "rubric_version": "2026-11-v10",
+  "prompts_version": "2026-11-v18",
+  "config_signature": "d6bda9a9f7a0",
+  "phase": 2,
+  "mode": "api",
+  "batch_mode": "sync",
+  "models": {
+    "main": "anthropic:claude-sonnet-5-5",
+    "fast": "anthropic:claude-sonnet-5-5"
+  },
+  "run_id": "20261117-141702-de0d",
+  "record_id": 103,
+  "checklist": {
+    "category": "air_conditioning",
+    "maintenance": "corrective",
+    "moment": "quote",
+    "complete": true,
+    "uploaded": 2,
+    "total": 2,
+    "requirements": [
+      {
+        "id": "quote",
+        "description": "Orçamento na planilha Excel padrão",
+        "met": true,
+        "attachments": [
+          "Orcamento_Climafrio_04161377.xlsx"
+        ]
+      },
+      {
+        "id": "problem_photo",
+        "description": "Foto do problema a ser corrigido",
+        "met": true,
+        "attachments": [
+          "IMG_20261022_101230.jpg",
+          "IMG_20261022_101512.jpg"
+        ]
+      }
+    ],
+    "missing": []
+  },
+  "attachments": [
+    {
+      "index": 1,
+      "name": "Orcamento_Climafrio_04161377.xlsx",
+      "category": "quote_doc",
+      "moment": "undetermined",
+      "readable": true,
+      "short_description": "Orçamento : 4 itens, R$ 585.00"
+    },
+    {
+      "index": 2,
+      "name": "IMG_20261022_101230.jpg",
+      "category": "room_before_photo",
+      "moment": "before",
+      "readable": true,
+      "short_description": "Split de parede branco sob forro, sem vazamento ou mancha visível"
+    },
+    {
+      "index": 3,
+      "name": "IMG_20261022_101512.jpg",
+      "category": "room_before_photo",
+      "moment": "before",
+      "readable": true,
+      "short_description": "Split de parede branco sob forro modular, sem dano visível"
+    }
+  ],
+  "recommendation": "approve",
+  "recommendation_reason": "Score de 85 ou mais, sem travas",
+  "score": 94,
+  "grades": {
+    "scope": 100,
+    "quote": 100,
+    "photos": 85
+  },
+  "confidence": "high",
+  "confidence_reducers": [],
+  "findings": [
+    {
+      "kind": "missing_before_photo",
+      "validation": "photos",
+      "severity": "medium",
+      "discount": 15,
+      "description": "Sem foto do \"antes\"",
+      "evidence": "Nenhuma foto registra o estado anterior ao serviço",
+      "reference": "",
+      "lock": false,
+      "reduces_confidence": false,
+      "phase": 2,
+      "amount_at_issue": 0.0,
+      "absorbed_by": "",
+      "returns": false,
+      "review": false,
+      "extent": 1.0,
+      "extent_label": ""
+    }
+  ],
+  "amount_at_issue": 0.0,
+  "amount_at_issue_pct": 0.0,
+  "scope": {
+    "local": "Campinas Cambuí (cód. 1520) - Área interna - Público, autoatendimento, ao lado dos caixas eletrônicos",
+    "environment": "Ar-condicionado split do autoatendimento, aparelho do lado direito de quem entra, pingando água na parede e no forro ao lado dos caixas eletrônicos",
+    "equipment": "Ar-condicionado split",
+    "requested_services": [
+      "fazer a limpeza completa do split",
+      "desobstruir o dreno do split",
+      "trocar a mangueira de drenagem do split"
+    ],
+    "mentioned_quantities": [],
+    "acceptance_criteria": [
+      "O orçamento prevê a limpeza completa do split do autoatendimento (aparelho do lado direito de quem entra)",
+      "O orçamento prevê a desobstrução do dreno do split",
+      "O orçamento prevê a troca da mangueira de drenagem",
+      "Os itens orçados atendem ao vazamento de água na parede e no forro ao lado dos caixas eletrônicos",
+      "Não há itens sem relação com o vazamento do split, como troca de aparelho ou carga de gás, sem justificativa no chamado",
+      "Se houver reparo de parede ou forro molhado, deve estar justificado pelas fotos, pois não foi pedido no escopo"
+    ],
+    "expected_evidence": [
+      "Foto do split do autoatendimento que está pingando, mostrando o aparelho do lado direito de quem entra",
+      "Foto da água pingando ou das marcas de umidade e manchas na parede ao lado dos caixas eletrônicos",
+      "Foto do forro com marcas de umidade ou gotejamento",
+      "Foto da mangueira de drenagem ou do dreno, mostrando o estado ou a obstrução, quando visível",
+      "Foto de contexto que mostre a posição do aparelho em relação aos caixas eletrônicos"
+    ],
+    "before_evidence_applicable": true,
+    "consistent_with_category_symptom": true,
+    "coherence_note": "",
+    "vague_scope": false,
+    "vague_reason": ""
+  },
+  "items": [
+    {
+      "n": 1,
+      "description": "Limpeza preventiva de split até 24.000 BTU (evaporadora + condensadora)",
+      "unit": "un",
+      "lpu": true,
+      "quantity": 1.0,
+      "unit_value": 180.0,
+      "total_value": 180.0,
+      "classification": "compliant",
+      "reason": "Limpeza do split (evaporadora e condensadora) é o primeiro serviço pedido, no aparelho do autoatendimento.",
+      "lpu_code": "HVAC-001",
+      "reference_price": 180.0,
+      "expected_quantity_max": 1.0,
+      "amount_at_issue": 0.0,
+      "findings": []
+    },
+    {
+      "n": 2,
+      "description": "Higienização com bactericida",
+      "unit": "un",
+      "lpu": true,
+      "quantity": 1.0,
+      "unit_value": 45.0,
+      "total_value": 45.0,
+      "classification": "compliant",
+      "reason": "Higienização com bactericida complementa a limpeza completa do split pedida e é coerente com o serviço, em apenas 1 aparelho.",
+      "lpu_code": "HVAC-002",
+      "reference_price": 45.0,
+      "expected_quantity_max": 1.0,
+      "amount_at_issue": 0.0,
+      "findings": []
+    },
+    {
+      "n": 3,
+      "description": "Desobstrução do dreno e troca da mangueira de drenagem (3 m)",
+      "unit": "vb",
+      "lpu": false,
+      "quantity": 1.0,
+      "unit_value": 210.0,
+      "total_value": 210.0,
+      "classification": "compliant",
+      "reason": "Executa diretamente a desobstrução do dreno e a troca da mangueira de drenagem, causa do vazamento relatado.",
+      "lpu_code": "NO_REFERENCE",
+      "reference_price": null,
+      "expected_quantity_max": 1.0,
+      "amount_at_issue": 0.0,
+      "findings": []
+    },
+    {
+      "n": 4,
+      "description": "Visita técnica e deslocamento",
+      "unit": "vb",
+      "lpu": true,
+      "quantity": 1.0,
+      "unit_value": 150.0,
+      "total_value": 150.0,
+      "classification": "compliant",
+      "reason": "Visita técnica e deslocamento são necessários para ir à agência executar o serviço, 1 visita.",
+      "lpu_code": "GER-001",
+      "reference_price": 150.0,
+      "expected_quantity_max": 1.0,
+      "amount_at_issue": 0.0,
+      "findings": []
+    }
+  ],
+  "quote_notes": [
+    "Os 4 itens têm relação com o vazamento do split e não há troca de aparelho, carga de gás nem reparo de parede ou forro. O item 3 não consta na tabela de referência, então o preço de R$ 210,00 precisa ser conferido com o preço de mercado apresentado. Não foi apresentada foto no chamado para conferir, e as fotos do antes (split, dreno ou mangueira, umidade na parede e no forro) devem ser verificadas na análise das imagens."
+  ],
+  "service_coverage": [
+    {
+      "n": 1,
+      "service": "fazer a limpeza completa do split",
+      "items": [
+        1,
+        2
+      ],
+      "covered": "yes",
+      "note": "A limpeza de evaporadora e condensadora (item 1) com higienização bactericida (item 2) cobre a limpeza completa do aparelho."
+    },
+    {
+      "n": 2,
+      "service": "desobstruir o dreno do split",
+      "items": [
+        3
+      ],
+      "covered": "yes",
+      "note": "O item 3 inclui a desobstrução do dreno, que é a causa provável do gotejamento."
+    },
+    {
+      "n": 3,
+      "service": "trocar a mangueira de drenagem do split",
+      "items": [
+        3
+      ],
+      "covered": "yes",
+      "note": "O item 3 prevê a troca da mangueira de drenagem com 3 m, medida plausível para um split."
+    }
+  ],
+  "photos": [
+    {
+      "file": "IMG_20261022_101230.jpg",
+      "environment": "Área interna, parede com split de parede e forro modular de placas, com divisória de vidro e parede laranja ao fundo",
+      "what_it_shows": "Split de parede branco (inverter) instalado logo abaixo do forro. Não aparece água pingando, mancha de umidade, forro molhado, mangueira de drenagem nem caixas eletrônicos.",
+      "moment": "before",
+      "readable": true,
+      "matches_scope": "partial",
+      "reason": "A foto mostra um split de parede em ambiente interno de agência, que é do contexto do chamado. Mas o aparelho aparece seco, sem sinal de vazamento, e nada indica que seja o do autoatendimento, do lado direito de quem entra. Não há o que contradiga o escopo.",
+      "covered_items": [],
+      "exif_date": "2026-10-22T10:12:30",
+      "reused_from": null,
+      "integrity_signals": []
+    },
+    {
+      "file": "IMG_20261022_101512.jpg",
+      "environment": "Área interna, parede branca com split de parede, forro modular de placas, parede laranja à esquerda e azul à direita",
+      "what_it_shows": "Split de parede branco sob o forro. Não aparece água pingando, mancha na parede ou no forro, dreno, mangueira nem caixas eletrônicos.",
+      "moment": "before",
+      "readable": true,
+      "matches_scope": "partial",
+      "reason": "A foto mostra um split de parede em ambiente interno de agência, mas sem o dano. Parede e forro estão limpos, sem umidade visível, e não dá para confirmar que é o aparelho do autoatendimento. É um aparelho diferente do da foto do Anexo 2, pela marca e pelo formato.",
+      "covered_items": [],
+      "exif_date": "2026-10-22T10:15:12",
+      "reused_from": null,
+      "integrity_signals": []
+    }
+  ],
+  "photo_summary": {
+    "has_before_photo": false,
+    "problem_assessment": "",
+    "done_justification": "",
+    "done_service": "undetermined",
+    "items_without_photo": [],
+    "quantity_checks": [],
+    "notes": "As duas fotos mostram splits de parede secos, sem gotejamento, manchas de umidade na parede ou no forro e sem a mangueira ou o dreno. Também não mostram os caixas eletrônicos nem a posição do aparelho em relação a eles. Por isso não comprovam o vazamento relatado nem que o aparelho é o do autoatendimento, do lado direito de quem entra. Os dois aparelhos são de modelos diferentes, o que pode indicar que as fotos são de equipamentos distintos ou de outro ambiente. Os itens 1 (limpeza), 3 (desobstrução do dreno e troca da mangueira) e 4 (visita) têm relação com o escopo. O item 2 (higienização com bactericida) não foi pedido, mas é um complemento comum da limpeza. O item 1 é descrito como limpeza preventiva de evaporadora e condensadora, enquanto o chamado fala em limpeza completa do split. Recomenda-se pedir ao fornecedor fotos do aparelho do autoatendimento pingando, das manchas na parede e no forro e da mangueira ou dreno."
+  },
+  "documents": [],
+  "related": {
+    "window_days": 5,
+    "include_still_open": true,
+    "min_probability": 70,
+    "show_probability": 40,
+    "candidates_found": 0,
+    "tickets": [],
+    "skipped": ""
+  },
+  "summary": "Recomendo aprovar com ressalvas: o escopo está coberto (limpeza nos itens 1 e 2; desobstrução do dreno e troca da mangueira de 3 m no item 3) e os itens 1, 2 e 4 estão a +0% da referência (R$ 180,00, R$ 45,00 e R$ 150,00), sem valor divergente. A ressalva é que o item 3, de R$ 210,00, não consta na tabela de referência e não veio preço de mercado para compará-lo. As duas fotos enviadas mostram splits de parede secos, sem gotejamento, sem umidade na parede ou no forro e sem dreno ou mangueira. Elas também não mostram os caixas eletrônicos nem a posição do aparelho, e os dois modelos são diferentes, então não comprovam o vazamento nem que o aparelho é o do autoatendimento, do lado direito de quem entra.",
+  "supplier_message": "Enviar fotos do problema (o antes) que mostrem o vazamento ou gotejamento no split do autoatendimento, a umidade na parede e no forro ao lado dos caixas eletrônicos e a posição do aparelho do lado direito de quem entra; enviar foto do dreno e da mangueira de drenagem atual que justifique a desobstrução e a troca; esclarecer a que ambiente e a quais aparelhos pertencem as duas fotos enviadas, já que são de modelos diferentes e não mostram o vazamento; apresentar preço de mercado (anúncio ou cotação) para o item 3, de R$ 210,00, que não consta na tabela de referência.",
+  "llm_calls": [
+    {
+      "task": "identify_attachments",
+      "provider": "anthropic",
+      "model": "anthropic:claude-sonnet-5-5",
+      "resolved_model": "claude-sonnet-5-5",
+      "prompt_version": "2026-11-v18",
+      "prompt_hash": "64dece384c92",
+      "schema_hash": "cc0bb58f3035",
+      "start": "2026-11-17T14:17:04.073609",
+      "duration_s": 14.83,
+      "input_tokens": 5169,
+      "output_tokens": 128,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 1913,
+      "cost_usd": 0.0164,
+      "from_cache": false,
+      "simulated": false,
+      "via_batch": false,
+      "batch_id": null,
+      "response": {
+        "attachments": [
+          {
+            "index": 2,
+            "category": "room_before_photo",
+            "moment": "before",
+            "readable": true,
+            "short_description": "Split de parede branco sob forro, sem vazamento ou mancha visível"
+          },
+          {
+            "index": 3,
+            "category": "room_before_photo",
+            "moment": "before",
+            "readable": true,
+            "short_description": "Split de parede branco sob forro modular, sem dano visível"
+          }
+        ]
+      }
+    },
+    {
+      "task": "scope",
+      "provider": "anthropic",
+      "model": "anthropic:claude-sonnet-5-5",
+      "resolved_model": "claude-sonnet-5-5",
+      "prompt_version": "2026-11-v18",
+      "prompt_hash": "bf3acd57d748",
+      "schema_hash": "6e0cef5ecc36",
+      "start": "2026-11-17T14:17:18.917981",
+      "duration_s": 4.79,
+      "input_tokens": 469,
+      "output_tokens": 660,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 3069,
+      "cost_usd": 0.015211,
+      "from_cache": false,
+      "simulated": false,
+      "via_batch": false,
+      "batch_id": null,
+      "response": {
+        "local": "Campinas Cambuí (cód. 1520) - Área interna - Público, autoatendimento, ao lado dos caixas eletrônicos",
+        "environment": "Ar-condicionado split do autoatendimento, aparelho do lado direito de quem entra, pingando água na parede e no forro ao lado dos caixas eletrônicos",
+        "equipment": "Ar-condicionado split",
+        "requested_services": [
+          "fazer a limpeza completa do split",
+          "desobstruir o dreno do split",
+          "trocar a mangueira de drenagem do split"
+        ],
+        "mentioned_quantities": [],
+        "acceptance_criteria": [
+          "O orçamento prevê a limpeza completa do split do autoatendimento (aparelho do lado direito de quem entra)",
+          "O orçamento prevê a desobstrução do dreno do split",
+          "O orçamento prevê a troca da mangueira de drenagem",
+          "Os itens orçados atendem ao vazamento de água na parede e no forro ao lado dos caixas eletrônicos",
+          "Não há itens sem relação com o vazamento do split, como troca de aparelho ou carga de gás, sem justificativa no chamado",
+          "Se houver reparo de parede ou forro molhado, deve estar justificado pelas fotos, pois não foi pedido no escopo"
+        ],
+        "expected_evidence": [
+          "Foto do split do autoatendimento que está pingando, mostrando o aparelho do lado direito de quem entra",
+          "Foto da água pingando ou das marcas de umidade e manchas na parede ao lado dos caixas eletrônicos",
+          "Foto do forro com marcas de umidade ou gotejamento",
+          "Foto da mangueira de drenagem ou do dreno, mostrando o estado ou a obstrução, quando visível",
+          "Foto de contexto que mostre a posição do aparelho em relação aos caixas eletrônicos"
+        ],
+        "before_evidence_applicable": true,
+        "consistent_with_category_symptom": true,
+        "coherence_note": "",
+        "vague_scope": false,
+        "vague_reason": ""
+      }
+    },
+    {
+      "task": "quote_review",
+      "provider": "anthropic",
+      "model": "anthropic:claude-sonnet-5-5",
+      "resolved_model": "claude-sonnet-5-5",
+      "prompt_version": "2026-11-v18",
+      "prompt_hash": "813d9fa5a331",
+      "schema_hash": "74de591c6c6e",
+      "start": "2026-11-17T14:17:23.981889",
+      "duration_s": 6.14,
+      "input_tokens": 1456,
+      "output_tokens": 874,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 4188,
+      "cost_usd": 0.022122,
+      "from_cache": false,
+      "simulated": false,
+      "via_batch": false,
+      "batch_id": null,
+      "response": {
+        "items": [
+          {
+            "n": 1,
+            "classification": "compliant",
+            "reason": "Limpeza do split (evaporadora e condensadora) é o primeiro serviço pedido, no aparelho do autoatendimento.",
+            "expected_quantity_max": 1.0,
+            "plausible_quantity": true,
+            "duplicate_of": 0,
+            "lpu_code": "HVAC-001"
+          },
+          {
+            "n": 2,
+            "classification": "compliant",
+            "reason": "Higienização com bactericida complementa a limpeza completa do split pedida e é coerente com o serviço, em apenas 1 aparelho.",
+            "expected_quantity_max": 1.0,
+            "plausible_quantity": true,
+            "duplicate_of": 0,
+            "lpu_code": "HVAC-002"
+          },
+          {
+            "n": 3,
+            "classification": "compliant",
+            "reason": "Executa diretamente a desobstrução do dreno e a troca da mangueira de drenagem, causa do vazamento relatado.",
+            "expected_quantity_max": 1.0,
+            "plausible_quantity": true,
+            "duplicate_of": 0,
+            "lpu_code": "NO_REFERENCE"
+          },
+          {
+            "n": 4,
+            "classification": "compliant",
+            "reason": "Visita técnica e deslocamento são necessários para ir à agência executar o serviço, 1 visita.",
+            "expected_quantity_max": 1.0,
+            "plausible_quantity": true,
+            "duplicate_of": 0,
+            "lpu_code": "GER-001"
+          }
+        ],
+        "service_coverage": [
+          {
+            "n": 1,
+            "service": "fazer a limpeza completa do split",
+            "items": [
+              1,
+              2
+            ],
+            "covered": "yes",
+            "note": "A limpeza de evaporadora e condensadora (item 1) com higienização bactericida (item 2) cobre a limpeza completa do aparelho."
+          },
+          {
+            "n": 2,
+            "service": "desobstruir o dreno do split",
+            "items": [
+              3
+            ],
+            "covered": "yes",
+            "note": "O item 3 inclui a desobstrução do dreno, que é a causa provável do gotejamento."
+          },
+          {
+            "n": 3,
+            "service": "trocar a mangueira de drenagem do split",
+            "items": [
+              3
+            ],
+            "covered": "yes",
+            "note": "O item 3 prevê a troca da mangueira de drenagem com 3 m, medida plausível para um split."
+          }
+        ],
+        "notes": "Os 4 itens têm relação com o vazamento do split e não há troca de aparelho, carga de gás nem reparo de parede ou forro. O item 3 não consta na tabela de referência, então o preço de R$ 210,00 precisa ser conferido com o preço de mercado apresentado. Não foi apresentada foto no chamado para conferir, e as fotos do antes (split, dreno ou mangueira, umidade na parede e no forro) devem ser verificadas na análise das imagens."
+      }
+    },
+    {
+      "task": "photos",
+      "provider": "anthropic",
+      "model": "anthropic:claude-sonnet-5-5",
+      "resolved_model": "claude-sonnet-5-5",
+      "prompt_version": "2026-11-v18",
+      "prompt_hash": "6cfcd008d0dd",
+      "schema_hash": "788a7bb0bd9e",
+      "start": "2026-11-17T14:17:30.225471",
+      "duration_s": 8.59,
+      "input_tokens": 5683,
+      "output_tokens": 968,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 4855,
+      "cost_usd": 0.033183,
+      "from_cache": false,
+      "simulated": false,
+      "via_batch": false,
+      "batch_id": null,
+      "response": {
+        "photos": [
+          {
+            "index": 2,
+            "environment": "Área interna, parede com split de parede e forro modular de placas, com divisória de vidro e parede laranja ao fundo",
+            "what_it_shows": "Split de parede branco (inverter) instalado logo abaixo do forro. Não aparece água pingando, mancha de umidade, forro molhado, mangueira de drenagem nem caixas eletrônicos.",
+            "moment": "before",
+            "readable": true,
+            "matches_scope": "partial",
+            "reason": "A foto mostra um split de parede em ambiente interno de agência, que é do contexto do chamado. Mas o aparelho aparece seco, sem sinal de vazamento, e nada indica que seja o do autoatendimento, do lado direito de quem entra. Não há o que contradiga o escopo.",
+            "covered_items": []
+          },
+          {
+            "index": 3,
+            "environment": "Área interna, parede branca com split de parede, forro modular de placas, parede laranja à esquerda e azul à direita",
+            "what_it_shows": "Split de parede branco sob o forro. Não aparece água pingando, mancha na parede ou no forro, dreno, mangueira nem caixas eletrônicos.",
+            "moment": "before",
+            "readable": true,
+            "matches_scope": "partial",
+            "reason": "A foto mostra um split de parede em ambiente interno de agência, mas sem o dano. Parede e forro estão limpos, sem umidade visível, e não dá para confirmar que é o aparelho do autoatendimento. É um aparelho diferente do da foto do Anexo 2, pela marca e pelo formato.",
+            "covered_items": []
+          }
+        ],
+        "has_before_photo": false,
+        "problem_assessment": "",
+        "done_justification": "",
+        "done_service": "undetermined",
+        "items_without_photo": [],
+        "quantity_checks": [],
+        "notes": "As duas fotos mostram splits de parede secos, sem gotejamento, manchas de umidade na parede ou no forro e sem a mangueira ou o dreno. Também não mostram os caixas eletrônicos nem a posição do aparelho em relação a eles. Por isso não comprovam o vazamento relatado nem que o aparelho é o do autoatendimento, do lado direito de quem entra. Os dois aparelhos são de modelos diferentes, o que pode indicar que as fotos são de equipamentos distintos ou de outro ambiente. Os itens 1 (limpeza), 3 (desobstrução do dreno e troca da mangueira) e 4 (visita) têm relação com o escopo. O item 2 (higienização com bactericida) não foi pedido, mas é um complemento comum da limpeza. O item 1 é descrito como limpeza preventiva de evaporadora e condensadora, enquanto o chamado fala em limpeza completa do split. Recomenda-se pedir ao fornecedor fotos do aparelho do autoatendimento pingando, das manchas na parede e no forro e da mangueira ou dreno."
+      }
+    },
+    {
+      "task": "assessment",
+      "provider": "anthropic",
+      "model": "anthropic:claude-sonnet-5-5",
+      "resolved_model": "claude-sonnet-5-5",
+      "prompt_version": "2026-11-v18",
+      "prompt_hash": "4f76887b8221",
+      "schema_hash": "54e4cbe91987",
+      "start": "2026-11-17T14:17:40.663232",
+      "duration_s": 8.82,
+      "input_tokens": 1449,
+      "output_tokens": 1036,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 1587,
+      "cost_usd": 0.017226,
+      "from_cache": false,
+      "simulated": false,
+      "via_batch": false,
+      "batch_id": null,
+      "response": {
+        "summary": "Recomendo aprovar com ressalvas: o escopo está coberto (limpeza nos itens 1 e 2; desobstrução do dreno e troca da mangueira de 3 m no item 3) e os itens 1, 2 e 4 estão a +0% da referência (R$ 180,00, R$ 45,00 e R$ 150,00), sem valor divergente. A ressalva é que o item 3, de R$ 210,00, não consta na tabela de referência e não veio preço de mercado para compará-lo. As duas fotos enviadas mostram splits de parede secos, sem gotejamento, sem umidade na parede ou no forro e sem dreno ou mangueira. Elas também não mostram os caixas eletrônicos nem a posição do aparelho, e os dois modelos são diferentes, então não comprovam o vazamento nem que o aparelho é o do autoatendimento, do lado direito de quem entra.",
+        "supplier_message": "Enviar fotos do problema (o antes) que mostrem o vazamento ou gotejamento no split do autoatendimento, a umidade na parede e no forro ao lado dos caixas eletrônicos e a posição do aparelho do lado direito de quem entra; enviar foto do dreno e da mangueira de drenagem atual que justifique a desobstrução e a troca; esclarecer a que ambiente e a quais aparelhos pertencem as duas fotos enviadas, já que são de modelos diferentes e não mostram o vazamento; apresentar preço de mercado (anúncio ou cotação) para o item 3, de R$ 210,00, que não consta na tabela de referência."
+      }
+    }
+  ],
+  "duration_s": 45.86,
+  "stage_durations_s": {
+    "checklist": 15.269,
+    "scope": 4.796,
+    "related": 0.233,
+    "quote": 6.181,
+    "photos": 10.527,
+    "documents": 0.0,
+    "score": 0.003,
+    "assessment": 8.832
+  },
+  "cost_usd": 0.104142,
+  "cost_brl": 0.5624
+}

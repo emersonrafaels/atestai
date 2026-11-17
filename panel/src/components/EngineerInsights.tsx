@@ -156,7 +156,7 @@ function Bar({ label, value, width, tone }: { label: string; value: string; widt
   );
 }
 
-/** 3. Preço × tabela de referência e × preço de mercado anexado. */
+/** 3. Preço × LPU e × preço de mercado anexado. */
 function PriceCard({ p, goTo }: { p: Assessment; goTo: GoTo }) {
   const priced = p.items.filter((i) => i.reference_price);
   const market = (p.documents ?? []).flatMap((d) => d.prices.filter((x) => x.quote_item > 0 && x.value > 0 && p.items.some((i) => i.n === x.quote_item)).map((x) => ({ ...x, file: d.file })));
@@ -168,7 +168,7 @@ function PriceCard({ p, goTo }: { p: Assessment; goTo: GoTo }) {
   return (
     <Card icon={BadgeDollarSign} title="Preço × referência" tone={tone} headline={headline} link="Ver no orçamento" onLink={() => goTo("quote", { items: above.map((i) => i.n) })}>
       {compared === 0 && (
-        <p className="text-muted">Nenhum item tem equivalente na tabela de referência e não há preço de mercado anexado: o preço não pôde ser comparado.</p>
+        <p className="text-muted">Nenhum item tem equivalente na LPU e não há preço de mercado anexado: o preço não pôde ser comparado.</p>
       )}
       <ul className="space-y-1.5">
         {priced.map((i) => {

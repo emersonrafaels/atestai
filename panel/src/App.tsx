@@ -1,4 +1,4 @@
-import { BarChart3, BookOpen, ClipboardCheck, Compass, FileSearch, FileText, Cpu, Download, FlaskConical, HelpCircle, Images, Inbox, ListChecks, Loader2, Play, Plus, Receipt, RotateCcw, ScanSearch, Settings, Trash2, Wifi, WifiOff, X, type LucideIcon } from "lucide-react";
+import { BarChart3, BookOpen, Building2, ClipboardCheck, Compass, FileSearch, FileText, Cpu, Download, FlaskConical, HelpCircle, Images, Inbox, ListChecks, Loader2, Play, Plus, Receipt, RotateCcw, ScanSearch, Settings, Trash2, Wifi, WifiOff, X, type LucideIcon } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api, type TicketDetail, type TicketSummary, type AppSettings, type Dataset, type Run, type Assessment, type Recommendation, type ScenarioTag } from "./api";
 import { serverOutdated } from "./api";
@@ -8,10 +8,12 @@ import { StageTimeline } from "./components/StageTimeline";
 import { TicketInputTab } from "./components/TicketInputTab";
 import { PhotosTab } from "./components/PhotosTab";
 import { DocumentsTab } from "./components/DocumentsTab";
+import { RelatedTab } from "./components/RelatedTab";
 import { QuoteTab } from "./components/QuoteTab";
 import { AssessmentTab } from "./components/AssessmentTab";
 import { StageProgress } from "./components/StageProgress";
 import { TicketList } from "./components/TicketList";
+import { EMPTY_FILTERS, loadFilters, matches, saveFilters, verdictOf, type ListFilters } from "./ticketFilters";
 import { OperationsView } from "./components/OperationsView";
 import { NewTicket } from "./components/NewTicket";
 import { RerunDialog } from "./components/RerunDialog";
@@ -28,12 +30,13 @@ import { AdminView, CONFIG_CHANGED_EVENT } from "./components/admin/AdminView";
 import { ModelCombobox } from "./components/ui/ModelCombobox";
 import { ProviderPicker, findChoice, initialProvider, providerChoices, withProvider } from "./components/ui/ProviderPicker";
 
-type Tab = "assessment" | "scope" | "quote" | "photos" | "documents" | "calls" | "input";
+type Tab = "assessment" | "scope" | "related" | "quote" | "photos" | "documents" | "calls" | "input";
 const TABS: { id: Tab; label: string; needsAssessment: boolean; icon: LucideIcon; hint: string }[] = [
   { id: "input", label: "Entrada do chamado", needsAssessment: false, icon: Inbox, hint: "O que chegou do Salesforce: escopo, orçamento e anexos" },
   { id: "assessment", label: "Parecer", needsAssessment: true, icon: ClipboardCheck, hint: "Checklist, recomendação, conta do score, apontamentos e a sua decisão" },
   { id: "scope", label: "Escopo", needsAssessment: true, icon: FileSearch, hint: "O texto do escopo, o que a IA extraiu dele e as verificações de clareza e coerência" },
-  { id: "quote", label: "Orçamento", needsAssessment: true, icon: Receipt, hint: "Cada item do orçamento classificado contra o escopo e a tabela de referência" },
+  { id: "related", label: "Agência", needsAssessment: true, icon: Building2, hint: "Outros chamados da mesma agência (abertos nos últimos dias ou ainda abertos) e a chance de ser o mesmo problema" },
+  { id: "quote", label: "Orçamento", needsAssessment: true, icon: Receipt, hint: "Cada item do orçamento classificado contra o escopo e a LPU" },
   { id: "photos", label: "Fotos", needsAssessment: true, icon: Images, hint: "O que cada foto mostra, se corresponde ao escopo e sinais de reaproveitamento" },
   { id: "documents", label: "Documentos", needsAssessment: true, icon: FileText, hint: "Leitura (OCR) dos documentos anexados, inclusive manuscritos e PDFs, e conferência com o chamado" },
   { id: "calls", label: "Chamadas ao modelo", needsAssessment: true, icon: Cpu, hint: "Cada chamada à IA: tarefa, modelo, tempo, tokens, custo e o JSON devolvido" },
@@ -46,6 +49,9 @@ export default function App() {
   const [tickets, setTickets] = useState<TicketSummary[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [streamFilter, setStreamFilter] = useState<"all" | "SETA" | "SISR">("all");
+  // busca e filtros da lista de chamados (agência, nº, parecer…), guardados no navegador
+  const [listFilters, setListFiltersRaw] = useState<ListFilters>(loadFilters);
+  const setListFilters = (f: ListFilters) => { setListFiltersRaw(f); saveFilters(f); };
   const [focus, setFocus] = useState<string | null>(null);
   const [detail_level, setDetail] = useState<TicketDetail | null>(null);
   const [mode, setMode] = useState<"simulated" | "api">("simulated");
@@ -199,6 +205,14 @@ export default function App() {
     const sets = new Set(ids.map((id) => tickets.find((c) => c.ticket_id === id)?.dataset));
     const only = sets.size === 1 ? [...sets][0] : undefined;
     if (dataset !== "all" && (!only || only !== dataset)) setDataset(only ?? "all");
+    // um filtro que esconderia o chamado aberto sai de cena (o escopo é o conjunto escolhido acima)
+    const hidden = ids.some((id) => {
+      const c = tickets.find((t) => t.ticket_id === id);
+      const st = execution?.tickets[id];
+      return c && !matches(c, listFilters, verdictOf(c, st?.assessment ?? null, !!st));
+    });
+    if (hidden) setListFilters(EMPTY_FILTERS);
+    if (ids.some((id) => tickets.find((t) => t.ticket_id === id && streamFilter !== "all" && t.workstream !== streamFilter))) setStreamFilter("all");
   };
   const openFromScenarios = (id: string) => {
     showInList([id]);
@@ -474,6 +488,7 @@ export default function App() {
       <div className={`grid min-h-0 grid-cols-1 transition-[grid-template-columns] duration-200 ${listCollapsed ? "grid-rows-[auto_1fr] md:grid-rows-1 md:grid-cols-[76px_1fr]" : "md:grid-cols-[380px_1fr]"}`}>
         <TicketList collapsed={listCollapsed} setCollapsed={setListCollapsed} tickets={tickets} selected={selected} focus={focus} focusTicket={setFocus} execution={execution}
           streamFilter={streamFilter} setStreamFilter={setStreamFilter} datasets={datasets} dataset={dataset} setDataset={setDataset}
+          filters={listFilters} setFilters={setListFilters}
           toggle={(id) => setSelected((s) => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; })}
           setAll={(ids, mark) => setSelected((s) => { const n = new Set(s); ids.forEach((i) => (mark ? n.add(i) : n.delete(i))); return n; })} />
 
@@ -554,10 +569,11 @@ export default function App() {
               {assessment && (
                 <div hidden={tab !== "assessment"}>
                   <AssessmentTab key={`${assessment.ticket_id}-${assessment.record_id ?? assessment.generated_at}`} p={assessment} rubric={rubric}
-                    ticket={detail_level} openPhoto={openPhoto} goTo={goTo} openTicket={(id) => { setView("analysis"); setFocus(id); }} />
+                    ticket={detail_level} openPhoto={openPhoto} goTo={goTo} openTicket={openFromScenarios} />
                 </div>
               )}
               {assessment && tab === "scope" && <ScopeTab p={assessment} ticket={detail_level} rubric={rubric} goTo={goTo} />}
+              {assessment && tab === "related" && <RelatedTab p={assessment} ticket={detail_level} openPhoto={openPhoto} openTicket={openFromScenarios} />}
               {assessment && tab === "quote" && <QuoteTab p={assessment} highlight={highlight.items} />}
               {assessment && tab === "photos" && <PhotosTab p={assessment} base={`/api/tickets/${assessment.ticket_id}/attachments`} openPhoto={openPhoto} highlight={highlight.files} />}
               {assessment && tab === "documents" && <DocumentsTab p={assessment} base={`/api/tickets/${assessment.ticket_id}/attachments`} openPhoto={openPhoto} />}
@@ -666,7 +682,7 @@ function buildTour(view: View, a: { toAnalysis: () => void; toAssessment: () => 
   }
   if (view === "scenarios") {
     return [
-      { title: "Cenários de teste", body: <p>Um chamado por tipo de problema, e os chamados de todos os conjuntos agrupados pelo problema que o gabarito descreve. Clique num chamado para abri-lo na Análise, ou em <b>Selecionar</b> para marcar vários e analisar de uma vez.</p> },
+      { title: "Cenários de teste", body: <p>Filtre pelo conjunto de dados e veja o que esperar de cada um. Nos <b>Casos Itaú - Salesforce</b>, o roteiro diz o que foi plantado e o que mostrar em cada chamado; nos conjuntos com gabarito, há um chamado por tipo de problema e os chamados agrupados pelo problema. Clique num chamado para abri-lo na Análise, ou em <b>Selecionar</b> para marcar vários e analisar de uma vez.</p> },
       help,
     ];
   }

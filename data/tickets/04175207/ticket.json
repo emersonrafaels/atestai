@@ -1,0 +1,56 @@
+{
+  "ticket_id": "04175207",
+  "workstream": "SETA",
+  "maintenance_type": "corrective",
+  "moment": "quote",
+  "category": "lighting",
+  "symptom": "luminaria_danificada",
+  "requested_scope": "Hall dos caixas eletrônicos escuro, luminárias do teto apagadas perto da entrada. À noite os clientes reclamam que não enxergam o teclado do caixa.",
+  "solution_description": "Substituição das luminárias antigas do hall por luminárias LED 60x60.",
+  "branch": {
+    "code": "6260",
+    "name": "Indaiatuba - Vila Sfeir",
+    "environment": "area_interna_publico"
+  },
+  "supplier": {
+    "name": "Luminar Serviços Elétricos LTDA (fictício)",
+    "cnpj": ""
+  },
+  "blocks_opening": false,
+  "quoted_value": 3300.0,
+  "dates": {
+    "opening": "2026-11-12",
+    "supplier_submission": "2026-11-13",
+    "manager_review": null
+  },
+  "status": "forwarded_to_backoffice",
+  "origin": "dataset",
+  "dataset": "casos",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "attachments": [
+    {
+      "file_name": "Orcamento_Luminar_04175207.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 5903,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-13"
+    },
+    {
+      "file_name": "IMG_20261112_183040.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 131564,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-13"
+    },
+    {
+      "file_name": "IMG_20261112_183215.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 296257,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-13"
+    }
+  ]
+}

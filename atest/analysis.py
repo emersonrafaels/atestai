@@ -18,6 +18,7 @@ from .domain import (
     EvaluatedDocument,
     EvaluatedItem,
     Finding,
+    RelatedTicketsCheck,
     Stage,
 )
 from .formatting import brl
@@ -42,6 +43,7 @@ class AnalysisContext:
         attachments: anexos classificados pelo checklist (categoria, momento, legibilidade).
         checklist: resultado do checklist mínimo.
         scope: leitura do escopo (serviços pedidos, local, quantidades, critérios de aceite).
+        related: chamados da mesma agência comparados com este (possível duplicidade).
         findings: apontamentos acumulados pelas etapas (a etapa de score ajusta e filtra).
         confidence_reducers: motivos extras de baixa confiança (ex.: orçamento ilegível, fotos não analisadas).
         items: itens do orçamento avaliados (classificação, preço de referência, apontamentos, valor em questão).
@@ -65,6 +67,7 @@ class AnalysisContext:
     attachments: list[ClassifiedAttachment] = field(default_factory=list)
     checklist: ChecklistResult | None = None
     scope: ScopeReading | None = None
+    related: RelatedTicketsCheck | None = None
     findings: list[Finding] = field(default_factory=list)
     confidence_reducers: list[str] = field(
         default_factory=list
@@ -146,11 +149,11 @@ class AnalysisContext:
         for i in priced:
             pct = 100 * (i.unit_value / i.reference_price - 1)
             out.append(
-                f"Preço do item {i.n}: {brl(i.unit_value)} × referência {brl(i.reference_price)} ({pct:+.0f}%)"
+                f"Preço do item {i.n}: {brl(i.unit_value)} × LPU {brl(i.reference_price)} ({pct:+.0f}%)"
             )
         if self.items and not priced:
             out.append(
-                "Nenhum item tem equivalente na tabela de referência: o preço não pôde ser comparado com a tabela"
+                "Nenhum item tem equivalente na LPU: o preço não pôde ser comparado com a LPU"
             )
         for d in self.documents:
             for p in d.prices:
@@ -158,6 +161,18 @@ class AnalysisContext:
                     out.append(
                         f"Preço de mercado no documento {d.file}: {p.description} a {brl(p.value)} × item {item.n} a {brl(item.unit_value)}"
                     )
+        if self.related:
+            shown = [
+                r
+                for r in self.related.tickets
+                if r.probability >= self.related.show_probability
+            ]
+            for r in shown:
+                out.append(
+                    f"Chamado {r.ticket_id} da mesma agência (aberto em {r.opening:%d/%m/%Y}, "
+                    f"{'em aberto' if r.is_open else 'encerrado'}): {r.probability}% de chance de ser o mesmo problema. "
+                    f"{r.reason}".strip()
+                )
         if self.photo_analysis and self.photo_analysis.problem_assessment.strip():
             out.append(
                 f"O que as fotos mostram do problema: {self.photo_analysis.problem_assessment.strip()}"

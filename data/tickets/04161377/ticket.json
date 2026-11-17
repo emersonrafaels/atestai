@@ -1,0 +1,56 @@
+{
+  "ticket_id": "04161377",
+  "workstream": "SETA",
+  "maintenance_type": "corrective",
+  "moment": "quote",
+  "category": "air_conditioning",
+  "symptom": "leak",
+  "requested_scope": "Ar-condicionado split do autoatendimento pingando água na parede e no forro ao lado dos caixas eletrônicos. É o aparelho do lado direito de quem entra.",
+  "solution_description": "Limpeza completa do split, desobstrução do dreno e troca da mangueira de drenagem.",
+  "branch": {
+    "code": "1520",
+    "name": "Campinas Cambuí",
+    "environment": "area_interna_publico"
+  },
+  "supplier": {
+    "name": "Climafrio Refrigeração LTDA (fictício)",
+    "cnpj": ""
+  },
+  "blocks_opening": false,
+  "quoted_value": 585.0,
+  "dates": {
+    "opening": "2026-10-22",
+    "supplier_submission": "2026-10-23",
+    "manager_review": null
+  },
+  "status": "awaiting_supplier",
+  "origin": "dataset",
+  "dataset": "casos",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "attachments": [
+    {
+      "file_name": "Orcamento_Climafrio_04161377.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 5934,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-23"
+    },
+    {
+      "file_name": "IMG_20261022_101230.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 243819,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-23"
+    },
+    {
+      "file_name": "IMG_20261022_101512.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 175000,
+      "sent_by": "supplier",
+      "data_upload": "2026-10-23"
+    }
+  ]
+}

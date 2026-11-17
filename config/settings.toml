@@ -27,7 +27,8 @@ main = "anthropic:claude-sonnet-5-5"   # escopo, orçamento × escopo, fotos
 fast = "anthropic:claude-sonnet-5-5"       # identificação dos anexos, redação do parecer
 
 [default.models.tasks]
-# sobrescreve o modelo de uma tarefa (identify_attachments, scope, quote_review, photos, assessment). Exemplos:
+# sobrescreve o modelo de uma tarefa (identify_attachments, scope, related_tickets, quote_review, photos, documents,
+# assessment). Exemplos:
 # photos = "google:<modelo-gemini>"
 # assessment = "openai:<modelo-openai>"
 
@@ -101,6 +102,10 @@ vertex = [
 [default.pipeline]
 phase = 2                   # 1 = régua do MVP; 2 = inclui "antes", ilegibilidade, reaproveitamento e data das fotos
 parallel = 3               # chamados em paralelo no modo síncrono
+# Chamados da mesma agência (régua: [rubric.related_tickets]): conjuntos que ficam fora da comparação, nos dois sentidos.
+# Validação, Itaú e Cenários sorteiam agência e data: dois chamados deles na mesma agência são coincidência do gerador,
+# e o gabarito não conta com isso. Casos do Salesforce, enviados pelo painel e o histórico entram.
+related_skip_datasets = ["validation", "itau", "scenarios"]
 
 [default.batch]
 # "sync": uma requisição por vez (resposta em segundos)
