@@ -2,5 +2,5 @@
 declare const __APP_VERSION__: string;
 
 export const PANEL_VERSION = __APP_VERSION__;
-/** Ex.: "v0.2.0" */
+/** Ex.: "v0.3.0" */
 export const versionLabel = `v${PANEL_VERSION}`;

@@ -1,4 +1,4 @@
-import { Check, ChevronRight, Copy, FileWarning, Link2, Lock, MapPin, ThumbsDown, Undo2, X, Zap } from "lucide-react";
+import { Check, ChevronRight, Copy, FileText, FileWarning, Link2, Lock, MapPin, ThumbsDown, Undo2, X, Zap } from "lucide-react";
 import type { Assessment, RelatedTicket, RubricInfo } from "../api";
 import { REC, SEVERITY, CONFIDENCE_LABEL, CONFIDENCE_TEXT, brl } from "../format";
 import { locate } from "../evidence";
@@ -20,25 +20,31 @@ export function saveParecerMode(m: ParecerMode) {
   try { localStorage.setItem(MODE_KEY, m); } catch { /* armazenamento indisponível */ }
 }
 
-/** Resumo × Completo, no topo da aba Parecer. */
+/** Resumo × Completo, no topo da aba Parecer: duas opções grandes, com ícone e o que cada uma mostra. */
 export function ModeSwitch({ mode, setMode }: { mode: ParecerMode; setMode: (m: ParecerMode) => void }) {
-  const opt = (m: ParecerMode, label: string, hint: string) => (
-    <Tooltip content={hint}>
-      <button role="tab" aria-selected={mode === m} onClick={() => setMode(m)}
-        className={`flex items-center gap-1.5 rounded-md px-3.5 py-1.5 text-sm transition-colors ${mode === m ? "bg-sheet font-semibold text-blueprint shadow-sm" : "text-muted hover:text-ink"}`}>
-        {m === "quick" && <Zap size={14} />}{label}
-      </button>
-    </Tooltip>
-  );
+  const opt = (m: ParecerMode, Icon: typeof Zap, label: string, sub: string, hint: string) => {
+    const on = mode === m;
+    return (
+      <Tooltip content={hint} className="flex min-w-[220px] flex-1 sm:max-w-[340px]">
+        <button role="tab" aria-selected={on} onClick={() => setMode(m)}
+          className={`flex w-full items-center gap-3 rounded-lg border-2 px-4 py-2.5 text-left transition-colors ${
+            on ? "border-blueprint bg-blueprint text-white shadow-md" : "border-line bg-sheet text-ink hover:border-blueprint/60 hover:bg-blueprint-soft"}`}>
+          <span className={`flex size-9 shrink-0 items-center justify-center rounded-lg ${on ? "bg-white/20" : "bg-blueprint-soft text-blueprint"}`}>
+            <Icon size={18} />
+          </span>
+          <span className="min-w-0">
+            <span className="block text-[15px] font-bold leading-tight">{label}</span>
+            <span className={`block text-[12px] leading-snug ${on ? "text-white/85" : "text-muted"}`}>{sub}</span>
+          </span>
+          {on && <Check size={18} strokeWidth={3} className="ml-auto shrink-0" />}
+        </button>
+      </Tooltip>
+    );
+  };
   return (
-    <div className="flex flex-wrap items-center justify-between gap-2">
-      <div role="tablist" aria-label="Como ver o parecer" className="flex rounded-lg bg-paper p-0.5 ring-1 ring-line">
-        {opt("quick", "Resumo", "O essencial para decidir: recomendação, pontos de atenção e a decisão")}
-        {opt("full", "Completo", "Tudo: checklist, racional do engenheiro, conta do score e cada apontamento com a evidência")}
-      </div>
-      <span className="text-[13px] text-muted">
-        {mode === "quick" ? "Resumo para decidir rápido. Detalhes no Completo." : "Parecer completo, na ordem do fluxo."}
-      </span>
+    <div role="tablist" aria-label="Como ver o parecer" className="flex flex-wrap gap-2.5">
+      {opt("quick", Zap, "Resumo", "O essencial para decidir rápido", "O essencial para decidir: recomendação, pontos de atenção e a decisão")}
+      {opt("full", FileText, "Completo", "Cada evidência, na ordem do fluxo", "Tudo: checklist, racional do engenheiro, conta do score e cada apontamento com a evidência")}
     </div>
   );
 }
