@@ -21,6 +21,41 @@ def normalize_text(text: str) -> str:
     return " ".join(re.sub(r"[^a-z0-9 ]+", " ", text).split())
 
 
+# Manchete do resumo: "Recomendo aprovar com ressalvas: ..." (até ":" ou ".", como o painel separa em splitLead).
+_LEAD = re.compile(r"^(\s*Recomend[oa]\s+)([^:.]{1,140})(?=[:.])", re.I)
+
+
+def align_summary(summary: str, label: str, labels: list[str]) -> str:
+    """Faz a manchete do resumo dizer a recomendação da régua.
+
+    O modelo só redige o parecer, mas às vezes troca a recomendação na primeira frase (ex.: régua "Aprovar" e
+    resumo "Recomendo aprovar com ressalvas"). Se a manchete cita outra recomendação, ela é trocada pela da régua e o
+    resto do texto fica igual. Manchete sem recomendação reconhecível, ou sem manchete, fica como está.
+
+    Args:
+        summary: resumo escrito pelo modelo.
+        label: rótulo da recomendação da régua (ex.: "Aprovar").
+        labels: rótulos de todas as recomendações, para reconhecer qual a manchete cita.
+
+    Returns:
+        O resumo com a manchete coerente com a régua.
+    """
+    m = _LEAD.match(summary or "")
+    if not m:
+        return summary
+    said = normalize_text(m.group(2))
+    cited = [
+        x
+        for x in labels
+        if normalize_text(x) and re.search(rf"\b{re.escape(normalize_text(x))}\b", said)
+    ]
+    if not cited:
+        return summary
+    if normalize_text(max(cited, key=len)) == normalize_text(label):
+        return summary
+    return f"{m.group(1)}{label[:1].lower()}{label[1:]}{summary[m.end():]}"
+
+
 # Frase que cobra prova do serviço feito (falta/pedido + foto/evidência + depois). Na aprovação do orçamento o serviço
 # ainda não foi feito: essas frases saem das observações e da mensagem ao fornecedor.
 _ASK = re.compile(
@@ -89,6 +124,7 @@ def same_unit(unit: str, reference: str, quantity: float) -> bool:
 _INTERNAL_TERMS = {
     "expected_quantity_max": "quantidade máxima esperada",
     "plausible_quantity": "quantidade plausível",
+    "similar_lpu_code": "item similar da LPU",
     "lpu_code": "código da LPU",
     "NO_REFERENCE": "sem referência",
     "SEM_REFERENCIA": "sem referência",

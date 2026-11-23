@@ -2,6 +2,7 @@ import { ArrowDown, ArrowRight, Check, ChevronDown, ChevronRight, Copy, History,
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api, type Assessment, type FindingFeedback, type RelatedTicket, type RubricInfo, type TicketDetail } from "../api";
 import { DuplicateModal } from "./DuplicateModal";
+import { ModeSwitch, QuickView, PARECER_MODE_EVENT, loadParecerMode, saveParecerMode, type ParecerMode } from "./QuickView";
 import { statusLabel, whenLabel } from "./RelatedBits";
 import { FindingFeedbackDialog } from "./FindingFeedbackDialog";
 import { brl, brl4, REC, SEVERITY, discountText, findingLabel, CONFIDENCE_LABEL, CONFIDENCE_TEXT, VALIDATIONS, VALIDATION_LABEL, VALIDATION_SHORT, explainFindings, GLOSSARY, pts, STAGE_LABEL, MAINTENANCE_LABEL } from "../format";
@@ -46,6 +47,14 @@ export function AssessmentTab({ p, rubric, ticket, openPhoto, goTo, openTicket }
       .then((list) => setFindingFb(Object.fromEntries(list.map((x) => [x.finding_index, x]))))  // em ordem: o último de cada posição fica
       .catch(() => setFindingFb({}));
   }, [p.record_id]);
+  // Resumo (decisão rápida) ou Completo; a escolha fica no navegador
+  const [mode, setModeRaw] = useState<ParecerMode>(loadParecerMode);
+  const setMode = useCallback((m: ParecerMode) => { setModeRaw(m); saveParecerMode(m); }, []);
+  useEffect(() => {
+    const h = (e: Event) => { const m = (e as CustomEvent<ParecerMode>).detail; if (m === "quick" || m === "full") setMode(m); };
+    window.addEventListener(PARECER_MODE_EVENT, h);
+    return () => window.removeEventListener(PARECER_MODE_EVENT, h);
+  }, [setMode]);
   const [decisionVisible, setDecisionVisible] = useState(false);
   const decisionRef = useRef<HTMLDivElement>(null);
   // modal que explica a confiança ou a recomendação
@@ -95,7 +104,13 @@ export function AssessmentTab({ p, rubric, ticket, openPhoto, goTo, openTicket }
     const io = new IntersectionObserver(([e]) => setDecisionVisible(e.isIntersecting), { threshold: 0.15 });
     io.observe(el);
     return () => io.disconnect();
-  }, []);
+  }, [mode]);
+
+  // do Resumo para o Completo, já no apontamento (com a evidência aberta)
+  const openDetail = useCallback((i: number) => {
+    setMode("full");
+    window.setTimeout(() => focusFinding(i), 80);
+  }, [setMode, focusFinding]);
 
   const impacts = explainFindings(p.findings, rubric);
   // a régua de hoje sobre este parecer: pareceres antigos podem contar como redutor o que hoje é só apontamento
@@ -110,6 +125,12 @@ export function AssessmentTab({ p, rubric, ticket, openPhoto, goTo, openTicket }
   return (
     <QuoteItemsContext.Provider value={quoteItems}>
     <div className="space-y-5">
+      <ModeSwitch mode={mode} setMode={setMode} />
+      {mode === "quick" ? (
+        <QuickView p={p} rubric={rubric} flagged={flagged} shown={shown} links={links} onCompare={setCompare} onExplain={setExplain} goTo={goTo}
+          unfounded={unfounded} toggleUnfounded={toggleUnfounded} openDetail={openDetail} copy={copy} copied={copied}
+          duplicateBanners={flagged.map((r) => <DuplicateBanner key={r.ticket_id} r={r} onCompare={() => setCompare(r)} openTicket={openTicket} />)} />
+      ) : (<>
       {/* 1. checklist mínimo: é a primeira etapa do fluxo, então vem primeiro */}
       <section data-tour="checklist" className="rounded-xl border border-line bg-sheet p-5">
         <StepTitle n={++n}
@@ -353,9 +374,11 @@ export function AssessmentTab({ p, rubric, ticket, openPhoto, goTo, openTicket }
         </section>
       )}
 
-      {/* 6. decisão da pessoa analista: por último, depois de ler o parecer inteiro */}
+      </>)}
+
+      {/* 6. decisão da pessoa analista: por último, depois de ler o parecer (no Resumo, logo após os pontos de atenção) */}
       <div ref={decisionRef}>
-        <DecisionPanel p={p} n={++n} rubric={rubric} unfounded={unfounded} toggleUnfounded={toggleUnfounded} focusFinding={focusFinding} onRegistered={setRegistered} onExplain={setExplain} />
+        <DecisionPanel p={p} n={mode === "quick" ? undefined : ++n} rubric={rubric} unfounded={unfounded} toggleUnfounded={toggleUnfounded} focusFinding={focusFinding} onRegistered={setRegistered} onExplain={setExplain} />
       </div>
 
       {explain && (

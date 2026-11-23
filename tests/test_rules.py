@@ -45,6 +45,7 @@ def review(
                 classification=extra.get("classification", "compliant"),
                 reason="",
                 lpu_code=lpu[i.n],
+                similar_lpu_code=extra.get("similar", "NO_REFERENCE"),
                 expected_quantity_max=extra.get("qmax", -1),
                 plausible_quantity=extra.get("plausible", True),
                 duplicate_of=0,

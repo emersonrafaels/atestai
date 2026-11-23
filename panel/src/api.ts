@@ -136,6 +136,8 @@ export interface Finding {
   returns?: boolean;
   /** pede conferência da pessoa analista (ex.: possível chamado duplicado): leva à análise detalhada (régua v10) */
   review?: boolean;
+  /** ponto a esclarecer: com a nota de aprovar, vira aprovar com ressalvas (régua v12) */
+  caveats?: boolean;
   /** fração do que foi enviado que o tipo atinge (1 = tudo) e a mesma fração em palavras ("3 de 6 fotos") */
   extent?: number;
   extent_label?: string;
@@ -146,6 +148,8 @@ export interface EvaluatedItem extends QuoteItem {
   reason: string;
   lpu_code: string;
   reference_price: number | null;
+  /** item Não LPU: o item da LPU que cumpre a mesma função (ex.: parede removível → parede de drywall) */
+  similar_lpu?: LpuItem | null;
   expected_quantity_max: number | null;
   amount_at_issue: number;
   findings: Finding[];
@@ -388,7 +392,17 @@ export type CatalogKind = "categories" | "symptoms" | "locations";
 export type CatalogConfig = Record<CatalogKind, Required<Option>[]>;
 export interface CatalogUsage { tickets: number; ground_truth: number; rules: number }
 
+/** Item da LPU (lista de preços unitários) de uma esteira. */
+export interface LpuItem {
+  code: string;
+  description: string;
+  unit: string;
+  reference_price: number;
+}
+
 export interface AppSettings {
+  /** LPU de cada esteira: o painel troca o código pelo nome nos textos, com código e preço no hover */
+  lpu?: Record<string, LpuItem[]>;
   environment: string;
   version: string;
   api_available: boolean;
@@ -450,7 +464,7 @@ export interface RubricInfo {
   /** tipo de apontamento → tipos da mesma validação que ele absorve (deixam de descontar quando ele aparece) */
   absorbs?: Record<string, string[]>;
   /** flags atuais de cada tipo de apontamento (pareceres antigos podem ter sido gravados com outros) */
-  finding_flags?: Record<string, { reduces_confidence: boolean; returns: boolean; lock: boolean; review?: boolean }>;
+  finding_flags?: Record<string, { reduces_confidence: boolean; returns: boolean; lock: boolean; review?: boolean; caveats?: boolean }>;
   proportional_floor?: number;
   relevant_amount_at_issue_pct?: number;
   max_amount_at_issue_for_approve_pct?: number;
@@ -779,6 +793,8 @@ export interface FindingTypeConfig {
   returns?: boolean;
   /** pede conferência da pessoa analista: leva à análise detalhada */
   review?: boolean;
+  /** ponto a esclarecer: no máximo aprovar com ressalvas */
+  caveats?: boolean;
   enabled: boolean;
   /** tipos da mesma validação que deixam de descontar quando este aparece */
   absorbs?: string[];

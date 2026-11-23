@@ -2,7 +2,7 @@
 # Alterar aqui muda notas, score e recomendação sem tocar no código. Suba a versão a cada mudança.
 
 [default.rubric]
-version = "2026-11-v11"  # v11: janela de duplicidade da agência passa de 5 para 60 dias; v10: chamados da mesma agência (janela de dias + ainda abertos) e possível chamado duplicado, que leva à análise detalhada (review); v9: desconto proporcional ao que foi enviado (fração de fotos, itens, serviços, documentos ou valor), valor em questão limita a nota de Orçamento, faltas do fornecedor devolvem (serviço pedido sem item, item fora do escopo ou duplicado; 30% ou mais do orçamento em questão) e "serviço pedido sem item" deixa de reduzir a confiança; v8: serviço pedido sem item no orçamento, serviço executado antes da aprovação, valor em questão limita "Aprovar" e tolerância própria para preço de mercado; v7: quantidade cobrada acima do que as fotos mostram; v6: leitura de documentos (OCR): documento ilegível, de outro chamado, com data fora da janela e preço acima do mercado; v5: escopo vago alto, quantidade não verificável, item sem foto e valor divergente relevante; v4: absorção entre tipos (absorbs) e foto do depois com local não confirmado; v3: chaves em inglês
+version = "2026-11-v13"  # v13: item Não LPU com similar na LPU (preço comparado ao do similar; no máximo aprovar com ressalvas); v12: apontamento "preço sem referência para comparar" (leva no máximo a aprovar com ressalvas) e até 12 chamados da agência comparados; v11: janela de duplicidade da agência passa de 5 para 60 dias; v10: chamados da mesma agência (janela de dias + ainda abertos) e possível chamado duplicado, que leva à análise detalhada (review); v9: desconto proporcional ao que foi enviado (fração de fotos, itens, serviços, documentos ou valor), valor em questão limita a nota de Orçamento, faltas do fornecedor devolvem (serviço pedido sem item, item fora do escopo ou duplicado; 30% ou mais do orçamento em questão) e "serviço pedido sem item" deixa de reduzir a confiança; v8: serviço pedido sem item no orçamento, serviço executado antes da aprovação, valor em questão limita "Aprovar" e tolerância própria para preço de mercado; v7: quantidade cobrada acima do que as fotos mostram; v6: leitura de documentos (OCR): documento ilegível, de outro chamado, com data fora da janela e preço acima do mercado; v5: escopo vago alto, quantidade não verificável, item sem foto e valor divergente relevante; v4: absorção entre tipos (absorbs) e foto do depois com local não confirmado; v3: chaves em inglês
 
 # peso de cada validação no score (somam 100)
 weights = { scope = 20, quote = 40, photos = 40 }
@@ -14,6 +14,7 @@ discount_by_severity = { critical = 60, high = 35, medium = 15, low = 5 }
 # ou "whole" (o chamado inteiro: desconta a severidade toda). Ex.: 1 foto fora do escopo em 6, Alto: 35 × (0,5 + 0,5/6) = 20.
 proportional_floor = 0.5
 # returns = true num tipo: falta do fornecedor (o que ajustar já está claro) → no máximo "Devolver ao fornecedor"
+# caveats = true num tipo: ponto a esclarecer que não impede aprovar → no máximo "Aprovar com ressalvas"
 # absorbs = ["tipo"] num tipo de apontamento: se os dois aparecem na mesma validação, o absorvido segue como evidência,
 # mas não desconta (é o mesmo problema visto por outro ângulo; descontar os dois puniria duas vezes)
 
@@ -63,7 +64,7 @@ include_still_open = true
 closed_statuses = ["approved", "rejected", "cancelled", "closed", "completed", "paid"]  # qualquer outra situação = aberto
 min_probability = 70
 show_probability = 40
-max_candidates = 8
+max_candidates = 12  # com a janela de 60 dias; os mais próximos (ou da mesma categoria) primeiro
 
 # --- tipos de apontamento -----------------------------------------------------------------------
 # amount_at_issue: "item" (o item inteiro), "excess" (só o que passa da referência/quantidade) ou "none"
@@ -148,6 +149,21 @@ validation = "quote"
 severity = "medium"
 amount_at_issue = "excess"
 description = "Preço acima do valor de mercado apresentado em documento"
+
+[default.rubric.finding_types.price_not_comparable]
+extent = "items"
+caveats = true  # sem com o que comparar o preço: não aprova direto, aprova com ressalvas
+validation = "quote"
+severity = "low"
+description = "Preço sem referência para comparar (fora da LPU e sem preço de mercado)"
+
+[default.rubric.finding_types.similar_lpu_item]
+extent = "items"
+caveats = true  # a LPU tem item que faz o mesmo: o fornecedor orça por ele ou justifica (aprova no máximo com ressalvas)
+validation = "quote"
+severity = "low"
+amount_at_issue = "excess"  # o que passa do preço do similar, quando a unidade é comparável
+description = "Item Não LPU com similar na LPU"
 
 [default.rubric.finding_types.quantity_above_photos]
 extent = "value"

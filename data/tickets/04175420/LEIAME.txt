@@ -1,0 +1,15 @@
+CASO FICTÍCIO criado para testar o Atest.AI (não é um chamado real do Salesforce): agência, fornecedor, valores e
+problemas foram inventados. As imagens em attachments/ são SIMULADAS (recortes de imagens geradas por IA da biblioteca data/real_photos_itau, OpenAI gpt-image); não são evidência real.
+A origem também está no EXIF (ImageDescription) de cada imagem. Gerado por generator/build_salesforce_cases.py.
+
+Chamado 04175420 - Sensor de presença do saguão sem detecção (aprovação do orçamento, SISR).
+
+Problemas plantados (o que o parecer deveria apontar):
+- ITEM NÃO LPU COM SIMILAR NA LPU (com excedente): o item 1, sensor infravermelho digital com fio, vem como
+  Não LPU, mas a LPU da SISR tem o sensor infravermelho passivo (IVP) com fio (ALA-002, R$ 140,00). Cobrado a
+  R$ 245,00: R$ 105,00 acima do similar -> similar_lpu_item.
+- ITEM NÃO LPU COM SIMILAR NA LPU (sem excedente): o item 4, deslocamento técnico, vem como Não LPU, mas
+  equivale à visita técnica e deslocamento da SISR (SIS-001, R$ 280,00), pelo mesmo preço -> similar_lpu_item
+  sem valor em questão (o fornecedor deveria ter usado o item da LPU).
+Itens corretos: mão de obra de substituição e teste do sensor (LPU).
+Resultado esperado: APROVAR COM RESSALVAS (cerca de 16% do orçamento em questão).

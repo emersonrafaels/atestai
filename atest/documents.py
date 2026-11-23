@@ -8,7 +8,9 @@ abaixo transformam a leitura em apontamentos, como na análise das fotos:
 - documento ilegível                         → unreadable_document (reduz a confiança);
 - documento de outro chamado/serviço         → document_mismatch;
 - data do atendimento fora da janela do chamado → document_date_inconsistent;
-- preço de mercado anexado abaixo do cobrado → price_above_market (no orçamento, sobre o excedente).
+- preço de mercado anexado abaixo do cobrado → price_above_market (no orçamento, sobre o excedente);
+- item sem preço na LPU, sem similar na LPU e sem preço de mercado anexado → price_not_comparable (no máximo aprovar
+  com ressalvas).
 """
 
 from __future__ import annotations
@@ -85,6 +87,7 @@ class DocumentStage(AnalysisStage):
         docs = self.ticket_documents(ctx.ticket, ctx.attachments)
         if not docs:
             ctx.documents = []
+            ctx.findings += self.unpriced_items([], ctx.items)
             return
         assert ctx.scope is not None
         analysis = None
@@ -131,6 +134,7 @@ class DocumentStage(AnalysisStage):
         # Apontamentos dos documentos (ilegível, de outro chamado, data fora da janela...) e de preço de mercado.
         ctx.findings += self.flag(ctx.ticket, ctx.documents)
         ctx.findings += self.market_prices(ctx.documents, ctx.items)
+        ctx.findings += self.unpriced_items(ctx.documents, ctx.items)
 
     @staticmethod
     def ticket_documents(
@@ -288,6 +292,55 @@ class DocumentStage(AnalysisStage):
                     self.scorer.finding("service_before_approval", evidence, d.file)
                 )
         return findings
+
+    def unpriced_items(
+        self, docs: list[EvaluatedDocument], items: list[EvaluatedItem]
+    ) -> list[Finding]:
+        """Item sem preço na LPU e sem preço de mercado anexado: não há com o que comparar o preço.
+
+        Não aponta item que já tem outro apontamento de preço nem item que já sai inteiro do orçamento (fora do
+        escopo, duplicado ou troca sem justificativa). Se havia documentos e eles não puderam ser lidos, a etapa
+        nem chega aqui (não dá para saber se veio preço de mercado).
+
+        Args:
+            docs: documentos lidos, com os preços citados e o item a que cada um se refere.
+            items: itens avaliados; o apontamento também é anexado ao item.
+
+        Returns:
+            Um `price_not_comparable` por item nessa situação (referência "item N", para medir a fração de itens).
+        """
+        if "price_not_comparable" not in self.rubric.finding_types:
+            return []
+        priced = {
+            p.quote_item
+            for d in docs
+            for p in d.prices
+            if p.value > 0 and p.same_product != Match.NO
+        }
+        whole = {"out_of_scope_item", "duplicate_item", "unjustified_replacement"}
+        out: list[Finding] = []
+        for item in items:
+            if (
+                item.reference_price is not None
+                or item.similar_lpu
+                is not None  # Não LPU com similar: o preço já foi comparado ao dele
+                or item.n in priced
+                or item.total_value <= 0
+                or any(
+                    f.kind.startswith("price_") or f.kind in whole
+                    for f in item.findings
+                )
+            ):
+                continue
+            f = self.scorer.finding(
+                "price_not_comparable",
+                f"Item {item.n} ({item.description}, {brl(item.total_value)}) não está na LPU e não veio preço de "
+                "mercado (anúncio ou cotação) para comparar",
+                f"item {item.n}",
+            )
+            item.findings.append(f)
+            out.append(f)
+        return out
 
     def market_prices(
         self, docs: list[EvaluatedDocument], items: list[EvaluatedItem]

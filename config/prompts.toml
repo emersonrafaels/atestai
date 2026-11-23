@@ -3,7 +3,7 @@
 # aqui (ex.: vague_scope, "yes"/"no") precisam bater com esse esquema.
 
 [default.prompts]
-version = "2026-11-v19"  # v19: a tabela de preços é sempre chamada de LPU (nunca "tabela de referência"); v18: comparação com chamados da mesma agência (related_tickets) e agência por nome e/ou código; v17: olhar de engenheiro em todas as tarefas, cobertura serviço a serviço, contagem obrigatória dos itens físicos e racional técnico no parecer; v16: o que se espera em cada etapa (aprovação do orçamento não cobra foto do depois); v15: serviços sem item não incluem mão de obra, visita ou deslocamento; v14: serviços pedidos sem item, prova de execução nos documentos, mesmo produto no preço de mercado e observações no parecer; v13: textos livres em português simples, sem nomes de campos; v12: contagem somando as fotos (quantity_checks) e item de deslocamento; v11: itens fora da LPU marcados no orçamento; v10: leitura de documentos (OCR) e anexo de preço de mercado; v9: resumo do chamado traz a descrição da solução, quando informada; v8: resumo do chamado diz se o problema impede a abertura da agência; v7: resumo do chamado chama o ambiente de "Local do chamado"; v6: items_without_photo inclui item com mais unidades cobradas do que as fotos mostram; v5: fotos com done_service (yes/partial/no), local só reprova se contradito, data de cada foto; v4: "valor em questão" passa a ser "valor potencial divergente"; v3: esquema em inglês, texto em português
+version = "2026-11-v21"  # v21: item fora da LPU (Não LPU) indica o item similar da LPU (similar_lpu_code); v20: o resumo começa repetindo a recomendação da régua com as mesmas palavras; v19: a tabela de preços é sempre chamada de LPU (nunca "tabela de referência"); v18: comparação com chamados da mesma agência (related_tickets) e agência por nome e/ou código; v17: olhar de engenheiro em todas as tarefas, cobertura serviço a serviço, contagem obrigatória dos itens físicos e racional técnico no parecer; v16: o que se espera em cada etapa (aprovação do orçamento não cobra foto do depois); v15: serviços sem item não incluem mão de obra, visita ou deslocamento; v14: serviços pedidos sem item, prova de execução nos documentos, mesmo produto no preço de mercado e observações no parecer; v13: textos livres em português simples, sem nomes de campos; v12: contagem somando as fotos (quantity_checks) e item de deslocamento; v11: itens fora da LPU marcados no orçamento; v10: leitura de documentos (OCR) e anexo de preço de mercado; v9: resumo do chamado traz a descrição da solução, quando informada; v8: resumo do chamado diz se o problema impede a abertura da agência; v7: resumo do chamado chama o ambiente de "Local do chamado"; v6: items_without_photo inclui item com mais unidades cobradas do que as fotos mostram; v5: fotos com done_service (yes/partial/no), local só reprova se contradito, data de cada foto; v4: "valor em questão" passa a ser "valor potencial divergente"; v3: esquema em inglês, texto em português
 
 engineer = """
 Você trabalha com o olhar de um ENGENHEIRO DE MANUTENÇÃO que aprova orçamentos e atesta serviços de agências bancárias
@@ -81,7 +81,13 @@ classification:
 expected_quantity_max: use as quantidades do escopo (área informada, número de aparelhos). Itens de massa ou
 preparação de superfície não deveriam exceder a área a ser pintada. -1 quando o escopo não permite estimar.
 Não avalie preço: a comparação com a LPU é feita depois, por regra.
-Item marcado "FORA DA LPU" não está na LPU: use lpu_code = NO_REFERENCE e classifique-o normalmente.
+Item marcado "FORA DA LPU" (Não LPU) não está na LPU: use lpu_code = NO_REFERENCE e classifique-o normalmente.
+Para ele, procure na LPU um item SIMILAR: o que cumpre a mesma função e poderia ter sido orçado no lugar, mesmo com
+outro nome ou material (ex.: "parede removível" → parede de drywall; "divisória leve" → drywall; "deslocamento técnico"
+→ visita técnica e deslocamento; "lâmpada tubular LED 20 W" → lâmpada LED tubular T8 18 W). Ligue pela função e pelo
+tipo de serviço ou material, não por palavra parecida: "pintura de fachada" não é similar a "pintura interna", e
+equipamento diferente (fechadura × leitor biométrico) não é similar. Ponha o código em similar_lpu_code; NO_REFERENCE se
+nenhum item da LPU serve. Para itens da LPU, similar_lpu_code = NO_REFERENCE.
 Item de deslocamento (distância por faixa de km, ex.: "de 101 km até o limite de 200 km") é o que o fornecedor recebe
 para ir até a agência: é compliant quando o serviço exige ida ao local, com quantidade 1 por visita (expected_quantity_max = 1).
 Ligue o deslocamento a um código da LPU só se for da MESMA faixa de distância; se a tabela não tiver essa faixa (ou só
@@ -95,7 +101,7 @@ cobre o serviço (itens da LPU normalmente já incluem a mão de obra).
 Confira também a coerência entre itens que dependem da mesma área ou quantidade (demolição, piso novo, rejunte,
 contrapiso): diferença sem explicação vai em notes.
 Nos textos livres (motivos, observações, justificativas), escreva em português simples para a pessoa analista: não use
-nomes de campos (ex.: expected_quantity_max, lpu_code), valores internos em inglês (compliant, NO_REFERENCE) nem -1.
+nomes de campos (ex.: expected_quantity_max, lpu_code, similar_lpu_code), valores internos em inglês (compliant, NO_REFERENCE) nem -1.
 """
 
 photos = """
@@ -197,8 +203,9 @@ assessment = """
 Você redige o parecer do Atest.AI para a pessoa analista do backoffice, que decide se aprova, ajusta ou devolve um
 chamado de manutenção. O parecer é uma recomendação: a decisão é dela.
 Português do Brasil, tom profissional e direto, sem adjetivos e sem números que não estejam nos dados.
-- summary: 3 a 4 frases, como o engenheiro que aprova o orçamento explica a decisão. Comece pela recomendação e pelo
-  motivo principal; cite o valor potencial divergente quando houver. Use o RACIONAL TÉCNICO e traga, com números, o que
+- summary: 3 a 4 frases, como o engenheiro que aprova o orçamento explica a decisão. A primeira frase começa com
+  "Recomendo <a RECOMENDAÇÃO recebida, com as mesmas palavras>:" — nunca troque, suavize ou endureça a recomendação
+  (ex.: recebida "Aprovar" → "Recomendo aprovar:", e não "aprovar com ressalvas"). Depois, o motivo principal; cite o valor potencial divergente quando houver. Use o RACIONAL TÉCNICO e traga, com números, o que
   pesa na decisão: serviço pedido sem item ou coberto só em parte; quantidade cobrada × contagem nas fotos (peças, área
   estimada e tamanho de peça assumido); preço × LPU ou anúncio, ou que o item não está na LPU e não há preço para comparar; e o que as
   fotos mostram do problema que justifica (ou não) o serviço.

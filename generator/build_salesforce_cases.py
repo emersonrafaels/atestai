@@ -114,7 +114,7 @@ CASES: list[Case] = [
         ),
         solution="Limpeza completa do split, desobstrução do dreno e troca da mangueira de drenagem.",
         branch={**CAMPINAS, "environment": "area_interna_publico"},
-        supplier="Climafrio Refrigeração LTDA (fictício)",
+        supplier="Climafrio Refrigeração LTDA",
         opening="2026-10-22",
         submission="2026-10-23",
         status="awaiting_supplier",
@@ -174,7 +174,7 @@ CASES: list[Case] = [
             "forro danificadas (6 m²) e pintura do forro recomposto."
         ),
         branch={**CAMPINAS, "environment": "area_interna_publico"},
-        supplier="Construtora Alvorada Serviços LTDA (fictício)",
+        supplier="Construtora Alvorada Serviços LTDA",
         opening="2026-11-09",
         submission="2026-11-10",
         quote_file="Orcamento_Alvorada_04174102.xlsx",
@@ -235,7 +235,7 @@ CASES: list[Case] = [
         ),
         solution="Troca de 8 placas de forro e impermeabilização do ponto de infiltração.",
         branch={"code": "1520", "name": "", "environment": "area_interna_publico"},
-        supplier="Reforma Já Engenharia LTDA (fictício)",
+        supplier="Reforma Já Engenharia LTDA",
         opening="2026-11-12",
         submission="2026-11-13",
         quote_file="Orcamento_ReformaJa_04174388.xlsx",
@@ -293,7 +293,7 @@ CASES: list[Case] = [
             "name": "Ag. Campinas - Cambuí",
             "environment": "area_interna_backoffice",
         },
-        supplier="Volt Instalações Elétricas LTDA (fictício)",
+        supplier="Volt Instalações Elétricas LTDA",
         opening="2026-11-13",
         submission="2026-11-14",
         quote_file="Orcamento_Volt_04174415.xlsx",
@@ -413,7 +413,7 @@ CASES: list[Case] = [
             "name": "Guapimirim - RJ",
             "environment": "area_interna_publico",
         },
-        supplier="Piso Forte Revestimentos LTDA (fictício)",
+        supplier="Piso Forte Revestimentos LTDA",
         opening="2026-11-14",
         submission="2026-11-15",
         quote_file="Orcamento_PisoForte_04174851.xlsx",
@@ -470,7 +470,7 @@ CASES: list[Case] = [
             "name": "Belo Horizonte Savassi",
             "environment": "tesouraria",
         },
-        supplier="Alerta Total Sistemas de Segurança LTDA (fictício)",
+        supplier="Alerta Total Sistemas de Segurança LTDA",
         opening="2026-11-12",
         submission="2026-11-13",
         quote_file="Orcamento_AlertaTotal_04175012.xlsx",
@@ -526,7 +526,7 @@ CASES: list[Case] = [
             "name": "Indaiatuba - Vila Sfeir",
             "environment": "area_interna_publico",
         },
-        supplier="Luminar Serviços Elétricos LTDA (fictício)",
+        supplier="Luminar Serviços Elétricos LTDA",
         opening="2026-11-12",
         submission="2026-11-13",
         quote_file="Orcamento_Luminar_04175207.xlsx",
@@ -564,6 +564,128 @@ CASES: list[Case] = [
             "  no hall, com outra categoria (Elétrica / Energia parcial) -> possible_duplicate_ticket -> ANÁLISE DETALHADA.\n"
             "- TROCA SEM JUSTIFICATIVA / QUANTIDADE ACIMA: o pedido é o hall escuro perto da entrada; o orçamento troca 6\n"
             "  luminárias inteiras, e as fotos mostram 2 luminárias antigas apagadas (o outro chamado orçou só 2 lâmpadas).\n"
+        ),
+    ),
+    # ------------------------------------------------------------------ item Não LPU com similar na LPU
+    Case(
+        ticket_id="04175318",
+        workstream="SETA",
+        category="civil",
+        symptom="rachadura_ou_trinca",
+        scope=(
+            "Parede de divisória do arquivo do backoffice rachada de cima a baixo e com placas soltas depois que um "
+            "carrinho de caixas bateu nela; a parede balança quando alguém encosta. Trocar a divisória entre o arquivo e "
+            "o corredor (cerca de 2,8 m de largura por 2,8 m de altura, 8 m²)."
+        ),
+        solution=(
+            "Retirada da divisória danificada e montagem de parede nova de 8 m² entre o arquivo e o corredor, com "
+            "pintura da face do corredor."
+        ),
+        branch={
+            "code": "3057",
+            "name": "Sorocaba Centro",
+            "environment": "area_interna_backoffice",
+        },
+        supplier="Paredes & Cia Construções LTDA",
+        opening="2026-11-16",
+        submission="2026-11-17",
+        quote_file="Orcamento_ParedesCia_04175318.xlsx",
+        items=[
+            (
+                "Parede removível com montagem (painéis e estrutura)",
+                "m²",
+                False,
+                8,
+                210.00,
+            ),
+            ("Retirada e descarte da divisória danificada", "vb", False, 1, 180.00),
+            (
+                "Pintura interna em látex acrílico, paredes, 2 demãos",
+                "m²",
+                True,
+                8,
+                35.00,
+            ),
+            ("Visita técnica e deslocamento (SETA)", "vb", True, 1, 150.00),
+        ],
+        photos=[
+            Photo(
+                "IMG_20261116_101420.jpg",
+                "real_photos_itau/storage/ia_openai_1794211923_00.jpg",
+                (0.0, 0.04, 0.8, 0.9),
+                "arquivo do backoffice, divisória com o corredor",
+            ),
+            Photo(
+                "IMG_20261116_101655.jpg",
+                "real_photos_itau/storage/ia_openai_1794297468_02.jpg",
+                (0.12, 0.0, 0.9, 0.82),
+                "arquivo do backoffice, vista da porta",
+            ),
+        ],
+        readme=(
+            "Chamado 04175318 - Divisória do arquivo do backoffice rachada (aprovação do orçamento, SETA).\n\n"
+            "Problema plantado (o que o parecer deveria apontar):\n"
+            '- ITEM NÃO LPU COM SIMILAR NA LPU: o item 1 "Parede removível com montagem" vem marcado como Não LPU, mas a\n'
+            "  LPU da SETA tem a parede de drywall (DRY-001, R$ 145,00/m²), que cumpre a mesma função. Cobrado a\n"
+            "  R$ 210,00/m² em 8 m²: R$ 520,00 acima do similar -> similar_lpu_item (valor potencial divergente R$ 520).\n"
+            "- PREÇO SEM REFERÊNCIA: o item 2 (retirada e descarte da divisória, R$ 180) também é Não LPU e não tem\n"
+            "  similar na LPU nem preço de mercado anexado -> price_not_comparable (contraste com o item 1).\n"
+            "Itens corretos: pintura da face do corredor (8 m², LPU) e a visita.\n"
+            "Resultado esperado: APROVAR COM RESSALVAS (cerca de 23% do orçamento em questão).\n"
+        ),
+    ),
+    Case(
+        ticket_id="04175420",
+        workstream="SISR",
+        category="alarm",
+        symptom="sensor_com_defeito",
+        scope=(
+            "Sensor de presença do saguão não detecta ninguém: na central a zona 6 fica sempre em repouso, mesmo passando "
+            "na frente do sensor. O alarme arma com a zona sem proteção."
+        ),
+        solution="Troca do sensor de presença do saguão e teste da zona 6 na central de alarme.",
+        branch={"code": "5128", "name": "Curitiba Batel", "environment": "saguao"},
+        supplier="Sentinela Segurança Eletrônica LTDA",
+        opening="2026-11-17",
+        submission="2026-11-18",
+        quote_file="Orcamento_Sentinela_04175420.xlsx",
+        items=[
+            (
+                "Sensor de presença infravermelho digital com fio, alcance 12 m",
+                "un",
+                False,
+                1,
+                245.00,
+            ),
+            ("Mão de obra de substituição de sensor", "un", True, 1, 110.00),
+            ("Teste preventivo de sensor de alarme (por sensor)", "un", True, 1, 22.00),
+            ("Deslocamento técnico até a agência", "vb", False, 1, 280.00),
+        ],
+        photos=[
+            Photo(
+                "IMG_20261117_150210.jpg",
+                "real_photos_itau/motion_sensor/ia_openai_1794211612_00.jpg",
+                (0.1, 0.0, 0.88, 0.84),
+                "sensor de presença no canto do saguão",
+            ),
+            Photo(
+                "IMG_20261117_150425.jpg",
+                "real_photos_itau/motion_sensor/ia_openai_1794211612_01.jpg",
+                (0.0, 0.08, 0.78, 0.92),
+                "sensor de presença do saguão, outro ângulo",
+            ),
+        ],
+        readme=(
+            "Chamado 04175420 - Sensor de presença do saguão sem detecção (aprovação do orçamento, SISR).\n\n"
+            "Problemas plantados (o que o parecer deveria apontar):\n"
+            "- ITEM NÃO LPU COM SIMILAR NA LPU (com excedente): o item 1, sensor infravermelho digital com fio, vem como\n"
+            "  Não LPU, mas a LPU da SISR tem o sensor infravermelho passivo (IVP) com fio (ALA-002, R$ 140,00). Cobrado a\n"
+            "  R$ 245,00: R$ 105,00 acima do similar -> similar_lpu_item.\n"
+            "- ITEM NÃO LPU COM SIMILAR NA LPU (sem excedente): o item 4, deslocamento técnico, vem como Não LPU, mas\n"
+            "  equivale à visita técnica e deslocamento da SISR (SIS-001, R$ 280,00), pelo mesmo preço -> similar_lpu_item\n"
+            "  sem valor em questão (o fornecedor deveria ter usado o item da LPU).\n"
+            "Itens corretos: mão de obra de substituição e teste do sensor (LPU).\n"
+            "Resultado esperado: APROVAR COM RESSALVAS (cerca de 16% do orçamento em questão).\n"
         ),
     ),
 ]

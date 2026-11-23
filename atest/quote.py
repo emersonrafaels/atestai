@@ -3,8 +3,9 @@
 1. A planilha Excel é lida por regra (repository.read_ticket_quote), sem LLM; o que ela não trouxer vem do chamado.
 2. O modelo principal confere cada item contra o escopo: aderente / fora do escopo / a justificar, quantidade
    plausível, duplicidade e código equivalente na LPU.
-3. Regras determinísticas: preço × LPU, duplicidade textual, coerência planilha × chamado e valor em questão
-   (item inteiro ou só o excedente, conforme config/rubric.toml).
+3. Regras determinísticas: preço × LPU, item Não LPU com similar na LPU (preço comparado ao do similar),
+   duplicidade textual, coerência planilha × chamado e valor em questão (item inteiro ou só o excedente, conforme
+   config/rubric.toml).
 """
 
 from __future__ import annotations
@@ -34,6 +35,8 @@ from .repository import LoadedTicket, QuoteError, read_ticket_quote
 from .scope import ScopeStage
 
 DUPLICATE_SIMILARITY = 0.8  # descrição ≥ 80% parecida conta como duplicidade (com mesma unidade, quantidade e preço)
+# apontamentos que já questionam o item inteiro: com eles, não adianta sugerir o similar da LPU
+WHOLE_ITEM = {"out_of_scope_item", "duplicate_item", "unjustified_replacement"}
 
 
 class QuoteStage(AnalysisStage):
@@ -254,6 +257,10 @@ class QuoteStage(AnalysisStage):
             price_finding, note = self._price_check(item, ref, label)
             findings += price_finding
             notes += note
+            # Item Não LPU que tem similar na LPU: o fornecedor poderia ter usado o item da tabela.
+            similar = self._similar_lpu(item, r, lpu)
+            if similar and not any(f.kind in WHOLE_ITEM for f in findings):
+                findings += self._similar_check(item, similar)
             # Duplicidade apontada pelo modelo ou, se ele não viu, pela comparação de texto com os itens anteriores.
             if dup := (r.duplicate_of if r else 0) or self._textual_duplicate(
                 item, items
@@ -282,6 +289,7 @@ class QuoteStage(AnalysisStage):
                         else "NO_REFERENCE"
                     ),
                     reference_price=ref.reference_price if ref else None,
+                    similar_lpu=similar,
                     expected_quantity_max=qmax,
                     amount_at_issue=self._amount_at_issue(item, findings),
                     findings=findings,
@@ -385,6 +393,47 @@ class QuoteStage(AnalysisStage):
         return [
             self.scorer.finding("price_above_reference", evidence, label, excess)
         ], []
+
+    @staticmethod
+    def _similar_lpu(
+        item: QuoteItem, r: ItemReview | None, lpu: dict[str, LpuItem]
+    ) -> LpuItem | None:
+        """Item da LPU que cumpre a mesma função de um item Não LPU (ex.: parede removível → parede de drywall).
+
+        Vem só de `similar_lpu_code`, que o modelo preenche para itens Não LPU (o `lpu_code` deles fica sem uso, para
+        a tabela nunca ser aplicada como se o item fosse da LPU). Código que não existe na LPU da esteira é ignorado.
+        """
+        if item.lpu or r is None:
+            return None
+        return lpu.get(r.similar_lpu_code.strip())
+
+    def _similar_check(self, item: QuoteItem, ref: LpuItem) -> list[Finding]:
+        """Apontamento `similar_lpu_item`: o item Não LPU tem similar na LPU; o preço é comparado ao do similar.
+
+        Args:
+            item: item Não LPU do orçamento.
+            ref: item similar da LPU.
+
+        Returns:
+            Um apontamento; o valor em questão é o que passa do preço do similar (com [price_tolerance_pct]) quando as
+            unidades são comparáveis, senão zero.
+        """
+        p, rp = item.unit_value, ref.reference_price
+        excess = 0.0
+        if not same_unit(item.unit, ref.unit, item.quantity):
+            price = f"cobrado em '{item.unit}' e o similar é em '{ref.unit}': preço não comparado"
+        elif p > rp * (1 + self.rubric.price_tolerance_pct / 100):
+            excess = round((p - rp) * item.quantity, 2)
+            price = f"{brl(p)} por {item.unit} contra {brl(rp)} do similar (+{(p / rp - 1) * 100:.0f}%; excedente {brl(excess)})"
+        else:
+            price = f"{brl(p)} por {item.unit}, dentro do preço do similar ({brl(rp)})"
+        evidence = (
+            f"Item {item.n} ({item.description}) é Não LPU, mas a LPU tem item similar: {ref.code} "
+            f"({ref.description}); {price}"
+        )
+        return [
+            self.scorer.finding("similar_lpu_item", evidence, f"item {item.n}", excess)
+        ]
 
     @staticmethod
     def _textual_duplicate(item: QuoteItem, previous: list[EvaluatedItem]) -> int:

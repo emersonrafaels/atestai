@@ -108,6 +108,12 @@ class ItemReview(LlmOutput):
         description="n de um item ANTERIOR que cobra a mesma coisa; 0 se não há"
     )
     lpu_code: str = Field(description="Código equivalente na LPU, ou NO_REFERENCE")
+    similar_lpu_code: str = Field(
+        description=(
+            "Só para item FORA DA LPU (Não LPU): código do item da LPU que cumpre a mesma função e poderia ter sido "
+            "orçado no lugar (ex.: parede removível → parede de drywall); NO_REFERENCE se nenhum serve ou se o item é da LPU"
+        )
+    )
 
 
 class ServiceCoverage(LlmOutput):

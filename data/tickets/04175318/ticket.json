@@ -1,0 +1,56 @@
+{
+  "ticket_id": "04175318",
+  "workstream": "SETA",
+  "maintenance_type": "corrective",
+  "moment": "quote",
+  "category": "civil",
+  "symptom": "rachadura_ou_trinca",
+  "requested_scope": "Parede de divisória do arquivo do backoffice rachada de cima a baixo e com placas soltas depois que um carrinho de caixas bateu nela; a parede balança quando alguém encosta. Trocar a divisória entre o arquivo e o corredor (cerca de 2,8 m de largura por 2,8 m de altura, 8 m²).",
+  "solution_description": "Retirada da divisória danificada e montagem de parede nova de 8 m² entre o arquivo e o corredor, com pintura da face do corredor.",
+  "branch": {
+    "code": "3057",
+    "name": "Sorocaba Centro",
+    "environment": "area_interna_backoffice"
+  },
+  "supplier": {
+    "name": "Paredes & Cia Construções LTDA",
+    "cnpj": ""
+  },
+  "blocks_opening": false,
+  "quoted_value": 2290.0,
+  "dates": {
+    "opening": "2026-11-16",
+    "supplier_submission": "2026-11-17",
+    "manager_review": null
+  },
+  "status": "forwarded_to_backoffice",
+  "origin": "dataset",
+  "dataset": "casos",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "attachments": [
+    {
+      "file_name": "Orcamento_ParedesCia_04175318.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 5945,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-17"
+    },
+    {
+      "file_name": "IMG_20261116_101420.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 215656,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-17"
+    },
+    {
+      "file_name": "IMG_20261116_101655.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 201846,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-17"
+    }
+  ]
+}

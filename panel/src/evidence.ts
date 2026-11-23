@@ -92,7 +92,7 @@ export function underCurrentRule(p: Assessment, rubric: RubricInfo): CurrentRule
   if (!flags || !p.confidence) return { p, outdated: false, dropped: [], added: [] };
   const findings = p.findings.map((f) => {
     const fl = flags[f.kind];
-    return fl ? { ...f, reduces_confidence: fl.reduces_confidence, returns: fl.returns, lock: fl.lock, review: fl.review ?? f.review } : f;
+    return fl ? { ...f, reduces_confidence: fl.reduces_confidence, returns: fl.returns, lock: fl.lock, review: fl.review ?? f.review, caveats: fl.caveats ?? f.caveats } : f;
   });
   const kinds = new Set(p.findings.map((f) => f.kind));
   const reading = p.confidence_reducers.filter((r) => !kinds.has(r));
@@ -158,6 +158,8 @@ export function simulate(stored: Assessment, rubric: RubricInfo, removed: Set<st
   else {
     recommendation = [...rubric.bands].sort((a, b) => b.score_min - a.score_min).find((b) => score >= b.score_min)?.recommendation ?? "return_to_supplier";
     if (recommendation === "approve" && approveCap && pct > approveCap) recommendation = "approve_with_caveats";
+    // ponto a esclarecer (ex.: preço sem referência para comparar): aprova com ressalvas
+    if (recommendation === "approve" && kept.some((f, k) => f.caveats && !impacts[k].absorbedBy)) recommendation = "approve_with_caveats";
   }
   return { grades, score, confidence, recommendation, kept: kept.length };
 }
@@ -180,7 +182,7 @@ export interface DecisionPath {
   /** a régua atual chega à mesma recomendação gravada no parecer (pareceres antigos podem ter usado outra régua) */
   consistent: boolean;
   /** faixa do score (quando chegou nela) e se o teto do valor em questão rebaixou "aprovar" para "com ressalvas" */
-  band: { score_min: number; end: number; recommendation: Recommendation; capped: boolean } | null;
+  band: { score_min: number; end: number; recommendation: Recommendation; capped: boolean; caveats: number[] } | null;
 }
 
 /**
@@ -213,10 +215,12 @@ export function decisionPath(stored: Assessment, rubric: RubricInfo): DecisionPa
     const b = sorted[k];
     const approveCap = rubric.max_amount_at_issue_for_approve_pct ?? 10;
     const capped = b.recommendation === "approve" && !!approveCap && p.amount_at_issue_pct > approveCap;
-    bandRec = capped ? "approve_with_caveats" : b.recommendation;
-    band = { score_min: b.score_min, end: sorted[k + 1]?.score_min ?? 101, recommendation: b.recommendation, capped };
+    // apontamentos de ressalva (régua: caveats) também rebaixam "aprovar" para "com ressalvas"
+    const caveats = b.recommendation === "approve" ? all.filter((i) => p.findings[i].caveats && !impacts[i].absorbedBy) : [];
+    bandRec = capped || caveats.length ? "approve_with_caveats" : b.recommendation;
+    band = { score_min: b.score_min, end: sorted[k + 1]?.score_min ?? 101, recommendation: b.recommendation, capped, caveats };
   }
-  checks.push({ id: "band", hit: true, findings: [], rec: bandRec });
+  checks.push({ id: "band", hit: true, findings: band?.caveats ?? [], rec: bandRec });
 
   const first = checks.findIndex((c) => c.hit);
   const steps = checks.map((c, k): DecisionStep => ({ id: c.id, state: k < first ? "passed" : k === first ? "fired" : "unreached", findings: c.findings }));
@@ -227,6 +231,8 @@ export function decisionPath(stored: Assessment, rubric: RubricInfo): DecisionPa
 // ============================================================================ motivos rápidos para o comentário
 export const REASONS_BY_KIND: Record<string, string> = {
   missing_before_photo: "Foto do antes não é exigida para este serviço",
+  price_not_comparable: "O preço é compatível com o de mercado (conferi)",
+  similar_lpu_item: "O item da LPU não serve para este caso",
   missing_after_photo: "O serviço concluído está comprovado em outro anexo",
   photo_mismatch: "A foto mostra o ambiente certo, só de outro ângulo",
   unreadable_photo: "A foto está legível o suficiente",

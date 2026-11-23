@@ -65,7 +65,7 @@ description = "Foto de outro chamado, recortada e com data nova: trava de integr
 [[groups]]
 id = "quote"
 label = "Orçamento e solução"
-description = "Preço, quantidade, troca sem justificativa e item fora do escopo."
+description = "Preço, quantidade, troca sem justificativa, item fora do escopo e item Não LPU com similar na LPU."
 
 [[groups]]
 id = "agency"
@@ -208,6 +208,35 @@ show = [
 ]
 linked = ["04173506"]
 
+# item Não LPU com similar na LPU
+
+[[cases]]
+id = "04175318"
+group = "quote"
+title = "Divisória do arquivo rachada (parede removível × drywall)"
+expect = ["approve_with_caveats"]
+findings = ["similar_lpu_item", "price_not_comparable"]
+show = [
+  "Na aba Orçamento, o item 1 'Parede removível' vem como Não LPU, e o Atest.AI acha o similar na LPU: DRY-001, parede de drywall (R$ 145,00/m²).",
+  "Cobrado a R$ 210,00/m² em 8 m²: R$ 520,00 acima do similar entram no valor potencial divergente.",
+  "Contraste: o item 2 (retirada da divisória) também é Não LPU, mas não tem similar: 'Preço sem referência para comparar'.",
+  "A mensagem ao fornecedor pede para orçar pelo item da LPU ou justificar o Não LPU.",
+]
+linked = []
+
+[[cases]]
+id = "04175420"
+group = "quote"
+title = "Sensor de presença do saguão sem detecção"
+expect = ["approve_with_caveats"]
+findings = ["similar_lpu_item"]
+show = [
+  "Item 1, sensor infravermelho Não LPU a R$ 245,00: similar na LPU ALA-002 (sensor IVP com fio, R$ 140,00), R$ 105,00 acima.",
+  "Item 4, 'Deslocamento técnico' Não LPU: similar SIS-001 (visita técnica e deslocamento) pelo mesmo preço, apontado sem valor em questão.",
+  "Os dois apontamentos levam a Aprovar com ressalvas.",
+]
+linked = []
+
 # mesma agência, outro problema
 
 [[cases]]
@@ -227,11 +256,11 @@ linked = ["04174102", "04172318", "04161377"]
 id = "04161377"
 group = "agency"
 title = "Ar-condicionado do autoatendimento pingando"
-expect = ["approve"]
-findings = []
+expect = ["approve_with_caveats"]
+findings = ["price_not_comparable"]
 show = [
-  "Aberto em 22/10 e ainda aguardando o fornecedor: entra nas comparações de novembro só porque segue aberto.",
-  "O orçamento é coerente: Aprovar.",
+  "Aberto em 22/10 e ainda aguardando o fornecedor: entra nas comparações de novembro (dentro dos 60 dias e ainda aberto).",
+  "O orçamento é coerente, mas o item 3 (dreno e mangueira, R$ 210) não está na LPU e não veio preço de mercado: 'Preço sem referência para comparar' leva a Aprovar com ressalvas.",
   "Mostre-o a partir do 04174102: lá ele aparece como relacionado (a água pode vir do split), sem virar duplicidade.",
 ]
 linked = ["04174102", "04174388"]

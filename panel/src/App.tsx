@@ -1,4 +1,4 @@
-import { BarChart3, BookOpen, Building2, ClipboardCheck, Compass, FileSearch, FileText, Cpu, Download, FlaskConical, HelpCircle, Images, Inbox, ListChecks, Loader2, Play, Plus, Receipt, RotateCcw, ScanSearch, Settings, Trash2, Wifi, WifiOff, X, type LucideIcon } from "lucide-react";
+import { BarChart3, BookOpen, Building2, ClipboardCheck, Compass, FileSearch, FileText, Cpu, FlaskConical, HelpCircle, Images, Inbox, ListChecks, Loader2, Play, Plus, Receipt, RotateCcw, ScanSearch, Settings, Sparkles, Trash2, Wifi, WifiOff, X, type LucideIcon } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api, type TicketDetail, type TicketSummary, type AppSettings, type Dataset, type Run, type Assessment, type Recommendation, type ScenarioTag } from "./api";
 import { serverOutdated } from "./api";
@@ -13,14 +13,18 @@ import { QuoteTab } from "./components/QuoteTab";
 import { AssessmentTab } from "./components/AssessmentTab";
 import { StageProgress } from "./components/StageProgress";
 import { TicketList } from "./components/TicketList";
+import { ExportMenu } from "./components/ExportMenu";
+import { PARECER_MODE_EVENT } from "./components/QuickView";
+import { Onboarding, onboardingDone } from "./components/Onboarding";
+import { versionLabel } from "./version";
 import { EMPTY_FILTERS, loadFilters, matches, saveFilters, verdictOf, type ListFilters } from "./ticketFilters";
 import { OperationsView } from "./components/OperationsView";
 import { NewTicket } from "./components/NewTicket";
 import { RerunDialog } from "./components/RerunDialog";
 import { ValidationView } from "./components/ValidationView";
 import { ScenariosView } from "./components/ScenariosView";
-import { brl4, REC, DEFAULT_RUBRIC, ENV_NAME, MAINTENANCE_LABEL, envLabel, registerLocations } from "./format";
-import { Tour, tourDone, type TourStep } from "./components/ui/Tour";
+import { brl4, REC, DEFAULT_RUBRIC, ENV_NAME, MAINTENANCE_LABEL, envLabel, registerLocations, registerLpu } from "./format";
+import { Tour, type TourStep } from "./components/ui/Tour";
 import { Tooltip, InfoTip } from "./components/ui/Tooltip";
 import { InfoBox, resetInfoBoxes } from "./components/ui/InfoBox";
 import { Lightbox, type LightboxItem } from "./components/ui/Lightbox";
@@ -54,7 +58,8 @@ export default function App() {
   const setListFilters = (f: ListFilters) => { setListFiltersRaw(f); saveFilters(f); };
   const [focus, setFocus] = useState<string | null>(null);
   const [detail_level, setDetail] = useState<TicketDetail | null>(null);
-  const [mode, setMode] = useState<"simulated" | "api">("simulated");
+  // o painel analisa sempre com o modelo (API); o modo simulado fica só para os testes automatizados
+  const mode = "api" as const;
   const [batchMode, setBatchMode] = useState<"sync" | "batch">("sync");
   const [view, setView] = useState<View>("analysis");
   const [adminVisited, setAdminVisited] = useState(false);
@@ -80,6 +85,7 @@ export default function App() {
   const [tourOpen, setTourOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [glossaryOpen, setGlossaryOpen] = useState(false);
+  const [onboardingOpen, setOnboardingOpen] = useState(false);
   // lista de chamados recolhível: lembrada neste navegador; atalho "[" alterna
   const [listCollapsed, setListCollapsedRaw] = useState(() => { try { return localStorage.getItem("atest.list.collapsed") === "1"; } catch { return false; } });
   const setListCollapsed = useCallback((v: boolean) => {
@@ -100,11 +106,10 @@ export default function App() {
   useEffect(() => {
     api.config().then((c) => {
       registerLocations(c.locations);
+      registerLpu(c.lpu);
       setConfig(c);
       setPhase(c.phase);
       setBatchMode(c.batch_mode);
-      // a Análise já abre no modo API; sem credencial de nenhum provedor, fica no simulado (o único disponível)
-      setMode(c.api_available ? "api" : "simulated");
       const p = initialProvider(c);
       const choice = findChoice(c, p);
       setProvider(p);
@@ -126,7 +131,7 @@ export default function App() {
   // o portal gravou uma configuração (cadastro, régua, checklist): recarrega cadastro e nomes na lista
   useEffect(() => {
     const changed = () => {
-      api.config().then((c) => { registerLocations(c.locations); setConfig(c); }).catch(() => undefined);
+      api.config().then((c) => { registerLocations(c.locations); registerLpu(c.lpu); setConfig(c); }).catch(() => undefined);
       reloadTickets();
     };
     window.addEventListener(CONFIG_CHANGED_EVENT, changed);
@@ -136,7 +141,10 @@ export default function App() {
   useEffect(() => {
     if (!focus) return;
     setDetail(null);
-    api.ticket(focus).then(setDetail).catch((e) => setError(String(e.message ?? e)));
+    // trocando de chamado rápido, a resposta de um pedido anterior não pode sobrescrever a do chamado atual
+    let current = true;
+    api.ticket(focus).then((d) => { if (current) setDetail(d); }).catch((e) => { if (current) setError(String(e.message ?? e)); });
+    return () => { current = false; };
   }, [focus]);
 
   const focusState = focus ? execution?.tickets[focus] : undefined;
@@ -146,7 +154,10 @@ export default function App() {
   const lastId = !focusState ? focusSummary?.last?.assessment_id : undefined;
   useEffect(() => {
     setSavedAssessment(null);
-    if (lastId) api.assessment(lastId).then(setSavedAssessment).catch(() => setSavedAssessment(null));
+    if (!lastId) return;
+    let current = true;  // idem: só vale a resposta do parecer pedido por último
+    api.assessment(lastId).then((a) => { if (current) setSavedAssessment(a); }).catch(() => { if (current) setSavedAssessment(null); });
+    return () => { current = false; };
   }, [lastId]);
   const assessment = focusState?.assessment ?? (focusState ? null : savedAssessment);
 
@@ -262,7 +273,7 @@ export default function App() {
   const [openSaved, setOpenSaved] = useState<string | null>(null);
   const marked = tickets.filter((c) => selected.has(c.ticket_id));
   const run = () => {
-    const saved = mode === "api" ? marked.filter((c) => c.last?.mode === "api") : [];
+    const saved = marked.filter((c) => c.last?.mode === "api");
     if (saved.length) setRerunAsk(saved);
     else start(marked.map((c) => c.ticket_id));
   };
@@ -294,26 +305,18 @@ export default function App() {
   const running = execution?.status === "running";
   const summary = useMemo(() => count(execution), [execution]);
 
-  const downloadJson = () => {
-    if (!assessment) return;
-    const blob = new Blob([JSON.stringify(assessment, null, 2)], { type: "application/json" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = `parecer_${assessment.ticket_id}.json`;
-    a.click();
-  };
-
   const rubric = config?.rubric ?? DEFAULT_RUBRIC;
   const tourSteps = useMemo(() => buildTour(view, {
     toAnalysis: () => setView("analysis"),
-    toAssessment: () => { setView("analysis"); if (assessment) setTab("assessment"); },
+    toAssessment: () => { setView("analysis"); if (assessment) setTab("assessment"); window.dispatchEvent(new CustomEvent(PARECER_MODE_EVENT, { detail: "full" })); },
     hasAssessment: !!assessment,
   }), [view, assessment]);
 
-  // primeira visita: abre o tour sozinho, depois que a tela carregou
+  // primeira visita: abre as boas-vindas (as principais funções) depois que a tela carregou; o tour guiado é
+  // oferecido no fim delas. Quem já viu as boas-vindas, mas nunca fez o tour, não é interrompido de novo.
   useEffect(() => {
-    if (config && tickets.length && !tourDone()) {
-      const t = window.setTimeout(() => setTourOpen(true), 600);
+    if (config && tickets.length && !onboardingDone()) {
+      const t = window.setTimeout(() => setOnboardingOpen(true), 600);
       return () => window.clearTimeout(t);
     }
   }, [config, tickets.length]);
@@ -353,13 +356,14 @@ export default function App() {
               </Tooltip>
             )}
             {config && (
-              <Tooltip side="bottom" content={config.api_available ? `Provedores com credencial: ${providerChoices(config).filter((p) => p.available).map((p) => p.label).join(", ")}` : `Nenhum provedor com credencial (${providerChoices(config).map((p) => p.label).join(", ")}): só o modo simulado está disponível`}>
-                <span className={`hidden cursor-help items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-semibold lg:flex ${config.api_available ? "bg-[#e3f2ea] text-ok" : "bg-paper text-muted"}`}>
-                  {config.api_available ? <Wifi size={13} /> : <WifiOff size={13} />}{config.api_available ? "API conectada" : "Só simulado"}
+              <Tooltip side="bottom" content={config.api_available ? `Provedores com credencial: ${providerChoices(config).filter((p) => p.available).map((p) => p.label).join(", ")}` : `Nenhum provedor com credencial (${providerChoices(config).map((p) => p.label).join(", ")}): defina em config/.secrets.toml ou no ambiente para analisar`}>
+                <span className={`hidden cursor-help items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-semibold lg:flex ${config.api_available ? "bg-[#e3f2ea] text-ok" : "bg-[#fbefed] text-bad"}`}>
+                  {config.api_available ? <Wifi size={13} /> : <WifiOff size={13} />}{config.api_available ? "API conectada" : "API sem credencial"}
                 </span>
               </Tooltip>
             )}
             <HelpMenu open={helpOpen} setOpen={setHelpOpen}
+              welcome={() => { setHelpOpen(false); setOnboardingOpen(true); }}
               tour={() => { setHelpOpen(false); setTourOpen(true); }}
               glossary={() => { setHelpOpen(false); setGlossaryOpen(true); }}
               reset={() => { setHelpOpen(false); resetInfoBoxes(); }} />
@@ -369,17 +373,7 @@ export default function App() {
         {/* linha 2: barra de execução (só onde se analisa chamados) */}
         {(view === "analysis" || view === "metrics") && (
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-line/70 bg-paper/50 px-6 py-2 text-sm">
-            <fieldset data-tour="mode" className="flex items-center gap-2">
-              <legend className="sr-only">Modo</legend>
-              <span className="flex items-center gap-1 text-[13px] text-muted">Modo <InfoTip term="mode" /></span>
-              <div className="flex rounded-lg border border-line bg-sheet p-0.5">
-                <SegmentButton active={mode === "simulated"} onClick={() => setMode("simulated")} hint="Sem custo: respostas simuladas, sem chamar o modelo">Simulado</SegmentButton>
-                <SegmentButton active={mode === "api"} onClick={() => setMode("api")} disabled={!config?.api_available}
-                  hint={config?.api_available ? `Chama o modelo de verdade${currentChoice ? ` (${currentChoice.label})` : ""}: mede a qualidade real e gera custo` : "Nenhum provedor com credencial: defina em config/.secrets.toml ou no ambiente"}>
-                  API</SegmentButton>
-              </div>
-            </fieldset>
-            {mode === "api" && config && (
+            {config && (
               <fieldset data-tour="provider" className="flex items-center gap-2">
                 <legend className="sr-only">Provedor</legend>
                 <span className="flex items-center gap-1 text-[13px] text-muted">Provedor
@@ -388,7 +382,7 @@ export default function App() {
                 <ProviderPicker config={config} value={provider} onChange={chooseProvider} disabled={running} />
               </fieldset>
             )}
-            {mode === "api" && (
+            {(
               <fieldset className="flex items-center gap-2">
                 <legend className="sr-only">Envio</legend>
                 <span className="flex items-center gap-1 text-[13px] text-muted">Envio <InfoTip term="batch" /></span>
@@ -398,7 +392,7 @@ export default function App() {
                 </div>
               </fieldset>
             )}
-            {mode === "api" && (
+            {(
               <div className="flex flex-wrap items-center gap-2">
                 <span className="flex items-center gap-1 text-[13px] text-muted">Modelos
                   <InfoTip text={<><b>Principal</b>: lê o escopo, confere o orçamento e escreve o parecer.<br /><b>Rápido</b>: identifica os anexos e analisa as fotos.<br />Escolha na lista ou digite outro id no formato provedor:modelo.</>} />
@@ -419,8 +413,8 @@ export default function App() {
                   <Plus size={16} /> Novo chamado
                 </button>
               </Tooltip>
-              <Tooltip content={!selected.size ? "Marque ao menos um chamado na lista à esquerda" : running ? "Aguarde a execução atual terminar" : `Analisa no modo ${mode === "api" ? "API" : "simulado"}: ${[...selected].slice(0, 8).join(", ")}${selected.size > 8 ? ` e mais ${selected.size - 8}` : ""}`}>
-                <button data-tour="run" onClick={run} disabled={!selected.size || running}
+              <Tooltip content={config && !config.api_available ? "Nenhum provedor com credencial: defina em config/.secrets.toml ou no ambiente" : !selected.size ? "Marque ao menos um chamado na lista à esquerda" : running ? "Aguarde a execução atual terminar" : `Analisa com o modelo${currentChoice ? ` (${currentChoice.label})` : ""}: ${[...selected].slice(0, 8).join(", ")}${selected.size > 8 ? ` e mais ${selected.size - 8}` : ""}`}>
+                <button data-tour="run" onClick={run} disabled={!selected.size || running || !config?.api_available}
                   className="flex items-center gap-2 rounded-lg bg-blueprint px-4 py-1.5 font-semibold text-white shadow-sm transition-colors hover:bg-[#1d44a0] disabled:pointer-events-none disabled:opacity-50">
                   {running ? <Loader2 size={16} className="animate-spin" /> : <Play size={16} />}
                   {running ? `Analisando ${summary.done}/${summary.total}…` : <>Analisar <span className="rounded-full bg-white/20 px-1.5 text-[12px] tabular-nums">{selected.size}</span></>}
@@ -479,7 +473,7 @@ export default function App() {
           </div>
         ) : (
           <span className="text-muted">
-            <b className="font-medium text-ink">Como começar:</b> marque os chamados na lista à esquerda e clique em <b className="font-medium text-ink">Analisar</b>. O modo simulado demonstra o fluxo sem chamar a API.
+            <b className="font-medium text-ink">Como começar:</b> marque os chamados na lista à esquerda e clique em <b className="font-medium text-ink">Analisar</b>. A análise chama o modelo escolhido em Provedor e Modelos.
             {" "}<button onClick={() => setTourOpen(true)} className="font-medium text-blueprint hover:underline">Fazer o tour guiado</button>
           </span>
         )}
@@ -497,8 +491,8 @@ export default function App() {
             <OperationsView openRun={openRun} />
           ) : detail_level ? (
             <div className="mx-auto max-w-[1180px] px-6 py-6">
-              <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
-                <div>
+              <div className="mb-4 flex flex-wrap items-start justify-between gap-3 md:flex-nowrap">
+                <div className="min-w-0 flex-1">
                   <div className="text-sm text-muted">{detail_level.workstream} · {detail_level.branch}{detail_level.environment ? ` · local: ${envLabel(detail_level.environment)}` : ""} · {detail_level.supplier}</div>
                   <h2 className="largo flex items-center gap-3 text-[28px] font-bold leading-tight">
                     Chamado {detail_level.ticket_id}
@@ -522,12 +516,19 @@ export default function App() {
                     )}
                   </div>
                 </div>
-                {focusState && focusState.status !== "done" && focusState.status !== "error" && <StageProgress state={focusState} />}
-                {!focusState && savedAssessment && (
-                  <span className="text-sm text-muted">Último parecer salvo, de {new Date(savedAssessment.generated_at).toLocaleString("pt-BR")}</span>
-                )}
-                {focusState?.status === "error" && <span className="text-sm text-bad">{focusState.error}</span>}
+                {/* à direita do título: exportar o parecer (à vista) e a situação da análise */}
+                <div className="flex shrink-0 flex-col items-end gap-2 md:pt-1">
+                  {assessment && <ExportMenu p={assessment} ticket={detail_level.ticket_id === assessment.ticket_id ? detail_level : null} />}
+                  {!focusState && savedAssessment && (
+                    <span className="text-sm text-muted">Último parecer salvo, de {new Date(savedAssessment.generated_at).toLocaleString("pt-BR")}</span>
+                  )}
+                  {focusState?.status === "error" && <span className="text-sm text-bad">{focusState.error}</span>}
+                </div>
               </div>
+              {/* progresso da análise numa linha própria: na coluna da direita, as 8 etapas espremiam o título do chamado */}
+              {focusState && focusState.status !== "done" && focusState.status !== "error" && (
+                <div className="mb-4"><StageProgress state={focusState} /></div>
+              )}
 
               <StageTimeline ticket={detail_level} />
 
@@ -555,13 +556,6 @@ export default function App() {
                     </Tooltip>
                   );
                 })}
-                {assessment && (
-                  <Tooltip className="ml-auto inline-flex" content="Baixa o parecer completo em JSON (para auditoria ou integração)">
-                    <button onClick={downloadJson} className="flex items-center gap-1.5 whitespace-nowrap px-3 py-2 text-sm text-muted hover:text-ink">
-                      <Download size={15} /> Parecer em JSON
-                    </button>
-                  </Tooltip>
-                )}
               </nav>
 
               {tab === "input" && <TicketInputTab ch={detail_level} openPhoto={openPhoto} />}
@@ -592,6 +586,10 @@ export default function App() {
         <span>Gerência de Ciência de Dados</span>
         <span aria-hidden>-</span>
         <span>Comunidade Infra de Canais Físicos</span>
+        <span aria-hidden>-</span>
+        <Tooltip side="top" content="Versão do painel web do Atest.AI">
+          <span className="cursor-help tabular-nums">Painel {versionLabel}</span>
+        </Tooltip>
       </footer>
 
       {showNewTicket && config && (
@@ -602,7 +600,6 @@ export default function App() {
           setFocus(c.ticket_id);
           setTab("input");
           setView("analysis");
-          if (config.api_available) setMode("api");
         }} />
       )}
 
@@ -613,6 +610,7 @@ export default function App() {
       {photos && <Lightbox items={photos.items} start={photos.index} onClose={() => setPhotos(null)} />}
       {glossaryOpen && <GlossaryDialog onClose={() => setGlossaryOpen(false)} />}
       <Tour steps={tourSteps} open={tourOpen} onClose={() => setTourOpen(false)} />
+      {onboardingOpen && <Onboarding onClose={() => setOnboardingOpen(false)} onTour={() => setTourOpen(true)} />}
     </div>
   );
 }
@@ -643,7 +641,7 @@ const SECTION_HINT = {
 } as const;
 
 /** Menu de ajuda: tour guiado da tela atual, glossário e reexibir as dicas fechadas. */
-function HelpMenu({ open, setOpen, tour, glossary, reset }: { open: boolean; setOpen: (v: boolean) => void; tour: () => void; glossary: () => void; reset: () => void }) {
+function HelpMenu({ open, setOpen, welcome, tour, glossary, reset }: { open: boolean; setOpen: (v: boolean) => void; welcome: () => void; tour: () => void; glossary: () => void; reset: () => void }) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!open) return;
@@ -662,9 +660,11 @@ function HelpMenu({ open, setOpen, tour, glossary, reset }: { open: boolean; set
       </button>
       {open && (
         <div role="menu" className="surgir absolute right-0 z-40 mt-2 w-64 rounded-xl border border-line bg-sheet p-1.5 shadow-xl">
+          <button role="menuitem" onClick={welcome} className={item}><Sparkles size={16} className="shrink-0 text-blueprint" /><span><b className="block font-medium">Conheça o Atest.AI</b><span className="text-[12px] text-muted">As principais funções, em 7 telas</span></span></button>
           <button role="menuitem" onClick={tour} className={item}><Compass size={16} className="shrink-0 text-blueprint" /><span><b className="block font-medium">Tour guiado</b><span className="text-[12px] text-muted">Passo a passo desta tela</span></span></button>
           <button role="menuitem" onClick={glossary} className={item}><BookOpen size={16} className="shrink-0 text-blueprint" /><span><b className="block font-medium">Glossário</b><span className="text-[12px] text-muted">Score, peso, kappa, F1…</span></span></button>
           <button role="menuitem" onClick={reset} className={item}><RotateCcw size={16} className="shrink-0 text-blueprint" /><span><b className="block font-medium">Reexibir dicas</b><span className="text-[12px] text-muted">Mostra de novo as caixas fechadas</span></span></button>
+          <p className="mt-1 border-t border-line px-3 pb-1 pt-2 text-[11px] text-muted">Painel web {versionLabel}</p>
         </div>
       )}
     </div>
@@ -714,7 +714,7 @@ function buildTour(view: View, a: { toAnalysis: () => void; toAssessment: () => 
     </> },
     { target: "nav", title: "Três seções", body: <p><b>Análise</b> para trabalhar chamado a chamado, <b>Validação</b> para medir a qualidade do Atest.AI e <b>Operação</b> para custo e uso.</p> },
     { target: "ticket-list", title: "Lista de chamados", body: <p>Clique num chamado para abri-lo. Marque a caixa de seleção para incluí-lo na próxima análise. Filtre por conjunto e esteira no topo. O botão no canto (ou a tecla <b>[</b>) recolhe a lista para ganhar espaço.</p> },
-    { target: "mode", title: "Modo de execução", body: <p><b>Simulado</b> demonstra o fluxo sem custo. <b>API</b> chama o modelo de verdade.</p> },
+    { target: "provider", title: "Provedor e modelos", body: <p>Escolha quem responde às chamadas (provedor), os modelos <b>Principal</b> e <b>Rápido</b> e o envio: <b>Síncrono</b> (resultado em segundos) ou <b>Lote</b> (metade do custo, assíncrono).</p> },
     { target: "run", title: "Analisar", body: <p>Roda o pipeline nos chamados marcados: checklist → escopo → orçamento → fotos → score → parecer.</p> },
     { target: "status", title: "Andamento", body: <p>Progresso da execução e quantas recomendações de cada tipo saíram.</p> },
     { target: "tabs", title: "Abas do chamado", body: <p>A <b>Entrada</b> está sempre disponível. As demais abrem depois da análise. Passe o mouse em cada aba para ver o que ela mostra.</p> },

@@ -1,0 +1,14 @@
+CASO FICTÍCIO criado para testar o Atest.AI (não é um chamado real do Salesforce): agência, fornecedor, valores e
+problemas foram inventados. As imagens em attachments/ são SIMULADAS (recortes de imagens geradas por IA da biblioteca data/real_photos_itau, OpenAI gpt-image); não são evidência real.
+A origem também está no EXIF (ImageDescription) de cada imagem. Gerado por generator/build_salesforce_cases.py.
+
+Chamado 04175318 - Divisória do arquivo do backoffice rachada (aprovação do orçamento, SETA).
+
+Problema plantado (o que o parecer deveria apontar):
+- ITEM NÃO LPU COM SIMILAR NA LPU: o item 1 "Parede removível com montagem" vem marcado como Não LPU, mas a
+  LPU da SETA tem a parede de drywall (DRY-001, R$ 145,00/m²), que cumpre a mesma função. Cobrado a
+  R$ 210,00/m² em 8 m²: R$ 520,00 acima do similar -> similar_lpu_item (valor potencial divergente R$ 520).
+- PREÇO SEM REFERÊNCIA: o item 2 (retirada e descarte da divisória, R$ 180) também é Não LPU e não tem
+  similar na LPU nem preço de mercado anexado -> price_not_comparable (contraste com o item 1).
+Itens corretos: pintura da face do corredor (8 m², LPU) e a visita.
+Resultado esperado: APROVAR COM RESSALVAS (cerca de 23% do orçamento em questão).

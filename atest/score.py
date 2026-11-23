@@ -119,6 +119,7 @@ class ScoreCalculator:
             amount_at_issue=round(amount, 2),
             returns=spec.returns,
             review=spec.review,
+            caveats=spec.caveats,
         )
 
     # ------------------------------------------------------------------ proporcional ao que foi enviado
@@ -432,8 +433,9 @@ class ScoreCalculator:
         3. falta do fornecedor (`returns`, não absorvida) → devolver ao fornecedor;
         4. confiança baixa → revisão detalhada;
         5. % em questão ≥ [max_amount_at_issue_for_caveats_pct] → devolver ao fornecedor;
-        6. faixa do score ([bands]); "aprovar" com % em questão acima de [max_amount_at_issue_for_approve_pct]
-           cai para "aprovar com ressalvas". Confiança média acrescenta o aviso ao motivo.
+        6. faixa do score ([bands]); "aprovar" com % em questão acima de [max_amount_at_issue_for_approve_pct],
+           ou com apontamento de ressalva (`caveats`, não absorvido), cai para "aprovar com ressalvas".
+           Confiança média acrescenta o aviso ao motivo.
 
         Args:
             findings: apontamentos finais.
@@ -506,6 +508,20 @@ class ScoreCalculator:
         ):
             # nota alta, mas parte relevante do orçamento em questão: não aprova direto
             reason = f"Score {score}, mas {amount_at_issue_pct:.0f}% do orçamento está em questão (acima de {limit:g}%)"
+            if confidence == Confidence.MEDIUM:
+                reason += "; confiança média: revisar com atenção"
+            return Recommendation.APPROVE_WITH_CAVEATS, reason
+        # ponto a esclarecer que não impede aprovar (ex.: preço sem referência para comparar): aprova com ressalvas
+        caveats = [
+            f
+            for f in findings
+            if f.caveats and (f.validation.value, f.kind) not in absorbed
+        ]
+        if band.recommendation == Recommendation.APPROVE and caveats:
+            labels = "; ".join(
+                dict.fromkeys(self.reducer_label(f.kind).lower() for f in caveats)
+            )
+            reason = f"Score {score}, mas com ressalva: {labels}"
             if confidence == Confidence.MEDIUM:
                 reason += "; confiança média: revisar com atenção"
             return Recommendation.APPROVE_WITH_CAVEATS, reason

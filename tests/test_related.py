@@ -121,6 +121,24 @@ def test_default_window_is_60_days(cfg):
     assert got == {"04000005": True}
 
 
+def test_close_tickets_come_first_even_in_another_category(cfg):
+    """Com a janela longa, outro chamado aberto 2 dias depois (outra categoria) vem antes de um de 50 dias atrás."""
+    rule = cfg.rubric.related_tickets
+    day = date(2026, 11, 10)
+    b = {"code": "1520", "name": "Campinas"}
+    cur = _ticket("04000001", day, b)
+    near = _ticket("04000002", day + timedelta(days=2), b, category="painting")
+    pool = [
+        _entry(cur),
+        _entry(
+            _ticket("04000003", day - timedelta(days=50), b)
+        ),  # mesma categoria, longe
+        _entry(near),  # outra categoria, perto
+    ]
+    order = [c.data.ticket_id for c in find_candidates(cur, pool, rule)]
+    assert order == ["04000002", "04000003"]
+
+
 # ============================================================================ etapa e régua
 class _FakeSession:
     def __init__(self, probabilities: dict[str, int]):

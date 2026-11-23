@@ -2,7 +2,7 @@ import { ClipboardCheck } from "lucide-react";
 import { useEffect, useMemo } from "react";
 import type { Assessment, ServiceCoverage } from "../api";
 import { brl, num, findingLabel } from "../format";
-import { itemMap, QuoteItemsContext, SentenceList } from "./ui/RichText";
+import { highlight as richText, itemMap, LpuNote, LpuRef, QuoteItemsContext, SentenceList } from "./ui/RichText";
 
 const CLASS = {
   compliant: { label: "Aderente", cls: "bg-[#e3f2ea] text-ok" },
@@ -42,9 +42,9 @@ export function QuoteTab({ p, highlight = [] }: { p: Assessment; highlight?: num
                   <td className="px-3 py-2.5 tabular-nums">{i.n}</td>
                   <td className="px-3 py-2.5">
                     <div className="font-medium">{i.description}</div>
-                    <div className="text-[13px] text-muted">{i.reason}{i.lpu === false ? " · item fora da LPU" : i.lpu_code && i.lpu_code !== "NO_REFERENCE" && i.lpu_code !== "SEM_REFERENCIA" ? ` · ${i.lpu_code}` : " · sem referência na LPU"}</div>
+                    <div className="text-[13px] text-muted">{i.reason}<LpuNote item={i} /></div>
                     {i.findings.filter((a) => a.kind !== "out_of_scope_item" && a.kind !== "unjustified_replacement").map((a, k) => (
-                      <div key={k} className="mt-1 text-[13px] text-warn">{findingLabel(a.kind)}: {a.evidence}</div>
+                      <div key={k} className="mt-1 text-[13px] text-warn">{findingLabel(a.kind)}: {richText(a.evidence)}</div>
                     ))}
                   </td>
                   <td className="whitespace-nowrap px-3 py-2.5 text-right tabular-nums">
@@ -54,7 +54,9 @@ export function QuoteTab({ p, highlight = [] }: { p: Assessment; highlight?: num
                     )}
                   </td>
                   <td className={`px-3 py-2.5 text-right tabular-nums ${above ? "font-semibold text-bad" : ""}`}>{brl(i.unit_value)}</td>
-                  <td className="px-3 py-2.5 text-right tabular-nums text-muted">{i.reference_price ? brl(i.reference_price) : "—"}</td>
+                  <td className="px-3 py-2.5 text-right tabular-nums text-muted">
+                    {i.reference_price ? brl(i.reference_price) : i.similar_lpu ? <span>{brl(i.similar_lpu.reference_price)}<div className="text-[11px]">similar <LpuRef code={i.similar_lpu.code} label={i.similar_lpu.code} fallback={i.similar_lpu} /></div></span> : "—"}
+                  </td>
                   <td className="px-3 py-2.5 text-right tabular-nums">{brl(i.total_value)}</td>
                   <td className={`px-3 py-2.5 text-right tabular-nums ${i.amount_at_issue ? "font-semibold text-bad" : "text-muted"}`}>
                     {i.amount_at_issue ? brl(i.amount_at_issue) : "—"}

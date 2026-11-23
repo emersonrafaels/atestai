@@ -1,7 +1,7 @@
 import { Camera, ClipboardList, FileText, Ruler, Tag } from "lucide-react";
 import { createContext, useContext, type ReactNode } from "react";
-import type { QuoteItem } from "../../api";
-import { brl, num } from "../../format";
+import type { EvaluatedItem, LpuItem, QuoteItem } from "../../api";
+import { brl, num, LPU, lpuName } from "../../format";
 import { Tooltip } from "./Tooltip";
 
 /**
@@ -16,6 +16,8 @@ const TOKEN = new RegExp(
     // "itens 1, 2 e 4", mas não engole a quantidade em "item 1, 1 un"
     String.raw`(?<item>\bite(?:m|ns)\s\d+(?:(?:,\s?|\se\s)\d+(?![.,]?\d)(?!\s?(?:m²|m2|m³|m\b|ml|un|unid|peç|pç|R\$)))*)`,
     String.raw`(?<annex>\bAnexos?\s\d+(?:(?:,\s?|\se\s)\d+)*)`,
+    // código da LPU (ex.: DRY-001): vira o nome do item, com código, descrição e preço no hover
+    String.raw`(?<lpu>\b[A-Z]{2,5}-\d{3}\b)`,
     // número de chamado (8 dígitos): vira link quando é um chamado da mesma agência comparado com este
     String.raw`(?<ticket>\b\d{8}\b)`,
     String.raw`(?<qty>\b\d+(?:[.,]\d+)?\s?(?:m²|m2|m³|m3|ml|un|unid\.?|peças?|pontos?|chapas?|quadros?)(?![\p{L}\d]))`,
@@ -84,6 +86,40 @@ function ItemRef({ text, nums, onItems }: { text: string; nums: number[]; onItem
   return <Tooltip className="inline" delay={80} content={<ItemTip nums={nums} items={items!} clickable={!!onItems} />}>{el}</Tooltip>;
 }
 
+/**
+ * Item da LPU citado no texto: aparece pelo nome; o hover mostra código, esteira, descrição completa e preço.
+ * `fallback` (ex.: o similar gravado no parecer) vale quando a LPU ainda não carregou ou mudou desde a análise.
+ */
+export function LpuRef({ code, label, fallback }: { code: string; label?: string; fallback?: LpuItem | null }) {
+  const it = LPU.get(code) ?? (fallback ? { ...fallback, workstream: "" } : undefined);
+  if (!it) return <>{code}</>;
+  const tip = (
+    <span className="block text-left">
+      <b className="tabular-nums">{code}</b>{it.workstream && <span className="opacity-75"> · LPU {it.workstream}</span>}
+      <span className="block">{it.description}</span>
+      <span className="block tabular-nums opacity-75">{brl(it.reference_price)} por {it.unit}</span>
+    </span>
+  );
+  return (
+    <Tooltip className="inline" delay={80} content={tip}>
+      <span tabIndex={0} aria-label={`${it.description}, código ${code} da LPU, ${brl(it.reference_price)} por ${it.unit}`}
+        className="cursor-help whitespace-nowrap rounded bg-blueprint-soft px-0.5 font-medium text-blueprint underline decoration-dotted decoration-blueprint/50 underline-offset-2 hover:bg-blueprint/15">
+        {label ?? lpuName(it)}
+      </span>
+    </Tooltip>
+  );
+}
+
+/** Situação do item frente à LPU na linha do orçamento: item da LPU (pelo nome), Não LPU (com o similar) ou sem referência. */
+export function LpuNote({ item }: { item: Pick<EvaluatedItem, "lpu" | "lpu_code" | "similar_lpu"> }) {
+  if (item.lpu === false) {
+    const s = item.similar_lpu;
+    return s ? <> · Não LPU · similar na LPU: <LpuRef code={s.code} fallback={s} /> ({brl(s.reference_price)}/{s.unit})</> : <> · Não LPU</>;
+  }
+  const c = item.lpu_code;
+  return c && c !== "NO_REFERENCE" && c !== "SEM_REFERENCIA" ? <> · <LpuRef code={c} /></> : <> · sem referência na LPU</>;
+}
+
 /** Chamados citáveis no texto (os da mesma agência) e o que fazer ao clicar num deles. */
 export interface TicketLinks {
   ids: Set<string>;
@@ -98,10 +134,21 @@ export function highlight(text: string, onItems?: OnItems, tickets?: TicketLinks
   let last = 0;
   for (const m of text.matchAll(TOKEN)) {
     const i = m.index ?? 0;
+    if (i < last) continue; // dentro da descrição da LPU que já foi trocada pelo nome
     if (i > last) out.push(text.slice(last, i));
     const g = m.groups ?? {};
     const s = m[0];
     const k = `${i}`;
+    if (g.lpu) {
+      const it = LPU.get(s);
+      // "(DRY-001)" sozinho entre parênteses é anotação ao lado do nome que o texto já trouxe: fica o código, com hover
+      const aside = text[i - 1] === "(" && text[i + s.length] === ")";
+      out.push(it ? <LpuRef key={k} code={s} label={aside ? s : undefined} /> : s);
+      // "DRY-001 (Parede de drywall …)": a descrição entre parênteses sai, o nome já está no lugar do código
+      const paren = it ? ` (${it.description})` : "";
+      last = i + s.length + (paren && text.startsWith(paren, i + s.length) ? paren.length : 0);
+      continue;
+    }
     if (g.money) out.push(<b key={k} className="whitespace-nowrap font-semibold tabular-nums text-ink">{s}</b>);
     else if (g.pct) {
       const around = text.slice(i, i + s.length + 14).toLowerCase();

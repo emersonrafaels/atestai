@@ -51,6 +51,9 @@ STATUS_PT = {
 }
 
 MAX_ITEMS_IN_PROMPT = 12  # itens do orçamento de cada chamado enviados ao modelo
+# Abertos até N dias antes ou depois entram na frente mesmo com outra categoria: um duplicado costuma vir logo em
+# seguida, e quem abre escolhe a categoria de outro jeito (goteira × forro manchado).
+CLOSE_DAYS = 7
 
 
 def status_label(status: str) -> str:
@@ -93,8 +96,9 @@ def find_candidates(
         skip_datasets: conjuntos que ficam fora da comparação ([pipeline] related_skip_datasets).
 
     Returns:
-        Todos os que entram (o limite `max_candidates` é aplicado por quem chama), com a mesma categoria primeiro
-        e, dentro dela, os de abertura mais próxima.
+        Todos os que entram (o limite `max_candidates` é aplicado por quem chama): primeiro os da mesma categoria
+        ou abertos até CLOSE_DAYS dias antes/depois; depois os demais; em cada grupo, da abertura mais próxima
+        para a mais distante.
     """
     skip = set(skip_datasets or ())
     out: list[Candidate] = []
@@ -113,7 +117,12 @@ def find_candidates(
         )
         if in_window or still_open:
             out.append(Candidate(e, days, in_window))
-    out.sort(key=lambda c: (c.data.category != current.category, abs(c.days_apart)))
+    out.sort(
+        key=lambda c: (
+            c.data.category != current.category and abs(c.days_apart) > CLOSE_DAYS,
+            abs(c.days_apart),
+        )
+    )
     return out
 
 

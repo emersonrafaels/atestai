@@ -1,4 +1,4 @@
-import type { Stage, Recommendation, Finding, RubricInfo, ValidationKind } from "./api";
+import type { Stage, Recommendation, Finding, RubricInfo, ValidationKind, EvaluatedItem, LpuItem } from "./api";
 
 export const brl = (v: number | null | undefined) =>
   (v ?? 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -45,6 +45,8 @@ export const FINDING_LABELS: Record<string, string> = {
   quantity_above_expected: "Quantidade acima",
   price_above_reference: "Preço acima da referência",
   price_above_market: "Preço acima do mercado",
+  price_not_comparable: "Preço sem referência para comparar",
+  similar_lpu_item: "Não LPU com similar na LPU",
   quantity_above_photos: "Quantidade acima das fotos",
   scope_not_quoted: "Serviço pedido sem orçamento",
   service_before_approval: "Executado antes da aprovação",
@@ -285,3 +287,60 @@ export const PROVIDER_LABEL: Record<string, string> = { anthropic: "Anthropic", 
 export const providerLabel = (v: string) => PROVIDER_LABEL[v] ?? v;
 
 export const ENV_NAME: Record<string, string> = { development: "desenvolvimento", staging: "homologação", production: "produção" };
+
+// ============================================================================ LPU: código → nome
+/** LPU de todas as esteiras, pelo código (os prefixos não se repetem entre esteiras). Preenchida por registerLpu. */
+export const LPU = new Map<string, LpuItem & { workstream: string }>();
+export function registerLpu(table: Record<string, LpuItem[]> | undefined) {
+  LPU.clear();
+  for (const [ws, items] of Object.entries(table ?? {})) for (const i of items) LPU.set(i.code, { ...i, workstream: ws });
+}
+
+/** Nome curto do item: a descrição até o primeiro detalhe ("Parede de drywall (placa…), instalada" → "Parede de drywall"). */
+export function lpuName(i: Pick<LpuItem, "description">): string {
+  const cut = i.description.search(/\s\(|,\s/);
+  return cut >= 8 ? i.description.slice(0, cut) : i.description;
+}
+
+/** Código da LPU no texto, com a descrição entre parênteses logo depois (quando o texto já a traz). */
+const LPU_IN_TEXT = /\b([A-Z]{2,5}-\d{3})\b(\s\((?:[^()]|\([^()]*\))*\))?/g;
+
+/**
+ * Texto para documento (sem hover): o código da LPU vira "Nome (CÓDIGO)". Se o texto já trazia a descrição entre
+ * parênteses depois do código, ela sai (senão o nome apareceria duas vezes). Código fora da LPU fica como está.
+ */
+export function lpuPlain(text: string): string {
+  if (!LPU.size || !text) return text;
+  return text.replace(LPU_IN_TEXT, (m, code: string, paren: string | undefined, at: number) => {
+    const it = LPU.get(code);
+    // fora da LPU, ou "(DRY-001)" sozinho entre parênteses (anotação ao lado do nome que o texto já trouxe): fica como está
+    if (!it || (text[at - 1] === "(" && text[at + code.length] === ")")) return m;
+    const keep = paren && paren.trim() !== `(${it.description})` ? paren : "";
+    return `${lpuName(it)} (${code})${keep}`;
+  });
+}
+
+/** Cópia do parecer com os códigos da LPU trocados pelo nome em todos os textos (para o PDF e o HTML exportados). */
+export function lpuReadable<T>(value: T): T {
+  if (!LPU.size) return value;
+  const walk = (x: unknown, key?: string): unknown => {
+    if (key === "similar_lpu" || key === "lpu_code") return x; // dados, não texto: lpuNote monta a frase
+    if (typeof x === "string") return lpuPlain(x);
+    if (Array.isArray(x)) return x.map((y) => walk(y));
+    if (x && typeof x === "object") return Object.fromEntries(Object.entries(x).map(([k, y]) => [k, walk(y, k)]));
+    return x;
+  };
+  return walk(value) as T;
+}
+
+/** Situação do item frente à LPU, em texto (documentos exportados): " · Pintura interna (PIN-001)", " · Não LPU · similar…". */
+export function lpuNote(i: Pick<EvaluatedItem, "lpu" | "lpu_code" | "similar_lpu">): string {
+  if (i.lpu === false) {
+    const s = i.similar_lpu;
+    return s ? ` · Não LPU · similar na LPU: ${lpuName(s)} (${s.code}, ${brl(s.reference_price)}/${s.unit})` : " · Não LPU";
+  }
+  const c = i.lpu_code;
+  if (!c || c === "NO_REFERENCE" || c === "SEM_REFERENCIA") return " · sem referência na LPU";
+  const it = LPU.get(c);
+  return it ? ` · ${lpuName(it)} (${c})` : ` · ${c}`;
+}

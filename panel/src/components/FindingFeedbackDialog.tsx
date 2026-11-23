@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { api, type Assessment, type FindingFeedback, type FindingVerdict } from "../api";
 import { SEVERITY, VALIDATION_LABEL } from "../format";
+import { highlight } from "./ui/RichText";
 
 const AUTHOR_KEY = "atest.author"; // o mesmo nome usado na decisão do parecer
 
@@ -74,7 +75,7 @@ export function FindingFeedbackDialog({ assessmentId, index, finding, previous, 
               <span className="rounded px-1.5 py-0.5 text-[12px] font-semibold text-white" style={{ background: sev?.color }}>{sev?.label}</span>
               <span className="font-medium">{finding.description}</span>
             </div>
-            <p className="mt-1 line-clamp-3 text-muted">{finding.evidence}</p>
+            <p className="mt-1 line-clamp-3 text-muted">{highlight(finding.evidence)}</p>
             <p className="mt-1 text-[12px] text-muted">{VALIDATION_LABEL[finding.validation]}</p>
           </div>
 

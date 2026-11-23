@@ -60,6 +60,7 @@ from .domain import (
     Attachment,
     Branch,
     Catalog,
+    LpuItem,
     MaintenanceType,
     Moment,
     Quote,
@@ -464,6 +465,8 @@ class AppSettings(BaseModel):
     categories: list[Option]
     symptoms: list[Option]
     locations: list[Option] = []
+    # LPU de cada esteira (código, descrição, unidade, preço): o painel troca o código pelo nome nos textos
+    lpu: dict[str, list[LpuItem]] = {}
     providers: list[str]
     missing_keys: list[str]
     signature: str
@@ -1079,6 +1082,10 @@ def create_app(cfg: Settings) -> FastAPI:
             categories=catalog_options(manager.cfg_base.catalog, "categories"),
             symptoms=catalog_options(manager.cfg_base.catalog, "symptoms"),
             locations=catalog_options(manager.cfg_base.catalog, "locations"),
+            lpu={
+                ws: list(items.values())
+                for ws, items in References(manager.cfg_base).lpu.items()
+            },
             providers=sorted(used_providers(cfg)),
             missing_keys=missing_keys(cfg),
             signature=manager.cfg_base.signature(),
@@ -1109,6 +1116,7 @@ def create_app(cfg: Settings) -> FastAPI:
                         "returns": t.returns,
                         "lock": t.lock,
                         "review": t.review,
+                        "caveats": t.caveats,
                     }
                     for k, t in manager.cfg_base.rubric.finding_types.items()
                 },

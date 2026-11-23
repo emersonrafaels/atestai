@@ -14,7 +14,7 @@ from .domain import (
     Stage,
     ValidationResult,
 )
-from .formatting import brl, drop_after_service_requests
+from .formatting import align_summary, brl, drop_after_service_requests
 from .llm_schemas import AssessmentText
 from .providers import TextPart
 
@@ -26,6 +26,8 @@ SUPPLIER_ACTIONS = {
     "unjustified_replacement": "enviar laudo técnico que justifique o {ref}",
     "quantity_above_expected": "justificar ou ajustar a quantidade do {ref}",
     "price_above_reference": "ajustar o preço do {ref} à referência",
+    "price_not_comparable": "enviar preço de mercado (anúncio ou cotação) do {ref}, que não está na LPU",
+    "similar_lpu_item": "orçar o {ref} pelo item similar da LPU ou justificar por que ele precisa ser Não LPU",
     "duplicate_item": "remover a cobrança duplicada do {ref}",
     "photo_mismatch": "substituir as fotos que não mostram o ambiente do escopo",
     "missing_after_photo": "enviar foto que comprove o serviço concluído",
@@ -182,6 +184,17 @@ class AssessmentStage(AnalysisStage):
         except Exception:
             log.exception("falha ao redigir o parecer; usando o texto por regra")
             ctx.text = AssessmentWriter.from_template(result)
+        # a recomendação é da régua: a manchete do resumo não pode dizer outra
+        rec = Recommendation(result["recommendation"])
+        aligned = align_summary(
+            ctx.text.summary, rec.label, [r.label for r in Recommendation]
+        )
+        if aligned != ctx.text.summary:
+            log.info(
+                "manchete do resumo trocada para a recomendação da régua (%s)",
+                rec.value,
+            )
+            ctx.text = ctx.text.model_copy(update={"summary": aligned})
         if (
             ctx.ticket.data.moment == Moment.QUOTE
         ):  # serviço ainda não feito: nada de cobrar foto do depois ou termo de conclusão

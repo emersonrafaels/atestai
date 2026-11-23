@@ -33,8 +33,12 @@ export function Tour({ steps, open, onClose }: { steps: TourStep[]; open: boolea
   const cardRef = useRef<HTMLDivElement>(null);
   const stepsRef = useRef(steps);
   stepsRef.current = steps;
+  // onClose chega como função nova a cada renderização da tela; guardado numa ref, `close` fica estável e o passo
+  // só é preparado de novo quando muda (antes, qualquer renderização refazia o passo e escondia o balão no meio)
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
-  const close = useCallback(() => { markDone(); setI(0); setDir(1); setTarget(null); onClose(); }, [onClose]);
+  const close = useCallback(() => { markDone(); setI(0); setDir(1); setTarget(null); onCloseRef.current(); }, []);
   const go = useCallback((d: 1 | -1) => {
     setDir(d);
     if (i + d >= stepsRef.current.length) close();

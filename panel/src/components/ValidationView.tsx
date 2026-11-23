@@ -17,9 +17,9 @@ export function ValidationView({ config, openCase }: Props) {
   const [datasets, setDatasets] = useState<Dataset[]>([]);
   const [dataset, setDataset] = useState(config.validation.dataset);
   const [sample, setSample] = useState<number | null>(null);
-  const [mode, setMode] = useState<"simulated" | "api">("simulated");
+  // a validação roda sempre com o modelo (API): é o que mede a qualidade de verdade
+  const mode = "api" as const;
   const [batchMode, setBatchMode] = useState<"sync" | "batch">(config.batch_mode);
-  const [noise, setNoise] = useState(0.15);
   const [provider, setProvider] = useState(() => initialProvider(config));
   const [execution, setRun] = useState<Run | null>(null);
   const [report, setReport] = useState<ValidationReport | null>(null);
@@ -56,10 +56,10 @@ export function ValidationView({ config, openCase }: Props) {
     setError(null);
     setReport(null);
     try {
-      const label = `${datasets.find((c) => c.name === dataset)?.label.split(" (")[0] ?? dataset}${sample && sample < nDataset ? `, amostra ${sample}` : ""}${mode === "simulated" ? `, ruído ${Math.round(noise * 100)}%` : ""}`;
+      const label = `${datasets.find((c) => c.name === dataset)?.label.split(" (")[0] ?? dataset}${sample && sample < nDataset ? `, amostra ${sample}` : ""}`;
       const choice = mode === "api" ? findChoice(config, provider) : null;
       const ex = await api.run({ dataset, sample: sample && sample < nDataset ? sample : null, mode, batch_mode: batchMode, phase: 2,
-        simulated_noise: mode === "simulated" ? noise : 0, label: choice ? `${label}, ${choice.label}` : label,
+        simulated_noise: 0, label: choice ? `${label}, ${choice.label}` : label,
         ...(choice ? { provider: choice.id, main_model: choice.main, fast_model: choice.fast } : {}) });
       setRun(ex);
       setStartedAt(Date.now());
@@ -126,28 +126,7 @@ export function ValidationView({ config, openCase }: Props) {
                 <button type="button" onClick={() => setSample(null)} className={`rounded px-1.5 ${size === nDataset ? "bg-blueprint-soft font-medium text-blueprint" : "text-muted hover:text-ink"}`}>todos</button>
               </span>
             </label>
-            <fieldset>
-              <legend className="mb-1 flex items-center gap-1 font-medium">Modo <InfoTip term="mode" /></legend>
-              <div className="flex rounded-lg bg-paper p-0.5">
-                {(["simulated", "api"] as const).map((m) => (
-                  <Tooltip key={m} className="flex flex-1" content={m === "api" && !config.api_available ? "Nenhum provedor com credencial: defina em config/.secrets.toml ou no ambiente" : m === "api" ? "Chama o modelo de verdade: mede a qualidade real e gera custo" : "Sem custo: mostra o fluxo e as métricas com erro simulado"}>
-                    <button type="button" disabled={running || (m === "api" && !config.api_available)} onClick={() => setMode(m)}
-                      className={`flex-1 rounded-md px-3 py-1 ${mode === m ? "bg-sheet font-semibold shadow-sm" : "text-muted hover:text-ink"} disabled:pointer-events-none disabled:opacity-40`}>
-                      {m === "simulated" ? "Simulado" : "API"}
-                    </button>
-                  </Tooltip>
-                ))}
-              </div>
-            </fieldset>
-            {mode === "simulated" ? (
-              <label>
-                <span className="mb-1 flex items-center gap-1 font-medium">Erro simulado: {Math.round(noise * 100)}% <InfoTip term="noise" /></span>
-                <input type="range" min={0} max={0.4} step={0.05} value={noise} disabled={running} onChange={(e) => setNoise(Number(e.target.value))} className="w-full accent-[var(--color-blueprint)]" />
-                <span className={`text-[12px] ${noise === 0 ? "font-medium text-warn" : "text-muted"}`}>
-                  {noise === 0 ? "Com 0%, o simulador devolve o gabarito: tudo dá 100%." : "Acima de 0%, o simulador erra como um modelo real."}
-                </span>
-              </label>
-            ) : (
+            {(
               <>
               <fieldset>
                 <legend className="mb-1 flex items-center gap-1 font-medium">Provedor</legend>
@@ -168,12 +147,13 @@ export function ValidationView({ config, openCase }: Props) {
             )}
           </div>
           <div className="flex flex-col items-stretch justify-end gap-1.5 lg:items-end">
-            <button data-tour="val-run" onClick={run} disabled={running || !nDataset}
+            <button data-tour="val-run" onClick={run} disabled={running || !nDataset || !config.api_available}
+              title={config.api_available ? undefined : "Nenhum provedor com credencial: defina em config/.secrets.toml ou no ambiente"}
               className="flex items-center justify-center gap-2 rounded-lg bg-blueprint px-5 py-2.5 font-semibold text-white transition-colors hover:bg-[#1d44a0] disabled:opacity-50">
               {running ? <Loader2 size={16} className="animate-spin" /> : <Play size={16} />} {running ? "Rodando…" : `Rodar ${size} chamados`}
             </button>
             <span className="text-[12px] text-muted">
-              {mode === "simulated" ? "Sem custo de API" : perTicket !== null
+              {perTicket !== null
                 ? `Estimativa: ~${brl(perTicket * size * (batchMode === "batch" && lastApi?.batch_mode !== "batch" ? 0.5 : 1))}`
                 : "Custo estimado aparece após a 1ª rodada na API"}
             </span>

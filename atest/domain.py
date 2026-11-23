@@ -607,6 +607,10 @@ class FindingType(DomainModel):
         False,
         description="pede conferência da pessoa analista (ex.: possível chamado duplicado): leva à análise detalhada",
     )
+    caveats: bool = Field(
+        False,
+        description="ponto a esclarecer que não impede aprovar: com este apontamento, no máximo aprovar com ressalvas",
+    )
     enabled: bool = Field(
         True,
         description="desativado: o apontamento não é gerado nem desconta (portal de configuração)",
@@ -683,7 +687,7 @@ class RelatedTicketsRule(DomainModel):
         description="a partir desta chance (%), o chamado aparece no parecer como relacionado, sem apontamento",
     )
     max_candidates: int = Field(
-        8, ge=1, le=30, description="no máximo N chamados comparados pelo modelo"
+        12, ge=1, le=30, description="no máximo N chamados comparados pelo modelo"
     )
 
     def is_open(self, status: str) -> bool:
@@ -786,6 +790,10 @@ class Finding(DomainModel):
         False,
         description="pede conferência da pessoa analista: leva à análise detalhada (salvo trava)",
     )
+    caveats: bool = Field(
+        False,
+        description="ponto a esclarecer: com a nota de aprovar, a recomendação vira aprovar com ressalvas",
+    )
     extent: float = Field(
         1.0,
         ge=0,
@@ -838,6 +846,8 @@ class EvaluatedItem(QuoteItem):
     reason: str
     lpu_code: str
     reference_price: float | None = None
+    # item Não LPU: o item da LPU que cumpre a mesma função (ex.: parede removível → parede de drywall)
+    similar_lpu: LpuItem | None = None
     expected_quantity_max: float | None = None
     amount_at_issue: float = 0.0
     findings: list[Finding] = Field(default_factory=list)

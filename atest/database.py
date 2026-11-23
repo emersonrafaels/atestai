@@ -19,18 +19,27 @@ from typing import Any
 from pydantic import BaseModel, Field
 
 from .domain import Assessment, Recommendation
-from .formatting import lpu_terms
+from .formatting import align_summary, lpu_terms
 
-# Pareceres gravados antes das mudanças de nome: agência "(cód. 0418)" → "(núm. do ponto 0418)", sem "(fictícia)".
+# Pareceres gravados antes das mudanças de nome: agência "(cód. 0418)" → "(núm. do ponto 0418)"; agência e
+# fornecedor sem "(fictícia)"/"(fictício)".
 _OLD_CODE = re.compile(r"(\(|Agência )cód\. (\d{4})\b")
 
 
+def _stored(raw: str) -> Assessment:
+    """Parecer gravado, com os nomes de hoje e a manchete do resumo igual à recomendação da régua."""
+    a = Assessment.model_validate_json(_current_terms(raw))
+    labels = [r.label for r in Recommendation]
+    summary = align_summary(a.summary, a.recommendation.label, labels)
+    return a.model_copy(update={"summary": summary}) if summary != a.summary else a
+
+
 def _current_terms(raw: str) -> str:
-    """JSON de um parecer gravado com os nomes de hoje (LPU, número do ponto, agência sem \"(fictícia)\")."""
+    """JSON de um parecer gravado com os nomes de hoje (LPU, número do ponto, sem \"(fictícia)\"/\"(fictício)\")."""
     raw = _OLD_CODE.sub(
         lambda m: f"{m.group(1)}núm. do ponto {m.group(2)}", lpu_terms(raw)
     )
-    return raw.replace(" (fictícia)", "")
+    return raw.replace(" (fictícia)", "").replace(" (fictício)", "")
 
 
 SCHEMA = """
@@ -329,16 +338,14 @@ class Database:
 
     def assessment(self, pid: int) -> Assessment | None:
         r = self._rows("SELECT json FROM assessments WHERE id=?", (pid,))
-        # pareceres antigos aparecem com os nomes de hoje (LPU, número do ponto)
-        return (
-            Assessment.model_validate_json(_current_terms(r[0]["json"])) if r else None
-        )
+        # pareceres antigos aparecem com os nomes de hoje (LPU, número do ponto) e a manchete coerente
+        return _stored(r[0]["json"]) if r else None
 
     def run_assessments(self, run_id: str) -> list[Assessment]:
         rows = self._rows(
             "SELECT json FROM assessments WHERE run_id=? ORDER BY ticket_id", (run_id,)
         )
-        return [Assessment.model_validate_json(_current_terms(r["json"])) for r in rows]
+        return [_stored(r["json"]) for r in rows]
 
     def ticket_history(self, ticket_id: str) -> list[dict[str, Any]]:
         """Pareceres anteriores do chamado, do mais novo ao mais antigo, com o último feedback de cada um."""

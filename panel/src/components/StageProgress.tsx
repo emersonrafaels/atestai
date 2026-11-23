@@ -6,7 +6,7 @@ import { STAGES } from "../format";
 export function StageProgress({ state, compact = false }: { state: TicketState; compact?: boolean }) {
   const returnedAtChecklist = state.assessment?.recommendation === "checklist_returned";
   return (
-    <ol className={`flex items-center ${compact ? "gap-1" : "gap-2"}`} aria-label="Etapas da análise">
+    <ol className={`flex items-center ${compact ? "gap-1" : "flex-wrap gap-x-2 gap-y-1.5"}`} aria-label="Etapas da análise">
       {STAGES.map((e, i) => {
         const made = state.completed_stages.includes(e.id) || state.status === "done";
         const pulada = returnedAtChecklist && i > 0;

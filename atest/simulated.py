@@ -192,6 +192,7 @@ class SimulatedClient:
                     ),
                     "duplicate_of": dup,
                     "lpu_code": i["lpu_code"],
+                    "similar_lpu_code": i.get("similar_lpu_code", "NO_REFERENCE"),
                 }
             )
         # o escopo simulado tem um serviço pedido: coberto por todos os itens, salvo quando o gabarito diz que falta item

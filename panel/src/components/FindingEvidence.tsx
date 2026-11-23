@@ -5,6 +5,7 @@ import type { Assessment, EvaluatedItem, EvaluatedPhoto, Finding, RelatedTicket,
 import { ProbabilityBar, statusLabel, whenLabel } from "./RelatedBits";
 import { DuplicateModal } from "./DuplicateModal";
 import { brl, num, MOMENT_LABEL, envLabel } from "../format";
+import { LpuRef } from "./ui/RichText";
 import { locate, type Located } from "../evidence";
 import type { LightboxItem } from "./ui/Lightbox";
 
@@ -90,7 +91,7 @@ function QuoteEvidence({ f, loc, goTo }: { f: Finding; loc: Located; goTo: GoTo 
   const rows: { item: EvaluatedItem; role?: string }[] = [{ item: loc.items[0], role: loc.duplicateOf ? "cobrado de novo" : undefined }];
   if (loc.duplicateOf) rows.unshift({ item: loc.duplicateOf, role: "original" });
   const hot = (col: "qty" | "unit" | "row") =>
-    (f.kind === "quantity_above_expected" && col === "qty") || (f.kind === "price_above_reference" && col === "unit") ? "bg-[#f8e4e2] font-semibold text-bad" : "";
+    (f.kind === "quantity_above_expected" && col === "qty") || ((f.kind === "price_above_reference" || (f.kind === "similar_lpu_item" && f.amount_at_issue > 0)) && col === "unit") ? "bg-[#f8e4e2] font-semibold text-bad" : "";
   const whole = ["out_of_scope_item", "unjustified_replacement", "duplicate_item"].includes(f.kind);
   const it = loc.items[0];
   return (
@@ -131,6 +132,11 @@ function QuoteEvidence({ f, loc, goTo }: { f: Finding; loc: Located; goTo: GoTo 
                         referência {brl(item.reference_price)}{item.unit_value > item.reference_price ? ` (+${Math.round((100 * (item.unit_value - item.reference_price)) / item.reference_price)}%)` : ""}
                       </div>
                     )}
+                    {flagged && item.reference_price === null && item.similar_lpu && (
+                      <div className="text-[11px] font-normal text-muted">
+                        similar <LpuRef code={item.similar_lpu.code} fallback={item.similar_lpu} />: {brl(item.similar_lpu.reference_price)}/{item.similar_lpu.unit}
+                      </div>
+                    )}
                   </td>
                   <td className="whitespace-nowrap px-2.5 py-2 text-right">{brl(item.total_value)}</td>
                   <td className={`whitespace-nowrap px-2.5 py-2 text-right ${flagged && item.amount_at_issue ? "font-semibold text-bad" : "text-muted"}`}>
@@ -143,7 +149,7 @@ function QuoteEvidence({ f, loc, goTo }: { f: Finding; loc: Located; goTo: GoTo 
         </table>
       </div>
       <p className="mt-1.5 text-[12px] text-muted">
-        {whole ? "A linha inteira entra no valor potencial divergente." : f.kind === "price_above_reference" ? "Só o que passa da referência (com a tolerância) entra no valor potencial divergente." : "Só o excedente de quantidade entra no valor potencial divergente."}
+        {whole ? "A linha inteira entra no valor potencial divergente." : f.kind === "price_above_reference" ? "Só o que passa da referência (com a tolerância) entra no valor potencial divergente." : f.kind === "similar_lpu_item" ? <>O item é Não LPU, mas a LPU tem um similar{it.similar_lpu && <> (<LpuRef code={it.similar_lpu.code} fallback={it.similar_lpu} />)</>}. Só o que passa do preço do similar (com a tolerância e na mesma unidade) entra no valor potencial divergente.</> : "Só o excedente de quantidade entra no valor potencial divergente."}
       </p>
     </div>
   );

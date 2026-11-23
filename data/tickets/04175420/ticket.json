@@ -1,0 +1,56 @@
+{
+  "ticket_id": "04175420",
+  "workstream": "SISR",
+  "maintenance_type": "corrective",
+  "moment": "quote",
+  "category": "alarm",
+  "symptom": "sensor_com_defeito",
+  "requested_scope": "Sensor de presença do saguão não detecta ninguém: na central a zona 6 fica sempre em repouso, mesmo passando na frente do sensor. O alarme arma com a zona sem proteção.",
+  "solution_description": "Troca do sensor de presença do saguão e teste da zona 6 na central de alarme.",
+  "branch": {
+    "code": "5128",
+    "name": "Curitiba Batel",
+    "environment": "saguao"
+  },
+  "supplier": {
+    "name": "Sentinela Segurança Eletrônica LTDA",
+    "cnpj": ""
+  },
+  "blocks_opening": false,
+  "quoted_value": 657.0,
+  "dates": {
+    "opening": "2026-11-17",
+    "supplier_submission": "2026-11-18",
+    "manager_review": null
+  },
+  "status": "forwarded_to_backoffice",
+  "origin": "dataset",
+  "dataset": "casos",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "attachments": [
+    {
+      "file_name": "Orcamento_Sentinela_04175420.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 5924,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-18"
+    },
+    {
+      "file_name": "IMG_20261117_150210.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 204457,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-18"
+    },
+    {
+      "file_name": "IMG_20261117_150425.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 174845,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-18"
+    }
+  ]
+}

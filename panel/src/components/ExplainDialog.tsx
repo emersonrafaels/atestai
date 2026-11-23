@@ -4,6 +4,7 @@ import { createPortal } from "react-dom";
 import type { Assessment, Recommendation, RubricInfo } from "../api";
 import { decisionPath, simulate, underCurrentRule, type DecisionStep, type DecisionStepId } from "../evidence";
 import { CONFIDENCE_LABEL, CONFIDENCE_TEXT, READING_REDUCERS, REC, REDUCER_HELP, VALIDATION_SHORT, findingLabel } from "../format";
+import { highlight } from "./ui/RichText";
 import { tint } from "./ScoreBadge";
 
 export type ExplainKind = "confidence" | "recommendation";
@@ -213,7 +214,7 @@ function ConfidenceBody({ p, rubric, unfounded, toggleUnfounded, focusFinding, o
                       {first?.description ?? findingLabel(r)}. Pela régua atual, é um problema {first?.validation === "photos" ? "das evidências" : first?.validation === "scope" ? "do chamado ou do orçamento" : "do orçamento"} que o modelo conseguiu ver, não uma dificuldade de leitura: segue como apontamento, mas não reduz a confiança.
                     </p>
                   ) : <p className="mt-1 leading-relaxed text-ink/90">{help?.what ?? first?.description ?? "Faltou informação para concluir."}</p>}
-                  {first?.evidence && <p className="mt-1 line-clamp-2 text-[13px] text-muted">Neste chamado: {first.evidence}</p>}
+                  {first?.evidence && <p className="mt-1 line-clamp-2 text-[13px] text-muted">Neste chamado: {highlight(first.evidence)}</p>}
                   {!gone && help?.todo && <p className="mt-1 text-[13px]"><b className="font-semibold">Como resolver:</b> <span className="text-muted">{help.todo}</span></p>}
                   {reading && <p className="mt-1 text-[12px] text-muted">Não é apontamento da régua: veio de uma falha na leitura automática, por isso não pode ser marcado como não procede.</p>}
                   {changes && (
@@ -417,8 +418,8 @@ function StepDetail({ s, p, rubric, band, missing, go, onConfidence }: {
       if (p.score === null || !band) { text = "Sem score."; break; }
       const range = `${band.score_min}–${Math.min(100, band.end - 1)}`;
       text = fired
-        ? <>Score <b>{p.score}</b>: faixa <b style={{ color: REC[band.recommendation].color }}>{REC[band.recommendation].label}</b> ({range}).{band.capped && <> Como {pctText} do orçamento está em questão (acima de {approveCap}%), aprovar vira <b style={{ color: REC.approve_with_caveats.color }}>aprovar com ressalvas</b>.</>}</>
-        : <>Pelo score ({p.score}), seria <b>{REC[band.capped ? "approve_with_caveats" : band.recommendation].label}</b> ({range}), mas uma regra anterior já decidiu.</>;
+        ? <>Score <b>{p.score}</b>: faixa <b style={{ color: REC[band.recommendation].color }}>{REC[band.recommendation].label}</b> ({range}).{band.capped && <> Como {pctText} do orçamento está em questão (acima de {approveCap}%), aprovar vira <b style={{ color: REC.approve_with_caveats.color }}>aprovar com ressalvas</b>.</>}{!band.capped && band.caveats.length > 0 && <> Há {band.caveats.length === 1 ? "um ponto" : "pontos"} a esclarecer ({[...new Set(band.caveats.map((i) => findingLabel(p.findings[i].kind).toLowerCase()))].join(", ")}), então aprovar vira <b style={{ color: REC.approve_with_caveats.color }}>aprovar com ressalvas</b>.</>}</>
+        : <>Pelo score ({p.score}), seria <b>{REC[band.capped || band.caveats.length ? "approve_with_caveats" : band.recommendation].label}</b> ({range}), mas uma regra anterior já decidiu.</>;
       break;
     }
   }

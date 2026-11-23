@@ -94,6 +94,7 @@ class QuoteSession:
                     plausible_quantity=True,
                     duplicate_of=0,
                     lpu_code="NO_REFERENCE",
+                    similar_lpu_code="NO_REFERENCE",
                 )
             ],
             service_coverage=self.coverage,

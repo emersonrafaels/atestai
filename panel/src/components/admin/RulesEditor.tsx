@@ -100,6 +100,7 @@ export function FindingRulesEditor({ data, base, onChange }: Props) {
                   <Th tip={COLUMN_HELP.confidence} className="text-center" justify="justify-center">Reduz confiança</Th>
                   <Th tip={COLUMN_HELP.returns} className="text-center" justify="justify-center">Devolve</Th>
                   <Th tip={COLUMN_HELP.review} className="text-center" justify="justify-center">Conferência</Th>
+                  <Th tip={COLUMN_HELP.caveats} className="text-center" justify="justify-center">Ressalva</Th>
                   <Th tip={COLUMN_HELP.extent}>Proporcional a</Th>
                   <Th tip={COLUMN_HELP.absorbs}>Absorve</Th>
                   <Th tip={COLUMN_HELP.amount} className="px-4">Valor divergente</Th>
@@ -148,6 +149,7 @@ export function FindingRulesEditor({ data, base, onChange }: Props) {
                       <td className="px-2 py-2 text-center"><span className="inline-flex items-center gap-1"><Switch size="sm" on={f.reduces_confidence} disabled={!f.enabled || ws !== "all"} onChange={(on) => set(kind, { reduces_confidence: on })} label="Reduz confiança" />{f.reduces_confidence && <ShieldAlert size={12} className="text-muted" />}</span></td>
                       <td className="px-2 py-2 text-center"><span className="inline-flex items-center gap-1"><Switch size="sm" on={!!f.returns} disabled={!f.enabled || ws !== "all"} onChange={(on) => set(kind, { returns: on })} label="Devolve ao fornecedor" />{f.returns && <Undo2 size={12} className="text-bad" />}</span></td>
                       <td className="px-2 py-2 text-center"><Switch size="sm" on={!!f.review} disabled={!f.enabled || ws !== "all"} onChange={(on) => set(kind, { review: on })} label="Pede conferência da pessoa analista" /></td>
+                      <td className="px-2 py-2 text-center"><Switch size="sm" on={!!f.caveats} disabled={!f.enabled || ws !== "all"} onChange={(on) => set(kind, { caveats: on })} label="Aprova no máximo com ressalvas" /></td>
                       <td className="px-2 py-2">
                         <select value={f.extent ?? "whole"} disabled={!f.enabled || ws !== "all"} title={wsOnly} onChange={(e) => set(kind, { extent: e.target.value as FindingTypeConfig["extent"] })} className="rounded-md border border-line bg-sheet px-1.5 py-1 text-[13px]">
                           {Object.entries(EXTENT).map(([k, label]) => <option key={k} value={k}>{label}</option>)}
@@ -181,6 +183,7 @@ const COLUMN_HELP: Record<string, React.ReactNode> = {
   lock: "Ligada, o apontamento devolve o chamado ao fornecedor qualquer que seja o score (ex.: foto reaproveitada de outro chamado).",
   review: "Ligada, o apontamento leva o chamado para análise detalhada antes de aprovar ou devolver (ex.: possível chamado duplicado da mesma agência): a pessoa analista confere se o chamado deve seguir. Só a trava vem antes.",
   confidence: "O apontamento indica dificuldade do modelo em ler ou entender a entrada (escopo vago, foto ilegível…). Problemas do orçamento ou das fotos que o modelo enxergou não devem reduzir a confiança. Um redutor deixa a confiança média; dois mandam o chamado para análise detalhada.",
+  caveats: "Ponto a esclarecer que não impede aprovar (ex.: preço sem referência para comparar). Ligada, um chamado com nota de aprovar vira “Aprovar com ressalvas”.",
   returns: "Falta do fornecedor: o que ajustar já está claro (ex.: serviço pedido sem item no orçamento). Ligada, o chamado volta ao fornecedor qualquer que seja o score.",
   extent: "O desconto acompanha quanto do que foi enviado o apontamento atinge: valor em questão sobre o orçamento, fotos, itens ou documentos atingidos, ou serviços pedidos sem item. “Chamado inteiro” desconta sempre a severidade toda.",
   absorbs: <>Evita punir duas vezes o mesmo problema. Se esta regra e uma das marcadas aparecem juntas no mesmo chamado, só esta desconta; a outra continua no parecer como evidência.

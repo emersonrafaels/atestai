@@ -44,12 +44,14 @@ class ScoringStage(AnalysisStage):
                     spec.severity != f.severity
                     or spec.returns != f.returns
                     or spec.review != f.review
+                    or spec.caveats != f.caveats
                 ):
                     update = {
                         "severity": spec.severity,
                         "discount": rubric.discount_by_severity[spec.severity],
                         "returns": spec.returns,
                         "review": spec.review,
+                        "caveats": spec.caveats,
                     }
                     f = f.model_copy(update=update)
                 out.append(f)
