@@ -20,7 +20,7 @@ import re
 from datetime import date, datetime, timedelta
 
 from .analysis import AnalysisContext, AnalysisStage
-from .attachments import attachment_parts
+from .attachments import attachment_parts, chunked
 from .domain import (
     Attachment,
     AttachmentCategory,
@@ -33,7 +33,7 @@ from .domain import (
     Stage,
 )
 from .formatting import asks_for_after_service, brl
-from .llm import LlmSession
+from .llm import MAX_OUTPUT_TOKENS, LlmSession
 from .llm_schemas import DocumentAnalysis, ScopeReading
 from .observability import event
 from .providers import Part, ProviderError, TextPart
@@ -174,14 +174,43 @@ class DocumentStage(AnalysisStage):
             A transcrição e os campos extraídos de cada documento (data, agência, problema, solução, assinatura,
             preços citados, situação do serviço).
 
+        Mais documentos que [llm.max_images_per_call]: lidos em lotes desse tamanho e juntados (a leitura é por
+        documento, nada é agregado entre eles).
+
         Raises:
-            ProviderError: resposta inválida ou sem resposta do modelo.
+            ProviderError: resposta inválida ou sem resposta do modelo (em qualquer lote).
+        """
+        chunks = chunked(docs, self.cfg.llm.max_images_per_call)
+        if len(chunks) == 1:
+            return self._analyze_chunk(session, ticket, scope, items, docs)
+        event("documents_chunked", documents=len(docs), chunks=len(chunks))
+        parts = [
+            self._analyze_chunk(
+                session, ticket, scope, items, c, batch=(n, len(chunks))
+            )
+            for n, c in enumerate(chunks, 1)
+        ]
+        return DocumentAnalysis(
+            documents=[d for p in parts for d in p.documents],
+            notes=" ".join(p.notes.strip() for p in parts if p.notes.strip()),
+        )
+
+    def _analyze_chunk(
+        self,
+        session: LlmSession,
+        ticket: LoadedTicket,
+        scope: ScopeReading,
+        items: list[EvaluatedItem],
+        docs: list[Attachment],
+        batch: tuple[int, int] | None = None,
+    ) -> DocumentAnalysis:
+        """Uma chamada ao modelo principal com um lote de documentos.
 
         Os argumentos passados ao session.ask:
             task: "documents".
             parts: resumo do chamado + escopo + itens do orçamento (com preço unitário) + os documentos.
             output: `DocumentAnalysis`, uma leitura por documento.
-            max_tokens: 6000; usa o modelo principal (visão/PDF).
+            max_tokens: 2000 + 1500 por documento, até MAX_OUTPUT_TOKENS; usa o modelo principal (visão/PDF).
             meta: nomes e números dos documentos enviados, para o rastro.
         """
         # Itens com preço unitário: o modelo liga cada preço citado num documento ao item correspondente.
@@ -192,10 +221,16 @@ class DocumentStage(AnalysisStage):
             )
             or "(orçamento não lido)"
         )
+        part = (
+            f"Lote {batch[0]} de {batch[1]} dos documentos do chamado: leia só estes. "
+            if batch
+            else ""
+        )
         content: list[Part] = [
             TextPart(
                 f"{ticket.data.summary_text()}\n\nLEITURA DO ESCOPO:\n{ScopeStage.describe(scope)}\n\n"
-                f"ITENS DO ORÇAMENTO:\n{item_lines}\n\n{len(docs)} documentos a seguir; use o número do anexo como 'index'."
+                f"ITENS DO ORÇAMENTO:\n{item_lines}\n\n{part}{len(docs)} documentos a seguir; use o número do anexo como "
+                "'index'."
             )
         ]
         for a in docs:
@@ -204,8 +239,10 @@ class DocumentStage(AnalysisStage):
             "attachments": [a.name for a in docs],
             "indices": [a.index for a in docs],
         }
+        # a transcrição cresce com o número de documentos: limite fixo cortava a saída com muitos anexos
+        max_tokens = min(MAX_OUTPUT_TOKENS, 2000 + 1500 * len(docs))
         return session.ask(
-            "documents", content, DocumentAnalysis, max_tokens=6000, meta=meta
+            "documents", content, DocumentAnalysis, max_tokens=max_tokens, meta=meta
         )
 
     @staticmethod

@@ -53,7 +53,10 @@ timeout_per_1k_tokens_s = 8
 timeout_min_s = 60
 timeout_max_s = 600
 image_max_side = 1568
-use_disk_cache = true    # não paga duas vezes pela mesma requisição
+# Imagens/anexos por chamada: chamados com mais fotos que isso (ex.: 100+) são identificados e analisados em lotes, para a
+# resposta caber no limite de tokens de saída e respeitar o máximo de imagens por pedido dos provedores.
+max_images_per_call = 20
+use_disk_cache = true   # não paga duas vezes pela mesma requisição
 
 [default.llm.provider_options.iara]
 # usado só quando algum modelo é "iara:..."

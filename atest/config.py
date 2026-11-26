@@ -93,6 +93,9 @@ class LlmSettings(_Section):
     timeout_min_s: float = Field(60, ge=1)
     timeout_max_s: float = Field(600, ge=1)
     image_max_side: int = 1568
+    # imagens/anexos por chamada ao modelo: acima disso as etapas de anexos, fotos e documentos dividem em lotes
+    # (resposta cabe no limite de saída e respeita o máximo de imagens por pedido dos provedores)
+    max_images_per_call: int = Field(20, ge=1)
     use_disk_cache: bool = True
     refresh_cache: bool = Field(
         False,

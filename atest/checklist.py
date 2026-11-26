@@ -7,8 +7,10 @@
 
 from __future__ import annotations
 
+import logging
+
 from .analysis import AnalysisContext, AnalysisStage
-from .attachments import attachment_parts
+from .attachments import attachment_parts, chunked
 from .domain import (
     AttachmentCategory,
     ChecklistResult,
@@ -18,9 +20,10 @@ from .domain import (
     Recommendation,
     Stage,
 )
-from .llm import LlmSession
-from .llm_schemas import AttachmentIdentification
-from .providers import Part, TextPart
+from .llm import MAX_OUTPUT_TOKENS, LlmSession, LlmTimeout
+from .llm_schemas import AttachmentIdentification, IdentifiedAttachment
+from .observability import event
+from .providers import Part, ProviderError, TextPart
 from .repository import LoadedTicket, QuoteError, read_ticket_quote
 
 
@@ -104,7 +107,10 @@ class ChecklistStage(AnalysisStage):
     def _classify_with_model(
         self, session: LlmSession, ticket: LoadedTicket, others: list
     ) -> list[ClassifiedAttachment]:
-        """Identifica fotos e documentos com o modelo rápido.
+        """Identifica fotos e documentos com o modelo rápido, em lotes de até [llm.max_images_per_call] anexos.
+
+        Chamado com muitas fotos (ex.: 100+) numa chamada só estourava o limite de tokens de saída; em lotes, cada
+        resposta é pequena. Lote que falha é dividido ao meio e tentado de novo (até MIN_CHUNK anexos).
 
         Args:
             session: sessão de LLM do chamado.
@@ -114,40 +120,20 @@ class ChecklistStage(AnalysisStage):
         Returns:
             Um `ClassifiedAttachment` por anexo; o que o modelo não devolveu fica como "outro", ilegível.
 
-        Os argumentos passados ao session.ask:
-            task: "identify_attachments" (prompt de sistema em config/prompts.toml).
-            parts: resumo do chamado + categorias possíveis + o conteúdo de cada anexo (imagem ou PDF).
-            output: `AttachmentIdentification`, uma identificação por anexo.
-            fast: True, usa o modelo rápido (tarefa simples, muitas imagens).
-            max_tokens: 3000.
-            meta: nomes e números dos anexos enviados, para o rastro.
+        Raises:
+            ProviderError: um lote falhou mesmo dividido no tamanho mínimo (marcar os anexos como "não identificado"
+                devolveria o chamado ao fornecedor sem motivo real).
         """
-        # Categorias aceitas (config/checklists.toml), listadas no pedido para o modelo escolher uma.
-        categories = "\n".join(
-            f"- {k}: {v}" for k, v in self.references.attachment_categories.items()
-        )
-        content: list[Part] = [
-            TextPart(
-                f"{ticket.data.summary_text()}\n\nCATEGORIAS POSSÍVEIS:\n{categories}"
-                f"\n\nA seguir, {len(others)} anexos. Identifique todos, usando o número do anexo como 'index'."
+        chunks = chunked(others, self.cfg.llm.max_images_per_call)
+        if len(chunks) > 1:
+            event("attachments_chunked", attachments=len(others), chunks=len(chunks))
+        identified: list[IdentifiedAttachment] = []
+        for n, chunk in enumerate(chunks, 1):
+            identified += self._identify_resilient(
+                session, ticket, chunk, (n, len(chunks)) if len(chunks) > 1 else None
             )
-        ]
-        # Cada anexo vai como imagem (reduzida a [llm.image_max_side]) ou PDF, precedido do rótulo "Anexo N".
-        for a in others:
-            content += attachment_parts(a, self.cfg.llm.image_max_side)
-        resp = session.ask(
-            "identify_attachments",
-            content,
-            AttachmentIdentification,
-            fast=True,
-            max_tokens=3000,
-            meta={
-                "attachments": [a.name for a in others],
-                "indices": [a.index for a in others],
-            },
-        )
         # Liga a resposta ao anexo pelo número; anexo esquecido pelo modelo cai no padrão "não identificado".
-        by_index = {x.index: x for x in resp.attachments}
+        by_index = {x.index: x for x in identified}
         out = []
         for a in others:
             x = by_index.get(a.index)
@@ -162,6 +148,85 @@ class ChecklistStage(AnalysisStage):
                 )
             )
         return out
+
+    MIN_CHUNK = 6  # menor lote ao dividir um lote que falhou
+
+    def _identify_resilient(
+        self,
+        session: LlmSession,
+        ticket: LoadedTicket,
+        chunk: list,
+        batch: tuple[int, int] | None,
+    ) -> list[IdentifiedAttachment]:
+        """Identifica um lote; se falhar (resposta cortada ou fora do formato), divide ao meio e tenta cada metade.
+
+        Raises:
+            ProviderError: o lote já está no tamanho mínimo (ou a API travou) e mesmo assim falhou.
+        """
+        try:
+            return self._identify_chunk(session, ticket, chunk, batch)
+        except ProviderError as e:
+            # Lote pequeno ou API travada: dividir não resolve (só multiplicaria a espera).
+            if len(chunk) <= self.MIN_CHUNK or isinstance(e, LlmTimeout):
+                raise
+            event(
+                "attachments_split",
+                logging.WARNING,
+                error=str(e)[:300],
+                attachments=len(chunk),
+            )
+        half = (len(chunk) + 1) // 2
+        return self._identify_resilient(
+            session, ticket, chunk[:half], batch
+        ) + self._identify_resilient(session, ticket, chunk[half:], batch)
+
+    def _identify_chunk(
+        self,
+        session: LlmSession,
+        ticket: LoadedTicket,
+        chunk: list,
+        batch: tuple[int, int] | None = None,
+    ) -> list[IdentifiedAttachment]:
+        """Uma chamada ao modelo rápido para identificar um lote de anexos.
+
+        Os argumentos passados ao session.ask:
+            task: "identify_attachments" (prompt de sistema em config/prompts.toml).
+            parts: resumo do chamado + categorias possíveis + o conteúdo de cada anexo (imagem ou PDF).
+            output: `AttachmentIdentification`, uma identificação por anexo.
+            fast: True, usa o modelo rápido (tarefa simples, muitas imagens).
+            max_tokens: 600 + 120 por anexo (20 anexos ≈ 3000), até MAX_OUTPUT_TOKENS.
+            meta: nomes e números dos anexos enviados, para o rastro.
+        """
+        # Categorias aceitas (config/checklists.toml), listadas no pedido para o modelo escolher uma.
+        categories = "\n".join(
+            f"- {k}: {v}" for k, v in self.references.attachment_categories.items()
+        )
+        part = (
+            f"Lote {batch[0]} de {batch[1]} dos anexos do chamado: identifique só estes. "
+            if batch
+            else ""
+        )
+        content: list[Part] = [
+            TextPart(
+                f"{ticket.data.summary_text()}\n\nCATEGORIAS POSSÍVEIS:\n{categories}"
+                f"\n\n{part}A seguir, {len(chunk)} anexos. Identifique todos, usando o número do anexo como 'index'."
+            )
+        ]
+        # Cada anexo vai como imagem (reduzida a [llm.image_max_side]) ou PDF, precedido do rótulo "Anexo N".
+        for a in chunk:
+            content += attachment_parts(a, self.cfg.llm.image_max_side)
+        resp = session.ask(
+            "identify_attachments",
+            content,
+            AttachmentIdentification,
+            fast=True,
+            max_tokens=min(MAX_OUTPUT_TOKENS, 600 + 120 * len(chunk)),
+            meta={
+                "attachments": [a.name for a in chunk],
+                "indices": [a.index for a in chunk],
+            },
+        )
+        return resp.attachments
 
     # ------------------------------------------------------------------ regra do checklist
     def evaluate(

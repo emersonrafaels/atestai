@@ -17,6 +17,7 @@ from .attachments import (
     HashCache,
     Hashes,
     attachment_parts,
+    chunked,
     compute_hashes,
     detail_level,
     distance,
@@ -282,8 +283,11 @@ class PhotoStage(AnalysisStage):
     ) -> PhotoAnalysis | None:
         """Análise das fotos que não derruba o chamado quando a resposta do modelo falha (ex.: saída estruturada da IARA/Bedrock).
 
-        1. todas as fotos numa chamada; 2. se falhar, de novo (falhas de formato costumam ser pontuais); 3. com mais de
-        CHUNK fotos, em lotes menores, juntando o resultado; 4. se nada der certo, None (o chamado segue com redutor).
+        Mais fotos que [llm.max_images_per_call] (ex.: 100+): direto em lotes desse tamanho, sem a chamada com todas (a
+        resposta não caberia no limite de saída); lote que falha é refeito em sublotes de CHUNK.
+        Até esse limite: 1. todas as fotos numa chamada; 2. se falhar, de novo (falhas de formato costumam ser pontuais);
+        3. com mais de CHUNK fotos, em lotes menores, juntando o resultado. Se nada der certo, None (o chamado segue
+        com redutor).
 
         Args:
             session: sessão de LLM do chamado.
@@ -295,6 +299,19 @@ class PhotoStage(AnalysisStage):
         Returns:
             A análise das fotos (juntada, se feita em lotes); None se o modelo não devolveu resposta válida.
         """
+        # Muitas fotos: lotes desde o início (a chamada com todas seria cortada no limite de tokens de saída).
+        size = self.cfg.llm.max_images_per_call
+        if len(photos) > size:
+            chunks = chunked(photos, size)
+            event(
+                "photos_chunked",
+                photos=len(photos),
+                chunks=len(chunks),
+                proactive=True,
+            )
+            return self._analyze_chunks(
+                session, ticket, scope, items, chunks, resplit=True
+            )
         # 1ª tentativa: todas as fotos numa chamada só.
         try:
             return self.analyze(session, ticket, scope, items, photos)
@@ -325,8 +342,8 @@ class PhotoStage(AnalysisStage):
                     photos=len(photos),
                 )
                 return None
-        # Muitas fotos: divide em lotes de CHUNK; basta um lote falhar para desistir (resultado parcial enganaria).
-        chunks = [photos[i : i + self.CHUNK] for i in range(0, len(photos), self.CHUNK)]
+        # Mais de CHUNK fotos: divide em lotes de CHUNK.
+        chunks = chunked(photos, self.CHUNK)
         event(
             "photos_chunked",
             logging.WARNING,
@@ -334,24 +351,72 @@ class PhotoStage(AnalysisStage):
             chunks=len(chunks),
             error=str(first)[:300],
         )
+        return self._analyze_chunks(session, ticket, scope, items, chunks)
+
+    def _analyze_chunks(
+        self,
+        session: LlmSession,
+        ticket: LoadedTicket,
+        scope: ScopeReading,
+        items: list[EvaluatedItem],
+        chunks: list[list[Attachment]],
+        resplit: bool = False,
+    ) -> PhotoAnalysis | None:
+        """Analisa lote a lote e junta o resultado; basta um lote falhar de vez para desistir (resultado parcial enganaria).
+
+        Args:
+            chunks: as fotos já divididas em lotes.
+            resplit: True refaz o lote que falhou em sublotes de CHUNK antes de desistir (exceto se a API travou).
+
+        Returns:
+            A análise juntada (`merge`); None se algum lote (ou sublote) não teve resposta válida.
+        """
+        parts = self._chunk_parts(session, ticket, scope, items, chunks, resplit)
+        return self.merge(parts) if parts is not None else None
+
+    def _chunk_parts(
+        self,
+        session: LlmSession,
+        ticket: LoadedTicket,
+        scope: ScopeReading,
+        items: list[EvaluatedItem],
+        chunks: list[list[Attachment]],
+        resplit: bool,
+    ) -> list[PhotoAnalysis] | None:
+        """A leitura de cada lote (sublotes no lugar do lote que falhou), ou None se algum falhou de vez."""
+        total = len(chunks)
         parts: list[PhotoAnalysis] = []
         for n, chunk in enumerate(chunks, 1):
             try:
                 parts.append(
-                    self.analyze(
-                        session, ticket, scope, items, chunk, batch=(n, len(chunks))
-                    )
+                    self.analyze(session, ticket, scope, items, chunk, batch=(n, total))
                 )
+                continue
             except ProviderError as e:
+                if not resplit or len(chunk) <= self.CHUNK or isinstance(e, LlmTimeout):
+                    event(
+                        "photos_degraded",
+                        logging.WARNING,
+                        error=str(e)[:300],
+                        photos=len(chunk),
+                        chunk=n,
+                    )
+                    return None
                 event(
-                    "photos_degraded",
+                    "photos_chunk_split",
                     logging.WARNING,
                     error=str(e)[:300],
                     photos=len(chunk),
                     chunk=n,
                 )
+            # O lote falhou: refaz em sublotes menores (falha costuma ser resposta cortada ou fora do formato).
+            sub = self._chunk_parts(
+                session, ticket, scope, items, chunked(chunk, self.CHUNK), False
+            )
+            if sub is None:
                 return None
-        return self.merge(parts)
+            parts += sub
+        return parts
 
     @staticmethod
     def with_unchecked_items(
@@ -431,19 +496,32 @@ class PhotoStage(AnalysisStage):
                         "per_photo": f"{prev.per_photo}; {c.per_photo}",
                     }
                 )
+
+        # Textos livres: um trecho por lote; com mais de um lote, cada trecho diz de que fotos fala ("Fotos 21–40:").
+        def joined(field: str) -> str:
+            out = []
+            for p in parts:
+                text = getattr(p, field).strip()
+                if not text:
+                    continue
+                idx = [f.index for f in p.photos]
+                if len(parts) > 1 and idx:
+                    lo, hi = min(idx), max(idx)
+                    text = (
+                        f"Fotos {lo}–{hi}: {text}" if lo != hi else f"Foto {lo}: {text}"
+                    )
+                out.append(text)
+            return " ".join(out)
+
         return PhotoAnalysis(
             photos=[f for p in parts for f in p.photos],
             has_before_photo=any(p.has_before_photo for p in parts),
-            problem_assessment=" ".join(
-                p.problem_assessment for p in parts if p.problem_assessment
-            ).strip(),
-            done_justification=" ".join(
-                p.done_justification for p in parts if p.done_justification
-            ).strip(),
+            problem_assessment=joined("problem_assessment"),
+            done_justification=joined("done_justification"),
             done_service=done,
             items_without_photo=sorted(missing),
             quantity_checks=list(checks.values()),
-            notes=" ".join(p.notes for p in parts if p.notes).strip(),
+            notes=joined("notes"),
         )
 
     @staticmethod

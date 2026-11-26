@@ -193,7 +193,17 @@ def humanize(name: str, f: dict[str, Any]) -> str:
     if name == "photos_retry":
         return f"Análise das fotos falhou ({f.get('error')}); tentando de novo"
     if name == "photos_chunked":
+        if f.get("proactive"):
+            return f"Análise das fotos: {f.get('photos')} fotos, analisadas em {f.get('chunks')} lotes"
         return f"Análise das {f.get('photos')} fotos falhou; tentando em {f.get('chunks')} lotes menores"
+    if name == "photos_chunk_split":
+        return f"Análise das fotos: lote {f.get('chunk')} ({f.get('photos')} fotos) falhou ({f.get('error')}); refazendo em lotes menores"
+    if name == "attachments_chunked":
+        return f"Identificação dos anexos: {f.get('attachments')} anexos, identificados em {f.get('chunks')} lotes"
+    if name == "attachments_split":
+        return f"Identificação dos anexos: lote de {f.get('attachments')} falhou ({f.get('error')}); dividindo ao meio"
+    if name == "documents_chunked":
+        return f"Leitura dos documentos: {f.get('documents')} documentos, lidos em {f.get('chunks')} lotes"
     if name == "photos_degraded":
         return f"Fotos não analisadas ({f.get('error')}): o chamado segue com confiança reduzida para conferência manual"
     if name == "photos_quantity_unchecked":

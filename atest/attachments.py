@@ -6,7 +6,9 @@ import io
 import json
 import threading
 from datetime import datetime
+from collections.abc import Sequence
 from pathlib import Path
+from typing import TypeVar
 
 import imagehash
 from PIL import ExifTags, Image, ImageFilter, ImageOps, ImageStat
@@ -15,6 +17,13 @@ from .domain import Attachment
 from .providers import DocumentPart, ImagePart, Part, TextPart
 
 Hashes = tuple[imagehash.ImageHash, imagehash.ImageHash]
+T = TypeVar("T")
+
+
+def chunked(seq: Sequence[T], size: int) -> list[list[T]]:
+    """Divide `seq` em lotes de até `size` itens, na ordem (o último pode ser menor)."""
+    size = max(1, size)
+    return [list(seq[i : i + size]) for i in range(0, len(seq), size)]
 
 
 def image(path: Path, max_side: int = 1568) -> ImagePart:

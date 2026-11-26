@@ -189,6 +189,105 @@ def test_retry_then_chunks_then_merge(stage, monkeypatch):
     ]  # sem repetir o mesmo pedido
 
 
+class BigBatchFails(FlakySession):
+    """Sessão falsa que falha (resposta cortada) em qualquer chamada com mais de `limit` fotos."""
+
+    def __init__(self, limit: int, also_fail_at: int | None = None):
+        super().__init__(fails=0, error=ProviderError("cortada", truncated=True))
+        self.limit, self.also_fail_at = limit, also_fail_at
+
+    def ask(self, task, content, output, max_tokens, meta):
+        self.calls.append(len(meta["indices"]))
+        if len(meta["indices"]) > self.limit or len(self.calls) == self.also_fail_at:
+            raise self.error
+        return analysis(meta["indices"], missing=[2], count=len(meta["indices"]))
+
+
+@pytest.fixture()
+def no_parts(monkeypatch):
+    monkeypatch.setattr("atest.photos.attachment_parts", lambda a, side: [])
+    monkeypatch.setattr(
+        "atest.photos.ScopeStage.describe", staticmethod(lambda scope: "(escopo)")
+    )
+
+
+def test_many_photos_go_straight_to_chunks(stage, no_parts, monkeypatch):
+    monkeypatch.setattr(stage.cfg.llm, "max_images_per_call", 20)
+    ch = load_ticket(stage.cfg.tickets_dir / "04164650")
+    s = FlakySession(fails=0)
+    merged = stage.analyze_resilient(s, ch, scope_stub(), [], photos(45))
+    assert s.calls == [20, 20, 5]  # sem a chamada com as 45 fotos juntas
+    assert [p.index for p in merged.photos] == list(range(1, 46))
+    assert merged.quantity_checks[0].count_seen == 45
+
+
+def test_failed_chunk_is_resplit(stage, no_parts, monkeypatch):
+    monkeypatch.setattr(stage.cfg.llm, "max_images_per_call", 20)
+    ch = load_ticket(stage.cfg.tickets_dir / "04164650")
+    s = BigBatchFails(limit=6)
+    merged = stage.analyze_resilient(s, ch, scope_stub(), [], photos(25))
+    # lote de 20 cortado → 6+6+6+2; lote de 5 passa direto
+    assert s.calls == [20, 6, 6, 6, 2, 5]
+    assert [p.index for p in merged.photos] == list(range(1, 26))
+    # sublote que também falha: desiste (resultado parcial enganaria)
+    s = BigBatchFails(limit=6, also_fail_at=3)
+    assert stage.analyze_resilient(s, ch, scope_stub(), [], photos(25)) is None
+
+
+def test_merge_labels_text_by_photo_range(stage):
+    a = analysis([1, 2]).model_copy(update={"notes": "nota A"})
+    b = analysis([3]).model_copy(update={"notes": "nota B"})
+    assert stage.merge([a, b]).notes == "Fotos 1–2: nota A Foto 3: nota B"
+    assert stage.merge([a]).notes == "nota A"  # um lote só: sem prefixo
+
+
+def test_checklist_identifies_attachments_in_chunks(cfg, ref, monkeypatch):
+    from atest.checklist import ChecklistStage
+    from atest.llm_schemas import AttachmentIdentification, IdentifiedAttachment
+
+    monkeypatch.setattr(cfg.llm, "max_images_per_call", 20)
+    monkeypatch.setattr("atest.checklist.attachment_parts", lambda a, side: [])
+    stage = ChecklistStage(cfg, ref, ScoreCalculator(ref.rubric))
+    ch = load_ticket(cfg.tickets_dir / "04164650")
+
+    class Session:
+        def __init__(self, limit):
+            self.limit, self.calls, self.tokens = limit, [], []
+
+        def ask(self, task, content, output, fast, max_tokens, meta):
+            self.calls.append(len(meta["indices"]))
+            self.tokens.append(max_tokens)
+            if len(meta["indices"]) > self.limit:
+                raise ProviderError("cortada", truncated=True)
+            return AttachmentIdentification(
+                attachments=[
+                    IdentifiedAttachment(
+                        index=i,
+                        category="room_after_photo",
+                        moment="after",
+                        readable=True,
+                        short_description=f"foto {i}",
+                    )
+                    for i in meta["indices"]
+                ]
+            )
+
+    s = Session(limit=99)
+    out = stage._classify_with_model(s, ch, photos(105))
+    assert s.calls == [20] * 5 + [5]  # 105 anexos nunca numa chamada só
+    assert max(s.tokens) <= 3000
+    assert [a.index for a in out] == list(range(1, 106))
+    assert all(a.short_description != "não identificado" for a in out)
+    # lote cortado: dividido ao meio até caber
+    s = Session(limit=10)
+    out = stage._classify_with_model(s, ch, photos(25))
+    assert s.calls == [20, 10, 10, 5]
+    assert [a.index for a in out] == list(range(1, 26))
+    # lote mínimo ainda falhando: repassa o erro (não devolve o chamado por anexo "não identificado")
+    with pytest.raises(ProviderError):
+        stage._classify_with_model(Session(limit=0), ch, photos(25))
+
+
 def test_unread_photos_keep_ticket_going(stage, monkeypatch):
     from atest.analysis import AnalysisContext
 
