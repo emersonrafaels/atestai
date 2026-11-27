@@ -32,6 +32,7 @@ export const STAGES: { id: Stage; label: string }[] = [
   { id: "quote", label: "Orçamento" },
   { id: "photos", label: "Fotos" },
   { id: "documents", label: "Documentos" },
+  { id: "coherence", label: "Categoria e solução" },
   { id: "score", label: "Score" },
   { id: "assessment", label: "Parecer" },
 ];
@@ -54,6 +55,7 @@ export const FINDING_LABELS: Record<string, string> = {
   document_mismatch: "Documento não confere",
   document_date_inconsistent: "Data do documento fora do período",
   photo_mismatch: "Foto não corresponde",
+  report_answer_contradicted: "Resposta do relatório contradita pela foto",
   missing_after_photo: "Sem foto do concluído",
   after_photo_unconfirmed_location: "Local do depois não confirmado",
   missing_before_photo: "Sem foto do antes",
@@ -62,6 +64,10 @@ export const FINDING_LABELS: Record<string, string> = {
   photo_dated_before: "Data da foto anterior",
   spreadsheet_mismatch: "Planilha divergente",
   inconsistent_scope: "Escopo incoerente",
+  cause_miscategorized: "Vandalismo/desastre com categoria errada",
+  miscategorized_ticket: "Categoria ou sintoma errados",
+  solution_incoherent: "Solução não resolve o problema",
+  solution_partially_coherent: "Solução resolve só parte do problema",
   unverifiable_quantity: "Quantidade não verificável",
   item_without_photo: "Item sem foto",
   relevant_amount_at_issue: "Valor divergente relevante",
@@ -70,6 +76,7 @@ export const FINDING_LABELS: Record<string, string> = {
   photos_not_analyzed: "Fotos não analisadas pelo modelo",
   documents_not_analyzed: "Documentos não lidos pelo modelo",
   related_not_checked: "Chamados da agência não comparados",
+  coherence_not_checked: "Categoria e solução não conferidas",
 };
 
 /** Rótulo de um tipo de apontamento ou redutor; valor desconhecido aparece legível, sem "_". */
@@ -85,6 +92,7 @@ export const TASK_LABELS: Record<string, string> = {
   photos: "Análise das fotos",
   documents: "Leitura dos documentos (OCR)",
   related_tickets: "Chamados da agência",
+  coherence: "Categoria e solução",
   assessment: "Redação do parecer",
 };
 
@@ -141,9 +149,13 @@ export const REDUCER_HELP: Record<string, { what: string; todo: string }> = {
     what: "O modelo não devolveu uma leitura válida dos documentos. Eles não foram conferidos.",
     todo: "Rode a análise de novo ou confira os documentos manualmente.",
   },
+  coherence_not_checked: {
+    what: "O modelo não devolveu a conferência de categoria e solução: a causa do problema (vandalismo, desastre natural) e a coerência da solução não foram conferidas.",
+    todo: "Rode a análise de novo ou confira a categoria, o sintoma e a solução manualmente.",
+  },
 };
 /** Redutores que vêm de falha de leitura (não são apontamentos e não podem ser marcados como "não procede"). */
-export const READING_REDUCERS = new Set(["unreadable_quote", "photos_not_analyzed", "documents_not_analyzed"]);
+export const READING_REDUCERS = new Set(["unreadable_quote", "photos_not_analyzed", "documents_not_analyzed", "coherence_not_checked"]);
 export const MOMENT_LABEL: Record<string, string> = { before: "antes", after: "depois", during: "durante", undetermined: "indeterminado" };
 
 // ============================================================================ score: de onde vem cada ponto

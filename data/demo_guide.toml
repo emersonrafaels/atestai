@@ -36,7 +36,7 @@ tips = ["Os cartões 'Por tipo de problema' mostram quais trazem cada defeito."]
 
 [datasets.casos]
 label = "Casos Itaú - Salesforce"
-what = "14 chamados no formato do Salesforce (04…): 3 reconstituídos de chamados reais e 11 fictícios, montados para mostrar cada recurso do Atest.AI. As fotos são simuladas."
+what = "18 chamados no formato do Salesforce (04…): 3 reconstituídos de chamados reais e 15 fictícios, montados para mostrar cada recurso do Atest.AI. As fotos são simuladas."
 expect = "Não têm gabarito: analise no modo API (o simulado recusa). O esperado abaixo é o que foi plantado em cada caso (LEIAME.txt da pasta); o modelo real pode variar no score e em apontamentos menores."
 tips = [
   "Para a duplicidade aparecer, os chamados da mesma agência precisam estar na base, e estão: o Atest.AI compara com os abertos até 60 dias antes ou depois e com os que seguem abertos.",
@@ -76,6 +76,21 @@ description = "Contraprova da duplicidade: chamados da mesma agência que não d
 id = "real"
 label = "Reconstituídos do Salesforce"
 description = "Chamados reais (textos e orçamentos do Salesforce), com fotos simuladas."
+
+[[groups]]
+id = "volume"
+label = "Chamado com muitas fotos"
+description = "Mais de 100 fotos num chamado só: anexos e fotos analisados em lotes, sem estourar o limite de resposta do modelo."
+
+[[groups]]
+id = "pdf_report"
+label = "Relatório em PDF da SISR"
+description = "Relatório no formato checklist (pergunta, Sim/Não e foto), sem fotos soltas: as fotos são extraídas do PDF e conferidas com a resposta ao lado."
+
+[[groups]]
+id = "coherence"
+label = "Categoria e solução"
+description = "Depois das fotos e dos documentos, com todas as evidências: a causa (vandalismo, desastre natural) bate com a categoria e o sintoma? A solução resolve o problema relatado?"
 
 # duplicidade
 
@@ -307,3 +322,65 @@ show = [
   "É o chamado mais antigo do duplicado 04175207.",
 ]
 linked = ["04175207"]
+
+# muitas fotos (100+)
+
+[[cases]]
+id = "04175533"
+group = "volume"
+title = "Vistoria geral da agência com 116 fotos"
+expect = ["return_to_supplier", "approve_with_caveats", "detailed_review"]
+findings = ["out_of_scope_item", "photo_mismatch"]
+show = [
+  "O parecer sai sem erro: a identificação dos anexos e a análise das fotos vão em lotes de 20 ([llm] max_images_per_call).",
+  "Na aba Fotos, as 116 fotos avaliadas; no checklist, nenhum anexo 'não identificado'.",
+  "Item 16, pintura de fachada (R$ 3.230, ~27% do orçamento): fora do escopo da vistoria e sem foto da fachada.",
+  "As imagens de câmera de segurança no meio da sequência saem como 'Foto não corresponde ao escopo', mesmo caindo num lote do meio.",
+]
+linked = []
+
+# relatório em PDF no formato checklist (SISR)
+
+[[cases]]
+id = "04175640"
+group = "pdf_report"
+title = "Câmera externa vandalizada: só o relatório em PDF"
+expect = ["approve_with_caveats", "detailed_review", "return_to_supplier"]
+findings = ["report_answer_contradicted", "cause_miscategorized"]
+show = [
+  "O fornecedor mandou só o orçamento e o PDF (pergunta + Sim/Não + foto). O checklist passa: a foto da câmera e a imagem do gravador vêm de dentro do PDF.",
+  "Na aba Fotos, as 3 fotos extraídas, cada uma com 'Página N do Relatorio_...pdf' e a pergunta e a resposta ao lado.",
+  "Pergunta 4: diz que a imagem da câmera 05 mostra a entrada do autoatendimento (Sim), mas a foto é de uma câmera interna, do backoffice: 'Resposta do relatório contradita pela foto'.",
+  "Na aba Documentos, as 7 perguntas do relatório com as respostas marcadas.",
+  "Na aba Escopo, 'Categoria e solução': a câmera foi vandalizada (pergunta 1: Sim), mas o chamado foi aberto como Cftv / Sem imagem -> 'Vandalismo/desastre com categoria errada' (análise detalhada).",
+]
+linked = []
+
+# categoria e solução
+
+[[cases]]
+id = "04175751"
+group = "coherence"
+title = "Tomada aberta como vandalismo, mas queimada"
+expect = ["detailed_review"]
+findings = ["cause_miscategorized"]
+show = [
+  "O chamado foi aberto como Elétrica / Vandalismo ('cliente forçou um carregador').",
+  "As fotos mostram a tomada enegrecida e derretida em volta dos furos: aquecimento (mau contato ou sobrecarga), não quebra por força.",
+  "Na aba Escopo, 'Categoria e solução': causa vista 'Desgaste ou falha comum', aberto como 'Vandalismo' -> análise detalhada. Vandalismo tem tratamento próprio (B.O., seguro, verba).",
+  "A solução (trocar a tomada) e o orçamento estão coerentes: só a causa está errada.",
+]
+linked = []
+
+[[cases]]
+id = "04175862"
+group = "coherence"
+title = "Infiltração no forro: só troca e pinta"
+expect = ["approve_with_caveats", "return_to_supplier"]
+findings = ["solution_partially_coherent"]
+show = [
+  "Infiltração no forro do salão: 'pinga água nos dias de chuva forte'.",
+  "A solução e o orçamento só trocam as placas, aplicam antimofo e pintam; nada localiza nem corrige a origem da água (a LPU tem IMP-001, tratamento de infiltração).",
+  "Na aba Escopo, 'Categoria e solução': 'Resolve só parte' (ou 'Não resolve'), com o motivo. Categoria e sintoma estão certos.",
+]
+linked = []

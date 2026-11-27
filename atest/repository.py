@@ -23,6 +23,7 @@ from .domain import (
     Ticket,
 )
 from .formatting import pt_validation_error
+from .pdf_photos import extract_pdf_photos
 
 log = logging.getLogger(__name__)
 
@@ -62,7 +63,9 @@ def load_ticket(folder: Path) -> LoadedTicket:
         folder: pasta do chamado (com ticket.json e a subpasta attachments/).
 
     Returns:
-        O chamado validado, a pasta e os anexos numerados a partir de 1 (na ordem de ticket.json).
+        O chamado validado, a pasta e os anexos numerados a partir de 1 (na ordem de ticket.json). As fotos embutidas
+        nos PDFs entram depois, como anexos de foto com `source` (o PDF), `page` e `context` (texto ao lado), numeradas
+        em seguida aos anexos de ticket.json.
 
     Raises:
         FileNotFoundError: a pasta não tem ticket.json.
@@ -82,6 +85,19 @@ def load_ticket(folder: Path) -> LoadedTicket:
         )
         for i, a in enumerate(data.attachments, 1)
     ]
+    # Fotos de dentro dos PDFs (relatório em formato checklist da SISR): viram anexos de foto, como se viessem soltas.
+    for pdf in [a for a in attachments if a.content_type == "application/pdf"]:
+        for p in extract_pdf_photos(pdf.path):
+            attachments.append(
+                Attachment(
+                    index=len(attachments) + 1,
+                    path=p.path,
+                    content_type="image/jpeg",
+                    source=pdf.name,
+                    page=p.page,
+                    context=p.context,
+                )
+            )
     return LoadedTicket(data=data, folder=folder, attachments=attachments)
 
 

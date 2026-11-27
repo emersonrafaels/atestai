@@ -8,7 +8,7 @@ export type Recommendation =
   | "detailed_review"
   | "checklist_returned";
 
-export type Stage = "checklist" | "scope" | "related" | "quote" | "photos" | "documents" | "score" | "assessment" | "done";
+export type Stage = "checklist" | "scope" | "related" | "quote" | "photos" | "documents" | "coherence" | "score" | "assessment" | "done";
 
 export interface Expected {
   recommendation: Recommendation;
@@ -167,6 +167,12 @@ export interface EvaluatedPhoto {
   exif_date: string | null;
   reused_from: string | null;
   integrity_signals: string[];
+  /** foto de relatório em PDF (formato checklist da SISR) que contradiz a resposta marcada */
+  contradicts_report?: string;
+  /** foto extraída de PDF: o PDF de origem, a página e o texto ao lado (pergunta e resposta) */
+  source?: string;
+  page?: number;
+  context?: string;
 }
 
 export interface ClassifiedAttachment {
@@ -212,6 +218,8 @@ export interface EvaluatedDocument {
   /** o documento prova que o serviço já foi feito? (yes só com afirmação explícita) */
   service_status?: "yes" | "partial" | "no" | "undetermined";
   prices: { description: string; value: number; quote_item: number; same_product?: "yes" | "partial" | "no" | "undetermined" }[];
+  /** relatório em formato checklist (SISR): pergunta e resposta marcada */
+  answers?: { question: string; answer: string; note: string; has_photo: boolean }[];
   matches_ticket: "yes" | "partial" | "no" | "undetermined";
   divergences: string[];
   reason: string;
@@ -275,6 +283,8 @@ export interface Assessment {
   documents?: EvaluatedDocument[];
   /** chamados da mesma agência comparados com este (pareceres antigos não têm) */
   related?: RelatedTicketsCheck | null;
+  /** categoria/sintoma × causa vista nas evidências e solução × problema (pareceres antigos não têm) */
+  coherence?: CoherenceReview | null;
   summary: string;
   supplier_message: string;
   llm_calls: LlmCall[];
@@ -972,3 +982,21 @@ export const adminApi = {
   changePassword: (current: string, next: string) =>
     askAdmin<void>("/api/admin/password", { method: "POST", body: JSON.stringify({ current, new: next }) }),
 };
+
+/** Etapa "Categoria e solução": a causa vista nas evidências, se categoria e sintoma servem e se a solução resolve. */
+export type Cause = "vandalism" | "natural_disaster" | "wear_or_failure" | "other" | "undetermined";
+export interface CoherenceReview {
+  reported_problem: string;
+  cause: Cause;
+  cause_evidence: string;
+  category_fits: boolean;
+  symptom_fits: boolean;
+  suggested_category: string;
+  suggested_symptom: string;
+  classification_note: string;
+  solution: string;
+  solution_coherent: "yes" | "partial" | "no" | "undetermined";
+  solution_note: string;
+  /** causa especial indicada pela categoria/sintoma do chamado ("" = nenhuma) */
+  ticket_cause: string;
+}

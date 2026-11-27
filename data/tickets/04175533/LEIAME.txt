@@ -1,0 +1,19 @@
+CASO FICTÍCIO criado para testar o Atest.AI (não é um chamado real do Salesforce): agência, fornecedor, valores e
+problemas foram inventados. As imagens em attachments/ são SIMULADAS (recortes de imagens geradas por IA da biblioteca data/real_photos_itau, OpenAI gpt-image); não são evidência real.
+A origem também está no EXIF (ImageDescription) de cada imagem. Gerado por generator/build_salesforce_cases.py.
+
+Chamado 04175533 - Vistoria geral da agência com 116 fotos (aprovação do orçamento).
+
+Para que serve: testar chamado com MUITAS fotos, como os do Itaú com 100+ que davam erro de max_tokens.
+Com [llm] max_images_per_call = 20, a identificação dos anexos e a análise das fotos vão em lotes de 20; no
+log aparecem attachments_chunked e photos_chunked (proactive=True), sem 'resposta cortada'.
+O que conferir: o parecer sai (sem erro), com TODAS as fotos na aba Fotos e nenhum anexo 'não identificado'.
+
+Problemas plantados (o que o parecer deveria apontar):
+- ITEM FORA DO ESCOPO: o item 16, pintura de fachada (85 m² x R$ 38,00 = R$ 3.230,00, cerca de 27% do
+  orçamento), não aparece na vistoria nem na solução, e nenhuma foto mostra a fachada -> out_of_scope_item.
+- FOTOS FORA DO ESCOPO: no meio da sequência há imagens de câmera de segurança (corredor e estacionamento),
+  que não têm relação com a vistoria de infraestrutura -> photo_mismatch (uma por foto). Elas caem num lote
+  do meio: servem para conferir que o apontamento de um lote sobrevive à junção dos lotes.
+Os demais itens são da LPU, pelo preço da LPU, e batem com a vistoria. Com tantas fotos, a contagem por item
+(quantidade cobrada x fotos) pode variar no modelo real: confira o raciocínio na aba Fotos.

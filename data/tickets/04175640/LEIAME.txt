@@ -1,0 +1,25 @@
+CASO FICTÍCIO criado para testar o Atest.AI (não é um chamado real do Salesforce): agência, fornecedor, valores e
+problemas foram inventados. As imagens em attachments/ são SIMULADAS (recortes de imagens geradas por IA da biblioteca data/real_photos_itau, OpenAI gpt-image; as do relatório estão DENTRO do PDF Relatorio_Atendimento_04175640.pdf); não são evidência real.
+A origem também está no EXIF (ImageDescription) de cada imagem. Gerado por generator/build_salesforce_cases.py.
+
+Chamado 04175640 - Câmera externa vandalizada, sem imagem (retorno após a execução, SISR).
+
+Para que serve: testar o formato de relatório mais comum na SISR. O fornecedor mandou só o orçamento e um PDF
+no formato checklist (pergunta, resposta Sim/Não marcada e a foto que a demonstra), SEM fotos soltas.
+O Atest.AI extrai as 3 fotos de dentro do PDF (attachments/Relatorio_..._p01_foto01.jpg etc., com o manifesto
+.fotos.json) e as analisa como fotos, com a pergunta e a resposta ao lado. Antes disso, o chamado era devolvido
+no checklist mínimo (nenhum anexo de foto) e as fotos do PDF não eram conferidas.
+
+O que conferir: o checklist passa (foto do equipamento e imagem da câmera vêm do PDF); na aba Fotos, as 3 fotos
+com 'Página N do Relatorio_...pdf' e o texto da pergunta; na aba Documentos, as 7 perguntas com as respostas.
+
+Problema plantado (o que o parecer deveria apontar):
+- RESPOSTA CONTRADITA PELA FOTO: a pergunta 4 diz que a imagem da câmera 05 aparece no gravador mostrando a
+  ENTRADA DO AUTOATENDIMENTO (Sim), mas a foto ao lado mostra a imagem de uma câmera INTERNA, do backoffice
+  (mesas, computadores, armários) -> report_answer_contradicted. Sem imagem da câmera 05 funcionando, a prova
+  do serviço também fica em dúvida (sem foto do concluído ou local não confirmado).
+- A pergunta 1 (vandalizado: Sim) não tem foto: pode sair 'sem foto do antes'.
+- CAUSA ESPECIAL COM SINTOMA ERRADO: a câmera foi vandalizada (escopo e pergunta 1: Sim), mas o chamado foi
+  aberto como Cftv / Sem imagem -> cause_miscategorized (o sintoma certo seria Vandalismo), que leva à
+  análise detalhada.
+Orçamento: itens e preços da LPU da SISR, coerentes com a troca de uma câmera.

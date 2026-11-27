@@ -27,7 +27,7 @@ import random
 import shutil
 import sys
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 
 import piexif
@@ -41,6 +41,8 @@ sys.path.insert(0, str(ROOT))
 from atest.attachments import compute_hashes, detail_level, distance  # noqa: E402
 from atest.config import load_settings  # noqa: E402
 from atest.photos import PhotoIndex  # noqa: E402
+from atest.repository import load_ticket  # noqa: E402
+from pdf_report import Question, render_report  # noqa: E402
 from atest.spreadsheet import ITEM_HEADER, WIDTHS  # noqa: E402
 
 TICKETS = ROOT / "data" / "tickets"
@@ -90,6 +92,34 @@ class Case:
     maintenance_type: str = "corrective"
     blocks_opening: bool = False
     extra: dict = field(default_factory=dict)
+    report: Report | None = (
+        None  # relatório em PDF (formato checklist da SISR), com as fotos dentro dele
+    )
+
+
+@dataclass
+class ReportItem:
+    """Pergunta do relatório em PDF: resposta marcada (True = Sim, False = Não, None = N/A) e a foto que a demonstra."""
+
+    text: str
+    answer: bool | None
+    photo: Photo | None = None
+    note: str = ""
+
+
+@dataclass
+class Report:
+    """Relatório de atendimento em PDF no formato checklist da SISR (as fotos vão DENTRO do PDF, não soltas)."""
+
+    file: str
+    title: str
+    header: list[str]
+    items: list[ReportItem]
+    footer: list[str] = field(default_factory=list)
+
+    @property
+    def photos(self) -> list[Photo]:
+        return [q.photo for q in self.items if q.photo]
 
 
 HEADER = (
@@ -691,6 +721,394 @@ CASES: list[Case] = [
 ]
 
 
+# ------------------------------------------------------------------ chamado com muitas fotos (100+)
+# Vistoria geral da agência, com fotos de todos os ambientes, como os chamados do Itaú que chegam com 100+ fotos e
+# estouravam o limite de tokens de saída numa chamada só. Cada imagem da biblioteca rende três recortes (três fotos do
+# mesmo ponto, com enquadramentos diferentes); as imagens já usadas por outro caso desta lista ficam de fora, para não
+# parecerem reaproveitamento. As fotos de câmera de segurança no meio da sequência estão ali de propósito (fora do escopo).
+BULK_SOURCES: list[tuple[str, str]] = (
+    [  # pasta da biblioteca, o que a foto mostra (vai no EXIF)
+        ("ceiling_view__stains", "forro do salão com manchas de umidade"),
+        ("backoffice__stains", "forro do backoffice manchado"),
+        ("storage", "arquivo do backoffice"),
+        ("backoffice__lights_off", "luminárias apagadas no backoffice"),
+        ("ceiling_view", "luminárias do salão de atendimento"),
+        ("ceiling_view__led", "teto do salão com as luminárias"),
+        ("outlets__burned", "tomada queimada em estação de trabalho"),
+        ("outlets", "tomadas das estações de trabalho"),
+        ("door_closer", "mola aérea de porta batendo"),
+        ("door_closer__detail", "mola aérea vazando óleo, detalhe"),
+        ("under_sink_leak", "vazamento no sifão da pia do banheiro"),
+        ("bathroom", "banheiro dos funcionários"),
+        ("ac_filter__dirty", "filtro de split sujo"),
+        ("ac_filter", "filtro de split"),
+    ]
+)
+BULK_OFF_SCOPE: list[tuple[str, str]] = (
+    [  # plantadas: nada a ver com o escopo (SISR, não SETA)
+        ("cctv_view__corridor", "imagem de câmera de segurança do corredor"),
+        ("cctv_view__parking", "imagem de câmera de segurança do estacionamento"),
+    ]
+)
+# três cantos: o recorte central parecia demais com as fotos do conjunto itau (02…), que usam a imagem quase inteira
+BULK_CROPS = (
+    (0.0, 0.0, 0.66, 0.7),
+    (0.34, 0.0, 1.0, 0.7),
+    (0.34, 0.3, 1.0, 1.0),
+)
+BULK_OFF_SCOPE_CROP = (0.1, 0.08, 0.86, 0.9)
+
+
+def bulk_photos(day: str, start: str, used: set[str]) -> list[Photo]:
+    """Fotos da vistoria, na ordem em que o técnico percorre a agência (nomes com hora crescente).
+
+    Args:
+        day: data das fotos (AAAAMMDD).
+        start: hora da primeira foto (HHMMSS).
+        used: origens já usadas por outros casos (ficam de fora).
+
+    Returns:
+        Três recortes por imagem da biblioteca (sem as já usadas) e, no meio da sequência, um recorte de cada imagem de
+        câmera de segurança. Sem a biblioteca (fora do git), a lista sai vazia e `build` avisa.
+    """
+    rnd = random.Random(f"bulk-{day}")
+    clock = datetime.strptime(f"{day}{start}", "%Y%m%d%H%M%S")
+
+    def sources(folders: list[tuple[str, str]]) -> list[tuple[str, str]]:
+        out = []
+        for folder, desc in folders:
+            for f in sorted((LIBRARY / folder).glob("*.jpg")):
+                src = f"real_photos_itau/{folder}/{f.name}"
+                if src not in used:
+                    out.append((src, desc))
+        return out
+
+    plan: list[tuple[str, str, tuple[float, float, float, float]]] = [
+        (src, desc, crop) for src, desc in sources(BULK_SOURCES) for crop in BULK_CROPS
+    ]
+    # as fotos fora do escopo entram no meio (caem num lote do meio quando a análise é dividida)
+    middle = len(plan) // 2
+    plan[middle:middle] = [
+        (src, desc, BULK_OFF_SCOPE_CROP) for src, desc in sources(BULK_OFF_SCOPE)
+    ]
+    photos = []
+    for src, desc, crop in plan:
+        clock += timedelta(seconds=rnd.randint(35, 110))
+        photos.append(Photo(f"IMG_{clock:%Y%m%d_%H%M%S}.jpg", src, crop, desc))
+    return photos
+
+
+def bulk_case() -> Case:
+    used = {p.source for c in CASES for p in c.photos}
+    photos = bulk_photos("20261118", "084000", used)
+    return Case(
+        ticket_id="04175533",
+        workstream="SETA",
+        category="civil",
+        symptom="pecas_e_equipamentos_diversos",
+        scope=(
+            "Vistoria geral da agência feita pelo gerente com o fornecedor. Problemas encontrados: forro manchado e com "
+            "infiltração no salão de atendimento e no backoffice (cerca de 14 m²); 6 luminárias apagadas entre o salão e "
+            "o backoffice; 6 tomadas queimadas ou esquentando nas estações de trabalho; molas aéreas das portas do "
+            "backoffice e do banheiro vazando óleo e batendo a porta; vazamento no sifão da pia do banheiro dos "
+            "funcionários; 4 aparelhos split com filtro sujo, sem limpeza há meses. Fotos de todos os pontos em anexo."
+        ),
+        solution=(
+            "Correção dos itens da vistoria: tratamento da infiltração e recomposição do forro com pintura, troca das 6 "
+            "luminárias por LED, troca das 6 tomadas, troca das 2 molas aéreas, troca do sifão e limpeza com "
+            "higienização dos 4 splits."
+        ),
+        branch={
+            "code": "3390",
+            "name": "Ribeirão Preto Centro",
+            "environment": "area_interna_toda_agencia",
+        },
+        supplier="Manutec Facilities e Engenharia LTDA",
+        opening="2026-11-18",
+        submission="2026-11-20",
+        quote_file="Orcamento_Manutec_04175533.xlsx",
+        items=[
+            ("Recomposição de forro de gesso (recorte e reposição)", "m²", True, 14, 95.00),
+            ("Tratamento de infiltração com manta líquida/impermeabilizante", "m²", True, 16, 68.00),
+            ("Aplicação de fundo preparador antimofo", "m²", True, 14, 6.50),
+            ("Pintura de teto/forro em látex, 2 demãos", "m²", True, 14, 35.00),
+            ("Luminária LED de embutir 60x60, 40 W", "un", True, 6, 385.00),
+            ("Mão de obra de instalação de luminária", "un", True, 6, 80.00),
+            ("Descarte de luminárias e lâmpadas (logística reversa)", "vb", True, 1, 360.00),
+            ("Tomada 2P+T 10 A com placa", "un", True, 6, 28.00),
+            ("Mão de obra de substituição de tomada", "un", True, 6, 35.00),
+            ("Mola aérea (fecha-porta) para porta até 80 kg", "un", True, 2, 420.00),
+            ("Mão de obra de instalação de mola aérea", "un", True, 2, 150.00),
+            ("Sifão de PVC para pia", "un", True, 1, 38.00),
+            ("Mão de obra hidráulica", "h", True, 2, 85.00),
+            ("Limpeza preventiva de split até 24.000 BTU (evaporadora + condensadora)", "un", True, 4, 180.00),
+            ("Higienização com bactericida (por aparelho)", "un", True, 4, 45.00),
+            ("Pintura de fachada com tinta acrílica externa", "m²", True, 85, 38.00),
+            ("Visita técnica e deslocamento (SETA)", "vb", True, 1, 150.00),
+        ],  # fmt: skip
+        photos=photos,
+        readme=(
+            f"Chamado 04175533 - Vistoria geral da agência com {len(photos)} fotos (aprovação do orçamento).\n\n"
+            "Para que serve: testar chamado com MUITAS fotos, como os do Itaú com 100+ que davam erro de max_tokens.\n"
+            "Com [llm] max_images_per_call = 20, a identificação dos anexos e a análise das fotos vão em lotes de 20; no\n"
+            "log aparecem attachments_chunked e photos_chunked (proactive=True), sem 'resposta cortada'.\n"
+            "O que conferir: o parecer sai (sem erro), com TODAS as fotos na aba Fotos e nenhum anexo 'não identificado'.\n\n"
+            "Problemas plantados (o que o parecer deveria apontar):\n"
+            "- ITEM FORA DO ESCOPO: o item 16, pintura de fachada (85 m² x R$ 38,00 = R$ 3.230,00, cerca de 27% do\n"
+            "  orçamento), não aparece na vistoria nem na solução, e nenhuma foto mostra a fachada -> out_of_scope_item.\n"
+            "- FOTOS FORA DO ESCOPO: no meio da sequência há imagens de câmera de segurança (corredor e estacionamento),\n"
+            "  que não têm relação com a vistoria de infraestrutura -> photo_mismatch (uma por foto). Elas caem num lote\n"
+            "  do meio: servem para conferir que o apontamento de um lote sobrevive à junção dos lotes.\n"
+            "Os demais itens são da LPU, pelo preço da LPU, e batem com a vistoria. Com tantas fotos, a contagem por item\n"
+            "(quantidade cobrada x fotos) pode variar no modelo real: confira o raciocínio na aba Fotos.\n"
+        ),
+    )
+
+
+CASES.append(bulk_case())
+
+
+# ------------------------------------------------------------------ SISR: relatório em PDF no formato checklist
+# Boa parte dos fornecedores da SISR manda só um PDF: cada pergunta, a resposta Sim/Não marcada e a foto que a demonstra,
+# sem fotos soltas. As fotos são extraídas do PDF (atest/pdf_photos.py) e analisadas como as outras.
+def report_photo(
+    name: str, source: str, crop: tuple[float, float, float, float], desc: str
+) -> Photo:
+    return Photo(name, f"real_photos_itau/{source}", crop, desc)
+
+
+CASES.append(
+    Case(
+        ticket_id="04175640",
+        workstream="SISR",
+        category="cctv",
+        symptom="no_image",
+        scope=(
+            "Câmera 05, externa, sobre a entrada do autoatendimento, vandalizada: está sem imagem no gravador desde o fim "
+            "de semana. A entrada do autoatendimento fica sem monitoramento."
+        ),
+        solution=(
+            "Substituição da câmera 05 por câmera IP bullet nova, com eletroduto e caixa antivandalismo, e teste da imagem "
+            "e da gravação no gravador."
+        ),
+        branch={
+            "code": "5590",
+            "name": "Niterói Icaraí",
+            "environment": "area_externa",
+        },
+        supplier="Vigilância Total Sistemas de Segurança LTDA",
+        opening="2026-11-16",
+        submission="2026-11-19",
+        moment="execution",
+        quote_file="Orcamento_VigilanciaTotal_04175640.xlsx",
+        items=[
+            ("Câmera IP bullet 4 MP", "un", True, 1, 2300.00),
+            ('Eletroduto galvanizado 3/4" com caixa de passagem antivandalismo', "m", True, 4, 38.00),
+            ("Conector/balun e reconexão", "un", True, 2, 40.00),
+            ("Mão de obra técnica de segurança (hora)", "h", True, 3, 110.00),
+            ("Visita técnica e deslocamento (SISR)", "vb", True, 1, 280.00),
+        ],  # fmt: skip
+        photos=[],
+        report=Report(
+            file="Relatorio_Atendimento_04175640.pdf",
+            title="Relatório de Atendimento Técnico - CFTV",
+            header=[
+                "Fornecedor: Vigilância Total Sistemas de Segurança LTDA",
+                "Chamado: 04175640    Agência: 5590 - Niterói Icaraí",
+                "Data do atendimento: 18/11/2026    Início: 09:10    Término: 11:40",
+                "Técnico: Carlos A. Souza    Equipamento: Câmera 05 (externa, entrada do autoatendimento)",
+            ],
+            items=[
+                ReportItem(
+                    "O equipamento estava vandalizado?",
+                    True,
+                    note="Lente quebrada e cabo arrancado",
+                ),
+                ReportItem(
+                    "A câmera foi substituída por uma nova?",
+                    True,
+                    report_photo(
+                        "IMG_20261118_101530.jpg",
+                        "bullet_camera_wall/ia_openai_1794211111_01.jpg",
+                        (0.0, 0.0, 0.7, 0.74),
+                        "câmera bullet nova instalada",
+                    ),
+                ),
+                ReportItem(
+                    "A câmera foi fixada com eletroduto e caixa antivandalismo?",
+                    True,
+                    report_photo(
+                        "IMG_20261118_102210.jpg",
+                        "bullet_camera_wall/ia_openai_1794211111_00.jpg",
+                        (0.3, 0.2, 1.0, 1.0),
+                        "câmera com eletroduto na parede",
+                    ),
+                ),
+                ReportItem(
+                    "A imagem da câmera 05 aparece no gravador, mostrando a entrada do autoatendimento?",
+                    True,
+                    report_photo(
+                        "IMG_20261118_111045.jpg",
+                        "cctv_view__office/ia_openai_1794211289_00.jpg",
+                        (0.0, 0.0, 0.72, 0.76),
+                        "tela do gravador",
+                    ),
+                ),
+                ReportItem(
+                    "A gravação foi testada (reprodução das últimas horas)?",
+                    True,
+                    note="Reprodução ok; HD com 30 dias de gravação",
+                ),
+                ReportItem("A câmera antiga foi recolhida pela empresa?", True),
+                ReportItem(
+                    "O gerente da agência acompanhou o teste?",
+                    True,
+                    note="Gerente João Martins",
+                ),
+            ],
+            footer=[
+                "Declaro que o serviço foi executado conforme descrito acima.",
+                "Responsável na agência: João Martins (gerente) - assinado",
+            ],
+        ),
+        readme=(
+            "Chamado 04175640 - Câmera externa vandalizada, sem imagem (retorno após a execução, SISR).\n\n"
+            "Para que serve: testar o formato de relatório mais comum na SISR. O fornecedor mandou só o orçamento e um PDF\n"
+            "no formato checklist (pergunta, resposta Sim/Não marcada e a foto que a demonstra), SEM fotos soltas.\n"
+            "O Atest.AI extrai as 3 fotos de dentro do PDF (attachments/Relatorio_..._p01_foto01.jpg etc., com o manifesto\n"
+            ".fotos.json) e as analisa como fotos, com a pergunta e a resposta ao lado. Antes disso, o chamado era devolvido\n"
+            "no checklist mínimo (nenhum anexo de foto) e as fotos do PDF não eram conferidas.\n\n"
+            "O que conferir: o checklist passa (foto do equipamento e imagem da câmera vêm do PDF); na aba Fotos, as 3 fotos\n"
+            "com 'Página N do Relatorio_...pdf' e o texto da pergunta; na aba Documentos, as 7 perguntas com as respostas.\n\n"
+            "Problema plantado (o que o parecer deveria apontar):\n"
+            "- RESPOSTA CONTRADITA PELA FOTO: a pergunta 4 diz que a imagem da câmera 05 aparece no gravador mostrando a\n"
+            "  ENTRADA DO AUTOATENDIMENTO (Sim), mas a foto ao lado mostra a imagem de uma câmera INTERNA, do backoffice\n"
+            "  (mesas, computadores, armários) -> report_answer_contradicted. Sem imagem da câmera 05 funcionando, a prova\n"
+            "  do serviço também fica em dúvida (sem foto do concluído ou local não confirmado).\n"
+            "- A pergunta 1 (vandalizado: Sim) não tem foto: pode sair 'sem foto do antes'.\n"
+            "- CAUSA ESPECIAL COM SINTOMA ERRADO: a câmera foi vandalizada (escopo e pergunta 1: Sim), mas o chamado foi\n"
+            "  aberto como Cftv / Sem imagem -> cause_miscategorized (o sintoma certo seria Vandalismo), que leva à\n"
+            "  análise detalhada.\n"
+            "Orçamento: itens e preços da LPU da SISR, coerentes com a troca de uma câmera.\n"
+        ),
+    )
+)
+
+
+# ------------------------------------------------------------------ categoria e solução
+CASES += [
+    Case(
+        ticket_id="04175751",
+        workstream="SETA",
+        category="electrical",
+        symptom="vandalismo",
+        scope=(
+            "Tomada da bancada do caixa 2 danificada por vandalismo: um cliente forçou um carregador na tomada e ela "
+            "ficou inutilizada. A tomada está sem uso e com risco de choque."
+        ),
+        solution="Substituição da tomada da bancada do caixa 2.",
+        branch={
+            "code": "3871",
+            "name": "Curitiba Batel",
+            "environment": "area_interna_publico",
+        },
+        supplier="Paraná Instalações Prediais LTDA",
+        opening="2026-11-18",
+        submission="2026-11-19",
+        quote_file="Orcamento_ParanaInstalacoes_04175751.xlsx",
+        items=[
+            ("Tomada 2P+T 10 A com placa", "un", True, 1, 28.00),
+            ("Mão de obra de substituição de tomada", "un", True, 1, 35.00),
+            ("Visita técnica e deslocamento (SETA)", "vb", True, 1, 150.00),
+        ],
+        photos=[
+            Photo(
+                "IMG_20261118_101205.jpg",
+                "real_photos_itau/outlets__burned/ia_openai_1794297398_01.jpg",
+                (0.12, 0.08, 0.92, 0.9),
+                "tomada da bancada do caixa 2, enegrecida e derretida",
+            ),
+            Photo(
+                "IMG_20261118_101322.jpg",
+                "real_photos_itau/outlets__burned/ia_openai_1794297398_00.jpg",
+                (0.05, 0.1, 0.8, 0.95),
+                "tomada da bancada, outro ângulo",
+            ),
+        ],
+        readme=(
+            "Chamado 04175751 - Tomada do caixa 2 aberta como VANDALISMO (aprovação do orçamento, SETA).\n\n"
+            "Para que serve: testar a conferência de categoria e sintoma com as evidências (etapa 'Categoria e\n"
+            "solução'). Vandalismo e desastre natural têm tratamento próprio (B.O., seguro, verba), então abrir um defeito\n"
+            "comum como vandalismo é um problema.\n\n"
+            "Problema plantado (o que o parecer deveria apontar):\n"
+            "- CAUSA ERRADA: o chamado foi aberto como Elétrica / Vandalismo ('cliente forçou um carregador'), mas as fotos\n"
+            "  mostram a tomada ENEGRECIDA e DERRETIDA em volta dos furos: marca de aquecimento (mau contato ou sobrecarga),\n"
+            "  não de quebra por força -> cause_miscategorized ('Vandalismo/desastre com categoria errada'), que leva à\n"
+            "  análise detalhada. O sintoma certo seria 'Tomada ou interruptor danificado'.\n"
+            "A solução (trocar a tomada) e o orçamento (itens da LPU) são coerentes com o problema.\n"
+        ),
+    ),
+    Case(
+        ticket_id="04175862",
+        workstream="SETA",
+        category="civil",
+        symptom="moisture_infiltration",
+        scope=(
+            "Forro do salão de atendimento, acima do totem de senhas, com manchas de infiltração e mofo em várias placas. "
+            "As manchas crescem e pinga água nos dias de chuva forte."
+        ),
+        solution="Troca das placas de forro manchadas, aplicação de antimofo e pintura do forro.",
+        branch={
+            "code": "6104",
+            "name": "Recife Boa Viagem",
+            "environment": "area_interna_publico",
+        },
+        supplier="Nordeste Reformas e Manutenção LTDA",
+        opening="2026-11-20",
+        submission="2026-11-21",
+        quote_file="Orcamento_NordesteReformas_04175862.xlsx",
+        items=[
+            (
+                "Recomposição de forro (troca das placas manchadas)",
+                "m²",
+                True,
+                8,
+                95.00,
+            ),
+            ("Aplicação de fundo preparador antimofo", "m²", True, 8, 6.50),
+            ("Pintura de teto/forro em látex, 2 demãos", "m²", True, 8, 35.00),
+            ("Visita técnica e deslocamento (SETA)", "vb", True, 1, 150.00),
+        ],
+        photos=[
+            Photo(
+                "IMG_20261120_143010.jpg",
+                "real_photos_itau/ceiling_view__stains/ia_openai_1794297247_02.jpg",
+                (0.0, 0.0, 0.82, 0.78),
+                "forro do salão com manchas de infiltração e mofo",
+            ),
+            Photo(
+                "IMG_20261120_143127.jpg",
+                "real_photos_itau/ceiling_view__stains/ia_openai_1794297247_01.jpg",
+                (0.15, 0.05, 1.0, 0.85),
+                "placas do forro manchadas, de perto",
+            ),
+        ],
+        readme=(
+            "Chamado 04175862 - Infiltração no forro do salão: a solução só troca e pinta o forro (aprovação do\n"
+            "orçamento, SETA).\n\n"
+            "Para que serve: testar a coerência da solução com o problema relatado (etapa 'Categoria e solução').\n\n"
+            "Problema plantado (o que o parecer deveria apontar):\n"
+            "- SOLUÇÃO NÃO TRATA A CAUSA: o problema é infiltração ('pinga água nos dias de chuva forte'), mas a solução e o\n"
+            "  orçamento só trocam as placas, aplicam antimofo e pintam. Nada localiza nem corrige a origem da água (laje,\n"
+            "  calha, telhado ou tubulação; a LPU tem IMP-001, tratamento de infiltração): na próxima chuva o forro novo\n"
+            "  mancha de novo -> solution_partially_coherent ('Solução resolve só parte do problema') ou\n"
+            "  solution_incoherent.\n"
+            "Categoria e sintoma (Civil / Infiltração ou umidade) estão certos; itens e preços batem com a LPU.\n"
+        ),
+    ),
+]
+
+
 # ============================================================================ geração
 def exif_bytes(photo: Photo, ticket_id: str) -> bytes:
     stamp = photo.taken_at.strftime("%Y:%m:%d %H:%M:%S").encode()
@@ -756,7 +1174,31 @@ def make_quote(case: Case, target: Path) -> None:
     wb.save(target)
 
 
+def make_report(case: Case, target: Path) -> None:
+    """Relatório em PDF no formato checklist: cada foto é gerada como as soltas (recorte + EXIF) e embutida no PDF."""
+    assert case.report is not None
+    questions = []
+    for q in case.report.items:
+        data = None
+        if q.photo:
+            tmp = target.with_name(f"_tmp_{q.photo.name}")
+            make_photo(q.photo, case.ticket_id, tmp)
+            data = tmp.read_bytes()
+            tmp.unlink()
+        questions.append(Question(q.text, q.answer, data, q.note))
+    target.write_bytes(
+        render_report(
+            case.report.title, case.report.header, questions, case.report.footer
+        )
+    )
+
+
 def build(case: Case, force: bool) -> bool:
+    if not case.photos and not case.report:
+        raise SystemExit(
+            f"{case.ticket_id}: nenhuma foto de origem. A biblioteca {LIBRARY} fica fora do git "
+            "(veja generator/ai_photos.py)."
+        )
     folder = TICKETS / case.ticket_id
     if folder.exists():
         if not force:
@@ -768,6 +1210,8 @@ def build(case: Case, force: bool) -> bool:
     make_quote(case, att / case.quote_file)
     for p in case.photos:
         make_photo(p, case.ticket_id, att / p.name)
+    if case.report:
+        make_report(case, att / case.report.file)
     upload = case.submission
     attachments = [
         {"file_name": case.quote_file, "content_type": XLSX, "size_bytes": (att / case.quote_file).stat().st_size,
@@ -776,7 +1220,10 @@ def build(case: Case, force: bool) -> bool:
         {"file_name": p.name, "content_type": "image/jpeg", "size_bytes": (att / p.name).stat().st_size,
          "sent_by": "supplier", "data_upload": upload}
         for p in case.photos
-    ]  # fmt: skip
+    ] + ([
+        {"file_name": case.report.file, "content_type": "application/pdf",
+         "size_bytes": (att / case.report.file).stat().st_size, "sent_by": "supplier", "data_upload": upload}
+    ] if case.report else [])  # fmt: skip
     total = round(sum(q * v for _, _, _, q, v in case.items), 2)
     ticket = {
         "ticket_id": case.ticket_id,
@@ -806,20 +1253,24 @@ def build(case: Case, force: bool) -> bool:
     (folder / "ticket.json").write_text(
         json.dumps(ticket, ensure_ascii=False, indent=2), encoding="utf-8"
     )
+    all_photos = case.photos + (case.report.photos if case.report else [])
     origin = (
         LIB_ORIGIN
-        if any(not p.reused_from for p in case.photos)
+        if any(not p.reused_from for p in all_photos)
         else "cópias de fotos de outro chamado"
     )
-    if any(p.reused_from for p in case.photos) and any(
-        not p.reused_from for p in case.photos
+    if any(p.reused_from for p in all_photos) and any(
+        not p.reused_from for p in all_photos
     ):
         origin += "; e cópias de fotos de outro chamado, de propósito"
+    if case.report:
+        origin += f"; as do relatório estão DENTRO do PDF {case.report.file}"
     (folder / "LEIAME.txt").write_text(
         HEADER.format(origin=origin) + case.readme, encoding="utf-8"
     )
+    where = f" dentro do PDF {case.report.file}" if case.report else ""
     print(
-        f"{case.ticket_id}: gerado ({len(case.photos)} fotos, orçamento R$ {total:,.2f})"
+        f"{case.ticket_id}: gerado ({len(all_photos)} fotos{where}, orçamento R$ {total:,.2f})"
     )
     return True
 
@@ -836,8 +1287,19 @@ def check() -> bool:
     )
     ok = True
     for case in CASES:
-        for p in case.photos:
-            path = TICKETS / case.ticket_id / "attachments" / p.name
+        folder = TICKETS / case.ticket_id
+        # fotos soltas pelo nome; as do relatório em PDF, pelos anexos extraídos do PDF (como o pipeline as vê)
+        checks = [
+            (p.name, folder / "attachments" / p.name, p.reused_from)
+            for p in case.photos
+        ]
+        if case.report and (folder / "ticket.json").exists():
+            checks += [
+                (a.name, a.path, "")
+                for a in load_ticket(folder).attachments
+                if a.source
+            ]
+        for name, path, reused_from in checks:
             if not path.exists():
                 continue
             h, det = compute_hashes(path), detail_level(path)
@@ -854,15 +1316,15 @@ def check() -> bool:
                 )
                 if d <= limit and (best is None or d < best[0]):
                     best = (d, f"{r.ticket_id}/{r.file}")
-            if p.reused_from:
-                good = best is not None and best[1] == p.reused_from
-                print(f"  {case.ticket_id}/{p.name}: reaproveitada de {p.reused_from} -> "
+            if reused_from:
+                good = best is not None and best[1] == reused_from
+                print(f"  {case.ticket_id}/{name}: reaproveitada de {reused_from} -> "
                       f"{'detectada' if good else 'NÃO DETECTADA'} {best or ''}")  # fmt: skip
             else:
                 good = best is None
                 if not good:
                     print(
-                        f"  {case.ticket_id}/{p.name}: parece com {best[1]} (distância {best[0]}): troque o recorte"
+                        f"  {case.ticket_id}/{name}: parece com {best[1]} (distância {best[0]}): troque o recorte"
                     )
             ok &= good
     print("Conferência das fotos:", "ok" if ok else "FALHOU")

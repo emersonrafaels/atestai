@@ -1,0 +1,56 @@
+{
+  "ticket_id": "04175751",
+  "workstream": "SETA",
+  "maintenance_type": "corrective",
+  "moment": "quote",
+  "category": "electrical",
+  "symptom": "vandalismo",
+  "requested_scope": "Tomada da bancada do caixa 2 danificada por vandalismo: um cliente forçou um carregador na tomada e ela ficou inutilizada. A tomada está sem uso e com risco de choque.",
+  "solution_description": "Substituição da tomada da bancada do caixa 2.",
+  "branch": {
+    "code": "3871",
+    "name": "Curitiba Batel",
+    "environment": "area_interna_publico"
+  },
+  "supplier": {
+    "name": "Paraná Instalações Prediais LTDA",
+    "cnpj": ""
+  },
+  "blocks_opening": false,
+  "quoted_value": 213.0,
+  "dates": {
+    "opening": "2026-11-18",
+    "supplier_submission": "2026-11-19",
+    "manager_review": null
+  },
+  "status": "forwarded_to_backoffice",
+  "origin": "dataset",
+  "dataset": "casos",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "attachments": [
+    {
+      "file_name": "Orcamento_ParanaInstalacoes_04175751.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 5848,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-19"
+    },
+    {
+      "file_name": "IMG_20261118_101205.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 124323,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-19"
+    },
+    {
+      "file_name": "IMG_20261118_101322.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 179510,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-19"
+    }
+  ]
+}

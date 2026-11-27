@@ -42,7 +42,7 @@ export function PhotosTab({ p, base, openPhoto, highlight = [] }: { p: Assessmen
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {p.photos.map((f, idx) => {
           const url = `${base}/${encodeURIComponent(f.file)}`;
-          const problem = !f.readable || f.matches_scope === "no" || !!f.reused_from;
+          const problem = !f.readable || f.matches_scope === "no" || !!f.reused_from || !!f.contradicts_report;
           const c = MATCH[f.matches_scope];
           return (
             <figure key={f.file} id={`photo-${f.file}`} className={`overflow-hidden rounded-xl border-2 bg-sheet ${highlight.includes(f.file) ? "destaque " : ""}${f.reused_from ? "border-lock" : problem ? "border-bad" : "border-line"}`}>
@@ -62,6 +62,13 @@ export function PhotosTab({ p, base, openPhoto, highlight = [] }: { p: Assessmen
                 {f.environment && <div className="text-[13px] text-muted">Ambiente: {f.environment}</div>}
                 <div className={`text-[13px] font-medium ${f.readable ? c.cls : "text-bad"}`}>{f.readable ? c.label : "Ilegível"}</div>
                 {f.reason && f.reason !== "(simulado)" && <div className="text-[13px] text-muted">{f.reason}</div>}
+                {f.source && (
+                  <div className="rounded-md bg-paper px-2 py-1 text-[12px] text-muted" title={f.context || undefined}>
+                    <span className="font-medium text-ink/80">Página {f.page} do {f.source}</span>
+                    {f.context && <span className="line-clamp-3"> · “{f.context}”</span>}
+                  </div>
+                )}
+                {f.contradicts_report && <div className="text-[13px] font-medium text-bad">Contradiz o relatório: {f.contradicts_report}</div>}
                 {f.integrity_signals.map((s, k) => <div key={k} className="text-[13px] text-lock">{s}</div>)}
                 <div className="truncate pt-1 text-[11px] text-muted/80">{f.file}</div>
               </figcaption>

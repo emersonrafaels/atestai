@@ -36,9 +36,10 @@ def _login(c: TestClient) -> dict:
 
 def _run(c: TestClient, ticket: str) -> dict:
     e = c.post("/api/runs", json={"tickets": [ticket], "mode": "simulated"}).json()
-    for _ in range(
-        1200
-    ):  # o 1º run indexa as fotos (hashes) e pode levar alguns segundos
+    # o 1º run indexa as fotos de toda a base (hashes, do zero no cache temporário): passa de 1 minuto com o caso de
+    # 116 fotos (04175533)
+    deadline = time.monotonic() + 240
+    while time.monotonic() < deadline:
         r = c.get(f"/api/runs/{e['id']}").json()
         if r["status"] == "completed":
             return r["tickets"][ticket]["assessment"]

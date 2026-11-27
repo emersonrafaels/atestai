@@ -340,6 +340,7 @@ class Prompts(_Section):
     photos: str
     documents: str
     related_tickets: str = ""
+    coherence: str = ""
     assessment: str
 
 

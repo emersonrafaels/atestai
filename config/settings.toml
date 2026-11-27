@@ -28,7 +28,7 @@ fast = "anthropic:claude-sonnet-5-5"       # identificação dos anexos, redaç�
 
 [default.models.tasks]
 # sobrescreve o modelo de uma tarefa (identify_attachments, scope, related_tickets, quote_review, photos, documents,
-# assessment). Exemplos:
+# coherence, assessment). Exemplos:
 # photos = "google:<modelo-gemini>"
 # assessment = "openai:<modelo-openai>"
 

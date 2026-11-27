@@ -12,12 +12,17 @@ import { ExplainDialog, type ExplainKind } from "./ExplainDialog";
 import { DecisionPanel } from "./DecisionPanel";
 import { EngineerInsights, hasInsights } from "./EngineerInsights";
 import { ScoreBreakdown } from "./ScoreBreakdown";
+import { ValidatorsTable } from "./Validators";
 import { FindingEvidence, whereLabel, type GoTo } from "./FindingEvidence";
 import type { LightboxItem } from "./ui/Lightbox";
 import { InfoBox } from "./ui/InfoBox";
 import { InfoTip, Tooltip } from "./ui/Tooltip";
 import { StepTitle } from "./ui/StepTitle";
+import { Fold, FoldBody, FoldsProvider, useFolds } from "./ui/Fold";
 import { actions, highlight, itemMap, QuoteItemsContext, SentenceList, splitLead, type TicketLinks } from "./ui/RichText";
+
+/** Blocos que começam recolhidos (os demais abrem). */
+const FOLD_DEFAULTS: Record<string, boolean> = { score: false };
 
 interface Props {
   p: Assessment;
@@ -55,6 +60,8 @@ export function AssessmentTab({ p, rubric, ticket, openPhoto, goTo, openTicket }
     window.addEventListener(PARECER_MODE_EVENT, h);
     return () => window.removeEventListener(PARECER_MODE_EVENT, h);
   }, [setMode]);
+  // blocos do parecer recolhíveis; "Como o score foi calculado" começa recolhido
+  const folds = useFolds(FOLD_DEFAULTS);
   const [decisionVisible, setDecisionVisible] = useState(false);
   const decisionRef = useRef<HTMLDivElement>(null);
   // modal que explica a confiança ou a recomendação
@@ -87,6 +94,7 @@ export function AssessmentTab({ p, rubric, ticket, openPhoto, goTo, openTicket }
   const toggleOpen = (i: number) => setOpen((s) => { const n = new Set(s); if (n.has(i)) n.delete(i); else n.add(i); return n; });
   const toggleUnfounded = useCallback((k: string) => setUnfounded((s) => { const n = new Set(s); if (n.has(k)) n.delete(k); else n.add(k); return n; }), []);
   const focusFinding = useCallback((i: number) => {
+    folds.reveal("findings");
     setOpen((s) => new Set(s).add(i));
     requestAnimationFrame(() => {
       const el = document.getElementById(`finding-${i}`);
@@ -95,7 +103,7 @@ export function AssessmentTab({ p, rubric, ticket, openPhoto, goTo, openTicket }
       void el?.offsetWidth;
       el?.classList.add("piscar");
     });
-  }, []);
+  }, [folds]);
 
   // barra flutuante "decisão pendente" some quando a seção da decisão está na tela
   useEffect(() => {
@@ -124,6 +132,7 @@ export function AssessmentTab({ p, rubric, ticket, openPhoto, goTo, openTicket }
 
   return (
     <QuoteItemsContext.Provider value={quoteItems}>
+    <FoldsProvider value={folds}>
     <div className="space-y-5">
       <ModeSwitch mode={mode} setMode={setMode} />
       {mode === "quick" ? (
@@ -132,7 +141,7 @@ export function AssessmentTab({ p, rubric, ticket, openPhoto, goTo, openTicket }
           duplicateBanners={flagged.map((r) => <DuplicateBanner key={r.ticket_id} r={r} onCompare={() => setCompare(r)} openTicket={openTicket} />)} />
       ) : (<>
       {/* 1. checklist mínimo: é a primeira etapa do fluxo, então vem primeiro */}
-      <section data-tour="checklist" className="rounded-xl border border-line bg-sheet p-5">
+      <Fold id="checklist" data-tour="checklist" className="rounded-xl border border-line bg-sheet p-5">
         <StepTitle n={++n}
           sub={<>Documentos obrigatórios para {ticket?.category_label ? <b className="text-ink/80">{ticket.category_label.toLowerCase()}</b> : "esta categoria"} na etapa <b className="text-ink/80">{STAGE_LABEL[p.moment] ?? p.moment}</b> ({(MAINTENANCE_LABEL[p.maintenance_type] ?? p.maintenance_type).toLowerCase()}). Sem eles, o chamado volta antes de qualquer análise.</>}
           aside={
@@ -140,9 +149,11 @@ export function AssessmentTab({ p, rubric, ticket, openPhoto, goTo, openTicket }
               {p.checklist.complete ? <Check size={15} /> : <X size={15} />}
               {p.checklist.complete ? "Completo" : `Falta${missing.length === 1 ? "" : "m"} ${missing.length}`} · {p.checklist.uploaded}/{p.checklist.total}
             </span>
-          }>
-          Checklist mínimo <InfoTip term="checklist" />
+          }
+          help={<InfoTip term="checklist" />}>
+          Checklist mínimo
         </StepTitle>
+        <FoldBody>
         <div className="mt-3 h-1.5 rounded-full bg-paper">
           <div className={`h-1.5 rounded-full ${p.checklist.complete ? "bg-ok" : "bg-bad"}`} style={{ width: `${p.checklist.total ? (100 * p.checklist.uploaded) / p.checklist.total : 0}%` }} />
         </div>
@@ -162,11 +173,13 @@ export function AssessmentTab({ p, rubric, ticket, openPhoto, goTo, openTicket }
             </li>
           ))}
         </ul>
-      </section>
+        </FoldBody>
+      </Fold>
 
       {/* 2. recomendação */}
-      <section data-tour="verdict" className="rounded-xl border border-line bg-sheet p-5">
+      <Fold id="verdict" data-tour="verdict" className="rounded-xl border border-line bg-sheet p-5">
         <StepTitle n={++n}>Parecer do Atest.AI</StepTitle>
+        <FoldBody>
         {flagged.length > 0 && (
           <div className="mt-3 space-y-2">
             {flagged.map((r) => <DuplicateBanner key={r.ticket_id} r={r} onCompare={() => setCompare(r)} openTicket={openTicket} />)}
@@ -232,29 +245,36 @@ export function AssessmentTab({ p, rubric, ticket, openPhoto, goTo, openTicket }
             )}
           </div>
         </div>
-      </section>
+        </FoldBody>
+      </Fold>
 
-      {/* 3. o racional do engenheiro: cobertura do pedido, quantidade × fotos, preço e leitura do problema */}
+      {/* 3. validadores: cada conferência com OK / NOK, por área; o NOK leva ao apontamento */}
+      <ValidatorsTable p={p} n={++n} unfounded={unfounded} focusFinding={focusFinding} />
+
+      {/* 4. o racional do engenheiro: cobertura do pedido, quantidade × fotos, preço e leitura do problema */}
       {p.score !== null && hasInsights(p) && <EngineerInsights p={p} n={++n} goTo={goTo} openPhoto={openPhoto} />}
 
       {/* 4. a conta do score */}
-      <section data-tour="score-breakdown" className="rounded-xl border border-line bg-sheet p-5">
+      <Fold id="score" data-tour="score-breakdown" className="rounded-xl border border-line bg-sheet p-5">
         <StepTitle n={++n} sub={p.score !== null
           ? "Cada validação começa com 100 pontos e perde pontos a cada apontamento. O score é a média ponderada das três notas."
-          : undefined}>
-          Como o score foi calculado <InfoTip term="bands" />
+          : undefined}
+          help={<InfoTip term="bands" />}>
+          Como o score foi calculado
         </StepTitle>
+        <FoldBody>
         <div className="mt-4">
           {p.score !== null ? <ScoreBreakdown p={p} rubric={rubric} onExplain={setExplain} /> : (
             <InfoBox tone="tip">Sem score: o chamado voltou no checklist mínimo, antes das validações de escopo, orçamento e fotos.</InfoBox>
           )}
         </div>
-      </section>
+        </FoldBody>
+      </Fold>
 
       {/* 4. apontamentos: clicáveis, mostram onde está o erro; "não procede" alimenta a decisão */}
       {p.findings.length > 0 && (
-        <section data-tour="findings" className="rounded-xl border border-line bg-sheet">
-          <div className="border-b border-line px-5 py-4">
+        <Fold id="findings" data-tour="findings" className="rounded-xl border border-line bg-sheet">
+          <div className="border-b border-line px-5 py-4 group-data-[fold=closed]/fold:border-0">
             <StepTitle n={++n}
               sub={<>Somados, tiram <b className="text-ink tabular-nums">{pts(totalScorePts)}</b> pontos do score. <b className="text-ink">Clique num apontamento</b> para ver a linha do orçamento ou a foto com o problema.</>}
               aside={
@@ -268,6 +288,7 @@ export function AssessmentTab({ p, rubric, ticket, openPhoto, goTo, openTicket }
               Apontamentos ({p.findings.length})
             </StepTitle>
           </div>
+          <FoldBody>
           {byValidation.map((g) => (
             <div key={g.v} className="border-b border-line/70 px-5 py-4 last:border-0">
               <h4 className="mb-3 flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
@@ -346,12 +367,13 @@ export function AssessmentTab({ p, rubric, ticket, openPhoto, goTo, openTicket }
               </ul>
             </div>
           ))}
-        </section>
+          </FoldBody>
+        </Fold>
       )}
 
       {/* 5. mensagem ao fornecedor */}
       {p.supplier_message && (
-        <section className="rounded-xl border border-line bg-sheet p-5">
+        <Fold id="message" className="rounded-xl border border-line bg-sheet p-5">
           <StepTitle n={++n} sub="Texto pronto para devolver ao fornecedor. Revise antes de enviar."
             aside={
               <button onClick={copy} className={`flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-sm transition-colors ${copied ? "border-ok bg-[#e3f2ea] text-ok" : "border-line hover:bg-paper"}`}>
@@ -360,6 +382,7 @@ export function AssessmentTab({ p, rubric, ticket, openPhoto, goTo, openTicket }
             }>
             Mensagem sugerida ao fornecedor
           </StepTitle>
+          <FoldBody>
           {unfounded.size > 0 && (
             <p className="mt-2 rounded-md bg-[#fdf6e4] px-3 py-1.5 text-[13px]">Você marcou apontamentos como não procedentes: retire-os da mensagem antes de enviar.</p>
           )}
@@ -371,7 +394,8 @@ export function AssessmentTab({ p, rubric, ticket, openPhoto, goTo, openTicket }
               </li>
             ))}
           </ol>
-        </section>
+          </FoldBody>
+        </Fold>
       )}
 
       </>)}
@@ -407,6 +431,7 @@ export function AssessmentTab({ p, rubric, ticket, openPhoto, goTo, openTicket }
         </div>
       )}
     </div>
+    </FoldsProvider>
     </QuoteItemsContext.Provider>
   );
 }

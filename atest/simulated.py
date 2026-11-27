@@ -17,6 +17,7 @@ from .config import Settings
 from .domain import LlmCall, Match
 from .llm_schemas import (
     AttachmentIdentification,
+    CoherenceReview,
     DocumentAnalysis,
     PhotoAnalysis,
     QuoteReview,
@@ -303,6 +304,44 @@ class SimulatedClient:
             for i, tid in enumerate(meta.get("candidates", []))
         ]
         return RelatedTicketsReview(judgments=judgments).model_dump()
+
+    def _coherence(self, g: GroundTruth, meta: dict) -> dict:
+        """Categoria e solução simuladas: tudo coerente, salvo os apontamentos que o gabarito espera. Causa especial
+        errada: o contrário da causa do chamado (aberto como vandalismo → desgaste; aberto como comum → vandalismo).
+        """
+        ticket_cause = meta.get("ticket_cause", "")
+        wrong_cause = "cause_miscategorized" in g.findings
+        if wrong_cause:
+            cause = "wear_or_failure" if ticket_cause else "vandalism"
+        else:
+            cause = ticket_cause or "undetermined"
+        miscategorized = "miscategorized_ticket" in g.findings
+        solution = (
+            "no"
+            if "solution_incoherent" in g.findings
+            else "partial" if "solution_partially_coherent" in g.findings else "yes"
+        )
+        return CoherenceReview(
+            reported_problem="(simulado)",
+            cause=cause,
+            cause_evidence="(simulado a partir do gabarito)" if wrong_cause else "",
+            category_fits=not miscategorized,
+            symptom_fits=not (miscategorized or wrong_cause),
+            suggested_category="",
+            suggested_symptom="",
+            classification_note=(
+                "(simulado) O problema não corresponde à categoria e ao sintoma do chamado"
+                if miscategorized
+                else ""
+            ),
+            solution="(simulado)",
+            solution_coherent=solution,
+            solution_note=(
+                "(simulado) A solução não trata a causa do problema relatado"
+                if solution != "yes"
+                else ""
+            ),
+        ).model_dump()
 
     def _assessment(self, g: GroundTruth, meta: dict) -> dict:
         from .assessment import AssessmentWriter

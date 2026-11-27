@@ -1,0 +1,16 @@
+CASO FICTÍCIO criado para testar o Atest.AI (não é um chamado real do Salesforce): agência, fornecedor, valores e
+problemas foram inventados. As imagens em attachments/ são SIMULADAS (recortes de imagens geradas por IA da biblioteca data/real_photos_itau, OpenAI gpt-image); não são evidência real.
+A origem também está no EXIF (ImageDescription) de cada imagem. Gerado por generator/build_salesforce_cases.py.
+
+Chamado 04175862 - Infiltração no forro do salão: a solução só troca e pinta o forro (aprovação do
+orçamento, SETA).
+
+Para que serve: testar a coerência da solução com o problema relatado (etapa 'Categoria e solução').
+
+Problema plantado (o que o parecer deveria apontar):
+- SOLUÇÃO NÃO TRATA A CAUSA: o problema é infiltração ('pinga água nos dias de chuva forte'), mas a solução e o
+  orçamento só trocam as placas, aplicam antimofo e pintam. Nada localiza nem corrige a origem da água (laje,
+  calha, telhado ou tubulação; a LPU tem IMP-001, tratamento de infiltração): na próxima chuva o forro novo
+  mancha de novo -> solution_partially_coherent ('Solução resolve só parte do problema') ou
+  solution_incoherent.
+Categoria e sintoma (Civil / Infiltração ou umidade) estão certos; itens e preços batem com a LPU.

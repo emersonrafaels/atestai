@@ -146,6 +146,11 @@ _INTERNAL_TERMS = {
     "vague_scope": "escopo vago",
     "consistent_with_category_symptom": "coerência com categoria e sintoma",
     "undetermined": "indeterminado",
+    "wear_or_failure": "desgaste ou falha",
+    "natural_disaster": "desastre natural",
+    "solution_coherent": "coerência da solução",
+    "category_fits": "categoria adequada",
+    "symptom_fits": "sintoma adequado",
 }
 _ASSIGNMENT = re.compile(
     r"\s*\(\s*[a-z]+(?:_[a-z]+)+\s*=\s*[^)]*\)"
@@ -301,6 +306,7 @@ TASK_PT = {
     "documents": "Leitura dos documentos",
     "related_tickets": "Chamados da agência",
     "photos": "Análise das fotos",
+    "coherence": "Categoria e solução",
     "assessment": "Redação do parecer",
 }
 

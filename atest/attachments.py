@@ -42,13 +42,20 @@ def attachment_parts(attachment: Attachment, max_side: int = 1568) -> list[Part]
         f"--- Anexo {attachment.index}: {attachment.name} ({attachment.content_type}) ---"
     )
     if attachment.is_image:
+        info = [attachment.content_type]
         taken = exif_date(
             attachment.path
         )  # ajuda o modelo a separar antes e depois (a abertura vai no resumo do chamado)
         if taken:
-            label = TextPart(
-                f"--- Anexo {attachment.index}: {attachment.name} ({attachment.content_type}; tirada em {taken:%d/%m/%Y %H:%M}) ---"
-            )
+            info.append(f"tirada em {taken:%d/%m/%Y %H:%M}")
+        if attachment.source:
+            # foto de dentro de um PDF: a pergunta e a resposta ao lado dizem o que ela deveria demonstrar
+            info.append(f"foto da página {attachment.page} do PDF {attachment.source}")
+            if attachment.context:
+                info.append(f'texto ao lado da foto no PDF: "{attachment.context}"')
+        label = TextPart(
+            f"--- Anexo {attachment.index}: {attachment.name} ({'; '.join(info)}) ---"
+        )
         return [label, image(attachment.path, max_side)]
     if attachment.content_type == "application/pdf":
         return [

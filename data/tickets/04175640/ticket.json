@@ -1,0 +1,49 @@
+{
+  "ticket_id": "04175640",
+  "workstream": "SISR",
+  "maintenance_type": "corrective",
+  "moment": "execution",
+  "category": "cctv",
+  "symptom": "no_image",
+  "requested_scope": "Câmera 05, externa, sobre a entrada do autoatendimento, vandalizada: está sem imagem no gravador desde o fim de semana. A entrada do autoatendimento fica sem monitoramento.",
+  "solution_description": "Substituição da câmera 05 por câmera IP bullet nova, com eletroduto e caixa antivandalismo, e teste da imagem e da gravação no gravador.",
+  "branch": {
+    "code": "5590",
+    "name": "Niterói Icaraí",
+    "environment": "area_externa"
+  },
+  "supplier": {
+    "name": "Vigilância Total Sistemas de Segurança LTDA",
+    "cnpj": ""
+  },
+  "blocks_opening": false,
+  "quoted_value": 3142.0,
+  "dates": {
+    "opening": "2026-11-16",
+    "supplier_submission": "2026-11-19",
+    "manager_review": null
+  },
+  "status": "forwarded_to_backoffice",
+  "origin": "dataset",
+  "dataset": "casos",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "attachments": [
+    {
+      "file_name": "Orcamento_VigilanciaTotal_04175640.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 5965,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-19"
+    },
+    {
+      "file_name": "Relatorio_Atendimento_04175640.pdf",
+      "content_type": "application/pdf",
+      "size_bytes": 775029,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-19"
+    }
+  ]
+}

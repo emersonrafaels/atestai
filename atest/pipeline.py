@@ -1,4 +1,5 @@
-"""Orquestrador do Atest.AI: checklist → escopo → chamados da agência → orçamento → fotos → documentos (OCR) → score → parecer.
+"""Orquestrador do Atest.AI: checklist → escopo → chamados da agência → orçamento → fotos → documentos (OCR) → categoria e
+solução → score → parecer.
 
 O orquestrador não conhece regra de negócio: ele roda as etapas (`AnalysisStage`) em ordem sobre um
 `AnalysisContext`, mede o tempo de cada uma, avisa o progresso e monta o `Assessment` final. Trocar, remover ou
@@ -15,6 +16,7 @@ from typing import Any
 from .analysis import AnalysisContext, AnalysisStage
 from .assessment import AssessmentStage
 from .checklist import ChecklistStage
+from .coherence import CoherenceStage
 from .config import Settings
 from .costs import CostCalculator
 from .documents import DocumentStage
@@ -79,7 +81,8 @@ class Orchestrator:
             photo_index: índice de fotos repassado à etapa de fotos (None desliga a checagem de reaproveitamento).
 
         Returns:
-            Checklist → escopo → chamados da agência → orçamento → fotos → documentos → score → parecer.
+            Checklist → escopo → chamados da agência → orçamento → fotos → documentos → categoria e solução → score →
+            parecer.
         """
         args = (self.cfg, self.references, self.scorer)
         return [
@@ -89,6 +92,7 @@ class Orchestrator:
             QuoteStage(*args),
             PhotoStage(*args, index=photo_index),
             DocumentStage(*args),
+            CoherenceStage(*args),
             ScoringStage(*args),
             AssessmentStage(*args),
         ]
@@ -235,6 +239,17 @@ class Orchestrator:
             ),
             "documents": ctx.documents,
             "related": ctx.related,
+            "coherence": (
+                {
+                    **ctx.coherence.model_dump(mode="json"),
+                    # causa especial pela categoria/sintoma do chamado ("" = nenhuma), para a tela comparar
+                    "ticket_cause": self.references.rubric.cause_of(
+                        ctx.ticket.data.category.value, ctx.ticket.data.symptom.value
+                    ),
+                }
+                if ctx.coherence
+                else None
+            ),
             "summary": ctx.text.summary,
             "supplier_message": ctx.text.supplier_message,
         }

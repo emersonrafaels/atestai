@@ -7,6 +7,8 @@ import { tint, ScoreGauge } from "./ScoreBadge";
 import type { ExplainKind } from "./ExplainDialog";
 import { actions, highlight, SentenceList, splitLead, type TicketLinks } from "./ui/RichText";
 import { Tooltip } from "./ui/Tooltip";
+import { ValidatorsStrip } from "./Validators";
+import { Fold, FoldBody, FoldTitle } from "./ui/Fold";
 
 export type ParecerMode = "quick" | "full";
 const MODE_KEY = "atest.parecer.mode";
@@ -152,13 +154,17 @@ export function QuickView({ p, rubric, flagged, shown, links, onCompare, onExpla
         )}
       </section>
 
-      {/* 2. pontos de atenção: uma linha por apontamento */}
+      {/* 2. validadores: cada conferência com OK / NOK (o NOK abre a evidência no Completo) */}
+      <ValidatorsStrip p={p} unfounded={unfounded} openDetail={openDetail} />
+
+      {/* 3. pontos de atenção: uma linha por apontamento */}
       {points.length > 0 && (
-        <section data-tour="findings" className="rounded-xl border border-line bg-sheet">
-          <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-line px-5 py-3">
-            <h3 className="font-semibold">Pontos de atenção ({points.length})</h3>
+        <Fold id="points" data-tour="findings" className="rounded-xl border border-line bg-sheet">
+          <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-line px-5 py-3 group-data-[fold=closed]/fold:border-0">
+            <FoldTitle>Pontos de atenção ({points.length})</FoldTitle>
             <span className="text-[13px] text-muted">Do mais grave ao mais leve. Marque “Não procede” se algum estiver errado.{hidden > 0 && ` ${hidden} absorvido${hidden === 1 ? "" : "s"} só no Completo.`}</span>
           </div>
+          <FoldBody>
           <ul className="divide-y divide-line/70">
             {points.map(({ f, idx }) => {
               const off = unfounded.has(f.kind);
@@ -190,23 +196,26 @@ export function QuickView({ p, rubric, flagged, shown, links, onCompare, onExpla
               );
             })}
           </ul>
-        </section>
+          </FoldBody>
+        </Fold>
       )}
 
-      {/* 3. mensagem ao fornecedor, compacta */}
+      {/* 4. mensagem ao fornecedor, compacta */}
       {steps.length > 0 && (
-        <section className="rounded-xl border border-line bg-sheet p-5">
+        <Fold id="quick-message" className="rounded-xl border border-line bg-sheet p-5">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <h3 className="font-semibold">Mensagem sugerida ao fornecedor</h3>
+            <FoldTitle>Mensagem sugerida ao fornecedor</FoldTitle>
             <button onClick={copy} className={`flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-sm transition-colors ${copied ? "border-ok bg-[#e3f2ea] text-ok" : "border-line hover:bg-paper"}`}>
               {copied ? <Check size={14} /> : <Copy size={14} />}{copied ? "Copiada" : "Copiar"}
             </button>
           </div>
+          <FoldBody>
           {unfounded.size > 0 && <p className="mt-2 rounded-md bg-[#fdf6e4] px-3 py-1.5 text-[13px]">Você marcou apontamentos como não procedentes: retire-os da mensagem antes de enviar.</p>}
           <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm">
             {steps.map((a, i) => <li key={i}>{highlight(a, (items) => goTo("quote", { items }))}</li>)}
           </ol>
-        </section>
+          </FoldBody>
+        </Fold>
       )}
     </>
   );

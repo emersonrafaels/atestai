@@ -41,6 +41,7 @@ EXTRA_REDUCERS = {
     "photos_not_analyzed": "fotos não analisadas pelo modelo",
     "documents_not_analyzed": "documentos não lidos pelo modelo",
     "related_not_checked": "chamados da agência não comparados pelo modelo",
+    "coherence_not_checked": "categoria e solução não conferidas pelo modelo",
 }
 
 

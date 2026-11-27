@@ -1,0 +1,16 @@
+CASO FICTÍCIO criado para testar o Atest.AI (não é um chamado real do Salesforce): agência, fornecedor, valores e
+problemas foram inventados. As imagens em attachments/ são SIMULADAS (recortes de imagens geradas por IA da biblioteca data/real_photos_itau, OpenAI gpt-image); não são evidência real.
+A origem também está no EXIF (ImageDescription) de cada imagem. Gerado por generator/build_salesforce_cases.py.
+
+Chamado 04175751 - Tomada do caixa 2 aberta como VANDALISMO (aprovação do orçamento, SETA).
+
+Para que serve: testar a conferência de categoria e sintoma com as evidências (etapa 'Categoria e
+solução'). Vandalismo e desastre natural têm tratamento próprio (B.O., seguro, verba), então abrir um defeito
+comum como vandalismo é um problema.
+
+Problema plantado (o que o parecer deveria apontar):
+- CAUSA ERRADA: o chamado foi aberto como Elétrica / Vandalismo ('cliente forçou um carregador'), mas as fotos
+  mostram a tomada ENEGRECIDA e DERRETIDA em volta dos furos: marca de aquecimento (mau contato ou sobrecarga),
+  não de quebra por força -> cause_miscategorized ('Vandalismo/desastre com categoria errada'), que leva à
+  análise detalhada. O sintoma certo seria 'Tomada ou interruptor danificado'.
+A solução (trocar a tomada) e o orçamento (itens da LPU) são coerentes com o problema.

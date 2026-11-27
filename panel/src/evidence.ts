@@ -235,6 +235,7 @@ export const REASONS_BY_KIND: Record<string, string> = {
   similar_lpu_item: "O item da LPU não serve para este caso",
   missing_after_photo: "O serviço concluído está comprovado em outro anexo",
   photo_mismatch: "A foto mostra o ambiente certo, só de outro ângulo",
+  report_answer_contradicted: "A foto confirma a resposta do relatório",
   unreadable_photo: "A foto está legível o suficiente",
   reused_photo: "Não é reaproveitamento: mesmo local, serviço diferente",
   possible_duplicate_ticket: "Não é o mesmo problema: conferi o outro chamado",
@@ -247,6 +248,10 @@ export const REASONS_BY_KIND: Record<string, string> = {
   spreadsheet_mismatch: "Divergência irrelevante na planilha",
   vague_scope: "O escopo é suficiente para avaliar",
   inconsistent_scope: "O escopo é coerente com a categoria",
+  cause_miscategorized: "A categoria e o sintoma estão certos para a causa do problema",
+  miscategorized_ticket: "A categoria e o sintoma servem para o problema",
+  solution_incoherent: "A solução resolve o problema relatado",
+  solution_partially_coherent: "A solução resolve todo o problema relatado",
 };
 
 export const REASONS_BY_DECISION: Partial<Record<Recommendation, string[]>> = {

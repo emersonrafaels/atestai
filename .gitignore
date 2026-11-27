@@ -9,3 +9,7 @@ data/real_photos*/
 .pytest_cache/
 .ruff_cache/
 painel/node_modules/
+
+# fotos extraídas dos PDFs (atest/pdf_photos.py): recriadas ao abrir o chamado
+data/**/attachments/*_p[0-9][0-9]_foto[0-9][0-9].jpg
+data/**/attachments/*.fotos.json

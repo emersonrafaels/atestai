@@ -1,0 +1,590 @@
+{
+  "ticket_id": "04175751",
+  "workstream": "SETA",
+  "category": "electrical",
+  "symptom": "vandalismo",
+  "maintenance_type": "corrective",
+  "moment": "quote",
+  "branch": {
+    "code": "3871",
+    "name": "Curitiba Batel",
+    "environment": "area_interna_publico"
+  },
+  "supplier": "Paraná Instalações Prediais LTDA",
+  "quoted_value": 213.0,
+  "requested_scope": "Tomada da bancada do caixa 2 danificada por vandalismo: um cliente forçou um carregador na tomada e ela ficou inutilizada. A tomada está sem uso e com risco de choque.",
+  "generated_at": "2026-11-27T18:19:31.295233",
+  "rubric_version": "2026-11-v14",
+  "prompts_version": "2026-11-v23",
+  "config_signature": "0bd5e854781c",
+  "phase": 2,
+  "mode": "api",
+  "batch_mode": "sync",
+  "models": {
+    "main": "anthropic:claude-sonnet-5-5",
+    "fast": "anthropic:claude-sonnet-5-5"
+  },
+  "run_id": "20261127-181852-68d8",
+  "record_id": 113,
+  "checklist": {
+    "category": "electrical",
+    "maintenance": "corrective",
+    "moment": "quote",
+    "complete": true,
+    "uploaded": 2,
+    "total": 2,
+    "requirements": [
+      {
+        "id": "quote",
+        "description": "Orçamento na planilha Excel padrão",
+        "met": true,
+        "attachments": [
+          "Orcamento_ParanaInstalacoes_04175751.xlsx"
+        ]
+      },
+      {
+        "id": "problem_photo",
+        "description": "Foto do problema a ser corrigido",
+        "met": true,
+        "attachments": [
+          "IMG_20261118_101205.jpg",
+          "IMG_20261118_101322.jpg"
+        ]
+      }
+    ],
+    "missing": []
+  },
+  "attachments": [
+    {
+      "index": 1,
+      "name": "Orcamento_ParanaInstalacoes_04175751.xlsx",
+      "category": "quote_doc",
+      "moment": "undetermined",
+      "readable": true,
+      "short_description": "Orçamento : 3 itens, R$ 213.00"
+    },
+    {
+      "index": 2,
+      "name": "IMG_20261118_101205.jpg",
+      "category": "room_before_photo",
+      "moment": "before",
+      "readable": true,
+      "short_description": "Tomada danificada, queimada e com fuligem no espelho, vista frontal próxima"
+    },
+    {
+      "index": 3,
+      "name": "IMG_20261118_101322.jpg",
+      "category": "room_before_photo",
+      "moment": "before",
+      "readable": true,
+      "short_description": "Tomada queimada com fuligem e furos escurecidos, vista lateral próxima"
+    }
+  ],
+  "recommendation": "detailed_review",
+  "recommendation_reason": "Conferir antes de seguir: vandalismo ou desastre natural com categoria ou sintoma errados (Elétrica / Vandalismo)",
+  "score": 93,
+  "grades": {
+    "scope": 65,
+    "quote": 100,
+    "photos": 100
+  },
+  "confidence": "high",
+  "confidence_reducers": [],
+  "findings": [
+    {
+      "kind": "cause_miscategorized",
+      "validation": "scope",
+      "severity": "high",
+      "discount": 35,
+      "description": "Vandalismo ou desastre natural com categoria ou sintoma errados",
+      "evidence": "O chamado foi aberto como vandalismo (Elétrica / Vandalismo), mas as evidências indicam desgaste ou falha comum (O escopo diz que um cliente forçou o carregador, o que é mau uso comum e não prova dano intencional. As duas fotos (IMG_20261118_101205 e IMG_20261118_101322) mostram carbonização nos furos, fuligem na placa e plástico derretido, ou seja, aquecimento ou arco elétrico. Não há quebra por impacto, peça arrancada nem resposta de relatório indicando vandalismo.); o correto seria Tomada ou interruptor danificado",
+      "reference": "Elétrica / Vandalismo",
+      "lock": false,
+      "reduces_confidence": false,
+      "phase": 1,
+      "amount_at_issue": 0.0,
+      "absorbed_by": "",
+      "returns": false,
+      "review": true,
+      "caveats": false,
+      "extent": 1.0,
+      "extent_label": ""
+    }
+  ],
+  "amount_at_issue": 0.0,
+  "amount_at_issue_pct": 0.0,
+  "scope": {
+    "local": "Curitiba Batel (ponto 3871) - Área interna - Público, bancada do caixa 2",
+    "environment": "Bancada do caixa 2, na área interna de atendimento ao público",
+    "equipment": "Tomada da bancada do caixa 2",
+    "requested_services": [
+      "substituir a tomada da bancada do caixa 2, danificada por vandalismo"
+    ],
+    "mentioned_quantities": [],
+    "acceptance_criteria": [
+      "O orçamento prevê a substituição da tomada danificada da bancada do caixa 2, e não de outra tomada ou local.",
+      "O orçamento tem item de tomada (módulo ou conjunto com espelho/placa) e de mão de obra para a troca.",
+      "As quantidades orçadas correspondem à tomada danificada que as fotos mostram; só se admite mais de uma unidade se as fotos mostrarem mais tomadas danificadas.",
+      "Não há itens sem relação com a tomada do caixa 2, como troca de fiação, quadro ou outras tomadas, sem foto que os justifique.",
+      "A tomada nova elimina o risco de choque e volta a funcionar para uso do caixa 2."
+    ],
+    "expected_evidence": [
+      "Foto da tomada danificada na bancada do caixa 2, mostrando o dano causado ao forçar o carregador.",
+      "Foto de contexto que mostre a tomada na bancada e permita identificar o caixa 2 e o local.",
+      "Foto de aproximação do dano (peças quebradas, partes expostas ou deformadas) que mostre o risco de choque."
+    ],
+    "before_evidence_applicable": true,
+    "consistent_with_category_symptom": true,
+    "coherence_note": "",
+    "vague_scope": false,
+    "vague_reason": ""
+  },
+  "items": [
+    {
+      "n": 1,
+      "description": "Tomada 2P+T 10 A com placa",
+      "unit": "un",
+      "lpu": true,
+      "quantity": 1.0,
+      "unit_value": 28.0,
+      "total_value": 28.0,
+      "classification": "compliant",
+      "reason": "A tomada 2P+T 10 A com placa é a peça necessária para trocar a tomada danificada da bancada do caixa 2.",
+      "lpu_code": "ELE-004",
+      "reference_price": 28.0,
+      "similar_lpu": null,
+      "expected_quantity_max": 1.0,
+      "amount_at_issue": 0.0,
+      "findings": []
+    },
+    {
+      "n": 2,
+      "description": "Mão de obra de substituição de tomada",
+      "unit": "un",
+      "lpu": true,
+      "quantity": 1.0,
+      "unit_value": 35.0,
+      "total_value": 35.0,
+      "classification": "compliant",
+      "reason": "A mão de obra de substituição de tomada é necessária para executar a troca pedida, com 1 unidade para a única tomada danificada.",
+      "lpu_code": "ELE-005",
+      "reference_price": 35.0,
+      "similar_lpu": null,
+      "expected_quantity_max": 1.0,
+      "amount_at_issue": 0.0,
+      "findings": []
+    },
+    {
+      "n": 3,
+      "description": "Visita técnica e deslocamento (SETA)",
+      "unit": "vb",
+      "lpu": true,
+      "quantity": 1.0,
+      "unit_value": 150.0,
+      "total_value": 150.0,
+      "classification": "compliant",
+      "reason": "A visita técnica e o deslocamento são necessários para o fornecedor ir à agência executar a troca, com 1 por visita.",
+      "lpu_code": "GER-001",
+      "reference_price": 150.0,
+      "similar_lpu": null,
+      "expected_quantity_max": 1.0,
+      "amount_at_issue": 0.0,
+      "findings": []
+    }
+  ],
+  "quote_notes": [
+    "Orçamento enxuto e coerente com o chamado: 1 tomada, 1 mão de obra e 1 visita, sem itens extras de fiação, quadro ou outras tomadas. Todos os itens constam na LPU. Nesta etapa se espera apenas foto do antes; confirmar nas fotos que a tomada mostrada é a da bancada do caixa 2."
+  ],
+  "service_coverage": [
+    {
+      "n": 1,
+      "service": "substituir a tomada da bancada do caixa 2, danificada por vandalismo",
+      "items": [
+        1,
+        2,
+        3
+      ],
+      "covered": "yes",
+      "note": "O item 1 fornece a tomada nova com placa, o item 2 faz a troca e o item 3 cobre a ida ao local, o que resolve o pedido por completo com 1 tomada."
+    }
+  ],
+  "photos": [
+    {
+      "file": "IMG_20261118_101205.jpg",
+      "environment": "Parede ou bancada interna, close de uma tomada 2P+T com placa branca",
+      "what_it_shows": "Tomada de três furos com o espelho e o módulo queimados e enegrecidos. Há fuligem subindo pela placa, plástico deformado e derretido na parte de baixo do módulo.",
+      "moment": "before",
+      "readable": true,
+      "matches_scope": "yes",
+      "reason": "Mostra de perto o dano da tomada, com queimado, deformação e partes expostas que indicam risco de choque. Não há como identificar o caixa 2 nesta foto, mas nada contradiz o escopo.",
+      "covered_items": [
+        1,
+        2
+      ],
+      "contradicts_report": "",
+      "exif_date": "2026-11-18T10:12:05",
+      "reused_from": null,
+      "integrity_signals": [],
+      "source": "",
+      "page": 0,
+      "context": ""
+    },
+    {
+      "file": "IMG_20261118_101322.jpg",
+      "environment": "Parede ou bancada interna, ao lado de um revestimento cinza texturizado",
+      "what_it_shows": "A mesma tomada 2P+T vista de lado, com furos escurecidos, carbonização no módulo e fuligem na placa acima e abaixo. O revestimento cinza aparece ao lado.",
+      "moment": "before",
+      "readable": true,
+      "matches_scope": "yes",
+      "reason": "Mostra o dano de outro ângulo e dá algum contexto do entorno. Não permite confirmar que é a bancada do caixa 2, mas é compatível com o escopo.",
+      "covered_items": [
+        1,
+        2
+      ],
+      "contradicts_report": "",
+      "exif_date": "2026-11-18T10:13:22",
+      "reused_from": null,
+      "integrity_signals": [],
+      "source": "",
+      "page": 0,
+      "context": ""
+    }
+  ],
+  "photo_summary": {
+    "has_before_photo": true,
+    "problem_assessment": "As fotos mostram uma única tomada 2P+T com sinais claros de queima: carbonização nos furos, fuligem na placa e plástico derretido na base do módulo. Isso indica aquecimento ou arco elétrico, com risco de choque e de incêndio, e a tomada não deve continuar em uso. A troca da tomada com placa e a mão de obra (itens 1 e 2) se justificam. Como houve queima, convém o eletricista verificar o estado do cabo e do fundo da caixa ao trocar. Essa verificação não exige item extra de fiação, a menos que o fornecedor mostre dano nos condutores. A visita e o deslocamento (item 3) são padrão. O orçamento parece adequado ao que se vê.",
+    "done_justification": "",
+    "done_service": "undetermined",
+    "items_without_photo": [],
+    "quantity_checks": [
+      {
+        "item": 1,
+        "what_was_counted": "tomadas danificadas",
+        "per_photo": "Anexo 2: 1; Anexo 3: 1 (mesma tomada, visto de outro ângulo)",
+        "count_seen": 1.0,
+        "estimated_quantity": 1.0,
+        "reasoning": "As duas fotos mostram a mesma tomada, com o mesmo padrão de queima na placa. Conta-se uma unidade, igual ao 1 un orçado."
+      }
+    ],
+    "notes": "Nenhuma das fotos mostra a bancada do caixa 2 nem permite identificar o local. A foto 3 mostra apenas um revestimento cinza ao lado. Pode valer uma foto de contexto mais aberta, mas isso não impede a aprovação. Os itens e as quantidades batem com a única tomada danificada. Não há item sem relação com o problema."
+  },
+  "documents": [],
+  "related": {
+    "window_days": 60,
+    "include_still_open": true,
+    "min_probability": 70,
+    "show_probability": 40,
+    "candidates_found": 0,
+    "tickets": [],
+    "skipped": ""
+  },
+  "coherence": {
+    "reported_problem": "Tomada da bancada do caixa 2 inutilizada e com risco de choque, que o escopo atribui a um cliente que forçou um carregador nela; as fotos mostram a tomada queimada.",
+    "cause": "wear_or_failure",
+    "cause_evidence": "O escopo diz que um cliente forçou o carregador, o que é mau uso comum e não prova dano intencional. As duas fotos (IMG_20261118_101205 e IMG_20261118_101322) mostram carbonização nos furos, fuligem na placa e plástico derretido, ou seja, aquecimento ou arco elétrico. Não há quebra por impacto, peça arrancada nem resposta de relatório indicando vandalismo.",
+    "category_fits": true,
+    "symptom_fits": false,
+    "suggested_category": "",
+    "suggested_symptom": "tomada_danificada",
+    "classification_note": "A categoria Elétrica serve para uma tomada danificada. O sintoma Vandalismo não se sustenta, porque as fotos mostram queima e o escopo descreve mau uso; o sintoma 'Tomada ou interruptor danificado' descreve melhor o problema.",
+    "solution": "Substituir a tomada por uma 2P+T 10 A com placa, com mão de obra de troca e visita técnica (itens 1 a 3 do orçamento).",
+    "solution_coherent": "yes",
+    "solution_note": "A troca do módulo com placa elimina a tomada queimada e o risco de choque, e devolve o ponto de uso ao caixa 2. Como houve queima, o eletricista deve conferir o cabo e o fundo da caixa ao trocar; as fotos não mostram dano nos condutores que exija item extra.",
+    "ticket_cause": "vandalism"
+  },
+  "summary": "Recomendo análise detalhada: o chamado foi aberto como Elétrica / Vandalismo, mas o escopo diz que um cliente forçou um carregador na tomada, o que é mau uso comum e não prova dano intencional. As duas fotos (IMG_20261118_101205 e IMG_20261118_101322) mostram carbonização nos furos, fuligem na placa e plástico derretido, indício de aquecimento ou arco elétrico, e não de quebra por impacto. O orçamento cobre o serviço: itens 1, 2 e 3 trocam 1 tomada, a quantidade de 1 un bate com a contagem nas fotos, todos os preços estão iguais à LPU (+0%) e o valor potencial divergente é R$ 0,00. As fotos não mostram a bancada do caixa 2 nem permitem identificar o local, então vale confirmar que a tomada é a do caixa 2; isso não impede a aprovação.",
+  "supplier_message": "",
+  "llm_calls": [
+    {
+      "task": "identify_attachments",
+      "provider": "anthropic",
+      "model": "anthropic:claude-sonnet-5-5",
+      "resolved_model": "claude-sonnet-5-5",
+      "prompt_version": "2026-11-v23",
+      "prompt_hash": "61d67661606c",
+      "schema_hash": "cc0bb58f3035",
+      "start": "2026-11-27T18:18:53.745231",
+      "duration_s": 3.04,
+      "input_tokens": 5431,
+      "output_tokens": 142,
+      "cache_read_tokens": 2168,
+      "cache_write_tokens": 0,
+      "cost_usd": 0.012499,
+      "from_cache": false,
+      "simulated": false,
+      "via_batch": false,
+      "batch_id": null,
+      "response": {
+        "attachments": [
+          {
+            "index": 2,
+            "category": "room_before_photo",
+            "moment": "before",
+            "readable": true,
+            "short_description": "Tomada danificada, queimada e com fuligem no espelho, vista frontal próxima"
+          },
+          {
+            "index": 3,
+            "category": "room_before_photo",
+            "moment": "before",
+            "readable": true,
+            "short_description": "Tomada queimada com fuligem e furos escurecidos, vista lateral próxima"
+          }
+        ]
+      }
+    },
+    {
+      "task": "scope",
+      "provider": "anthropic",
+      "model": "anthropic:claude-sonnet-5-5",
+      "resolved_model": "claude-sonnet-5-5",
+      "prompt_version": "2026-11-v23",
+      "prompt_hash": "3eb90a21937f",
+      "schema_hash": "6e0cef5ecc36",
+      "start": "2026-11-27T18:18:56.815703",
+      "duration_s": 5.47,
+      "input_tokens": 456,
+      "output_tokens": 567,
+      "cache_read_tokens": 3148,
+      "cache_write_tokens": 0,
+      "cost_usd": 0.006897,
+      "from_cache": false,
+      "simulated": false,
+      "via_batch": false,
+      "batch_id": null,
+      "response": {
+        "local": "Curitiba Batel (ponto 3871) - Área interna - Público, bancada do caixa 2",
+        "environment": "Bancada do caixa 2, na área interna de atendimento ao público",
+        "equipment": "Tomada da bancada do caixa 2",
+        "requested_services": [
+          "substituir a tomada da bancada do caixa 2, danificada por vandalismo"
+        ],
+        "mentioned_quantities": [],
+        "acceptance_criteria": [
+          "O orçamento prevê a substituição da tomada danificada da bancada do caixa 2, e não de outra tomada ou local.",
+          "O orçamento tem item de tomada (módulo ou conjunto com espelho/placa) e de mão de obra para a troca.",
+          "As quantidades orçadas correspondem à tomada danificada que as fotos mostram; só se admite mais de uma unidade se as fotos mostrarem mais tomadas danificadas.",
+          "Não há itens sem relação com a tomada do caixa 2, como troca de fiação, quadro ou outras tomadas, sem foto que os justifique.",
+          "A tomada nova elimina o risco de choque e volta a funcionar para uso do caixa 2."
+        ],
+        "expected_evidence": [
+          "Foto da tomada danificada na bancada do caixa 2, mostrando o dano causado ao forçar o carregador.",
+          "Foto de contexto que mostre a tomada na bancada e permita identificar o caixa 2 e o local.",
+          "Foto de aproximação do dano (peças quebradas, partes expostas ou deformadas) que mostre o risco de choque."
+        ],
+        "before_evidence_applicable": true,
+        "consistent_with_category_symptom": true,
+        "coherence_note": "",
+        "vague_scope": false,
+        "vague_reason": ""
+      }
+    },
+    {
+      "task": "quote_review",
+      "provider": "anthropic",
+      "model": "anthropic:claude-sonnet-5-5",
+      "resolved_model": "claude-sonnet-5-5",
+      "prompt_version": "2026-11-v23",
+      "prompt_hash": "6eff4dda6594",
+      "schema_hash": "ced1d77792bc",
+      "start": "2026-11-27T18:19:02.640695",
+      "duration_s": 4.97,
+      "input_tokens": 1259,
+      "output_tokens": 666,
+      "cache_read_tokens": 4825,
+      "cache_write_tokens": 0,
+      "cost_usd": 0.009661,
+      "from_cache": false,
+      "simulated": false,
+      "via_batch": false,
+      "batch_id": null,
+      "response": {
+        "items": [
+          {
+            "n": 1,
+            "classification": "compliant",
+            "reason": "A tomada 2P+T 10 A com placa é a peça necessária para trocar a tomada danificada da bancada do caixa 2.",
+            "expected_quantity_max": 1.0,
+            "plausible_quantity": true,
+            "duplicate_of": 0,
+            "lpu_code": "ELE-004",
+            "similar_lpu_code": "NO_REFERENCE"
+          },
+          {
+            "n": 2,
+            "classification": "compliant",
+            "reason": "A mão de obra de substituição de tomada é necessária para executar a troca pedida, com 1 unidade para a única tomada danificada.",
+            "expected_quantity_max": 1.0,
+            "plausible_quantity": true,
+            "duplicate_of": 0,
+            "lpu_code": "ELE-005",
+            "similar_lpu_code": "NO_REFERENCE"
+          },
+          {
+            "n": 3,
+            "classification": "compliant",
+            "reason": "A visita técnica e o deslocamento são necessários para o fornecedor ir à agência executar a troca, com 1 por visita.",
+            "expected_quantity_max": 1.0,
+            "plausible_quantity": true,
+            "duplicate_of": 0,
+            "lpu_code": "GER-001",
+            "similar_lpu_code": "NO_REFERENCE"
+          }
+        ],
+        "service_coverage": [
+          {
+            "n": 1,
+            "service": "substituir a tomada da bancada do caixa 2, danificada por vandalismo",
+            "items": [
+              1,
+              2,
+              3
+            ],
+            "covered": "yes",
+            "note": "O item 1 fornece a tomada nova com placa, o item 2 faz a troca e o item 3 cobre a ida ao local, o que resolve o pedido por completo com 1 tomada."
+          }
+        ],
+        "notes": "Orçamento enxuto e coerente com o chamado: 1 tomada, 1 mão de obra e 1 visita, sem itens extras de fiação, quadro ou outras tomadas. Todos os itens constam na LPU. Nesta etapa se espera apenas foto do antes; confirmar nas fotos que a tomada mostrada é a da bancada do caixa 2."
+      }
+    },
+    {
+      "task": "photos",
+      "provider": "anthropic",
+      "model": "anthropic:claude-sonnet-5-5",
+      "resolved_model": "claude-sonnet-5-5",
+      "prompt_version": "2026-11-v23",
+      "prompt_hash": "fe9a60d7c97f",
+      "schema_hash": "e812f8e18dff",
+      "start": "2026-11-27T18:19:07.765913",
+      "duration_s": 9.66,
+      "input_tokens": 5809,
+      "output_tokens": 1055,
+      "cache_read_tokens": 5399,
+      "cache_write_tokens": 0,
+      "cost_usd": 0.022708,
+      "from_cache": false,
+      "simulated": false,
+      "via_batch": false,
+      "batch_id": null,
+      "response": {
+        "photos": [
+          {
+            "index": 2,
+            "environment": "Parede ou bancada interna, close de uma tomada 2P+T com placa branca",
+            "what_it_shows": "Tomada de três furos com o espelho e o módulo queimados e enegrecidos. Há fuligem subindo pela placa, plástico deformado e derretido na parte de baixo do módulo.",
+            "moment": "before",
+            "readable": true,
+            "matches_scope": "yes",
+            "reason": "Mostra de perto o dano da tomada, com queimado, deformação e partes expostas que indicam risco de choque. Não há como identificar o caixa 2 nesta foto, mas nada contradiz o escopo.",
+            "covered_items": [
+              1,
+              2
+            ],
+            "contradicts_report": ""
+          },
+          {
+            "index": 3,
+            "environment": "Parede ou bancada interna, ao lado de um revestimento cinza texturizado",
+            "what_it_shows": "A mesma tomada 2P+T vista de lado, com furos escurecidos, carbonização no módulo e fuligem na placa acima e abaixo. O revestimento cinza aparece ao lado.",
+            "moment": "before",
+            "readable": true,
+            "matches_scope": "yes",
+            "reason": "Mostra o dano de outro ângulo e dá algum contexto do entorno. Não permite confirmar que é a bancada do caixa 2, mas é compatível com o escopo.",
+            "covered_items": [
+              1,
+              2
+            ],
+            "contradicts_report": ""
+          }
+        ],
+        "has_before_photo": true,
+        "problem_assessment": "As fotos mostram uma única tomada 2P+T com sinais claros de queima: carbonização nos furos, fuligem na placa e plástico derretido na base do módulo. Isso indica aquecimento ou arco elétrico, com risco de choque e de incêndio, e a tomada não deve continuar em uso. A troca da tomada com placa e a mão de obra (itens 1 e 2) se justificam. Como houve queima, convém o eletricista verificar o estado do cabo e do fundo da caixa ao trocar. Essa verificação não exige item extra de fiação, a menos que o fornecedor mostre dano nos condutores. A visita e o deslocamento (item 3) são padrão. O orçamento parece adequado ao que se vê.",
+        "done_justification": "",
+        "done_service": "undetermined",
+        "items_without_photo": [],
+        "quantity_checks": [
+          {
+            "item": 1,
+            "what_was_counted": "tomadas danificadas",
+            "per_photo": "Anexo 2: 1; Anexo 3: 1 (mesma tomada, visto de outro ângulo)",
+            "count_seen": 1.0,
+            "estimated_quantity": 1.0,
+            "reasoning": "As duas fotos mostram a mesma tomada, com o mesmo padrão de queima na placa. Conta-se uma unidade, igual ao 1 un orçado."
+          }
+        ],
+        "notes": "Nenhuma das fotos mostra a bancada do caixa 2 nem permite identificar o local. A foto 3 mostra apenas um revestimento cinza ao lado. Pode valer uma foto de contexto mais aberta, mas isso não impede a aprovação. Os itens e as quantidades batem com a única tomada danificada. Não há item sem relação com o problema."
+      }
+    },
+    {
+      "task": "coherence",
+      "provider": "anthropic",
+      "model": "anthropic:claude-sonnet-5-5",
+      "resolved_model": "claude-sonnet-5-5",
+      "prompt_version": "2026-11-v23",
+      "prompt_hash": "1bc2ee2d9fa3",
+      "schema_hash": "59b133b00691",
+      "start": "2026-11-27T18:19:17.551714",
+      "duration_s": 8.08,
+      "input_tokens": 2447,
+      "output_tokens": 971,
+      "cache_read_tokens": 3136,
+      "cache_write_tokens": 0,
+      "cost_usd": 0.014918,
+      "from_cache": false,
+      "simulated": false,
+      "via_batch": false,
+      "batch_id": null,
+      "response": {
+        "reported_problem": "Tomada da bancada do caixa 2 inutilizada e com risco de choque, que o escopo atribui a um cliente que forçou um carregador nela; as fotos mostram a tomada queimada.",
+        "cause": "wear_or_failure",
+        "cause_evidence": "O escopo diz que um cliente forçou o carregador, o que é mau uso comum e não prova dano intencional. As duas fotos (IMG_20261118_101205 e IMG_20261118_101322) mostram carbonização nos furos, fuligem na placa e plástico derretido, ou seja, aquecimento ou arco elétrico. Não há quebra por impacto, peça arrancada nem resposta de relatório indicando vandalismo.",
+        "category_fits": true,
+        "symptom_fits": false,
+        "suggested_category": "",
+        "suggested_symptom": "tomada_danificada",
+        "classification_note": "A categoria Elétrica serve para uma tomada danificada. O sintoma Vandalismo não se sustenta, porque as fotos mostram queima e o escopo descreve mau uso; o sintoma 'Tomada ou interruptor danificado' descreve melhor o problema.",
+        "solution": "Substituir a tomada por uma 2P+T 10 A com placa, com mão de obra de troca e visita técnica (itens 1 a 3 do orçamento).",
+        "solution_coherent": "yes",
+        "solution_note": "A troca do módulo com placa elimina a tomada queimada e o risco de choque, e devolve o ponto de uso ao caixa 2. Como houve queima, o eletricista deve conferir o cabo e o fundo da caixa ao trocar; as fotos não mostram dano nos condutores que exija item extra."
+      }
+    },
+    {
+      "task": "assessment",
+      "provider": "anthropic",
+      "model": "anthropic:claude-sonnet-5-5",
+      "resolved_model": "claude-sonnet-5-5",
+      "prompt_version": "2026-11-v23",
+      "prompt_hash": "94ba89082a8e",
+      "schema_hash": "54e4cbe91987",
+      "start": "2026-11-27T18:19:25.648449",
+      "duration_s": 5.64,
+      "input_tokens": 1824,
+      "output_tokens": 769,
+      "cache_read_tokens": 1778,
+      "cache_write_tokens": 0,
+      "cost_usd": 0.011516,
+      "from_cache": false,
+      "simulated": false,
+      "via_batch": false,
+      "batch_id": null,
+      "response": {
+        "summary": "Recomendo análise detalhada: o chamado foi aberto como Elétrica / Vandalismo, mas o escopo diz que um cliente forçou um carregador na tomada, o que é mau uso comum e não prova dano intencional. As duas fotos (IMG_20261118_101205 e IMG_20261118_101322) mostram carbonização nos furos, fuligem na placa e plástico derretido, indício de aquecimento ou arco elétrico, e não de quebra por impacto. O orçamento cobre o serviço: itens 1, 2 e 3 trocam 1 tomada, a quantidade de 1 un bate com a contagem nas fotos, todos os preços estão iguais à LPU (+0%) e o valor potencial divergente é R$ 0,00. As fotos não mostram a bancada do caixa 2 nem permitem identificar o local, então vale confirmar que a tomada é a do caixa 2; isso não impede a aprovação.",
+        "supplier_message": ""
+      }
+    }
+  ],
+  "duration_s": 37.75,
+  "stage_durations_s": {
+    "checklist": 3.246,
+    "scope": 5.493,
+    "related": 0.309,
+    "quote": 5.014,
+    "photos": 9.926,
+    "documents": 0.0,
+    "coherence": 8.093,
+    "score": 0.001,
+    "assessment": 5.651
+  },
+  "cost_usd": 0.078199,
+  "cost_brl": 0.4223
+}

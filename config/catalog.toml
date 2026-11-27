@@ -122,6 +122,11 @@ symptoms = [
   { value = "porta_travando", label = "Porta travando sem motivo", categories = ["porta_giratoria"] },
   { value = "detector_de_metais", label = "Detector de metais com defeito", categories = ["porta_giratoria"] },
   { value = "sirene_nao_toca", label = "Sirene não toca", categories = ["sirene"] },
+  # Causas especiais (valem para todas as categorias): vandalismo e desastre natural têm tratamento próprio (B.O., seguro,
+  # verba). A régua (config/rubric.toml, special_causes) diz quais códigos contam como cada causa: ajuste lá se os códigos
+  # do Salesforce forem outros.
+  { value = "vandalismo", label = "Vandalismo", categories = [] },
+  { value = "desastre_natural", label = "Desastre natural (chuva, vendaval, enchente, raio)", categories = [] },
 ]
 
 # Locais da agência. SETA (infraestrutura) e SISR (segurança) têm listas diferentes no Salesforce;

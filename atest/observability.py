@@ -75,6 +75,7 @@ STAGE_PT = {
     "quote": "Orçamento",
     "photos": "Fotos",
     "documents": "Documentos",
+    "coherence": "Categoria e solução",
     "score": "Score",
     "assessment": "Parecer",
 }
@@ -214,6 +215,10 @@ def humanize(name: str, f: dict[str, Any]) -> str:
         return f"Leitura dos documentos falhou ({f.get('error')}); tentando de novo"
     if name == "documents_degraded":
         return f"Documentos não lidos ({f.get('error')}): o chamado segue com confiança reduzida"
+    if name == "coherence_retry":
+        return f"Conferência de categoria e solução falhou ({f.get('error')}); tentando de novo"
+    if name == "coherence_degraded":
+        return f"Categoria e solução não conferidas ({f.get('error')}): o chamado segue com confiança reduzida"
     if name == "batch_sent":
         tasks = ", ".join(_task(t) for t in f.get("tasks") or [])
         return f"Lote {f.get('batch_id')} enviado a {f.get('provider')}: {f.get('requests')} pedido(s) ({tasks})"

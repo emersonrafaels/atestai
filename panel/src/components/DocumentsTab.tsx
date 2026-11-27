@@ -101,6 +101,7 @@ function DocumentCard({ d, p, url, open }: { d: EvaluatedDocument; p: Assessment
             </ul>
           </div>
         )}
+        {(d.answers?.length ?? 0) > 0 && <ReportAnswers d={d} />}
         {d.divergences.length > 0 && (
           <div className="rounded-lg bg-[#fbefed] px-3 py-2 text-sm">
             <div className="text-[12px] font-semibold text-bad">Divergências</div>
@@ -118,5 +119,40 @@ function DocumentCard({ d, p, url, open }: { d: EvaluatedDocument; p: Assessment
         )}
       </div>
     </section>
+  );
+}
+
+const ANSWER: Record<string, { label: string; cls: string }> = {
+  yes: { label: "Sim", cls: "bg-[#e3f2ea] text-ok" },
+  no: { label: "Não", cls: "bg-[#f8e4e2] text-bad" },
+  not_applicable: { label: "N/A", cls: "bg-paper text-muted ring-1 ring-line" },
+  blank: { label: "Em branco", cls: "bg-[#fdf1dc] text-warn" },
+  other: { label: "Texto", cls: "bg-paper text-muted ring-1 ring-line" },
+};
+
+/** Relatório no formato checklist (comum na SISR): cada pergunta com a resposta marcada. As fotos ao lado das perguntas
+ *  são extraídas do PDF e conferidas na aba Fotos (inclusive se contradizem a resposta). */
+function ReportAnswers({ d }: { d: EvaluatedDocument }) {
+  const answers = d.answers ?? [];
+  return (
+    <div className="text-sm">
+      <div className="text-[12px] text-muted">Perguntas e respostas do relatório ({answers.length})</div>
+      <ol className="mt-1 divide-y divide-line rounded-lg border border-line">
+        {answers.map((a, k) => {
+          const s = ANSWER[a.answer] ?? ANSWER.other;
+          return (
+            <li key={k} className="flex flex-wrap items-baseline gap-x-2 px-3 py-1.5">
+              <span className="text-muted tabular-nums">{k + 1}.</span>
+              <span className="min-w-0 flex-1">{a.question}{a.note && <span className="text-muted"> · {a.note}</span>}</span>
+              {a.has_photo && <span className="text-[12px] text-muted">com foto</span>}
+              <span className={`rounded-full px-2 py-0.5 text-[12px] font-semibold ${s.cls}`}>{s.label}</span>
+            </li>
+          );
+        })}
+      </ol>
+      {answers.some((a) => a.has_photo) && (
+        <p className="mt-1 text-[12px] text-muted">As fotos das perguntas foram extraídas do PDF e estão na aba Fotos, com a conferência de cada uma.</p>
+      )}
+    </div>
   );
 }

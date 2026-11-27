@@ -5,6 +5,7 @@ import { brl, num } from "../format";
 import type { GoTo } from "./FindingEvidence";
 import type { LightboxItem } from "./ui/Lightbox";
 import { StepTitle } from "./ui/StepTitle";
+import { Fold, FoldBody } from "./ui/Fold";
 import { highlight, LpuRef, SentenceList } from "./ui/RichText";
 
 type Tone = "ok" | "warn" | "bad" | "neutral";
@@ -115,10 +116,11 @@ export function EngineerInsights({ p, n, goTo, openPhoto }: { p: Assessment; n: 
   const status = Object.fromEntries(tiles.map((t) => [t.id, t.s]));
 
   return (
-    <section data-tour="insights" className="rounded-xl border border-line bg-sheet p-5">
+    <Fold id="insights" data-tour="insights" className="rounded-xl border border-line bg-sheet p-5">
       <StepTitle n={n} sub="As conferências que um engenheiro faz para aprovar o orçamento. Clique numa conferência para ir ao detalhe.">
         <span className="inline-flex items-center gap-2"><HardHat size={18} className="text-blueprint" aria-hidden /> O que o engenheiro conferiu</span>
       </StepTitle>
+      <FoldBody>
       {tiles.length > 1 && (
         <div className={`mt-4 grid gap-2.5 sm:grid-cols-2 ${tiles.length >= 4 ? "lg:grid-cols-4" : tiles.length === 3 ? "lg:grid-cols-3" : ""}`}>
           {tiles.map(({ id, icon: Icon, label, s }) => {
@@ -150,7 +152,8 @@ export function EngineerInsights({ p, n, goTo, openPhoto }: { p: Assessment; n: 
           {status["insight-photos"] && <ProblemCard p={p} problem={problem} s={status["insight-photos"]} goTo={goTo} openPhoto={openPhoto} />}
         </div>
       </div>
-    </section>
+      </FoldBody>
+    </Fold>
   );
 }
 

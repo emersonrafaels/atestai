@@ -650,11 +650,29 @@ class PhotoStage(AnalysisStage):
         Returns:
             Os apontamentos das fotos.
         """
-        names = {a.index: a.name for a in photos}
+        by_index = {a.index: a for a in photos}
         findings = []
         # Foto a foto: legível mas de outro ambiente/serviço, ou ilegível.
         for f in analysis.photos:
-            name = names.get(f.index, f"anexo {f.index}")
+            a = by_index.get(f.index)
+            name = a.name if a else f"anexo {f.index}"
+            # Foto de relatório em PDF (pergunta + Sim/Não + foto) que contradiz a resposta marcada.
+            if (
+                a
+                and getattr(a, "source", "")
+                and f.readable
+                and f.contradicts_report.strip()
+                and "report_answer_contradicted" in self.rubric.finding_types
+            ):
+                where = f"página {a.page} do {a.source}"
+                said = f' ("{a.context}")' if a.context else ""
+                findings.append(
+                    self.scorer.finding(
+                        "report_answer_contradicted",
+                        f"{f.contradicts_report.strip()} ({where}{said})",
+                        name,
+                    )
+                )
             if f.readable and f.matches_scope == Match.NO:
                 findings.append(
                     self.scorer.finding(
@@ -836,15 +854,22 @@ class PhotoStage(AnalysisStage):
         analysis: PhotoAnalysis, photos: list[Attachment], integrity: dict[str, dict]
     ) -> list[EvaluatedPhoto]:
         """Foto a foto, a leitura do modelo somada aos sinais de integridade (para o parecer e o painel)."""
-        names = {a.index: a.name for a in photos}
+        by_index = {a.index: a for a in photos}
         out = []
         for f in analysis.photos:
-            name = names.get(f.index, f"anexo {f.index}")
+            a = by_index.get(f.index)
+            name = a.name if a else f"anexo {f.index}"
+            origin = (
+                {"source": a.source, "page": a.page, "context": a.context}
+                if a and getattr(a, "source", "")
+                else {}
+            )
             out.append(
                 EvaluatedPhoto(
                     file=name,
                     **f.model_dump(exclude={"index"}),
                     **integrity.get(name, {}),
+                    **origin,
                 )
             )
         return out

@@ -1,0 +1,854 @@
+{
+  "ticket_id": "04175533",
+  "workstream": "SETA",
+  "maintenance_type": "corrective",
+  "moment": "quote",
+  "category": "civil",
+  "symptom": "pecas_e_equipamentos_diversos",
+  "requested_scope": "Vistoria geral da agência feita pelo gerente com o fornecedor. Problemas encontrados: forro manchado e com infiltração no salão de atendimento e no backoffice (cerca de 14 m²); 6 luminárias apagadas entre o salão e o backoffice; 6 tomadas queimadas ou esquentando nas estações de trabalho; molas aéreas das portas do backoffice e do banheiro vazando óleo e batendo a porta; vazamento no sifão da pia do banheiro dos funcionários; 4 aparelhos split com filtro sujo, sem limpeza há meses. Fotos de todos os pontos em anexo.",
+  "solution_description": "Correção dos itens da vistoria: tratamento da infiltração e recomposição do forro com pintura, troca das 6 luminárias por LED, troca das 6 tomadas, troca das 2 molas aéreas, troca do sifão e limpeza com higienização dos 4 splits.",
+  "branch": {
+    "code": "3390",
+    "name": "Ribeirão Preto Centro",
+    "environment": "area_interna_toda_agencia"
+  },
+  "supplier": {
+    "name": "Manutec Facilities e Engenharia LTDA",
+    "cnpj": ""
+  },
+  "blocks_opening": false,
+  "quoted_value": 12155.0,
+  "dates": {
+    "opening": "2026-11-18",
+    "supplier_submission": "2026-11-20",
+    "manager_review": null
+  },
+  "status": "forwarded_to_backoffice",
+  "origin": "dataset",
+  "dataset": "casos",
+  "manager": {
+    "first_check": "forwarded",
+    "note": ""
+  },
+  "attachments": [
+    {
+      "file_name": "Orcamento_Manutec_04175533.xlsx",
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size_bytes": 6542,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_084146.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 338470,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_084321.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 397785,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_084443.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 286075,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_084529.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 241193,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_084642.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 190023,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_084754.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 185428,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_084838.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 154395,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_084953.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 180808,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_085035.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 182497,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_085137.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 151137,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_085230.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 154040,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_085419.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 144618,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_085551.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 193449,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_085719.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 201627,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_085755.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 171063,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_085838.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 203778,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_090000.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 199089,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_090116.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 168135,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_090218.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 229537,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_090333.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 222006,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_090510.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 222271,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_090545.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 216435,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_090636.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 230697,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_090809.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 249437,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_090951.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 176920,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_091114.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 153255,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_091230.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 148084,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_091341.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 240255,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_091431.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 223904,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_091619.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 265357,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_091754.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 173718,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_091858.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 166915,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_092047.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 159622,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_092223.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 150946,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_092304.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 178339,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_092445.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 148749,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_092621.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 161261,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_092743.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 162510,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_092858.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 143347,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_093022.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 113721,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_093108.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 109313,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_093226.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 131515,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_093415.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 108967,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_093518.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 108429,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_093654.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 138048,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_093748.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 157273,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_093919.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 146807,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_094027.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 173370,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_094123.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 129875,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_094227.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 120129,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_094347.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 112289,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_094450.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 288551,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_094633.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 264793,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_094756.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 233076,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_094929.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 131208,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_095115.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 175247,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_095215.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 303905,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_095333.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 189524,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_095412.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 400450,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_095522.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 398878,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_095604.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 126726,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_095747.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 116463,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_095925.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 158561,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_100025.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 168792,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_100144.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 184842,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_100223.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 188216,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_100333.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 186321,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_100414.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 225168,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_100603.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 82592,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_100747.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 81047,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_100843.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 143117,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_100953.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 134366,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_101116.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 92896,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_101209.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 87178,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_101327.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 126642,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_101500.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 173037,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_101603.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 133088,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_101656.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 127352,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_101823.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 129873,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_101952.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 104133,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_102105.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 141852,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_102205.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 164041,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_102314.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 239956,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_102425.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 207486,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_102605.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 166656,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_102644.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 222565,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_102752.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 101439,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_102941.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 108176,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_103115.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 98044,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_103257.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 155501,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_103446.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 144170,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_103528.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 152471,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_103658.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 204944,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_103830.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 134429,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_103941.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 152827,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_104118.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 185295,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_104209.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 136626,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_104340.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 154589,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_104421.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 385857,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_104547.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 371591,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_104708.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 321845,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_104841.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 308699,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_105018.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 297967,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_105142.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 279003,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_105241.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 272008,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_105344.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 298976,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_105436.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 295529,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_105550.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 366638,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_105707.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 282359,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_105806.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 291018,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_105924.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 332188,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_110044.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 309614,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_110148.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 320243,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_110224.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 243290,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_110337.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 281155,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    },
+    {
+      "file_name": "IMG_20261118_110448.jpg",
+      "content_type": "image/jpeg",
+      "size_bytes": 304089,
+      "sent_by": "supplier",
+      "data_upload": "2026-11-20"
+    }
+  ]
+}

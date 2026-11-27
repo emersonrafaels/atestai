@@ -1,6 +1,6 @@
 import { ArrowRight, Box, Camera, CheckCircle2, ClipboardCheck, FileSearch, ListChecks, MapPin, Ruler, Wrench, XCircle } from "lucide-react";
 import type { ReactNode } from "react";
-import type { Assessment, RubricInfo, TicketDetail } from "../api";
+import type { Assessment, CoherenceReview, RubricInfo, TicketDetail } from "../api";
 import { LOCAL_LABEL, MAINTENANCE_LABEL, SEVERITY, STAGE_LABEL, envLabel, explainFindings, num, pts } from "../format";
 import { InfoBox } from "./ui/InfoBox";
 import { InfoTip, Tooltip } from "./ui/Tooltip";
@@ -46,6 +46,7 @@ export function ScopeTab({ p, ticket, rubric, goTo }: { p: Assessment; ticket: T
   const criteria = realList(s.acceptance_criteria);
   const evidence = realList(s.expected_evidence);
   const quantities = s.mentioned_quantities ?? [];
+  const allFindings = p.findings.map((f, i) => ({ f, imp: impacts[i] }));
 
   return (
     <div className="space-y-5">
@@ -149,6 +150,8 @@ export function ScopeTab({ p, ticket, rubric, goTo }: { p: Assessment; ticket: T
         </ul>
       </section>
 
+      {p.coherence && <CoherenceSection c={p.coherence} p={p} ticket={ticket} findings={allFindings} rubric={rubric} onSee={() => goTo("assessment")} />}
+
       {/* como a leitura alimenta as outras etapas */}
       <section>
         <h3 className="mb-2 flex items-center gap-1.5 font-semibold">Como esta leitura é usada <InfoTip text="A leitura do escopo é enviada às etapas seguintes: é a régua contra a qual orçamento e fotos são conferidos." /></h3>
@@ -195,9 +198,60 @@ function Check({ ok, yes, no, tip }: { ok: boolean; yes: string; no: string; tip
   );
 }
 
-function Verification({ ok, title, question, okText, badText, finding, weight, onSee }: {
+type FindingWithImpact = { f: Assessment["findings"][number]; imp: ReturnType<typeof explainFindings>[number] };
+
+const CAUSE_LABEL: Record<string, string> = {
+  vandalism: "Vandalismo",
+  natural_disaster: "Desastre natural",
+  wear_or_failure: "Desgaste ou falha comum",
+  other: "Outra causa",
+  undetermined: "Causa não identificada",
+};
+const SOLUTION_LABEL: Record<string, string> = { yes: "Resolve o problema", partial: "Resolve só parte", no: "Não resolve", undetermined: "Sem informação da solução" };
+
+/** Etapa "Categoria e solução": a causa vista nas evidências contra a categoria/sintoma e a solução contra o problema. */
+function CoherenceSection({ c, p, ticket, findings, rubric, onSee }: {
+  c: CoherenceReview; p: Assessment; ticket: TicketDetail | null; findings: FindingWithImpact[]; rubric: RubricInfo; onSee: () => void;
+}) {
+  const opened = `${ticket?.category_label ?? p.category.replace(/_/g, " ")} / ${ticket?.symptom_label ?? p.symptom.replace(/_/g, " ")}`;
+  const causeFinding = findings.find((x) => x.f.kind === "cause_miscategorized");
+  const categoryFinding = causeFinding ?? findings.find((x) => x.f.kind === "miscategorized_ticket");
+  const solutionFinding = findings.find((x) => x.f.kind === "solution_incoherent" || x.f.kind === "solution_partially_coherent");
+  const categoryOk = !categoryFinding;
+  const solutionOk = c.solution_coherent !== "no" && c.solution_coherent !== "partial";
+  const special = c.cause === "vandalism" || c.cause === "natural_disaster";
+  return (
+    <section className="rounded-xl border border-line bg-sheet">
+      <h3 className="flex items-center gap-1.5 border-b border-line px-5 py-3 font-semibold">
+        Categoria e solução
+        <InfoTip text="Conferido depois das fotos e dos documentos, com todas as evidências: a causa do problema (vandalismo e desastre natural têm tratamento próprio) contra a categoria e o sintoma do chamado, e se a solução resolve o problema relatado." />
+      </h3>
+      {real(c.reported_problem) && (
+        <p className="border-b border-line/70 px-5 py-3 text-sm"><span className="text-muted">Problema, pelas evidências:</span> {c.reported_problem}</p>
+      )}
+      <div className="flex flex-wrap gap-2 border-b border-line/70 px-5 py-3 text-sm">
+        <span className="text-muted">Causa vista:</span>
+        <span className={`rounded-full px-2.5 py-0.5 font-medium ${special ? "bg-[#fdf1dc] text-warn" : "bg-paper text-ink"}`}>{CAUSE_LABEL[c.cause] ?? c.cause}</span>
+        {c.ticket_cause && <><span className="text-muted">· aberto como</span><span className="rounded-full bg-paper px-2.5 py-0.5 font-medium">{CAUSE_LABEL[c.ticket_cause] ?? c.ticket_cause}</span></>}
+        {real(c.cause_evidence) && <span className="basis-full text-[13px] text-muted">{c.cause_evidence}</span>}
+      </div>
+      <ul className="divide-y divide-line/70">
+        <Verification ok={categoryOk} title="Categoria e sintoma" question={`“${opened}” correspondem ao problema e à causa?`}
+          okText={real(c.classification_note) || "Sim: a categoria e o sintoma correspondem ao problema."}
+          badText={categoryFinding?.f.evidence || real(c.classification_note) || "A categoria ou o sintoma não correspondem ao problema."}
+          finding={categoryFinding} weight={rubric.weights.scope} onSee={onSee} />
+        <Verification ok={solutionOk} title="Solução" question={real(c.solution) ? `“${c.solution}” resolve o problema relatado?` : "A solução resolve o problema relatado?"}
+          okText={c.solution_coherent === "undetermined" ? "Sem descrição da solução nem evidência do que foi feito: não conferido." : real(c.solution_note) || SOLUTION_LABEL.yes}
+          badText={`${SOLUTION_LABEL[c.solution_coherent]}: ${real(c.solution_note) || "a solução não trata a causa do problema."}`}
+          finding={solutionFinding} weight={rubric.weights.quote} grade="Orçamento" onSee={onSee} />
+      </ul>
+    </section>
+  );
+}
+
+function Verification({ ok, title, question, okText, badText, finding, weight, grade = "Escopo", onSee }: {
   ok: boolean; title: string; question: string; okText: string; badText: string;
-  finding?: { f: Assessment["findings"][number]; imp: ReturnType<typeof explainFindings>[number] }; weight: number; onSee: () => void;
+  finding?: FindingWithImpact; weight: number; grade?: string; onSee: () => void;
 }) {
   return (
     <li className="grid gap-3 px-5 py-4 sm:grid-cols-[auto_1fr_auto] sm:items-center">
@@ -209,7 +263,7 @@ function Verification({ ok, title, question, okText, badText, finding, weight, o
       {finding && (
         <div className="flex items-center gap-3 sm:justify-end">
           <span className="rounded px-1.5 py-0.5 text-[11px] font-semibold uppercase text-white" style={{ background: SEVERITY[finding.f.severity].color }}>{SEVERITY[finding.f.severity].label}</span>
-          <Tooltip content={`Tira ${finding.imp.gradePts} da nota de Escopo; com peso ${weight}%, são ${pts(finding.imp.scorePts)} pontos a menos no score.${finding.f.reduces_confidence ? " Também reduz a confiança da análise." : ""}`}>
+          <Tooltip content={`Tira ${finding.imp.gradePts} da nota de ${grade}; com peso ${weight}%, são ${pts(finding.imp.scorePts)} pontos a menos no score.${finding.f.reduces_confidence ? " Também reduz a confiança da análise." : ""}`}>
             <span className="cursor-help text-right text-sm"><b className="text-bad">−{pts(finding.imp.scorePts)}</b> <span className="text-muted">no score</span></span>
           </Tooltip>
           <Link onClick={onSee}>Ver no Parecer</Link>

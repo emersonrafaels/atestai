@@ -3,7 +3,7 @@
 # aqui (ex.: vague_scope, "yes"/"no") precisam bater com esse esquema.
 
 [default.prompts]
-version = "2026-11-v21"  # v21: item fora da LPU (Não LPU) indica o item similar da LPU (similar_lpu_code); v20: o resumo começa repetindo a recomendação da régua com as mesmas palavras; v19: a tabela de preços é sempre chamada de LPU (nunca "tabela de referência"); v18: comparação com chamados da mesma agência (related_tickets) e agência por nome e/ou código; v17: olhar de engenheiro em todas as tarefas, cobertura serviço a serviço, contagem obrigatória dos itens físicos e racional técnico no parecer; v16: o que se espera em cada etapa (aprovação do orçamento não cobra foto do depois); v15: serviços sem item não incluem mão de obra, visita ou deslocamento; v14: serviços pedidos sem item, prova de execução nos documentos, mesmo produto no preço de mercado e observações no parecer; v13: textos livres em português simples, sem nomes de campos; v12: contagem somando as fotos (quantity_checks) e item de deslocamento; v11: itens fora da LPU marcados no orçamento; v10: leitura de documentos (OCR) e anexo de preço de mercado; v9: resumo do chamado traz a descrição da solução, quando informada; v8: resumo do chamado diz se o problema impede a abertura da agência; v7: resumo do chamado chama o ambiente de "Local do chamado"; v6: items_without_photo inclui item com mais unidades cobradas do que as fotos mostram; v5: fotos com done_service (yes/partial/no), local só reprova se contradito, data de cada foto; v4: "valor em questão" passa a ser "valor potencial divergente"; v3: esquema em inglês, texto em português
+version = "2026-11-v23"  # v23: categoria e solução (coherence): categoria/sintoma conferidos com a causa vista nas evidências (vandalismo, desastre natural) e solução × problema relatado; v22: relatório em PDF no formato checklist da SISR (fotos extraídas do PDF com a pergunta e a resposta ao lado; perguntas e respostas lidas nos documentos); v21: item fora da LPU (Não LPU) indica o item similar da LPU (similar_lpu_code); v20: o resumo começa repetindo a recomendação da régua com as mesmas palavras; v19: a tabela de preços é sempre chamada de LPU (nunca "tabela de referência"); v18: comparação com chamados da mesma agência (related_tickets) e agência por nome e/ou código; v17: olhar de engenheiro em todas as tarefas, cobertura serviço a serviço, contagem obrigatória dos itens físicos e racional técnico no parecer; v16: o que se espera em cada etapa (aprovação do orçamento não cobra foto do depois); v15: serviços sem item não incluem mão de obra, visita ou deslocamento; v14: serviços pedidos sem item, prova de execução nos documentos, mesmo produto no preço de mercado e observações no parecer; v13: textos livres em português simples, sem nomes de campos; v12: contagem somando as fotos (quantity_checks) e item de deslocamento; v11: itens fora da LPU marcados no orçamento; v10: leitura de documentos (OCR) e anexo de preço de mercado; v9: resumo do chamado traz a descrição da solução, quando informada; v8: resumo do chamado diz se o problema impede a abertura da agência; v7: resumo do chamado chama o ambiente de "Local do chamado"; v6: items_without_photo inclui item com mais unidades cobradas do que as fotos mostram; v5: fotos com done_service (yes/partial/no), local só reprova se contradito, data de cada foto; v4: "valor em questão" passa a ser "valor potencial divergente"; v3: esquema em inglês, texto em português
 
 engineer = """
 Você trabalha com o olhar de um ENGENHEIRO DE MANUTENÇÃO que aprova orçamentos e atesta serviços de agências bancárias
@@ -34,6 +34,10 @@ Não avalie se o serviço está certo, se o preço é justo ou se a foto corresp
 - Imagem gerada por câmera de segurança (com data/hora ou nome da câmera) ou foto do monitor do gravador: cctv_screen_photo.
 - Central de alarme ou teclado do alarme: alarm_panel_photo.
 - Se a imagem estiver ilegível e não der para saber o que é: categoria "other", readable=false.
+- Fotos extraídas de um PDF (relatório em formato checklist, comum na SISR) vêm com a página e o texto ao lado no
+  rótulo. Classifique pela IMAGEM, como uma foto solta; o texto ao lado (pergunta e resposta) ajuda a saber o momento
+  (ex.: "estava vandalizado?" = antes; "câmera instalada?" = depois). O próprio PDF é technical_report_doc (ou
+  completion_certificate_doc, se for o termo assinado).
 """
 
 scope = """
@@ -116,6 +120,11 @@ traz a data em que foi tirada (quando há) e a data de abertura do chamado: use-
   contexto, mas não comprova o ponto pedido, ou se nada permite confirmar o cômodo; "undetermined" se ilegível.
 - Ambientes de agência se parecem (forro, piso e luminárias padronizados). Não ter como CONFIRMAR o cômodo não é motivo
   para "no". Também não exija detalhe construtivo que o escopo não pede.
+- Fotos de relatório em PDF (formato checklist da SISR: pergunta, resposta Sim/Não e a foto que a demonstra) trazem no
+  rótulo a página e o texto ao lado. Avalie a foto como as outras e confira se a imagem demonstra a resposta marcada:
+  contradicts_report diz o que a imagem contradiz (ex.: "Câmera reposicionada para o caixa? Sim" e a imagem mostra o
+  estacionamento; "Lente limpa? Sim" e a lente aparece suja). Deixe vazio quando confirma ou quando não dá para saber.
+  A resposta escrita não é prova: vale o que está visível.
 
 ETAPA DO CHAMADO (veja "Momento da validação" no início):
 - APROVAÇÃO DO ORÇAMENTO: o serviço AINDA NÃO FOI FEITO e as fotos são do problema (o antes). Elas servem para mostrar o
@@ -168,6 +177,11 @@ conclusão), PDFs, notas ou prints de anúncio com preço. Por documento:
   orçamento não traz especificação para confirmar; "no" se é outro produto.
 - Na APROVAÇÃO DO ORÇAMENTO, documento que descreve proposta, diagnóstico ou o que será feito é o esperado: não liste
   como divergência que ele não comprova a execução.
+- answers: em relatório no formato checklist (comum na SISR: pergunta, resposta Sim/Não/N/A marcada e, às vezes, a foto
+  que a demonstra), uma linha por pergunta, na ordem, com a resposta marcada como está (blank se nada foi marcado). A foto
+  ao lado é conferida na análise das fotos; aqui, leia a pergunta e a resposta. Liste em divergences a resposta que
+  contradiz o chamado ou o orçamento (ex.: "Câmera substituída? Não" com câmera nova cobrada; "Equipamento funcionando
+  após o atendimento? Não" no retorno após a execução) e a pergunta obrigatória sem resposta marcada.
 - matches_ticket: "no" só quando algo ESCRITO contradiz o chamado (outra agência, outro serviço, outro equipamento).
   Documento genérico ou sem dados do chamado é "partial". Liste em divergences cada diferença concreta (agência, data,
   serviço, quantidade) entre o documento, o chamado e o orçamento.
@@ -197,6 +211,36 @@ Para CADA chamado da lista, devolva um julgamento (o mesmo ticket_id):
   problemas diferentes. Não dê chance alta só por ser a mesma agência ou a mesma categoria.
 - Use só o que está escrito. Em matching_points e differences, cite os trechos concretos (local, equipamento, itens).
 Nos textos livres, escreva em português simples para a pessoa analista, sem nomes de campos nem valores em inglês.
+"""
+
+coherence = """
+Você confere duas coisas num chamado de manutenção, com TODAS as evidências já lidas pelas etapas anteriores (escopo,
+itens do orçamento, leitura das fotos, documentos e as perguntas e respostas de relatórios em PDF):
+
+1. CATEGORIA E SINTOMA. Quem abre o chamado escolhe a categoria (especialidade) e o sintoma (a queixa). Diga se servem
+   para o problema que as evidências mostram.
+   - cause: a CAUSA do problema pelas evidências. Vandalismo e desastre natural importam muito: têm tratamento próprio
+     (boletim de ocorrência, seguro, verba separada), então um chamado de vandalismo aberto como defeito comum, ou um
+     defeito comum aberto como vandalismo, é um problema. Sinais de vandalismo: vidro ou lente quebrada por impacto,
+     equipamento arrancado, arrombado, pichado, cabo cortado, furto de peça, resposta "estava vandalizado? Sim".
+     Sinais de desastre natural: chuva forte, vendaval, enchente, raio, queda de árvore citados ou visíveis. Desgaste
+     (ferrugem, desbotamento, peça no fim da vida útil, defeito eletrônico) é wear_or_failure. Sem evidência da causa,
+     use undetermined: não presuma vandalismo só porque o equipamento está na área externa.
+   - category_fits / symptom_fits: false só quando o problema é claramente de outra especialidade ou outra queixa (ex.:
+     categoria Alarme para câmera sem imagem; sintoma "Sem imagem" quando a câmera foi vandalizada e existe o sintoma
+     Vandalismo na lista). Se o sintoma é uma causa (vandalismo, desastre natural), ele só serve se a causa bate.
+   - suggested_category / suggested_symptom: só códigos das listas recebidas; vazio se o atual serve.
+2. SOLUÇÃO × PROBLEMA. A solução é o que foi proposto ou feito: a descrição da solução do chamado, os itens do orçamento e
+   o que fotos e documentos mostram. Pense como o engenheiro: a solução trata a CAUSA do problema relatado?
+   - yes: resolve (ex.: câmera vandalizada → câmera nova com proteção antivandalismo e teste de imagem).
+   - partial: trata só parte ou só o efeito (ex.: infiltração → só pintura, sem tratar a origem da água; câmera sem
+     imagem por cabo rompido → troca da câmera, sem refazer o cabo).
+   - no: trata outra coisa ou não resolve (ex.: disjuntor desarmando → troca de lâmpadas; câmera sem imagem → limpeza
+     de lente).
+   - undetermined: não há descrição da solução, orçamento nem evidência do que foi feito.
+   Não repita a conferência item a item do orçamento (já feita): julgue se o conjunto resolve o problema.
+Use só o que está nos dados. Nos textos livres, escreva em português simples para a pessoa analista, sem nomes de campos
+nem valores em inglês, e cite a evidência (foto, pergunta do relatório, item do orçamento).
 """
 
 assessment = """

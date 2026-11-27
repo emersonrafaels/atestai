@@ -22,7 +22,13 @@ from .domain import (
     Stage,
 )
 from .formatting import brl
-from .llm_schemas import AssessmentText, PhotoAnalysis, ScopeReading, ServiceCoverage
+from .llm_schemas import (
+    AssessmentText,
+    CoherenceReview,
+    PhotoAnalysis,
+    ScopeReading,
+    ServiceCoverage,
+)
 from .score import ScoreCalculator, ScoreResult
 
 if TYPE_CHECKING:
@@ -53,6 +59,7 @@ class AnalysisContext:
         photo_analysis: leitura das fotos pelo modelo.
         documents: documentos lidos (OCR) e conferidos.
         integrity: nome da foto → data EXIF, origem de reaproveitamento e sinais de integridade.
+        coherence: categoria/sintoma × causa vista nas evidências e solução × problema relatado.
         score: notas, score, confiança e recomendação.
         amount_at_issue: valor em questão somado dos itens, em R$.
         amount_at_issue_pct: valor em questão em % do total do orçamento.
@@ -79,6 +86,7 @@ class AnalysisContext:
     photo_analysis: PhotoAnalysis | None = None
     documents: list[EvaluatedDocument] = field(default_factory=list)
     integrity: dict[str, dict] = field(default_factory=dict)
+    coherence: CoherenceReview | None = None
     score: ScoreResult | None = None
     amount_at_issue: float = 0.0
     amount_at_issue_pct: float = 0.0

@@ -311,6 +311,9 @@ class Stage(StrEnum):
     QUOTE = "quote"
     PHOTOS = "photos"
     DOCUMENTS = "documents"
+    COHERENCE = (
+        "coherence"  # categoria/sintoma e solução × problema, com todas as evidências
+    )
     SCORE = "score"
     ASSESSMENT = "assessment"
     DONE = "done"
@@ -487,6 +490,10 @@ class Attachment(DomainModel):
     index: int = Field(ge=1)
     path: Path
     content_type: str
+    # foto extraída de um PDF (relatório da SISR no formato pergunta + Sim/Não + foto): o PDF, a página e o texto ao lado
+    source: str = ""
+    page: int = 0
+    context: str = ""
 
     @computed_field  # type: ignore[prop-decorator]
     @property
@@ -749,7 +756,21 @@ class Rubric(DomainModel):
         default_factory=RelatedTicketsRule,
         description="comparação com chamados da mesma agência (possível duplicidade)",
     )
+    special_causes: dict[str, list[str]] = Field(
+        default_factory=dict,
+        description=(
+            "causa especial (vandalism, natural_disaster) → códigos de categoria ou sintoma que a indicam no chamado; "
+            "abrir com a causa errada vira o apontamento cause_miscategorized"
+        ),
+    )
     finding_types: dict[str, FindingType]
+
+    def cause_of(self, category: str, symptom: str) -> str:
+        """Causa especial indicada pela categoria ou pelo sintoma do chamado ("" = nenhuma)."""
+        for cause, codes in self.special_causes.items():
+            if category in codes or symptom in codes:
+                return cause
+        return ""
 
     def for_workstream(self, workstream: str) -> Rubric:
         """Régua com os ajustes da esteira aplicados a cada tipo de apontamento."""
@@ -864,9 +885,23 @@ class EvaluatedPhoto(DomainModel):
     matches_scope: Match
     reason: str
     covered_items: list[int]
+    contradicts_report: str = ""
     exif_date: datetime | None = None
     reused_from: str | None = None
     integrity_signals: list[str] = Field(default_factory=list)
+    # foto extraída de PDF: o PDF de origem, a página e o texto ao lado (pergunta e resposta)
+    source: str = ""
+    page: int = 0
+    context: str = ""
+
+
+class ReportAnswer(DomainModel):
+    """Pergunta de relatório em formato checklist e a resposta marcada (yes, no, not_applicable, blank, other)."""
+
+    question: str
+    answer: str = "other"
+    note: str = ""
+    has_photo: bool = False
 
 
 class DocumentPrice(DomainModel):
@@ -896,6 +931,7 @@ class EvaluatedDocument(DomainModel):
     has_signature: bool = False
     service_status: Match = Match.UNDETERMINED
     prices: list[DocumentPrice] = Field(default_factory=list)
+    answers: list[ReportAnswer] = Field(default_factory=list)
     matches_ticket: Match
     divergences: list[str] = Field(default_factory=list)
     reason: str = ""
@@ -1046,6 +1082,10 @@ class Assessment(DomainModel):
     related: RelatedTicketsCheck | None = Field(
         None,
         description="chamados da mesma agência comparados (possível duplicidade); None em pareceres antigos",
+    )
+    coherence: dict[str, Any] | None = Field(
+        None,
+        description="categoria/sintoma × causa vista nas evidências e solução × problema relatado; None em pareceres antigos",
     )
 
     summary: str = ""

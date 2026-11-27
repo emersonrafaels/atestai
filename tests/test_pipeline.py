@@ -54,6 +54,7 @@ class FakeServer:
             ("local", "scope"),
             ("photos", "photos"),
             ("documents", "documents"),
+            ("cause", "coherence"),
             ("summary", "assessment"),
         )
         for key, name in tasks:

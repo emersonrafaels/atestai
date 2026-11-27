@@ -2,7 +2,7 @@
 # Alterar aqui muda notas, score e recomendação sem tocar no código. Suba a versão a cada mudança.
 
 [default.rubric]
-version = "2026-11-v13"  # v13: item Não LPU com similar na LPU (preço comparado ao do similar; no máximo aprovar com ressalvas); v12: apontamento "preço sem referência para comparar" (leva no máximo a aprovar com ressalvas) e até 12 chamados da agência comparados; v11: janela de duplicidade da agência passa de 5 para 60 dias; v10: chamados da mesma agência (janela de dias + ainda abertos) e possível chamado duplicado, que leva à análise detalhada (review); v9: desconto proporcional ao que foi enviado (fração de fotos, itens, serviços, documentos ou valor), valor em questão limita a nota de Orçamento, faltas do fornecedor devolvem (serviço pedido sem item, item fora do escopo ou duplicado; 30% ou mais do orçamento em questão) e "serviço pedido sem item" deixa de reduzir a confiança; v8: serviço pedido sem item no orçamento, serviço executado antes da aprovação, valor em questão limita "Aprovar" e tolerância própria para preço de mercado; v7: quantidade cobrada acima do que as fotos mostram; v6: leitura de documentos (OCR): documento ilegível, de outro chamado, com data fora da janela e preço acima do mercado; v5: escopo vago alto, quantidade não verificável, item sem foto e valor divergente relevante; v4: absorção entre tipos (absorbs) e foto do depois com local não confirmado; v3: chaves em inglês
+version = "2026-11-v14"  # v14: categoria/sintoma conferidos com as evidências (vandalismo e desastre natural abertos com a causa errada levam à análise detalhada) e coerência da solução com o problema relatado; v13: item Não LPU com similar na LPU (preço comparado ao do similar; no máximo aprovar com ressalvas); v12: apontamento "preço sem referência para comparar" (leva no máximo a aprovar com ressalvas) e até 12 chamados da agência comparados; v11: janela de duplicidade da agência passa de 5 para 60 dias; v10: chamados da mesma agência (janela de dias + ainda abertos) e possível chamado duplicado, que leva à análise detalhada (review); v9: desconto proporcional ao que foi enviado (fração de fotos, itens, serviços, documentos ou valor), valor em questão limita a nota de Orçamento, faltas do fornecedor devolvem (serviço pedido sem item, item fora do escopo ou duplicado; 30% ou mais do orçamento em questão) e "serviço pedido sem item" deixa de reduzir a confiança; v8: serviço pedido sem item no orçamento, serviço executado antes da aprovação, valor em questão limita "Aprovar" e tolerância própria para preço de mercado; v7: quantidade cobrada acima do que as fotos mostram; v6: leitura de documentos (OCR): documento ilegível, de outro chamado, com data fora da janela e preço acima do mercado; v5: escopo vago alto, quantidade não verificável, item sem foto e valor divergente relevante; v4: absorção entre tipos (absorbs) e foto do depois com local não confirmado; v3: chaves em inglês
 
 # peso de cada validação no score (somam 100)
 weights = { scope = 20, quote = 40, photos = 40 }
@@ -66,6 +66,15 @@ min_probability = 70
 show_probability = 40
 max_candidates = 12  # com a janela de 60 dias; os mais próximos (ou da mesma categoria) primeiro
 
+# --- causas especiais ---------------------------------------------------------------------------
+# Vandalismo e desastre natural têm tratamento próprio (B.O., seguro, verba): o chamado precisa estar aberto com a causa
+# certa. Cada causa lista os códigos de categoria ou sintoma (config/catalog.toml) que a indicam. A etapa "Categoria e
+# solução" julga a causa pelas evidências (escopo, fotos, documentos, respostas do relatório) e, se não bater com a do
+# chamado, gera cause_miscategorized. Ajuste os códigos aos do Salesforce.
+[default.rubric.special_causes]
+vandalism = ["vandalismo"]
+natural_disaster = ["desastre_natural"]
+
 # --- tipos de apontamento -----------------------------------------------------------------------
 # amount_at_issue: "item" (o item inteiro), "excess" (só o que passa da referência/quantidade) ou "none"
 
@@ -80,6 +89,35 @@ validation = "scope"
 severity = "medium"
 reduces_confidence = true
 description = "Escopo incoerente com a categoria ou o sintoma"
+
+# categoria e sintoma conferidos com TODAS as evidências (etapa "Categoria e solução", depois dos documentos);
+# inconsistent_scope compara só o texto do escopo, então fica absorvido quando estes aparecem
+[default.rubric.finding_types.cause_miscategorized]
+validation = "scope"
+severity = "high"
+review = true  # vandalismo/desastre aberto como problema comum (ou o contrário): a pessoa analista confere antes de seguir
+absorbs = ["inconsistent_scope", "miscategorized_ticket"]
+description = "Vandalismo ou desastre natural com categoria ou sintoma errados"
+
+[default.rubric.finding_types.miscategorized_ticket]
+validation = "scope"
+severity = "medium"
+caveats = true  # a categoria não muda o serviço, mas precisa ser corrigida no chamado
+absorbs = ["inconsistent_scope"]
+description = "Categoria ou sintoma não correspondem ao problema"
+
+# a solução (descrição da solução + itens do orçamento + o que fotos e documentos mostram) resolve o problema relatado?
+[default.rubric.finding_types.solution_incoherent]
+validation = "quote"
+severity = "high"
+returns = true  # a solução não trata o problema: o fornecedor revê a solução ou a justifica tecnicamente
+description = "Solução não resolve o problema relatado"
+
+[default.rubric.finding_types.solution_partially_coherent]
+validation = "quote"
+severity = "medium"
+caveats = true  # trata só parte do problema (ex.: pinta sem tratar a infiltração): esclarecer antes de aprovar direto
+description = "Solução resolve só parte do problema relatado"
 
 [default.rubric.finding_types.out_of_scope_item]
 extent = "value"
@@ -188,6 +226,14 @@ extent = "photos"
 validation = "photos"
 severity = "high"
 description = "Foto não corresponde ao escopo"
+
+# relatório em PDF no formato checklist (SISR): a foto ao lado da pergunta contradiz a resposta marcada
+# (ex.: "Câmera reposicionada para o caixa? Sim" e a foto mostra o estacionamento)
+[default.rubric.finding_types.report_answer_contradicted]
+extent = "photos"
+validation = "photos"
+severity = "high"
+description = "Resposta do relatório contradita pela foto"
 
 [default.rubric.finding_types.missing_after_photo]
 validation = "photos"

@@ -163,6 +163,14 @@ class AnalyzedPhoto(LlmOutput):
     covered_items: list[int] = Field(
         description="Itens do orçamento que a foto evidencia"
     )
+    contradicts_report: str = Field(
+        "",
+        description=(
+            "Só para foto de relatório em PDF que traz no rótulo o texto ao lado (pergunta e resposta marcada): se a imagem "
+            "CONTRADIZ a resposta, diga o que contradiz em uma frase (ex.: 'resposta diz câmera limpa, mas a lente aparece "
+            "suja'); vazio se a imagem confirma a resposta, se não dá para saber ou se a foto não veio de relatório"
+        ),
+    )
 
 
 class QuantityCheck(LlmOutput):
@@ -244,6 +252,24 @@ class ReadPrice(LlmOutput):
     )
 
 
+class ReportAnswer(LlmOutput):
+    """Pergunta de relatório em formato checklist (comum na SISR) e a resposta marcada."""
+
+    question: str = Field(description="A pergunta, como escrita (sem o número)")
+    answer: Literal["yes", "no", "not_applicable", "blank", "other"] = Field(
+        description=(
+            "yes = Sim marcado; no = Não marcado; not_applicable = N/A; blank = nada marcado; other = resposta em texto "
+            "ou valor (o texto vai em note)"
+        )
+    )
+    note: str = Field(
+        description="Observação escrita junto da resposta, ou a resposta em texto; vazio se não há"
+    )
+    has_photo: bool = Field(
+        description="true se a pergunta tem foto ao lado no documento"
+    )
+
+
 class ReadDocument(LlmOutput):
     """Leitura (OCR) de um documento anexado e conferência com o chamado."""
 
@@ -297,6 +323,13 @@ class ReadDocument(LlmOutput):
     prices: list[ReadPrice] = Field(
         description="Preços que aparecem no documento (anúncio, cotação, nota)"
     )
+    answers: list[ReportAnswer] = Field(
+        default_factory=list,
+        description=(
+            "Relatório em formato checklist (pergunta + Sim/Não, às vezes com foto, comum na SISR): uma linha por pergunta, "
+            "na ordem; vazio se o documento não tem esse formato"
+        ),
+    )
     matches_ticket: Match = Field(
         description=(
             "yes = o documento é deste chamado (agência, serviço) e confirma o que foi pedido/feito; no = algo ESCRITO contradiz o "
@@ -349,6 +382,59 @@ class RelatedTicketsReview(LlmOutput):
     """Saída da tarefa related_tickets: um julgamento por chamado da lista."""
 
     judgments: list[RelatedTicketJudgment]
+
+
+# --------------------------------------------------------------------------- categoria e solução
+Cause = Literal[
+    "vandalism", "natural_disaster", "wear_or_failure", "other", "undetermined"
+]
+
+
+class CoherenceReview(LlmOutput):
+    """Saída da tarefa coherence: a categoria e o sintoma batem com o problema? A solução resolve o problema?"""
+
+    reported_problem: str = Field(
+        description="O problema de verdade, em uma frase, segundo o texto e as evidências (fotos, documentos, respostas)"
+    )
+    cause: Cause = Field(
+        description=(
+            "Causa do problema segundo as evidências: vandalism = dano intencional de terceiros (quebra, arrombamento, "
+            "pichação, furto, cabo cortado); natural_disaster = chuva forte, vendaval, enchente, raio, queda de árvore; "
+            "wear_or_failure = desgaste, defeito, fim de vida útil, mau uso comum; other = outra causa (acidente, "
+            "obra); undetermined = as evidências não permitem dizer"
+        )
+    )
+    cause_evidence: str = Field(
+        description="O que nas evidências indica a causa (cite foto, pergunta do relatório ou trecho do escopo); vazio se undetermined"
+    )
+    category_fits: bool = Field(
+        description="A categoria do chamado é a especialidade certa para o problema?"
+    )
+    symptom_fits: bool = Field(
+        description="O sintoma do chamado descreve o problema (e a causa, quando o sintoma é uma causa)?"
+    )
+    suggested_category: str = Field(
+        description="Se a categoria não serve, o código da lista que serve; senão vazio"
+    )
+    suggested_symptom: str = Field(
+        description="Se o sintoma não serve, o código da lista que serve; senão vazio"
+    )
+    classification_note: str = Field(
+        description="Uma frase justificando a categoria e o sintoma (certos ou errados)"
+    )
+    solution: str = Field(
+        description="A solução proposta ou executada, em uma frase (descrição da solução, itens do orçamento, documentos)"
+    )
+    solution_coherent: Match = Field(
+        description=(
+            "A solução resolve o problema relatado? yes = trata a causa e resolve; partial = trata só parte ou só o "
+            "efeito (ex.: pinta sem tratar a infiltração); no = trata outra coisa ou não resolve; undetermined = não há "
+            "informação da solução"
+        )
+    )
+    solution_note: str = Field(
+        description="Uma ou duas frases para a pessoa analista: por que a solução resolve (ou não) o problema"
+    )
 
 
 # --------------------------------------------------------------------------- parecer
